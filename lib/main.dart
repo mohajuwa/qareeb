@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
-import 'package:get/get_navigation/src/root/internacionalization.dart';
 import 'package:provider/provider.dart';
 import 'auth_screen/splase_screen.dart';
 import 'common_code/colore_screen.dart';
@@ -30,9 +29,9 @@ class _MyAppState extends State<MyApp> {
         title: "Qareeb",
         debugShowCheckedModeBanner: false,
         translations: AppTranslations(),
-        locale: const Locale('ar', 'Arabic'),
+        locale: const Locale('ur', 'arabic'), // Arabic as default
         theme: ThemeData(
-          fontFamily: 'SofiaRegular',
+          fontFamily: 'Khebrat', // Khebrat for Arabic default
           useMaterial3: false,
           splashColor: Colors.transparent,
           hoverColor: Colors.transparent,

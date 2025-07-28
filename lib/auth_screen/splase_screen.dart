@@ -111,7 +111,7 @@ class _Splase_ScreenState extends State<Splase_Screen> {
             Text(
               'Qareeb'.tr,
               style: TextStyle(
-                  color: theamcolore, fontSize: 35, fontFamily: 'SofiaProBold'),
+                  color: theamcolore, fontSize: 35, fontFamily: 'Khebrat'),
             ),
           ],
         ),

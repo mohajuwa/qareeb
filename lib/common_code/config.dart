@@ -3,9 +3,9 @@ import '../api_code/login_controller.dart';
 class Config {
   static String oneSignel = onesignalkey;
   static String mapkey = "AIzaSyB99Z7-KwgRCtvTae9brf7vDeRJBOqnPX8";
+  static String baseurl = 'https://qareeb.modwir.com';
 
-  static String imageurl = 'https://qareeb.modwir.com/';
-  static String baseurl = '${imageurl}customer/';
+  static String imageurl = '${imageurl}customer/';
   static String chaturl = '${imageurl}chat/';
 
   static String signup = 'signup';

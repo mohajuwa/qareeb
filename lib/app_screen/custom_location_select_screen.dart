@@ -74,7 +74,7 @@ class _CustomLocationSelectScreenState
     });
   }
 
-  Set<Marker> markers = Set();
+  Set<Marker> markers = {};
   late GoogleMapController mapController1;
 
   Future fun() async {

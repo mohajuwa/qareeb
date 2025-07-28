@@ -269,7 +269,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "${globalcurrency}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.price}",
+                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.price}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -285,7 +285,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "${globalcurrency}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.couponAmount}",
+                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.couponAmount}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -301,7 +301,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "${globalcurrency}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.platformFee}",
+                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.platformFee}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -317,7 +317,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "${globalcurrency}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.weatherPrice}",
+                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.weatherPrice}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -333,7 +333,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "${globalcurrency}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.addiTimePrice}",
+                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.addiTimePrice}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -352,7 +352,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "${globalcurrency}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.walletPrice}",
+                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.walletPrice}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -375,7 +375,7 @@ Future<Uint8List> makePdf() async {
                               ),
                         Spacer(),
                         Text(
-                          "${globalcurrency}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.paidAmount}",
+                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.paidAmount}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -388,7 +388,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "${globalcurrency}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.finalPrice}",
+                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.finalPrice}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],

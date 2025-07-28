@@ -15,6 +15,7 @@ import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/auth_screen/onmobile1_screen.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
+import 'package:qareeb/common_code/language_toggle_button.dart';
 import 'dart:ui' as ui;
 import '../api_code/forgot_api_controller.dart';
 import '../api_code/login_controller.dart';
@@ -38,9 +39,9 @@ class OnbordingScreen extends StatefulWidget {
 }
 
 class _OnbordingScreenState extends State<OnbordingScreen> {
+  @override
   void initState() {
     super.initState();
-    // camerapermission();
 
     smstypeApiController.smsApi(context);
 
@@ -53,119 +54,11 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
     ];
 
     _pageController = PageController(initialPage: _currentPage);
-
-    super.initState();
   }
 
   int _currentPage = 0;
-
   List<Slide> _slides = [];
-
   PageController _pageController = PageController();
-
-  List<Widget> _buildSlides() {
-    return _slides.map(_buildSlide).toList();
-  }
-
-  Widget _buildSlide(Slide slide) {
-    return Scaffold(
-      backgroundColor: theamcolore,
-      body: Container(
-        height: 300,
-        width: Get.width,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.all(10),
-        // color: Colors.red,
-        // child: Image(image: AssetImage(slide.image),fit: BoxFit.cover,height: 250,),
-        child: Lottie.asset(slide.image, fit: BoxFit.cover, height: 250),
-      ),
-    );
-  }
-
-  //! handling the on page changed
-  void _handlingOnPageChanged(int page) {
-    setState(() => _currentPage = page);
-  }
-
-  //! building page indicator
-  Widget _buildPageIndicator() {
-    Row row =
-        const Row(mainAxisAlignment: MainAxisAlignment.center, children: []);
-    for (int i = 0; i < _slides.length; i++) {
-      row.children.add(_buildPageIndicatorItem(i));
-      if (i != _slides.length - 1)
-        row.children.add(SizedBox(
-          width: 10,
-        ));
-    }
-    return row;
-  }
-
-  Widget _buildPageIndicatorItem(int index) {
-    return Container(
-      width: index == _currentPage ? 30 : 8,
-      height: index == _currentPage ? 6 : 8,
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          color: index == _currentPage
-              ? Colors.grey
-              : Colors.grey.withOpacity(0.5)),
-    );
-  }
-
-  sliderText() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 30, right: 30),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          SizedBox(
-            width: Get.width,
-            child: Text(
-              _currentPage == 0
-                  // ? "Empower Change, One Donation at a Time".tr
-                  ? "Welcome to Your Qareeb Ride!".tr
-                  : _currentPage == 1
-                      ? "Your Journey, Just a Tap Away".tr
-                      : _currentPage == 2
-                          ? "Wherever You Go, We’re Here".tr
-                          : "",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 22,
-                  color: notifier.textColor,
-                  fontFamily: 'SofiaProBold'), //heding Text
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: Get.width * 0.90,
-            child: Text(
-              _currentPage == 0
-                  ? "Book a ride in just a few taps and reach your destination comfortably"
-                      .tr
-                      .tr
-                  : _currentPage == 1
-                      ? "Experience fast, reliable, and safe rides with ease."
-                          .tr
-                          .tr
-                      : _currentPage == 2
-                          ? "Find a ride quickly and enjoy your journey hassle-free"
-                              .tr
-                              .tr
-                          : "",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-                height: 1.6,
-              ), //subtext
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   SmstypeApiController smstypeApiController = Get.put(SmstypeApiController());
   MobilCheckController mobilCheckController = Get.put(MobilCheckController());
@@ -184,11 +77,80 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
   String? otpvarableforgot;
 
   bool login = false;
-  LocationPermission? permission;
-
   bool islogincontroller = false;
 
   ColorNotifier notifier = ColorNotifier();
+
+  List<Widget> _buildSlides() {
+    return _slides.map(_buildSlide).toList();
+  }
+
+  Widget _buildSlide(Slide slide) {
+    return Scaffold(
+      backgroundColor: theamcolore,
+      body: Container(
+        height: 300,
+        width: Get.width,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(10),
+        child: Lottie.asset(slide.image, fit: BoxFit.cover, height: 250),
+      ),
+    );
+  }
+
+  void _handlingOnPageChanged(int page) {
+    setState(() => _currentPage = page);
+  }
+
+  Widget sliderText() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 30, right: 30),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          SizedBox(
+            width: Get.width,
+            child: Text(
+              _currentPage == 0
+                  ? "Welcome to Your Qareeb Ride!".tr
+                  : _currentPage == 1
+                      ? "Your Journey, Just a Tap Away".tr
+                      : _currentPage == 2
+                          ? "Wherever You Go, We're Here".tr
+                          : "",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 22,
+                  color: notifier.textColor,
+                  fontFamily: 'Khebrat'),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: Get.width * 0.90,
+            child: Text(
+              _currentPage == 0
+                  ? "Book a ride in just a few taps and reach your destination comfortably"
+                      .tr
+                  : _currentPage == 1
+                      ? "Experience fast, reliable, and safe rides with ease."
+                          .tr
+                      : _currentPage == 2
+                          ? "Find a ride quickly and enjoy your journey hassle-free"
+                              .tr
+                          : "",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+                height: 1.6,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -198,972 +160,575 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: <Widget>[
-          PageView(
-            controller: _pageController,
-            onPageChanged: _handlingOnPageChanged,
-            physics: const BouncingScrollPhysics(),
-            children: _buildSlides(),
-          ),
+          // Top half - Slides
           Positioned(
+            top: 0,
             left: 0,
             right: 0,
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+            height: Get.height * 0.5, // Top half of screen
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: _handlingOnPageChanged,
+              physics: const BouncingScrollPhysics(),
+              children: _buildSlides(),
+            ),
+          ),
+          Positioned(
+            top: 50,
+            right: 20,
+            child: const LanguageToggleButton(),
+          ),
+          // Center - Phone Number Field
+          Center(
             child: Container(
-              height: login == true ? 460 : 580,
-              width: Get.size.width,
+              width: Get.width * 0.9,
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
               decoration: BoxDecoration(
                 color: notifier.containergreaycolore,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
+                  ),
+                ],
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  // _buildPageIndicator(),
-                  // const SizedBox(height: 150),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Slider text
                   sliderText(),
-                  const Spacer(),
-                  Container(
-                    width: Get.width,
-                    decoration: BoxDecoration(
-                      color: notifier.containergreaycolore,
-                      borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(15),
-                          topLeft: Radius.circular(15)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // const Text("Enter your Mobile Number",style: TextStyle(color: Colors.black),),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          IntlPhoneField(
-                            controller: signupmobilecontroller,
-                            decoration: InputDecoration(
-                              counterText: "",
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: Colors.grey.withOpacity(0.4)),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              labelText: 'Phone Number'.tr,
-                              labelStyle: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
-                              ),
-                              border: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: Colors.grey,
-                                ),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: theamcolore),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                            ),
-                            style: TextStyle(color: notifier.textColor),
-                            flagsButtonPadding: EdgeInsets.zero,
-                            showCountryFlag: false,
-                            showDropdownIcon: false,
-                            initialCountryCode: 'YE',
-                            dropdownTextStyle: TextStyle(
-                                color: notifier.textColor, fontSize: 15),
-                            onCountryChanged: (value) {
-                              setState(() {
-                                // langth = value.maxLength;
-                                // ccode = number.countryCode;
-                              });
-                            },
-                            onChanged: (number) {
-                              setState(() {
-                                ccode = number.countryCode;
-                              });
-                            },
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          login == true
-                              ? Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // const Text("Enter Password",style: TextStyle(color: Colors.black),),
-                                    // const SizedBox(height: 10,),
-                                    TextFormField(
-                                      obscureText: true,
-                                      controller: loginpassword,
-                                      style:
-                                          TextStyle(color: notifier.textColor),
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return 'Please enter some text';
-                                        }
-                                        return null;
-                                      },
-                                      decoration: InputDecoration(
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                vertical: 15, horizontal: 15),
-                                        border: const OutlineInputBorder(
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(10)),
-                                            borderSide:
-                                                BorderSide(color: Colors.red)),
-                                        enabledBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                const BorderRadius.all(
-                                                    Radius.circular(10)),
-                                            borderSide: BorderSide(
-                                                color: Colors.grey
-                                                    .withOpacity(0.4))),
-                                        labelText: "Password".tr,
-                                        labelStyle: const TextStyle(
-                                            color: Colors.grey, fontSize: 14),
-                                        focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                const BorderRadius.all(
-                                                    Radius.circular(10)),
-                                            borderSide:
-                                                BorderSide(color: theamcolore)),
-                                      ),
-                                    ),
-                                    // CommonTextfiled200(txt: "Password", context: context,controller: loginpassword),
-                                    const SizedBox(
-                                      height: 15,
-                                    ),
-                                  ],
-                                )
-                              : SizedBox(),
-                          Row(
-                            children: [
-                              Text(
-                                "By clicking Continue.you agree tp our ".tr,
-                                style: TextStyle(color: notifier.textColor),
-                              ),
-                              Text("T&Cs".tr,
-                                  style: TextStyle(
-                                    color: theamcolore,
-                                    decoration: TextDecoration.underline,
-                                  )),
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          CommonButton(
-                              containcolore: theamcolore,
-                              onPressed1: () {
-                                // Navigator.push(context, MaterialPageRoute(builder: (context) => const Onmobile2Screen()));
+                  SizedBox(height: 30),
 
-                                if (signupmobilecontroller.text.isEmpty) {
-                                  // Fluttertoast.showToast(msg: "All fields are required.".tr);
-                                  snackbar(
-                                      context: context,
-                                      text: "All fields are required");
-                                } else {
-                                  setState(() {
-                                    login = false;
-                                  });
-                                  mobilCheckController.MobileCheckApi(
-                                          phone: signupmobilecontroller.text,
-                                          ccode: ccode,
-                                          context: context)
-                                      .then(
-                                    (value) {
-                                      print("//////////:---   ${value}");
-
-                                      if (value['Result'] == true) {
-                                        if (smstypeApiController
-                                                .smaApiModel!.message ==
-                                            "MSG91") {
-                                          masgapiController
-                                              .msgApi(
-                                                  mobilenumber: ccode +
-                                                      signupmobilecontroller
-                                                          .text,
-                                                  context: context)
-                                              .then(
-                                            (value) {
-                                              Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          Onmobile2Screen(
-                                                            otpvariable: int.parse(
-                                                                "${masgapiController.msgApiModel!.otp}"),
-                                                          )));
-                                            },
-                                          );
-                                        } else if (smstypeApiController
-                                                .smaApiModel!.message ==
-                                            "Twilio") {
-                                          print("******* Twilio *******");
-
-                                          twilioapiController
-                                              .twilioApi(
-                                                  mobilenumber: ccode +
-                                                      signupmobilecontroller
-                                                          .text,
-                                                  context: context)
-                                              .then(
-                                            (value) {
-                                              Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          Onmobile2Screen(
-                                                            otpvariable: int.parse(
-                                                                "${twilioapiController.twilioApiModel!.otp}"),
-                                                          )));
-                                            },
-                                          );
-                                        } else if (smstypeApiController
-                                                .smaApiModel!.message ==
-                                            "No Auth") {
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const Onmobile3Screen(),
-                                              ));
-                                        } else {
-                                          Fluttertoast.showToast(
-                                              msg: "No Service".tr);
-                                        }
-                                      } else {
-                                        setState(() {
-                                          login = true;
-                                        });
-
-                                        if (signupmobilecontroller
-                                                .text.isNotEmpty &&
-                                            loginpassword.text.isNotEmpty) {
-                                          islogincontroller = true;
-                                          loginController
-                                              .loginApi(
-                                                  context: context,
-                                                  phone: signupmobilecontroller
-                                                      .text,
-                                                  password: loginpassword.text,
-                                                  ccode: ccode)
-                                              .then(
-                                            (value) {
-                                              if (value["Result"] == true) {
-                                                islogincontroller = false;
-                                              } else {}
-                                            },
-                                          );
-                                        } else {
-                                          if (loginpassword.text.isEmpty) {
-                                            // Fluttertoast.showToast(msg: "Enter Password".tr);
-                                            snackbar(
-                                                context: context,
-                                                text: "Enter Password");
-                                          } else {
-                                            // Fluttertoast.showToast(msg: "All fields are required.".tr);
-                                            snackbar(
-                                                context: context,
-                                                text:
-                                                    "All fields are required.");
-                                          }
-                                        }
-
-                                        // print("not done condition");
-                                        // Fluttertoast.showToast(msg: "${value['message']}".tr);
-                                      }
-                                    },
-                                  );
-                                }
-                              },
-                              context: context,
-                              txt1: "Continue".tr),
-                          SizedBox(
-                            height: 15,
+                  // Phone number field
+                  SizedBox(
+                    height: 60,
+                    child: IntlPhoneField(
+                      controller: signupmobilecontroller,
+                      decoration: InputDecoration(
+                        counterText: "",
+                        enabledBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Colors.grey.withOpacity(0.4)),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        labelText: 'Phone Number'.tr,
+                        labelStyle: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                            color: Colors.grey,
                           ),
-                          Row(
-                            children: [
-                              const Spacer(),
-                              InkWell(
-                                  onTap: () {
-                                    Get.bottomSheet(Container(
-                                      height: 220,
-                                      decoration: BoxDecoration(
-                                          color: notifier.containercolore,
-                                          borderRadius: const BorderRadius.only(
-                                              topLeft: Radius.circular(10),
-                                              topRight: Radius.circular(10))),
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 15, right: 15),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const SizedBox(
-                                              height: 20,
-                                            ),
-                                            Text("Forget Password ?".tr,
-                                                style: TextStyle(
-                                                    color: notifier.textColor,
-                                                    fontSize: 16,
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            const SizedBox(
-                                              height: 10,
-                                            ),
-                                            IntlPhoneField(
-                                              controller: forgotmobile,
-                                              decoration: InputDecoration(
-                                                counterText: "",
-                                                enabledBorder:
-                                                    OutlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4)),
-                                                  borderRadius:
-                                                      BorderRadius.circular(15),
-                                                ),
-                                                labelText: 'Phone Number'.tr,
-                                                labelStyle: const TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 14,
-                                                ),
-                                                border: OutlineInputBorder(
-                                                  borderSide: const BorderSide(
-                                                    color: Colors.grey,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(15),
-                                                ),
-                                                focusedBorder:
-                                                    OutlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                      color: theamcolore),
-                                                  borderRadius:
-                                                      BorderRadius.circular(15),
-                                                ),
-                                              ),
-                                              style: TextStyle(
-                                                  color: notifier.textColor),
-                                              flagsButtonPadding:
-                                                  EdgeInsets.zero,
-                                              showCountryFlag: false,
-                                              showDropdownIcon: false,
-                                              initialCountryCode: 'IN',
-                                              dropdownTextStyle: TextStyle(
-                                                  color: notifier.textColor,
-                                                  fontSize: 15),
-                                              onCountryChanged: (value) {},
-                                              onChanged: (number) {
-                                                setState(() {
-                                                  ccodeforgot =
-                                                      number.countryCode;
-                                                });
-                                              },
-                                            ),
-                                            const SizedBox(
-                                              height: 20,
-                                            ),
-                                            CommonButton(
-                                                txt1: 'Continue'.tr,
-                                                containcolore: theamcolore,
-                                                context: context,
-                                                onPressed1: () async {
-                                                  if (forgotmobile
-                                                      .text.isEmpty) {
-                                                    Fluttertoast.showToast(
-                                                      msg:
-                                                          'Enter Mobile Number...!!!'
-                                                              .tr,
-                                                    );
-                                                  } else {
-                                                    mobilCheckController
-                                                            .MobileCheckApi(
-                                                                phone:
-                                                                    forgotmobile
-                                                                        .text,
-                                                                ccode:
-                                                                    ccodeforgot,
-                                                                context:
-                                                                    context)
-                                                        .then(
-                                                      (value) {
-                                                        print(
-                                                            "//////////:---   ${value}");
-
-                                                        if (value['Result'] ==
-                                                            false) {
-                                                          if (smstypeApiController
-                                                                  .smaApiModel!
-                                                                  .message ==
-                                                              "MSG91") {
-                                                            masgapiController
-                                                                .msgApi(
-                                                                    mobilenumber:
-                                                                        ccodeforgot +
-                                                                            forgotmobile
-                                                                                .text,
-                                                                    context:
-                                                                        context)
-                                                                .then(
-                                                              (value) {
-                                                                Get.bottomSheet(
-                                                                    Container(
-                                                                  height: 230,
-                                                                  decoration:
-                                                                      BoxDecoration(
-                                                                    color: notifier
-                                                                        .containercolore,
-                                                                    borderRadius: BorderRadius.only(
-                                                                        topRight:
-                                                                            Radius.circular(
-                                                                                15),
-                                                                        topLeft:
-                                                                            Radius.circular(15)),
-                                                                  ),
-                                                                  child:
-                                                                      Padding(
-                                                                    padding: const EdgeInsets
-                                                                        .only(
-                                                                        left:
-                                                                            15,
-                                                                        right:
-                                                                            15),
-                                                                    child:
-                                                                        Column(
-                                                                      mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .start,
-                                                                      crossAxisAlignment:
-                                                                          CrossAxisAlignment
-                                                                              .start,
-                                                                      children: [
-                                                                        const SizedBox(
-                                                                          height:
-                                                                              20,
-                                                                        ),
-                                                                        Text(
-                                                                          'Awesome'
-                                                                              .tr,
-                                                                          style: TextStyle(
-                                                                              color: notifier.textColor,
-                                                                              fontFamily: 'SofiaProBold',
-                                                                              fontSize: 20),
-                                                                        ),
-                                                                        const SizedBox(
-                                                                          height:
-                                                                              5,
-                                                                        ),
-                                                                        Text(
-                                                                          'We have sent the OTP to ${ccode}${forgotmobile.text}'
-                                                                              .tr,
-                                                                          style: TextStyle(
-                                                                              color: notifier.textColor,
-                                                                              fontFamily: "SofiaProBold"),
-                                                                        ),
-                                                                        const SizedBox(
-                                                                          height:
-                                                                              20,
-                                                                        ),
-                                                                        Center(
-                                                                          child:
-                                                                              OTPTextField(
-                                                                            otpFieldStyle:
-                                                                                OtpFieldStyle(
-                                                                              enabledBorderColor: Colors.grey.withOpacity(0.4),
-                                                                            ),
-                                                                            controller:
-                                                                                otpController,
-                                                                            length:
-                                                                                6,
-                                                                            width:
-                                                                                MediaQuery.of(context).size.width,
-                                                                            textFieldAlignment:
-                                                                                MainAxisAlignment.spaceAround,
-                                                                            fieldWidth:
-                                                                                45,
-                                                                            fieldStyle:
-                                                                                FieldStyle.box,
-                                                                            outlineBorderRadius:
-                                                                                5,
-                                                                            contentPadding:
-                                                                                const EdgeInsets.all(15),
-                                                                            style: TextStyle(
-                                                                                fontSize: 17,
-                                                                                color: notifier.textColor,
-                                                                                fontFamily: "SofiaProBold"),
-                                                                            onChanged:
-                                                                                (pin) {
-                                                                              setState(() {
-                                                                                otpvarableforgot = smscode;
-                                                                              });
-                                                                            },
-                                                                            onCompleted:
-                                                                                (pin) {
-                                                                              setState(() {
-                                                                                smscode = pin;
-                                                                              });
-                                                                            },
-                                                                          ),
-                                                                        ),
-                                                                        const SizedBox(
-                                                                          height:
-                                                                              20,
-                                                                        ),
-                                                                        CommonButton(
-                                                                            txt1: 'VERIFY OTP'
-                                                                                .tr,
-                                                                            containcolore:
-                                                                                theamcolore,
-                                                                            context:
-                                                                                context,
-                                                                            onPressed1:
-                                                                                () async {
-                                                                              if (masgapiController.msgApiModel!.otp == otpvarableforgot) {
-                                                                                Get.bottomSheet(Container(
-                                                                                  height: 250,
-                                                                                  decoration: const BoxDecoration(
-                                                                                    color: Colors.white,
-                                                                                    borderRadius: BorderRadius.only(topRight: Radius.circular(15), topLeft: Radius.circular(15)),
-                                                                                  ),
-                                                                                  child: Padding(
-                                                                                    padding: const EdgeInsets.only(left: 10, right: 10),
-                                                                                    child: Column(
-                                                                                      mainAxisSize: MainAxisSize.min,
-                                                                                      children: <Widget>[
-                                                                                        const SizedBox(
-                                                                                          height: 15,
-                                                                                        ),
-                                                                                        Text('Create A New Password'.tr, style: const TextStyle(fontSize: 18, fontFamily: "SofiaProBold", color: Colors.black)),
-                                                                                        const SizedBox(
-                                                                                          height: 15,
-                                                                                        ),
-                                                                                        CommonTextfiled2(txt: 'New Password'.tr, controller: newpasswordController, context: context),
-                                                                                        const SizedBox(
-                                                                                          height: 15,
-                                                                                        ),
-                                                                                        CommonTextfiled2(txt: 'Confirm Password'.tr, controller: conformpasswordController, context: context),
-                                                                                        const SizedBox(
-                                                                                          height: 15,
-                                                                                        ),
-                                                                                        CommonButton(
-                                                                                            containcolore: theamcolore,
-                                                                                            txt1: 'Confirm'.tr,
-                                                                                            context: context,
-                                                                                            onPressed1: () {
-                                                                                              if (newpasswordController.text.compareTo(conformpasswordController.text) == 0) {
-                                                                                                forgotController.forgotApi(context: context, phone: forgotmobile.text, password: conformpasswordController.text, ccode: ccodeforgot).then((value) {
-                                                                                                  // print("++++++$value");
-                                                                                                  // if(value["ResponseCode"] == "200"){
-                                                                                                  //   Get.back();
-                                                                                                  //   Fluttertoast.showToast(
-                                                                                                  //     msg: value["message"],
-                                                                                                  //   );
-                                                                                                  // }else{
-                                                                                                  //
-                                                                                                  //   Fluttertoast.showToast(
-                                                                                                  //     msg: value["message"],
-                                                                                                  //   );
-                                                                                                  //
-                                                                                                  // }
-                                                                                                });
-                                                                                              } else {
-                                                                                                Fluttertoast.showToast(
-                                                                                                  msg: "Please enter current password".tr,
-                                                                                                );
-                                                                                              }
-                                                                                            }),
-                                                                                      ],
-                                                                                    ),
-                                                                                  ),
-                                                                                ));
-                                                                              } else {
-                                                                                Fluttertoast.showToast(msg: "Incorrect OTP. Please try again.".tr);
-                                                                              }
-                                                                            }),
-                                                                        const SizedBox(
-                                                                          height:
-                                                                              20,
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  ),
-                                                                ));
-                                                              },
-                                                            );
-                                                          } else if (smstypeApiController
-                                                                  .smaApiModel!
-                                                                  .message ==
-                                                              "Twilio") {
-                                                            print(
-                                                                "******* Twilio *******");
-
-                                                            twilioapiController
-                                                                .twilioApi(
-                                                                    mobilenumber:
-                                                                        ccodeforgot +
-                                                                            forgotmobile
-                                                                                .text,
-                                                                    context:
-                                                                        context)
-                                                                .then(
-                                                              (value) {
-                                                                Get.bottomSheet(
-                                                                    Container(
-                                                                  height: 230,
-                                                                  decoration: BoxDecoration(
-                                                                      color: notifier
-                                                                          .containercolore,
-                                                                      borderRadius: BorderRadius.only(
-                                                                          topRight: Radius.circular(
-                                                                              15),
-                                                                          topLeft:
-                                                                              Radius.circular(15))),
-                                                                  child:
-                                                                      Padding(
-                                                                    padding: const EdgeInsets
-                                                                        .only(
-                                                                        left:
-                                                                            15,
-                                                                        right:
-                                                                            15),
-                                                                    child:
-                                                                        Column(
-                                                                      mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .start,
-                                                                      crossAxisAlignment:
-                                                                          CrossAxisAlignment
-                                                                              .start,
-                                                                      children: [
-                                                                        const SizedBox(
-                                                                          height:
-                                                                              20,
-                                                                        ),
-                                                                        Text(
-                                                                          'Awesome'
-                                                                              .tr,
-                                                                          style: TextStyle(
-                                                                              color: notifier.textColor,
-                                                                              fontFamily: 'SofiaProBold',
-                                                                              fontSize: 20),
-                                                                        ),
-                                                                        const SizedBox(
-                                                                          height:
-                                                                              5,
-                                                                        ),
-                                                                        Text(
-                                                                          'We have sent the OTP to ${ccode}${forgotmobile.text}'
-                                                                              .tr,
-                                                                          style: TextStyle(
-                                                                              color: notifier.textColor,
-                                                                              fontFamily: "SofiaProBold"),
-                                                                        ),
-                                                                        const SizedBox(
-                                                                          height:
-                                                                              20,
-                                                                        ),
-                                                                        Center(
-                                                                          child:
-                                                                              OTPTextField(
-                                                                            otpFieldStyle:
-                                                                                OtpFieldStyle(
-                                                                              enabledBorderColor: Colors.grey.withOpacity(0.4),
-                                                                            ),
-                                                                            controller:
-                                                                                otpController,
-                                                                            length:
-                                                                                6,
-                                                                            width:
-                                                                                MediaQuery.of(context).size.width,
-                                                                            textFieldAlignment:
-                                                                                MainAxisAlignment.spaceAround,
-                                                                            fieldWidth:
-                                                                                45,
-                                                                            fieldStyle:
-                                                                                FieldStyle.box,
-                                                                            outlineBorderRadius:
-                                                                                5,
-                                                                            contentPadding:
-                                                                                const EdgeInsets.all(15),
-                                                                            style: TextStyle(
-                                                                                fontSize: 17,
-                                                                                color: notifier.textColor,
-                                                                                fontFamily: "SofiaProBold"),
-                                                                            onChanged:
-                                                                                (pin) {
-                                                                              setState(() {
-                                                                                otpvarableforgot = smscode;
-                                                                              });
-                                                                              // otpvarable = int.parse(smscode);
-                                                                            },
-                                                                            onCompleted:
-                                                                                (pin) {
-                                                                              setState(() {
-                                                                                smscode = pin;
-                                                                              });
-                                                                            },
-                                                                          ),
-                                                                        ),
-                                                                        const SizedBox(
-                                                                          height:
-                                                                              20,
-                                                                        ),
-                                                                        CommonButton(
-                                                                            txt1: 'VERIFY OTP'
-                                                                                .tr,
-                                                                            containcolore:
-                                                                                theamcolore,
-                                                                            context:
-                                                                                context,
-                                                                            onPressed1:
-                                                                                () async {
-                                                                              if (twilioapiController.twilioApiModel!.otp == otpvarableforgot) {
-                                                                                Get.bottomSheet(Container(
-                                                                                  height: 250,
-                                                                                  decoration: const BoxDecoration(
-                                                                                    color: Colors.white,
-                                                                                    borderRadius: BorderRadius.only(topRight: Radius.circular(15), topLeft: Radius.circular(15)),
-                                                                                  ),
-                                                                                  child: Padding(
-                                                                                    padding: const EdgeInsets.only(left: 10, right: 10),
-                                                                                    child: Column(
-                                                                                      mainAxisSize: MainAxisSize.min,
-                                                                                      children: <Widget>[
-                                                                                        const SizedBox(
-                                                                                          height: 15,
-                                                                                        ),
-                                                                                        Text('Create A New Password'.tr, style: const TextStyle(fontSize: 18, fontFamily: "SofiaProBold", color: Colors.black)),
-                                                                                        const SizedBox(
-                                                                                          height: 15,
-                                                                                        ),
-                                                                                        CommonTextfiled2(txt: 'New Password'.tr, controller: newpasswordController, context: context),
-                                                                                        const SizedBox(
-                                                                                          height: 15,
-                                                                                        ),
-                                                                                        CommonTextfiled2(txt: 'Confirm Password'.tr, controller: conformpasswordController, context: context),
-                                                                                        const SizedBox(
-                                                                                          height: 15,
-                                                                                        ),
-                                                                                        CommonButton(
-                                                                                            containcolore: theamcolore,
-                                                                                            txt1: 'Confirm'.tr,
-                                                                                            context: context,
-                                                                                            onPressed1: () {
-                                                                                              if (newpasswordController.text.compareTo(conformpasswordController.text) == 0) {
-                                                                                                forgotController.forgotApi(context: context, phone: forgotmobile.text, password: conformpasswordController.text, ccode: ccodeforgot).then((value) {
-                                                                                                  print("++++++$value");
-                                                                                                  if (value["ResponseCode"] == "200") {
-                                                                                                    Get.back();
-                                                                                                    Fluttertoast.showToast(
-                                                                                                      msg: value["message"],
-                                                                                                    );
-                                                                                                  } else {
-                                                                                                    Fluttertoast.showToast(
-                                                                                                      msg: value["message"],
-                                                                                                    );
-                                                                                                  }
-                                                                                                });
-                                                                                              } else {
-                                                                                                Fluttertoast.showToast(
-                                                                                                  msg: "Please enter current password".tr,
-                                                                                                );
-                                                                                              }
-                                                                                            }),
-                                                                                      ],
-                                                                                    ),
-                                                                                  ),
-                                                                                ));
-                                                                              } else {
-                                                                                Fluttertoast.showToast(msg: "Incorrect OTP. Please try again.".tr);
-                                                                              }
-                                                                            }),
-                                                                        const SizedBox(
-                                                                          height:
-                                                                              20,
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  ),
-                                                                ));
-                                                              },
-                                                            );
-                                                          } else if (smstypeApiController
-                                                                  .smaApiModel!
-                                                                  .message ==
-                                                              "No Auth") {
-                                                            Get.bottomSheet(
-                                                                Container(
-                                                              height: 250,
-                                                              decoration:
-                                                                  const BoxDecoration(
-                                                                color: Colors
-                                                                    .white,
-                                                                borderRadius: BorderRadius.only(
-                                                                    topRight: Radius
-                                                                        .circular(
-                                                                            15),
-                                                                    topLeft: Radius
-                                                                        .circular(
-                                                                            15)),
-                                                              ),
-                                                              child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .only(
-                                                                        left:
-                                                                            10,
-                                                                        right:
-                                                                            10),
-                                                                child: Column(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .min,
-                                                                  children: <Widget>[
-                                                                    const SizedBox(
-                                                                      height:
-                                                                          15,
-                                                                    ),
-                                                                    Text(
-                                                                        'Create A New Password'
-                                                                            .tr,
-                                                                        style: const TextStyle(
-                                                                            fontSize:
-                                                                                18,
-                                                                            fontFamily:
-                                                                                "SofiaProBold",
-                                                                            color:
-                                                                                Colors.black)),
-                                                                    const SizedBox(
-                                                                      height:
-                                                                          15,
-                                                                    ),
-                                                                    CommonTextfiled2(
-                                                                        txt: 'New Password'
-                                                                            .tr,
-                                                                        controller:
-                                                                            newpasswordController,
-                                                                        context:
-                                                                            context),
-                                                                    const SizedBox(
-                                                                      height:
-                                                                          15,
-                                                                    ),
-                                                                    CommonTextfiled2(
-                                                                        txt: 'Confirm Password'
-                                                                            .tr,
-                                                                        controller:
-                                                                            conformpasswordController,
-                                                                        context:
-                                                                            context),
-                                                                    const SizedBox(
-                                                                      height:
-                                                                          15,
-                                                                    ),
-                                                                    CommonButton(
-                                                                        containcolore:
-                                                                            theamcolore,
-                                                                        txt1: 'Confirm'
-                                                                            .tr,
-                                                                        context:
-                                                                            context,
-                                                                        onPressed1:
-                                                                            () {
-                                                                          if (newpasswordController.text.compareTo(conformpasswordController.text) ==
-                                                                              0) {
-                                                                            forgotController.forgotApi(context: context, phone: forgotmobile.text, password: conformpasswordController.text, ccode: ccodeforgot).then((value) {
-                                                                              print("++++++$value");
-                                                                              if (value["ResponseCode"] == 200) {
-                                                                                Get.back();
-                                                                                Fluttertoast.showToast(
-                                                                                  msg: value["message"],
-                                                                                );
-                                                                              } else {
-                                                                                Fluttertoast.showToast(
-                                                                                  msg: value["message"],
-                                                                                );
-                                                                              }
-                                                                            });
-                                                                          } else {
-                                                                            Fluttertoast.showToast(
-                                                                              msg: "Please enter current password".tr,
-                                                                            );
-                                                                          }
-                                                                        }),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                            ));
-                                                          } else {
-                                                            Fluttertoast.showToast(
-                                                                msg:
-                                                                    "No Service"
-                                                                        .tr);
-                                                          }
-                                                        } else {
-                                                          Fluttertoast
-                                                              .showToast(
-                                                            msg:
-                                                                "${value['message']}",
-                                                          );
-                                                        }
-                                                      },
-                                                    );
-                                                  }
-                                                }),
-                                            const SizedBox(
-                                              height: 20,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ));
-                                  },
-                                  child: Center(
-                                    child: Text('Forgot Password ?'.tr,
-                                        style: TextStyle(
-                                            color: notifier.textColor,
-                                            fontFamily: "SofiaProBold",
-                                            fontSize: 14)),
-                                  )),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 15,
-                          ),
-                        ],
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: theamcolore),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                       ),
+                      style: TextStyle(color: notifier.textColor),
+                      flagsButtonPadding: EdgeInsets.zero,
+                      showCountryFlag: false,
+                      showDropdownIcon: false,
+                      initialCountryCode: 'YE',
+                      dropdownTextStyle:
+                          TextStyle(color: notifier.textColor, fontSize: 15),
+                      onCountryChanged: (value) {
+                        setState(() {});
+                      },
+                      onChanged: (number) {
+                        setState(() {
+                          ccode = number.countryCode;
+                        });
+                      },
                     ),
                   ),
+
+                  SizedBox(height: 20),
+
+                  // Password field if login is true
+                  if (login)
+                    Column(
+                      children: [
+                        TextFormField(
+                          obscureText: true,
+                          controller: loginpassword,
+                          style: TextStyle(color: notifier.textColor),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 15, horizontal: 15),
+                            border: const OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10)),
+                                borderSide: BorderSide(color: Colors.red)),
+                            enabledBorder: OutlineInputBorder(
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(10)),
+                                borderSide: BorderSide(
+                                    color: Colors.grey.withOpacity(0.4))),
+                            labelText: "Password".tr,
+                            labelStyle: const TextStyle(
+                                color: Colors.grey, fontSize: 14),
+                            focusedBorder: OutlineInputBorder(
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(10)),
+                                borderSide: BorderSide(color: theamcolore)),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                      ],
+                    ),
+
+                  // Terms and conditions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "By clicking Continue.you agree tp our ".tr,
+                        style:
+                            TextStyle(color: notifier.textColor, fontSize: 12),
+                      ),
+                      Text("T&Cs".tr,
+                          style: TextStyle(
+                            color: theamcolore,
+                            decoration: TextDecoration.underline,
+                            fontSize: 12,
+                          )),
+                    ],
+                  ),
+
+                  SizedBox(height: 20),
+
+                  // Continue button
+                  CommonButton(
+                      containcolore: theamcolore,
+                      onPressed1: () {
+                        if (signupmobilecontroller.text.isEmpty) {
+                          snackbar(
+                            context: context,
+                            text: "All fields are required".tr,
+                          );
+                        } else {
+                          setState(() {
+                            login = false;
+                          });
+                          mobilCheckController.MobileCheckApi(
+                                  phone: signupmobilecontroller.text,
+                                  ccode: ccode,
+                                  context: context)
+                              .then((value) {
+                            print("//////////:---   ${value}");
+
+                            if (value['Result'] == true) {
+                              if (smstypeApiController.smaApiModel!.message ==
+                                  "MSG91") {
+                                masgapiController
+                                    .msgApi(
+                                        mobilenumber:
+                                            ccode + signupmobilecontroller.text,
+                                        context: context)
+                                    .then((value) {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => Onmobile2Screen(
+                                                otpvariable: int.parse(
+                                                    "${masgapiController.msgApiModel!.otp}"),
+                                              )));
+                                });
+                              } else if (smstypeApiController
+                                      .smaApiModel!.message ==
+                                  "Twilio") {
+                                print("******* Twilio *******");
+
+                                twilioapiController
+                                    .twilioApi(
+                                        mobilenumber:
+                                            ccode + signupmobilecontroller.text,
+                                        context: context)
+                                    .then((value) {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => Onmobile2Screen(
+                                                otpvariable: int.parse(
+                                                    "${twilioapiController.twilioApiModel!.otp}"),
+                                              )));
+                                });
+                              } else if (smstypeApiController
+                                      .smaApiModel!.message ==
+                                  "No Auth") {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const Onmobile3Screen(),
+                                    ));
+                              } else {
+                                Fluttertoast.showToast(msg: "No Service".tr);
+                              }
+                            } else {
+                              setState(() {
+                                login = true;
+                              });
+
+                              if (signupmobilecontroller.text.isNotEmpty &&
+                                  loginpassword.text.isNotEmpty) {
+                                islogincontroller = true;
+                                loginController
+                                    .loginApi(
+                                        context: context,
+                                        phone: signupmobilecontroller.text,
+                                        password: loginpassword.text,
+                                        ccode: ccode)
+                                    .then((value) {
+                                  if (value["Result"] == true) {
+                                    islogincontroller = false;
+                                  } else {}
+                                });
+                              } else {
+                                if (loginpassword.text.isEmpty) {
+                                  snackbar(
+                                      context: context, text: "Enter Password");
+                                } else {
+                                  snackbar(
+                                      context: context,
+                                      text: "All fields are required.");
+                                }
+                              }
+                            }
+                          });
+                        }
+                      },
+                      context: context,
+                      txt1: "Continue".tr),
+
+                  SizedBox(height: 15),
+
+                  // Forgot password
+                  InkWell(
+                      onTap: () {
+                        Get.bottomSheet(_buildForgotPasswordBottomSheet());
+                      },
+                      child: Center(
+                        child: Text('Forgot Password ?'.tr,
+                            style: TextStyle(
+                                color: notifier.textColor,
+                                fontFamily: "Khebrat",
+                                fontSize: 14)),
+                      )),
                 ],
               ),
             ),
           ),
-          islogincontroller == true
-              ? BackdropFilter(
-                  filter: ui.ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                  child: Container(
-                      height: Get.height,
-                      width: Get.width,
-                      alignment: Alignment.center,
-                      child: Center(
-                        child: CircularProgressIndicator(color: theamcolore),
-                      )),
-                )
-              : SizedBox()
-          // islogincontroller == false ? Center(child: CircularProgressIndicator(color: Colors.grey),) : SizedBox()
+
+          // Loading overlay
+          if (islogincontroller)
+            BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+              child: Container(
+                  height: Get.height,
+                  width: Get.width,
+                  alignment: Alignment.center,
+                  child: Center(
+                    child: CircularProgressIndicator(color: theamcolore),
+                  )),
+            ),
         ],
       ),
     );
+  }
+
+  Widget _buildForgotPasswordBottomSheet() {
+    return Container(
+      height: 220,
+      decoration: BoxDecoration(
+          color: notifier.containercolore,
+          borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(10), topRight: Radius.circular(10))),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 15, right: 15),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Text("Forget Password ?".tr,
+                style: TextStyle(
+                    color: notifier.textColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 60,
+              child: IntlPhoneField(
+                controller: forgotmobile,
+                decoration: InputDecoration(
+                  counterText: "",
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  labelText: 'Phone Number'.tr,
+                  labelStyle: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                      color: Colors.grey,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: theamcolore),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                style: TextStyle(color: notifier.textColor),
+                flagsButtonPadding: EdgeInsets.zero,
+                showCountryFlag: false,
+                showDropdownIcon: false,
+                initialCountryCode: 'IN',
+                dropdownTextStyle:
+                    TextStyle(color: notifier.textColor, fontSize: 15),
+                onCountryChanged: (value) {},
+                onChanged: (number) {
+                  setState(() {
+                    ccodeforgot = number.countryCode;
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            CommonButton(
+                txt1: 'Continue'.tr,
+                containcolore: theamcolore,
+                context: context,
+                onPressed1: () async {
+                  if (forgotmobile.text.isEmpty) {
+                    Fluttertoast.showToast(
+                      msg: 'Enter Mobile Number...!!!'.tr,
+                    );
+                  } else {
+                    _handleForgotPassword();
+                  }
+                }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleForgotPassword() {
+    mobilCheckController.MobileCheckApi(
+            phone: forgotmobile.text, ccode: ccodeforgot, context: context)
+        .then((value) {
+      print("//////////:---   ${value}");
+
+      if (value['Result'] == false) {
+        if (smstypeApiController.smaApiModel!.message == "MSG91") {
+          _handleMsg91ForgotPassword();
+        } else if (smstypeApiController.smaApiModel!.message == "Twilio") {
+          _handleTwilioForgotPassword();
+        } else if (smstypeApiController.smaApiModel!.message == "No Auth") {
+          _showCreatePasswordBottomSheet();
+        } else {
+          Fluttertoast.showToast(msg: "No Service".tr);
+        }
+      } else {
+        Fluttertoast.showToast(msg: "${value['message']}");
+      }
+    });
+  }
+
+  void _handleMsg91ForgotPassword() {
+    masgapiController
+        .msgApi(mobilenumber: ccodeforgot + forgotmobile.text, context: context)
+        .then((value) {
+      Get.bottomSheet(_buildOtpVerificationBottomSheet(isMsg91: true));
+    });
+  }
+
+  void _handleTwilioForgotPassword() {
+    twilioapiController
+        .twilioApi(
+            mobilenumber: ccodeforgot + forgotmobile.text, context: context)
+        .then((value) {
+      Get.bottomSheet(_buildOtpVerificationBottomSheet(isMsg91: false));
+    });
+  }
+
+  Widget _buildOtpVerificationBottomSheet({required bool isMsg91}) {
+    return Container(
+      height: 230,
+      decoration: BoxDecoration(
+        color: notifier.containercolore,
+        borderRadius: BorderRadius.only(
+            topRight: Radius.circular(15), topLeft: Radius.circular(15)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 15, right: 15),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Text(
+              'Awesome'.tr,
+              style: TextStyle(
+                  color: notifier.textColor,
+                  fontFamily: 'Khebrat',
+                  fontSize: 20),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              'We have sent the OTP to ${ccode}${forgotmobile.text}'.tr,
+              style:
+                  TextStyle(color: notifier.textColor, fontFamily: "Khebrat"),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: OTPTextField(
+                otpFieldStyle: OtpFieldStyle(
+                  enabledBorderColor: Colors.grey.withOpacity(0.4),
+                ),
+                controller: otpController,
+                length: 6,
+                width: MediaQuery.of(context).size.width,
+                textFieldAlignment: MainAxisAlignment.spaceAround,
+                fieldWidth: 45,
+                fieldStyle: FieldStyle.box,
+                outlineBorderRadius: 5,
+                contentPadding: const EdgeInsets.all(15),
+                style: TextStyle(
+                    fontSize: 17,
+                    color: notifier.textColor,
+                    fontFamily: "Khebrat"),
+                onChanged: (pin) {
+                  setState(() {
+                    otpvarableforgot = smscode;
+                  });
+                },
+                onCompleted: (pin) {
+                  setState(() {
+                    smscode = pin;
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            CommonButton(
+                txt1: 'VERIFY OTP'.tr,
+                containcolore: theamcolore,
+                context: context,
+                onPressed1: () async {
+                  _verifyOtpForForgotPassword(isMsg91: isMsg91);
+                }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _verifyOtpForForgotPassword({required bool isMsg91}) {
+    bool isOtpValid = false;
+
+    if (isMsg91) {
+      isOtpValid = masgapiController.msgApiModel!.otp == otpvarableforgot;
+    } else {
+      isOtpValid = twilioapiController.twilioApiModel!.otp == otpvarableforgot;
+    }
+
+    if (isOtpValid) {
+      _showCreatePasswordBottomSheet();
+    } else {
+      Fluttertoast.showToast(msg: "Incorrect OTP. Please try again.".tr);
+    }
+  }
+
+  void _showCreatePasswordBottomSheet() {
+    Get.bottomSheet(Container(
+      height: 250,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+            topRight: Radius.circular(15), topLeft: Radius.circular(15)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 10, right: 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const SizedBox(height: 15),
+            Text('Create A New Password'.tr,
+                style: const TextStyle(
+                    fontSize: 18, fontFamily: "Khebrat", color: Colors.black)),
+            const SizedBox(height: 15),
+            CommonTextfiled2(
+                txt: 'New Password'.tr,
+                controller: newpasswordController,
+                context: context),
+            const SizedBox(height: 15),
+            CommonTextfiled2(
+                txt: 'Confirm Password'.tr,
+                controller: conformpasswordController,
+                context: context),
+            const SizedBox(height: 15),
+            CommonButton(
+                containcolore: theamcolore,
+                txt1: 'Confirm'.tr,
+                context: context,
+                onPressed1: () {
+                  if (newpasswordController.text
+                          .compareTo(conformpasswordController.text) ==
+                      0) {
+                    forgotController
+                        .forgotApi(
+                            context: context,
+                            phone: forgotmobile.text,
+                            password: conformpasswordController.text,
+                            ccode: ccodeforgot)
+                        .then((value) {
+                      print("++++++$value");
+                      if (value["ResponseCode"] == "200") {
+                        Get.back();
+                        Fluttertoast.showToast(
+                          msg: value["message"],
+                        );
+                      } else {
+                        Fluttertoast.showToast(
+                          msg: value["message"],
+                        );
+                      }
+                    });
+                  } else {
+                    Fluttertoast.showToast(
+                      msg: "Please enter current password".tr,
+                    );
+                  }
+                }),
+          ],
+        ),
+      ),
+    ));
   }
 }
 

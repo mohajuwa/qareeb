@@ -54,9 +54,9 @@ class WalletApiController extends GetxController implements GetxService {
           builder: (BuildContext context) {
             return Container(
               height: 330,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: const BorderRadius.only(
+                  borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(15),
                       topRight: Radius.circular(15))),
               child: Column(
@@ -78,7 +78,7 @@ class WalletApiController extends GetxController implements GetxService {
                   ),
                   Text(
                     'Top up $currencybol${walletController.text}.00',
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold,
                         color: Colors.black),
@@ -86,7 +86,7 @@ class WalletApiController extends GetxController implements GetxService {
                   const SizedBox(
                     height: 5,
                   ),
-                  Text(
+                  const Text(
                     'Successfuly',
                     style: TextStyle(
                         fontSize: 30,
@@ -114,12 +114,12 @@ class WalletApiController extends GetxController implements GetxService {
                           child: ElevatedButton(
                             style: const ButtonStyle(
                                 fixedSize:
-                                    MaterialStatePropertyAll(Size(0, 50)),
+                                    WidgetStatePropertyAll(Size(0, 50)),
                                 backgroundColor:
-                                    MaterialStatePropertyAll(Colors.white),
-                                side: MaterialStatePropertyAll(
+                                    WidgetStatePropertyAll(Colors.white),
+                                side: WidgetStatePropertyAll(
                                     BorderSide(color: Colors.black)),
-                                shape: MaterialStatePropertyAll(
+                                shape: WidgetStatePropertyAll(
                                     RoundedRectangleBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(30))))),
@@ -127,7 +127,7 @@ class WalletApiController extends GetxController implements GetxService {
                               Get.back();
                               // Get.back();
                             },
-                            child: Text('Done For Now',
+                            child: const Text('Done For Now',
                                 style: TextStyle(color: Colors.black)),
                           ),
                         ),
@@ -138,12 +138,12 @@ class WalletApiController extends GetxController implements GetxService {
                           child: ElevatedButton(
                             style: const ButtonStyle(
                                 fixedSize:
-                                    MaterialStatePropertyAll(Size(0, 50)),
+                                    WidgetStatePropertyAll(Size(0, 50)),
                                 backgroundColor:
-                                    MaterialStatePropertyAll(Colors.black),
-                                side: MaterialStatePropertyAll(
+                                    WidgetStatePropertyAll(Colors.black),
+                                side: WidgetStatePropertyAll(
                                     BorderSide(color: Colors.black)),
-                                shape: MaterialStatePropertyAll(
+                                shape: WidgetStatePropertyAll(
                                     RoundedRectangleBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(30))))),
