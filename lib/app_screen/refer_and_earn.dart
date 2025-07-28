@@ -172,7 +172,7 @@ class _ReferAndEarnState extends State<ReferAndEarn> {
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold)),
                                 TextSpan(
-                                    text: "ZippyGo".tr,
+                                    text: "Qareeb".tr,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium!

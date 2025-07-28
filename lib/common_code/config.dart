@@ -2,9 +2,9 @@ import '../api_code/login_controller.dart';
 
 class Config {
   static String oneSignel = onesignalkey;
-  static String mapkey = "*******************************";
+  static String mapkey = "AIzaSyB99Z7-KwgRCtvTae9brf7vDeRJBOqnPX8";
 
-  static String imageurl = 'https://qareeb.cscodetech.cloud/';
+  static String imageurl = 'https://qareeb.modwir.com/';
   static String baseurl = '${imageurl}customer/';
   static String chaturl = '${imageurl}chat/';
 

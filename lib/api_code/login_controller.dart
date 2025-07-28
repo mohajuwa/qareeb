@@ -11,7 +11,7 @@ import '../app_screen/permisiion_scren.dart';
 import '../common_code/common_button.dart';
 import '../common_code/push_notification.dart';
 
-String onesignalkey = "";
+String onesignalkey = "44d5202c-02e8-4c86-98ec-fb2c018366c4";
 
 void loginSharedPreferencesSet(bool value) async {
   SharedPreferences preferences = await SharedPreferences.getInstance();

@@ -22,13 +22,15 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => ColorNotifier(),),
+        ChangeNotifierProvider(
+          create: (context) => ColorNotifier(),
+        ),
       ],
       child: GetMaterialApp(
-        title: "ZippyGo",
+        title: "Qareeb",
         debugShowCheckedModeBanner: false,
         translations: AppTranslations(),
-        locale: const Locale('en', 'English'),
+        locale: const Locale('ar', 'Arabic'),
         theme: ThemeData(
           fontFamily: 'SofiaRegular',
           useMaterial3: false,
@@ -42,4 +44,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-

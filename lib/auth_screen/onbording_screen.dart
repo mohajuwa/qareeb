@@ -71,7 +71,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
     return Scaffold(
       backgroundColor: theamcolore,
       body: Container(
-        height: 500,
+        height: 300,
         width: Get.width,
         alignment: Alignment.center,
         padding: const EdgeInsets.all(10),
@@ -124,7 +124,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
             child: Text(
               _currentPage == 0
                   // ? "Empower Change, One Donation at a Time".tr
-                  ? "Welcome to Your ZippyGo Ride!".tr
+                  ? "Welcome to Your Qareeb Ride!".tr
                   : _currentPage == 1
                       ? "Your Journey, Just a Tap Away".tr
                       : _currentPage == 2
@@ -209,7 +209,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
             right: 0,
             bottom: MediaQuery.of(context).viewInsets.bottom,
             child: Container(
-              height: login == true ? 460 : 380,
+              height: login == true ? 460 : 580,
               width: Get.size.width,
               decoration: BoxDecoration(
                 color: notifier.containergreaycolore,
@@ -226,65 +226,6 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
                   // const SizedBox(height: 150),
                   sliderText(),
                   const Spacer(),
-                  // Container(
-                  //   width: Get.width,
-                  //   decoration: const BoxDecoration(
-                  //     color: Colors.white,
-                  //     borderRadius: BorderRadius.only(topRight: Radius.circular(15),topLeft: Radius.circular(15)),
-                  //   ),
-                  //   child: Padding(
-                  //     padding: const EdgeInsets.all(8.0),
-                  //     child: Column(
-                  //       crossAxisAlignment: CrossAxisAlignment.start,
-                  //       children: [
-                  //         const Text("Phone Number",style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 16)),
-                  //         const SizedBox(height: 5),
-                  //         IntlPhoneField(
-                  //           // controller: mobilcontroller,
-                  //           readOnly: true,
-                  //           onTap: () {
-                  //             Navigator.push(context, MaterialPageRoute(builder: (context) => const Onmobile1Screen(),));
-                  //           },
-                  //           decoration:  InputDecoration(
-                  //             counterText: "",
-                  //             enabledBorder: OutlineInputBorder(
-                  //               borderSide: BorderSide(color: Colors.grey.withOpacity(0.4)),
-                  //               borderRadius: BorderRadius.circular(15),
-                  //             ),
-                  //             hintText: 'Phone Number'.tr,
-                  //             hintStyle: const TextStyle(
-                  //               color: Colors.grey,
-                  //               fontSize: 14,
-                  //             ),
-                  //             border: OutlineInputBorder(
-                  //               borderSide: BorderSide(color: Colors.grey.withOpacity(0.4),),
-                  //               borderRadius: BorderRadius.circular(15),
-                  //             ),
-                  //             focusedBorder: OutlineInputBorder(
-                  //               borderSide:  BorderSide(color: Colors.grey.withOpacity(0.4)),
-                  //               borderRadius: BorderRadius.circular(15),
-                  //             ),
-                  //
-                  //           ),
-                  //           style: const TextStyle(color: Colors.black),
-                  //           flagsButtonPadding: EdgeInsets.zero,
-                  //           showCountryFlag: false,
-                  //           showDropdownIcon: false,
-                  //           initialCountryCode: 'IN',
-                  //           dropdownTextStyle:   const TextStyle(color: Colors.black,fontSize: 15),
-                  //           onCountryChanged: (value) {
-                  //
-                  //           },
-                  //           onChanged: (number) {
-                  //             setState(() {
-                  //               // ccode = number.countryCode;
-                  //             });
-                  //           },
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ),
                   Container(
                     width: Get.width,
                     decoration: BoxDecoration(
@@ -300,7 +241,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
                         children: [
                           // const Text("Enter your Mobile Number",style: TextStyle(color: Colors.black),),
                           SizedBox(
-                            height: 15,
+                            height: 10,
                           ),
                           IntlPhoneField(
                             controller: signupmobilecontroller,
@@ -331,7 +272,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
                             flagsButtonPadding: EdgeInsets.zero,
                             showCountryFlag: false,
                             showDropdownIcon: false,
-                            initialCountryCode: 'IN',
+                            initialCountryCode: 'YE',
                             dropdownTextStyle: TextStyle(
                                 color: notifier.textColor, fontSize: 15),
                             onCountryChanged: (value) {

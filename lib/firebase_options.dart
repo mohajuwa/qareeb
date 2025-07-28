@@ -41,30 +41,28 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: '******************',
-    appId: '*************',
-    messagingSenderId: '**************',
-    projectId: '***************',
-    authDomain: '**************',
-    storageBucket: '***************',
+    apiKey: 'AIzaSyCFrMvEUaMdVJ9I50OdqKJqR7UcJmVZY0c',
+    appId: '1:1048285519214:web:2c2d0085e55fbde4e3b57f',
+    messagingSenderId: '1048285519214',
+    projectId: 'qareeb-79bcf',
+    authDomain: 'qareeb-79bcf.firebaseapp.com',
+    storageBucket: 'qareeb-79bcf.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: '*********************',
-    appId: '**********',
-    messagingSenderId: '*********',
-    projectId: '********-******',
-    storageBucket: '****-******.****.com',
+    apiKey: 'AIzaSyDproDOArrR57D0uFz8MeVaaGHXKlCP_Rs',
+    appId: '1:1048285519214:android:fddb43968b7e65b2e3b57f',
+    messagingSenderId: '1048285519214',
+    projectId: 'qareeb-79bcf',
+    storageBucket: 'qareeb-79bcf.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: '********',
-    appId: '****',
-    messagingSenderId: '*******',
-    projectId: '*******-******',
-    storageBucket: '*****-******.*******.com',
-    androidClientId: '*************',
-    iosClientId: '*****************',
+    apiKey: 'AIzaSyDogSsISGA_ICtnLdLUht80VzBVSevekG0',
+    appId: '1:1048285519214:ios:c3906d8b9a435850e3b57f',
+    messagingSenderId: '1048285519214',
+    projectId: 'qareeb-79bcf',
+    storageBucket: 'qareeb-79bcf.firebasestorage.app',
     iosBundleId: 'com.qareeb.customer',
   );
 

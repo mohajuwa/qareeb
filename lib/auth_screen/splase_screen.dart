@@ -26,7 +26,6 @@ class Splase_Screen extends StatefulWidget {
 }
 
 class _Splase_ScreenState extends State<Splase_Screen> {
-
   bool? isLogin;
 
   @override
@@ -36,9 +35,7 @@ class _Splase_ScreenState extends State<Splase_Screen> {
     getColor();
   }
 
-
   getColor() async {
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool? previusstate = prefs.getBool("isDark");
     if (previusstate == null) {
@@ -46,36 +43,48 @@ class _Splase_ScreenState extends State<Splase_Screen> {
     } else {
       notifier.isAvailable(previusstate);
     }
-
   }
 
   LocationPermission? permission;
   Future fun() async {
-
-
     getDataFromLocal().then((value) async {
-      if(isLogin!){
+      if (isLogin!) {
         Timer(const Duration(seconds: 3), () {
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => OnbordingScreen(),), (route) => false);
+          Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OnbordingScreen(),
+              ),
+              (route) => false);
         });
-      } else{
+      } else {
         permission = await Geolocator.checkPermission();
         Timer(const Duration(seconds: 3), () {
           if (permission == LocationPermission.denied) {
-            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Permission_screen(),), (route) => false);
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Permission_screen(),
+                ),
+                (route) => false);
           } else {
-            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => MapScreen(selectvihical: false,),), (route) => false);
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MapScreen(
+                    selectvihical: false,
+                  ),
+                ),
+                (route) => false);
           }
         });
       }
     });
 
-
-      // Timer(const Duration(seconds: 3), () {
-      //   Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => OnbordingScreen(),), (route) => false);
-      // });
+    // Timer(const Duration(seconds: 3), () {
+    //   Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => OnbordingScreen(),), (route) => false);
+    // });
   }
-
 
   Future getDataFromLocal() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -94,9 +103,16 @@ class _Splase_ScreenState extends State<Splase_Screen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset("assets/svgpicture/applogo.svg",height: 150,width: 150),
-            const SizedBox(height: 20,),
-            Text('ZippyGo'.tr,style: TextStyle(color: theamcolore,fontSize: 35,fontFamily: 'SofiaProBold'),),
+            SvgPicture.asset("assets/svgpicture/applogo.svg",
+                height: 150, width: 150),
+            const SizedBox(
+              height: 20,
+            ),
+            Text(
+              'Qareeb'.tr,
+              style: TextStyle(
+                  color: theamcolore, fontSize: 35, fontFamily: 'SofiaProBold'),
+            ),
           ],
         ),
       ),
@@ -109,5 +125,4 @@ class _Splase_ScreenState extends State<Splase_Screen> {
   //     isLogin = prefs.getBool("UserLogin") ?? true;
   //   });
   // }
-
 }
