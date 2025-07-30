@@ -74,7 +74,7 @@ class SignupController extends GetxController implements GetxService {
           }
 
           if (permission == LocationPermission.denied) {
-            Get.offAll(const Permission_screen());
+            Get.offAll(const PermissionScreen());
           } else {
             Get.offAll(const MapScreen(selectvihical: false));
           }

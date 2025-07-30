@@ -75,6 +75,9 @@ String globalcurrency = "";
 List vehicle_bidding_driver = [];
 List vehicle_bidding_secounde = [];
 num walleteamount = 0.00;
+
+bool _socketInitialized = false;
+
 late IO.Socket socket;
 var lathomecurrent;
 var longhomecurrent;
@@ -175,545 +178,973 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // late AnimationController controller;
   // late Animation<Color?> colorAnimation;
 
-  // socate code
+// At the top of your MapScreen class, add this flag:
+
+// At the top of your MapScreen class, add this flag:
+  bool _socketInitialized = false;
+
+// COMPLETE socketConnect method:
   socketConnect() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    var uid = preferences.getString("userLogin");
-    var currency = preferences.getString("currenci");
-    decodeUid = jsonDecode(uid!);
-    currencyy = jsonDecode(currency!);
+    try {
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      var uid = preferences.getString("userLogin");
+      var currency = preferences.getString("currenci");
 
-    userid = decodeUid['id'];
-    username = decodeUid["name"];
-    useridgloable = decodeUid['id'];
+      // Check if data exists before using null check operator
+      if (uid == null) {
+        if (kDebugMode) {
+          print("Error: User login data not found in SharedPreferences");
+          print("uid: $uid");
+        }
+        Get.offAll(() => const OnboardingScreen());
+        return;
+      }
 
-    print("++++:---  $userid");
-    print("++ currencyy ++:---  $currencyy");
+      // Currency can be null, we'll handle it gracefully
+      if (currency == null) {
+        if (kDebugMode) {
+          print("Warning: Currency data not found, using default");
+        }
+        // Set a default currency or empty object
+        currencyy = {};
+      }
 
-    setState(() {});
+      // Now safe to decode JSON
+      try {
+        decodeUid = jsonDecode(uid);
+        if (currency != null) {
+          currencyy = jsonDecode(currency);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print("Error decoding JSON: $e");
+          print("uid content: $uid");
+          print("currency content: $currency");
+        }
+        // Don't redirect to login for currency decode errors, only for uid errors
+        if (uid == null || uid.isEmpty) {
+          await preferences.remove("userLogin");
+          await preferences.remove("currenci");
+          Get.offAll(() => const OnboardingScreen());
+          return;
+        }
+        // If only currency failed, continue with empty currency
+        currencyy = {};
+      }
 
-    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
-      'autoConnect': false,
-      'transports': ['websocket'],
-      'extraHeaders': {'Accept': '*/*'},
-      'timeout': 30000,
-      'forceNew': true,
-    });
+      // Check if decoded data has required fields
+      if (decodeUid == null || decodeUid['id'] == null) {
+        if (kDebugMode) {
+          print("Error: Decoded user data is invalid");
+          print("decodeUid: $decodeUid");
+        }
+        await preferences.remove("userLogin");
+        Get.offAll(() => const OnboardingScreen());
+        return;
+      }
 
-    socket.connect();
+      userid = decodeUid['id'];
+      username = decodeUid["name"] ?? "";
+      useridgloable = decodeUid['id'];
 
-    socket.onConnect((_) {
-      print('Connected');
-      socket.emit('message', 'Hello from Flutter');
-    });
+      if (kDebugMode) {
+        print("++++:---  $userid");
+        print("++ currencyy ++:---  $currencyy");
+        print("++ username ++:---  $username");
+      }
 
-    _connectSocket();
+      setState(() {});
+
+      // INITIALIZE SOCKET HERE FIRST - This is critical!
+      socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
+        'autoConnect': false,
+        'transports': ['websocket'],
+        'extraHeaders': {'Accept': '*/*'},
+        'timeout': 30000,
+        'forceNew': true,
+      });
+
+      // Mark socket as initialized IMMEDIATELY after creation
+      _socketInitialized = true;
+
+      // Set up basic socket events
+      socket.onConnect((_) {
+        if (kDebugMode) {
+          print('Socket Connected successfully');
+        }
+        socket.emit('message', 'Hello from Flutter');
+      });
+
+      socket.onDisconnect((_) {
+        if (kDebugMode) {
+          print('Socket Disconnected');
+        }
+      });
+
+      socket.onConnectError((error) {
+        if (kDebugMode) {
+          print('Socket Connection Error: $error');
+        }
+      });
+
+      // Connect the socket
+      socket.connect();
+
+      // Wait a moment for socket to initialize properly, then call _connectSocket
+      await Future.delayed(Duration(milliseconds: 200));
+
+      // Now it's safe to call _connectSocket
+      _connectSocket();
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error in socketConnect: $e");
+      }
+
+      // Only redirect to login if it's a critical error
+      // Don't redirect for minor issues like socket connection problems
+      if (e.toString().contains('userLogin') || userid == null) {
+        try {
+          SharedPreferences preferences = await SharedPreferences.getInstance();
+          await preferences.remove("userLogin");
+          await preferences.remove("currenci");
+        } catch (prefError) {
+          if (kDebugMode) {
+            print("Error clearing preferences: $prefError");
+          }
+        }
+        Get.offAll(() => const OnboardingScreen());
+      } else {
+        // For socket connection errors, just log and continue
+        if (kDebugMode) {
+          print(
+              "Socket connection failed, but user is logged in. Continuing...");
+        }
+      }
+    }
   }
 
+// COMPLETE _connectSocket method:
   _connectSocket() async {
-    setState(() {});
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    socket.onConnect(
-        (data) => print('Connection established Connected map screen'));
-    socket.onConnectError(
-        (data) => print('Connect Error11111 map screen: $data'));
-    socket.onDisconnect(
-        (data) => print('Socket.IO server disconnected map screen'));
+    // CRITICAL: Check if socket is initialized before doing anything
+    if (!_socketInitialized) {
+      if (kDebugMode) {
+        print("Socket not initialized yet, waiting...");
+      }
+      // Wait a bit and try again
+      await Future.delayed(Duration(milliseconds: 500));
+      if (!_socketInitialized) {
+        if (kDebugMode) {
+          print("Socket still not initialized, aborting _connectSocket");
+        }
+        return;
+      }
+    }
 
-    homeWalletApiController
-        .homwwalleteApi(uid: userid.toString(), context: context)
-        .then(
-      (value) {
-        print("{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
-        walleteamount = double.parse(value["wallet_amount"]);
-        print("[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
-      },
-    );
+    try {
+      // Additional check - make sure socket exists and is connected
+      if (!socket.connected) {
+        if (kDebugMode) {
+          print("Socket not connected, waiting for connection...");
+        }
+        await Future.delayed(Duration(milliseconds: 1000));
+      }
 
-    homeApiController
-        .homeApi(
-            uid: userid.toString(),
-            lat: lathome.toString(),
-            lon: longhome.toString())
-        .then((value) {
-      mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
-      mroal = homeApiController.homeapimodel!.categoryList![0].role.toString();
-      var currency = preferences.getString("currenci");
-      currencyy = jsonDecode(currency!);
-      globalcurrency = currencyy;
+      setState(() {});
+      SharedPreferences preferences = await SharedPreferences.getInstance();
 
-      pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
-          ? homeMapController
-              .homemapApi(
-                  mid: mid, lat: lathome.toString(), lon: longhome.toString())
-              .then(
-              (value) {
-                setState(() {});
-                print("///:---  ${value["Result"]}");
+      // Make sure userid is available before making API calls
+      if (userid == null) {
+        if (kDebugMode) {
+          print(
+              "Error: userid is null in _connectSocket - user may not be properly logged in");
+        }
+        // Don't redirect here, just return
+        return;
+      }
 
-                if (value["Result"] == false) {
-                  setState(() {
-                    vihicallocations.clear();
-                    markers.clear();
-                    _addMarkers();
-                    print("***if condition+++:---  $vihicallocations");
-                  });
-                } else {
-                  setState(() {});
-                  for (int i = 0;
-                      i < homeMapController.homeMapApiModel!.list!.length;
-                      i++) {
-                    vihicallocations.add(LatLng(
-                        double.parse(homeMapController
-                            .homeMapApiModel!.list![i].latitude
-                            .toString()),
-                        double.parse(homeMapController
-                            .homeMapApiModel!.list![i].longitude
-                            .toString())));
-                    _iconPaths.add(
-                        "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                  }
-                  _addMarkers();
-                }
+      // Wallet API call
+      homeWalletApiController
+          .homwwalleteApi(uid: userid.toString(), context: context)
+          .then((value) {
+        try {
+          if (value != null && value["wallet_amount"] != null) {
+            print("{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
+            walleteamount = double.parse(value["wallet_amount"].toString());
+            print(
+                "[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error parsing wallet amount: $e");
+          }
+        }
+      }).catchError((error) {
+        if (kDebugMode) {
+          print("Error in wallet API: $error");
+        }
+      });
 
-                print("******-**:::::------$vihicallocations");
-              },
-            )
-          : homeMapController
-              .homemapApi(
-                  mid: mid, lat: lathome.toString(), lon: longhome.toString())
-              .then(
-              (value) {
-                setState(() {});
-                print("///:---  ${value["Result"]}");
-
-                if (value["Result"] == false) {
-                  setState(() {
-                    vihicallocationsbiddingon.clear();
-                    markers.clear();
-                    _addMarkers2();
-                    // _addMarkers();
-                    print("***if condition+++:---  $vihicallocationsbiddingon");
-                  });
-                } else {
-                  setState(() {});
-                  for (int i = 0;
-                      i < homeMapController.homeMapApiModel!.list!.length;
-                      i++) {
-                    vihicallocationsbiddingon.add(LatLng(
-                        double.parse(homeMapController
-                            .homeMapApiModel!.list![i].latitude
-                            .toString()),
-                        double.parse(homeMapController
-                            .homeMapApiModel!.list![i].longitude
-                            .toString())));
-                    _iconPathsbiddingon.add(
-                        "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                  }
-                  _addMarkers2();
-                }
-
-                print("******-**:::::------$vihicallocationsbiddingon");
-              },
-            );
-
-      if (homeApiController.homeapimodel!.runnigRide!.isEmpty) {
-      } else {
-        pickupcontroller.text = homeApiController
-            .homeapimodel!.runnigRide![0].pickAdd!.title
-            .toString();
-        dropcontroller.text = homeApiController
-            .homeapimodel!.runnigRide![0].dropAdd!.title
-            .toString();
-        latitudepick = double.parse(homeApiController
-            .homeapimodel!.runnigRide![0].pickLatlon!.latitude
-            .toString());
-        longitudepick = double.parse(homeApiController
-            .homeapimodel!.runnigRide![0].pickLatlon!.longitude
-            .toString());
-        latitudedrop = double.parse(homeApiController
-            .homeapimodel!.runnigRide![0].dropLatlon!.latitude
-            .toString());
-        longitudedrop = double.parse(homeApiController
-            .homeapimodel!.runnigRide![0].dropLatlon!.longitude
-            .toString());
-        maximumfare =
-            homeApiController.homeapimodel!.runnigRide![0].maximumFare;
-        minimumfare =
-            homeApiController.homeapimodel!.runnigRide![0].minimumFare;
-        dropprice =
-            homeApiController.homeapimodel!.runnigRide![0].price.toString();
-        priceyourfare = homeApiController.homeapimodel!.runnigRide![0].price!;
-        request_id =
-            homeApiController.homeapimodel!.runnigRide![0].id.toString();
-
-        picktitle = homeApiController
-            .homeapimodel!.runnigRide![0].pickAdd!.title
-            .toString();
-        picksubtitle = homeApiController
-            .homeapimodel!.runnigRide![0].pickAdd!.subtitle
-            .toString();
-
-        droptitle = homeApiController
-            .homeapimodel!.runnigRide![0].dropAdd!.title
-            .toString();
-        dropsubtitle = homeApiController
-            .homeapimodel!.runnigRide![0].dropAdd!.subtitle
-            .toString();
-
-        tot_hour =
-            homeApiController.homeapimodel!.runnigRide![0].totHour.toString();
-        tot_time =
-            homeApiController.homeapimodel!.runnigRide![0].totMinute.toString();
-        tot_secound = "0";
-
-        calculateController
-            .calculateApi(
-                context: context,
-                uid: useridgloable.toString(),
-                mid: mid,
-                mrole: mroal,
-                pickup_lat_lon: "$latitudepick,$longitudepick",
-                drop_lat_lon: "$latitudedrop,$longitudedrop",
-                drop_lat_lon_list: onlypass)
-            .then(
-          (value) {
-            print("CALCULATE DATA LOAD");
-            calculateController.calCulateModel!.offerExpireTime = int.parse(
-                homeApiController.homeapimodel!.runnigRide![0].increasedTime
-                    .toString());
-            calculateController.calCulateModel!.driverId =
-                homeApiController.homeapimodel!.runnigRide![0].dId;
-            isanimation = true;
-            loadertimer = true;
-            offerpluse = false;
-
-            // ---------------------------------------------------------------------------------------------------------
-
+      // Home API call
+      homeApiController
+          .homeApi(
+              uid: userid.toString(),
+              lat: lathome.toString(),
+              lon: longhome.toString())
+          .then((value) {
+        try {
+          if (homeApiController.homeapimodel?.categoryList?.isNotEmpty ==
+              true) {
             mid =
                 homeApiController.homeapimodel!.categoryList![0].id.toString();
             mroal = homeApiController.homeapimodel!.categoryList![0].role
                 .toString();
-            print("*****mid*-**:::::------$mid");
-            _iconPaths.clear();
-            vihicallocations.clear();
-            _iconPathsbiddingon.clear();
-            vihicallocationsbiddingon.clear();
 
-            pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
-                ? markers.clear()
-                : "";
-            pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
-                ? fun().then((value) {
+            var currency = preferences.getString("currenci");
+            if (currency != null) {
+              try {
+                currencyy = jsonDecode(currency);
+                globalcurrency = currencyy;
+              } catch (e) {
+                if (kDebugMode) {
+                  print("Error decoding currency: $e");
+                }
+              }
+            }
+
+            // Handle map data based on pickup/drop controller state
+            if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
+              // No pickup/drop selected - show normal vehicle locations
+              homeMapController
+                  .homemapApi(
+                      mid: mid,
+                      lat: lathome.toString(),
+                      lon: longhome.toString())
+                  .then((value) {
+                try {
+                  setState(() {});
+                  print("///:---  ${value?["Result"]}");
+
+                  if (value?["Result"] == false) {
+                    setState(() {
+                      vihicallocations.clear();
+                      markers.clear();
+                      _addMarkers();
+                      print("***if condition+++:---  $vihicallocations");
+                    });
+                  } else {
                     setState(() {});
-                    getCurrentLatAndLong(lathome, longhome);
-                    // _loadMapStyles();
-                    // socketConnect();
-                  })
-                : "";
+                    if (homeMapController.homeMapApiModel?.list != null) {
+                      vihicallocations.clear();
+                      _iconPaths.clear();
 
-            pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
-                ? homeMapController
-                    .homemapApi(
-                        mid: mid,
-                        lat: lathome.toString(),
-                        lon: longhome.toString())
-                    .then(
-                    (value) {
-                      setState(() {});
-                      print("///:---  ${value["Result"]}");
+                      for (int i = 0;
+                          i < homeMapController.homeMapApiModel!.list!.length;
+                          i++) {
+                        try {
+                          double lat = double.parse(homeMapController
+                              .homeMapApiModel!.list![i].latitude
+                              .toString());
+                          double lng = double.parse(homeMapController
+                              .homeMapApiModel!.list![i].longitude
+                              .toString());
 
-                      if (value["Result"] == false) {
-                        setState(() {
-                          vihicallocations.clear();
-                          markers.clear();
-                          _addMarkers();
-                          fun().then((value) {
-                            setState(() {});
-                            getCurrentLatAndLong(lathome, longhome);
-                            // socketConnect();
-                          });
-                          print("***if condition+++:---  $vihicallocations");
-                        });
-                      } else {
-                        setState(() {});
-                        for (int i = 0;
-                            i < homeMapController.homeMapApiModel!.list!.length;
-                            i++) {
-                          vihicallocations.add(LatLng(
-                              double.parse(homeMapController
-                                  .homeMapApiModel!.list![i].latitude
-                                  .toString()),
-                              double.parse(homeMapController
-                                  .homeMapApiModel!.list![i].longitude
-                                  .toString())));
+                          vihicallocations.add(LatLng(lat, lng));
                           _iconPaths.add(
                               "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                        } catch (e) {
+                          if (kDebugMode) {
+                            print("Error parsing vehicle location $i: $e");
+                          }
                         }
-                        _addMarkers();
                       }
+                      _addMarkers();
+                    }
+                  }
+                  print("******-**:::::------$vihicallocations");
+                } catch (e) {
+                  if (kDebugMode) {
+                    print("Error in homeMapApi (empty controllers): $e");
+                  }
+                }
+              }).catchError((error) {
+                if (kDebugMode) {
+                  print("Error in homeMapApi call (empty controllers): $error");
+                }
+              });
+            } else {
+              // Pickup/drop selected - show bidding vehicle locations
+              homeMapController
+                  .homemapApi(
+                      mid: mid,
+                      lat: lathome.toString(),
+                      lon: longhome.toString())
+                  .then((value) {
+                try {
+                  setState(() {});
+                  print("///:---  ${value?["Result"]}");
 
-                      print("******-**:::::------$vihicallocations");
-                    },
-                  )
-                : homeMapController
-                    .homemapApi(
-                        mid: mid,
-                        lat: lathome.toString(),
-                        lon: longhome.toString())
-                    .then(
-                    (value) {
-                      setState(() {});
-                      print("///:---  ${value["Result"]}");
+                  if (value?["Result"] == false) {
+                    setState(() {
+                      vihicallocationsbiddingon.clear();
+                      markers.clear();
+                      _addMarkers2();
+                      print(
+                          "***if condition+++:---  $vihicallocationsbiddingon");
+                    });
+                  } else {
+                    setState(() {});
+                    if (homeMapController.homeMapApiModel?.list != null) {
+                      vihicallocationsbiddingon.clear();
+                      _iconPathsbiddingon.clear();
 
-                      if (value["Result"] == false) {
-                        setState(() {
-                          vihicallocationsbiddingon.clear();
-                          markers.clear();
-                          _addMarkers2();
-                          print(
-                              "***if condition+++:---  $vihicallocationsbiddingon");
-                        });
-                      } else {
-                        setState(() {});
-                        for (int i = 0;
-                            i < homeMapController.homeMapApiModel!.list!.length;
-                            i++) {
-                          vihicallocationsbiddingon.add(LatLng(
-                              double.parse(homeMapController
-                                  .homeMapApiModel!.list![i].latitude
-                                  .toString()),
-                              double.parse(homeMapController
-                                  .homeMapApiModel!.list![i].longitude
-                                  .toString())));
+                      for (int i = 0;
+                          i < homeMapController.homeMapApiModel!.list!.length;
+                          i++) {
+                        try {
+                          double lat = double.parse(homeMapController
+                              .homeMapApiModel!.list![i].latitude
+                              .toString());
+                          double lng = double.parse(homeMapController
+                              .homeMapApiModel!.list![i].longitude
+                              .toString());
+
+                          vihicallocationsbiddingon.add(LatLng(lat, lng));
                           _iconPathsbiddingon.add(
                               "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                        } catch (e) {
+                          if (kDebugMode) {
+                            print(
+                                "Error parsing bidding vehicle location $i: $e");
+                          }
                         }
                       }
-
-                      print("******-**:::::------$vihicallocationsbiddingon");
-                    },
-                  );
-
-            calculateController
-                .calculateApi(
-                    context: context,
-                    uid: userid.toString(),
-                    mid: mid,
-                    mrole: mroal,
-                    pickup_lat_lon: "$latitudepick,$longitudepick",
-                    drop_lat_lon: "$latitudedrop,$longitudedrop",
-                    drop_lat_lon_list: onlypass)
-                .then(
-              (value) {
-                dropprice = 0;
-                minimumfare = 0;
-                maximumfare = 0;
-
-                if (value["Result"] == true) {
-                  tot_hour = value["tot_hour"].toString();
-                  tot_time = value["tot_minute"].toString();
-
-                  vihicalimage = value["vehicle"]["map_img"].toString();
-                  vihicalname = value["vehicle"]["name"].toString();
-
-                  setState(() {});
-                } else {
-                  amountresponse = "false";
-
-                  setState(() {});
+                      _addMarkers2();
+                    }
+                  }
+                  print("******-**:::::------$vihicallocationsbiddingon");
+                } catch (e) {
+                  if (kDebugMode) {
+                    print("Error in homeMapApi (with controllers): $e");
+                  }
                 }
-              },
-            );
+              }).catchError((error) {
+                if (kDebugMode) {
+                  print("Error in homeMapApi call (with controllers): $error");
+                }
+              });
+            }
 
-            // ---------------------------------------------------------------------------------------------------------
+            // Handle running rides
+            if (homeApiController.homeapimodel?.runnigRide?.isEmpty != false) {
+              // No running rides
+              if (kDebugMode) {
+                print("No running rides found");
+              }
+            } else if (homeApiController.homeapimodel!.runnigRide!.isNotEmpty) {
+              // Handle existing running ride
+              try {
+                var runningRide =
+                    homeApiController.homeapimodel!.runnigRide![0];
 
-            requesttime();
-            Buttonpresebottomshhet();
-            print(
-                "11111(calculateController.calCulateModel!.offerExpireTime)22222:- ${calculateController.calCulateModel!.offerExpireTime}");
-            print(
-                "11111(calculateController.calCulateModel!.driverId)22222:- ${calculateController.calCulateModel!.driverId}");
-          },
-        );
+                pickupcontroller.text =
+                    runningRide.pickAdd?.title?.toString() ?? "";
+                dropcontroller.text =
+                    runningRide.dropAdd?.title?.toString() ?? "";
+
+                if (runningRide.pickLatlon?.latitude != null) {
+                  latitudepick =
+                      double.parse(runningRide.pickLatlon!.latitude.toString());
+                }
+                if (runningRide.pickLatlon?.longitude != null) {
+                  longitudepick = double.parse(
+                      runningRide.pickLatlon!.longitude.toString());
+                }
+                if (runningRide.dropLatlon?.latitude != null) {
+                  latitudedrop =
+                      double.parse(runningRide.dropLatlon!.latitude.toString());
+                }
+                if (runningRide.dropLatlon?.longitude != null) {
+                  longitudedrop = double.parse(
+                      runningRide.dropLatlon!.longitude.toString());
+                }
+
+                maximumfare = runningRide.maximumFare;
+                minimumfare = runningRide.minimumFare;
+                dropprice = runningRide.price?.toString() ?? "0";
+                priceyourfare = runningRide.price ?? 0;
+                request_id = runningRide.id?.toString() ?? "";
+
+                picktitle = runningRide.pickAdd?.title?.toString() ?? "";
+                picksubtitle = runningRide.pickAdd?.subtitle?.toString() ?? "";
+                droptitle = runningRide.dropAdd?.title?.toString() ?? "";
+                dropsubtitle = runningRide.dropAdd?.subtitle?.toString() ?? "";
+
+                tot_hour = runningRide.totHour?.toString() ?? "0";
+                tot_time = runningRide.totMinute?.toString() ?? "0";
+                tot_secound = "0";
+
+                // Calculate API call for running ride
+                calculateController
+                    .calculateApi(
+                        context: context,
+                        uid: useridgloable.toString(),
+                        mid: mid,
+                        mrole: mroal,
+                        pickup_lat_lon: "$latitudepick,$longitudepick",
+                        drop_lat_lon: "$latitudedrop,$longitudedrop",
+                        drop_lat_lon_list: onlypass)
+                    .then((value) {
+                  try {
+                    print("CALCULATE DATA LOAD");
+
+                    if (runningRide.increasedTime != null) {
+                      calculateController.calCulateModel!.offerExpireTime =
+                          int.parse(runningRide.increasedTime.toString());
+                    }
+                    calculateController.calCulateModel!.driverId =
+                        runningRide.dId;
+
+                    isanimation = true;
+                    loadertimer = true;
+                    offerpluse = false;
+
+                    // Clear existing markers and locations
+                    mid = homeApiController.homeapimodel!.categoryList![0].id
+                        .toString();
+                    mroal = homeApiController
+                        .homeapimodel!.categoryList![0].role
+                        .toString();
+                    print("*****mid*-**:::::------$mid");
+
+                    _iconPaths.clear();
+                    vihicallocations.clear();
+                    _iconPathsbiddingon.clear();
+                    vihicallocationsbiddingon.clear();
+
+                    if (pickupcontroller.text.isEmpty ||
+                        dropcontroller.text.isEmpty) {
+                      markers.clear();
+                      fun().then((value) {
+                        setState(() {});
+                        getCurrentLatAndLong(lathome, longhome);
+                      });
+                    }
+
+                    // Additional calculate API call
+                    calculateController
+                        .calculateApi(
+                            context: context,
+                            uid: userid.toString(),
+                            mid: mid,
+                            mrole: mroal,
+                            pickup_lat_lon: "$latitudepick,$longitudepick",
+                            drop_lat_lon: "$latitudedrop,$longitudedrop",
+                            drop_lat_lon_list: onlypass)
+                        .then((value) {
+                      try {
+                        dropprice = 0;
+                        minimumfare = 0;
+                        maximumfare = 0;
+
+                        if (value?["Result"] == true) {
+                          tot_hour = value["tot_hour"]?.toString() ?? "0";
+                          tot_time = value["tot_minute"]?.toString() ?? "0";
+                          vihicalimage =
+                              value["vehicle"]?["map_img"]?.toString() ?? "";
+                          vihicalname =
+                              value["vehicle"]?["name"]?.toString() ?? "";
+                          setState(() {});
+                        } else {
+                          amountresponse = "false";
+                          setState(() {});
+                        }
+                      } catch (e) {
+                        if (kDebugMode) {
+                          print("Error in additional calculate API: $e");
+                        }
+                      }
+                    }).catchError((error) {
+                      if (kDebugMode) {
+                        print("Error in additional calculate API call: $error");
+                      }
+                    });
+
+                    requesttime();
+                    Buttonpresebottomshhet();
+
+                    print(
+                        "11111(calculateController.calCulateModel!.offerExpireTime)22222:- ${calculateController.calCulateModel!.offerExpireTime}");
+                    print(
+                        "11111(calculateController.calCulateModel!.driverId)22222:- ${calculateController.calCulateModel!.driverId}");
+                  } catch (e) {
+                    if (kDebugMode) {
+                      print("Error in running ride calculate API: $e");
+                    }
+                  }
+                }).catchError((error) {
+                  if (kDebugMode) {
+                    print("Error in running ride calculate API call: $error");
+                  }
+                });
+              } catch (e) {
+                if (kDebugMode) {
+                  print("Error processing running ride: $e");
+                }
+              }
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error in home API processing: $e");
+          }
+        }
+      }).catchError((error) {
+        if (kDebugMode) {
+          print("Error in home API call: $error");
+        }
+      });
+
+      // Socket event listeners with error handling
+      socket.on('home', (messaj) {
+        try {
+          print("++++++++++ :---  $messaj");
+          print("Vehicle is of type: ${messaj.runtimeType}");
+          print("Vehicle keys: ${messaj.keys}");
+
+          if (messaj != null &&
+              messaj['uid'] != null &&
+              messaj['lat'] != null &&
+              messaj['lon'] != null) {
+            homeApiController
+                .homeApi(
+                    uid: messaj['uid'].toString(),
+                    lat: messaj['lat'].toString(),
+                    lon: messaj['lon'].toString())
+                .then((value) {
+              try {
+                if (homeApiController.homeapimodel?.categoryList?.isNotEmpty ==
+                    true) {
+                  mid = homeApiController.homeapimodel!.categoryList![0].id
+                      .toString();
+                  mroal = homeApiController.homeapimodel!.categoryList![0].role
+                      .toString();
+                }
+              } catch (e) {
+                if (kDebugMode) {
+                  print("Error in home socket event API processing: $e");
+                }
+              }
+            }).catchError((error) {
+              if (kDebugMode) {
+                print("Error in home socket event API call: $error");
+              }
+            });
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error in 'home' socket event: $e");
+          }
+        }
+      });
+
+      List zonelist = [];
+
+      socket.on("Driver_location_On", (Driver_location_On) async {
+        try {
+          print("++++++ Driver_location_On ++++ :---  $Driver_location_On");
+
+          if (Driver_location_On != null &&
+              Driver_location_On["zone_list"] != null) {
+            zonelist = List.from(Driver_location_On["zone_list"]);
+
+            if (homeMapController.homeMapApiModel?.zoneId != null &&
+                zonelist.contains(homeMapController.homeMapApiModel!.zoneId)) {
+              if (Driver_location_On["latitude"] != null &&
+                  Driver_location_On["longitude"] != null &&
+                  Driver_location_On["id"] != null) {
+                try {
+                  LatLng postion = LatLng(
+                      double.parse(Driver_location_On["latitude"].toString()),
+                      double.parse(Driver_location_On["longitude"].toString()));
+
+                  if (Driver_location_On["image"] != null) {
+                    final Uint8List markIcon = await getNetworkImage(
+                        "${Config.imageurl}${Driver_location_On["image"]}");
+
+                    MarkerId markerId =
+                        MarkerId(Driver_location_On["id"].toString());
+                    Marker marker = Marker(
+                      markerId: markerId,
+                      icon: BitmapDescriptor.fromBytes(markIcon),
+                      position: postion,
+                    );
+                    markers[markerId] = marker;
+
+                    // Poline Marker Update Code
+                    final markerId1 =
+                        MarkerId(Driver_location_On["id"].toString());
+                    final marker1 = Marker(
+                      markerId: markerId1,
+                      position: postion,
+                      icon: BitmapDescriptor.fromBytes(markIcon),
+                    );
+                    markers11[markerId1] = marker1;
+                    setState(() {});
+                  }
+                } catch (e) {
+                  if (kDebugMode) {
+                    print("Error processing driver location: $e");
+                  }
+                }
+              }
+            } else {
+              print("<<<<<<<<<<else>>>>>>>>>>>> $zonelist");
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error in Driver_location_On: $e");
+          }
+        }
+      });
+
+      socket.on("Drive_location_Off", (Drive_location_Off) {
+        try {
+          print("++++++ Drive_location_Off ++++ :---  $Drive_location_Off");
+
+          if (Drive_location_Off != null) {
+            if (Drive_location_Off["zone_list"] != null) {
+              zonelist = List.from(Drive_location_Off["zone_list"]);
+            }
+
+            if (Drive_location_Off["id"] != null) {
+              MarkerId markerId = MarkerId(Drive_location_Off["id"].toString());
+              markers.remove(markerId);
+              markers11.remove(markerId);
+              setState(() {});
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error in Drive_location_Off: $e");
+          }
+        }
+      });
+
+      socket.on("Driver_location_Update", (Driver_location_Update) async {
+        try {
+          print(
+              "++++++ Driver_location_Update ++++ :---  $Driver_location_Update");
+
+          if (Driver_location_Update != null &&
+              Driver_location_Update["latitude"] != null &&
+              Driver_location_Update["longitude"] != null &&
+              Driver_location_Update["id"] != null) {
+            try {
+              LatLng postion = LatLng(
+                  double.parse(Driver_location_Update["latitude"].toString()),
+                  double.parse(Driver_location_Update["longitude"].toString()));
+
+              if (Driver_location_Update["image"] != null) {
+                final Uint8List markIcon = await getNetworkImage(
+                    "${Config.imageurl}${Driver_location_Update["image"]}");
+
+                MarkerId markerId =
+                    MarkerId(Driver_location_Update["id"].toString());
+                Marker marker = Marker(
+                  markerId: markerId,
+                  icon: BitmapDescriptor.fromBytes(markIcon),
+                  position: postion,
+                );
+
+                markers[markerId] = marker;
+                if (markers.containsKey(markerId)) {
+                  final Marker oldMarker = markers[markerId]!;
+                  final Marker updatedMarker = oldMarker.copyWith(
+                    positionParam: postion,
+                  );
+                  markers[markerId] = updatedMarker;
+                }
+
+                // Poline Marker Update Code
+                final markerId1 =
+                    MarkerId(Driver_location_Update["id"].toString());
+                final marker1 = Marker(
+                  markerId: markerId1,
+                  position: postion,
+                  icon: BitmapDescriptor.fromBytes(markIcon),
+                );
+                markers11[markerId1] = marker1;
+                if (markers11.containsKey(markerId1)) {
+                  final Marker oldMarker = markers11[markerId1]!;
+                  final Marker updatedMarker = oldMarker.copyWith(
+                    positionParam: postion,
+                  );
+                  markers11[markerId1] = updatedMarker;
+                }
+                setState(() {});
+              }
+            } catch (e) {
+              if (kDebugMode) {
+                print("Error updating driver location: $e");
+              }
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error in Driver_location_Update: $e");
+          }
+        }
+      });
+
+      socket.on("Vehicle_Bidding$userid", (Vehicle_Bidding) {
+        try {
+          print("++++++ Vehicle_Bidding ++++ :---  $Vehicle_Bidding");
+
+          if (Vehicle_Bidding != null &&
+              Vehicle_Bidding["bidding_list"] != null) {
+            vehicle_bidding_driver = List.from(Vehicle_Bidding["bidding_list"]);
+            vehicle_bidding_secounde = [];
+
+            for (int i = 0; i < vehicle_bidding_driver.length; i++) {
+              if (vehicle_bidding_driver[i]["diff_second"] != null) {
+                vehicle_bidding_secounde
+                    .add(vehicle_bidding_driver[i]["diff_second"]);
+              }
+            }
+
+            Get.back();
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const DriverListScreen()));
+
+            if (vehicle_bidding_driver.isEmpty) {
+              Get.back();
+              Buttonpresebottomshhet();
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error in Vehicle_Bidding: $e");
+          }
+        }
+      });
+
+      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
+        try {
+          socket.close();
+
+          print("++++++ /acceptvehrequest map/ ++++ :---  $acceptvehrequest");
+          print(
+              "acceptvehrequest is of type map: ${acceptvehrequest.runtimeType}");
+
+          isanimation = false;
+          isControllerDisposed = true;
+
+          if (controller != null && controller!.isAnimating) {
+            print("Disposing animation controller");
+            controller!.dispose();
+          }
+
+          loadertimer = true;
+
+          // Handle amount controller
+          if (amountcontroller.text.isNotEmpty) {
+            try {
+              vihicalrice = double.parse(amountcontroller.text);
+            } catch (e) {
+              if (kDebugMode) {
+                print("Error parsing amount: $e");
+              }
+            }
+          }
+
+          if (acceptvehrequest != null &&
+              acceptvehrequest["c_id"] != null &&
+              acceptvehrequest["c_id"]
+                  .toString()
+                  .contains(useridgloable.toString())) {
+            print("condition done");
+            driveridloader = false;
+            print("condition done1");
+            print("condition done0 ${context}");
+
+            if (acceptvehrequest["uid"] != null &&
+                acceptvehrequest["request_id"] != null) {
+              globalDriverAcceptClass.driverdetailfunction(
+                  context: context,
+                  lat: latitudepick,
+                  long: longitudepick,
+                  d_id: acceptvehrequest["uid"].toString(),
+                  request_id: acceptvehrequest["request_id"].toString());
+              print("condition done2");
+            }
+          } else {
+            print("condition not done");
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error in acceptvehrequest: $e");
+          }
+        }
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error in _connectSocket: $e");
       }
-    });
+    }
+  }
 
-    socket.on('home', (messaj) {
-      print("++++++++++ :---  $messaj");
-      print("Vehicle is of type: ${messaj.runtimeType}");
-      print("Vehicle keys: ${messaj.keys}");
-      // select1 = 0;
-      homeApiController
-          .homeApi(
-              uid: messaj['uid'].toString(),
-              lat: messaj['lat'].toString(),
-              lon: messaj['lon'].toString())
-          .then(
-        (value) {
-          mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
-          mroal =
-              homeApiController.homeapimodel!.categoryList![0].role.toString();
-        },
-      );
-    });
+// Helper methods for socket management and other files:
+  bool isSocketInitialized() {
+    return _socketInitialized;
+  }
 
-    List zonelist = [];
+  bool get socketReady => _socketInitialized && socket.connected;
 
-    socket.on("Driver_location_On", (Driver_location_On) async {
-      print("++++++ Driver_location_On ++++ :---  $Driver_location_On");
-
-      zonelist = Driver_location_On["zone_list"];
-
-      if (zonelist.contains(homeMapController.homeMapApiModel!.zoneId)) {
-        LatLng postion = LatLng(double.parse(Driver_location_On["latitude"]),
-            double.parse(Driver_location_On["longitude"]));
-        final Uint8List markIcon = await getNetworkImage(
-            "${Config.imageurl}${Driver_location_On["image"]}");
-        MarkerId markerId = MarkerId(Driver_location_On["id"].toString());
-        Marker marker = Marker(
-          markerId: markerId,
-          icon: BitmapDescriptor.fromBytes(markIcon),
-          // icon: _loadIcon,
-          position: postion,
-        );
-        markers[markerId] = marker;
-        // markers11[markerId] = marker;
-        setState(() {});
-
-        // Poline Marker Update Code
-
-        final markerId1 = MarkerId(Driver_location_On["id"].toString());
-        final marker1 = Marker(
-          markerId: markerId1,
-          // position: vihicallocationsbiddingon[i],
-          // position: LatLng(double.parse(homeMapController.homeMapApiModel!.list![i].latitude.toString()),double.parse(homeMapController.homeMapApiModel!.list![i].longitude.toString())),
-          position: postion,
-          icon: BitmapDescriptor.fromBytes(markIcon),
-        );
-        markers11[markerId1] = marker1;
-      } else {
-        print("<<<<<<<<<<else>>>>>>>>>>>> $zonelist");
+// Safe socket emit method for other files to use
+  void emitSocketEvent(String event, dynamic data) {
+    if (!isSocketInitialized()) {
+      if (kDebugMode) {
+        print("Socket not initialized, cannot emit: $event");
       }
-    });
+      return;
+    }
 
-    socket.on("Drive_location_Off", (Drive_location_Off) {
-      print("++++++ Drive_location_Off ++++ :---  $Drive_location_Off");
-
-      zonelist = Drive_location_Off["zone_list"];
-      MarkerId markerId = MarkerId(Drive_location_Off["id"].toString());
-    });
-
-    socket.on("Driver_location_Update", (Driver_location_Update) async {
-      print("++++++ Driver_location_Update ++++ :---  $Driver_location_Update");
-
-      LatLng postion = LatLng(double.parse(Driver_location_Update["latitude"]),
-          double.parse(Driver_location_Update["longitude"]));
-      final Uint8List markIcon = await getNetworkImage(
-          "${Config.imageurl}${Driver_location_Update["image"]}");
-
-      MarkerId markerId = MarkerId(Driver_location_Update["id"].toString());
-      Marker marker = Marker(
-        markerId: markerId,
-        icon: BitmapDescriptor.fromBytes(markIcon),
-        position: postion,
-      );
-      markers[markerId] = marker;
-      if (markers.containsKey(markerId)) {
-        final Marker oldMarker = markers[markerId]!;
-        final Marker updatedMarker = oldMarker.copyWith(
-          positionParam: postion,
-        );
-        markers[markerId] = updatedMarker;
-        setState(() {});
+    if (socket.connected) {
+      socket.emit(event, data);
+    } else {
+      if (kDebugMode) {
+        print("Socket not connected, cannot emit: $event");
       }
+    }
+  }
 
-      // Poline Marker Update Code
-
-      final markerId1 = MarkerId(Driver_location_Update["id"].toString());
-      final marker1 = Marker(
-        markerId: markerId1,
-        // position: vihicallocationsbiddingon[i],
-        // position: LatLng(double.parse(homeMapController.homeMapApiModel!.list![i].latitude.toString()),double.parse(homeMapController.homeMapApiModel!.list![i].longitude.toString())),
-        position: postion,
-        icon: BitmapDescriptor.fromBytes(markIcon),
-      );
-      markers11[markerId1] = marker1;
-      if (markers11.containsKey(markerId1)) {
-        final Marker oldMarker = markers11[markerId1]!;
-        final Marker updatedMarker = oldMarker.copyWith(
-          positionParam: postion,
-        );
-        markers11[markerId1] = updatedMarker;
-        setState(() {});
-      }
-    });
-
-    // {id: 14, profile_image: uploads/driver/17278697000221000029659.jpg, first_name: Pratik, last_name: Navapara, latitude: 21.2381916, longitude: 72.8879854, car_name: Bike, tot_review: 2, avg_star: 4, request_id: 1600, price: 500, tot_min: 0.07, tot_km: 2.1, diff_second: 59}
-    // {id: 3, profile_image: uploads/driver/1723093000931chris-benson-w8, first_name: test, last_name: patel, latitude: 21.2381972, longitude: 72.8880312, car_name: Bike, tot_review: 0, avg_star: 0, request_id: 1600, price: 23, tot_min: 0.07, tot_km: 2.11, diff_second: 48}
-    // {id: 14, profile_image: uploads/driver/17278697000221000029659.jpg, first_name: Pratik, last_name: Navapara, latitude: 21.2381916, longitude: 72.8879854, car_name: Bike, tot_review: 2, avg_star: 4, request_id: 1600, price: 500, tot_min: 0.07, tot_km: 2.1, diff_second: 10}
-
-    socket.on("Vehicle_Bidding$userid", (Vehicle_Bidding) {
-      print("++++++ Vehicle_Bidding ++++ :---  $Vehicle_Bidding");
-
-      vehicle_bidding_driver = Vehicle_Bidding["bidding_list"];
-      vehicle_bidding_secounde = [];
-
-      for (int i = 0; i < vehicle_bidding_driver.length; i++) {
-        vehicle_bidding_secounde
-            .add(Vehicle_Bidding["bidding_list"][i]["diff_second"]);
-      }
-
-      Get.back();
-      // controller.dispose();
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const DriverListScreen()));
-      vehicle_bidding_driver.isEmpty ? Get.back() : "";
-      vehicle_bidding_driver.isEmpty ? Buttonpresebottomshhet() : "";
-      // vehicle_bidding_driver.isEmpty ? Navigator.push(context, MaterialPageRoute(builder: (context) => const MapScreen())) : "";
-    });
-
-    socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
-      socket.close();
-
-      print("++++++ /acceptvehrequest map/ ++++ :---  $acceptvehrequest");
-      print("acceptvehrequest is of type map: ${acceptvehrequest.runtimeType}");
-      isanimation = false;
-      isControllerDisposed = true;
-      if (controller != null && controller!.isAnimating) {
-        print("vgvgvgvgvgvgvgvgvgvgv");
-        controller!.dispose();
-      }
-
-      loadertimer = true;
-
-      // amountcontroller.text.isEmpty ? "" :
-      try {
-        vihicalrice = double.parse(amountcontroller.text);
-      } catch (a) {
-        print("opopo:-- ${a}");
-      }
-
-      if (acceptvehrequest["c_id"]
-          .toString()
-          .contains(useridgloable.toString())) {
-        print("condition done");
-        driveridloader == false;
-        print("condition done1");
-        print("condition done0 ${context}");
-        globalDriverAcceptClass.driverdetailfunction(
-            context: context,
-            lat: latitudepick,
-            long: longitudepick,
-            d_id: acceptvehrequest["uid"].toString(),
-            request_id: acceptvehrequest["request_id"].toString());
-        print("condition done2");
-      } else {
-        print("condition not done");
-      }
+// Methods that other files are using - keep them working:
+  void socateempt() {
+    emitSocketEvent('vehiclerequest', {
+      'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
+      'driverid': calculateController.calCulateModel!.driverId!,
     });
   }
 
+  void socateemptrequesttimeout() {
+    emitSocketEvent('Vehicle_Ride_Cancel', {
+      'uid': "$useridgloable",
+      'driverid': calculateController.calCulateModel!.driverId!,
+    });
+  }
+
+// Add this to your dispose method:
+  @override
+  void dispose() {
+    if (_socketInitialized) {
+      try {
+        socket.dispose();
+      } catch (e) {
+        if (kDebugMode) {
+          print("Error disposing socket: $e");
+        }
+      }
+      _socketInitialized = false;
+    }
+    super.dispose();
+  }
+
+// For other files that need to emit socket events, create helper methods:
+// These methods can be called from other files safely
+
+  void emitVehicleRideCancel(String uid, List driverid) {
+    emitSocketEvent('Vehicle_Ride_Cancel', {
+      'uid': uid,
+      'driverid': driverid,
+    });
+  }
+
+  void emitVehiclePaymentChange(String userid, String dId, int paymentId) {
+    emitSocketEvent('Vehicle_P_Change', {
+      'userid': userid,
+      'd_id': dId,
+      'payment_id': paymentId,
+    });
+  }
+
+  void emitVehicleRideComplete(String dId, String requestId) {
+    emitSocketEvent('Vehicle_Ride_Complete', {
+      'd_id': dId,
+      'request_id': requestId,
+    });
+  }
+
+  void emitSendChat(
+      String senderId, String receiverId, String message, String status) {
+    emitSocketEvent('Send_Chat', {
+      'sender_id': senderId,
+      'recevier_id': receiverId,
+      'message': message,
+      'status': status,
+    });
+  }
+
+  void emitAcceptBidding(
+      String uid, String dId, String requestId, String price) {
+    emitSocketEvent('Accept_Bidding', {
+      'uid': uid,
+      'd_id': dId,
+      'request_id': requestId,
+      'price': price,
+    });
+  }
+
+  void emitVehicleRequest(String requestId, List driverId, String cId) {
+    emitSocketEvent('vehiclerequest', {
+      'requestid': requestId,
+      'driverid': driverId,
+      'c_id': cId,
+    });
+  }
+
+  void emitVehicleTimeRequest(String uid, String dId) {
+    emitSocketEvent('Vehicle_Time_Request', {
+      'uid': uid,
+      'd_id': dId,
+    });
+  }
+
+// IMPORTANT: Usage instructions for other files
+/*
+TO USE SOCKET IN OTHER FILES:
+
+1. Get reference to MapScreen (where socket is initialized)
+2. Use the helper methods instead of direct socket access
+
+Example in other files:
+
+// In ride_complete_payment_screen.dart:
+// Instead of: socket.emit('Vehicle_P_Change', {...});
+// Use: mapScreenInstance.emitVehiclePaymentChange(userid, driver_id, payment);
+
+// In chat_screen.dart:
+// Instead of: socket.emit('Send_Chat', {...});
+// Use: mapScreenInstance.emitSendChat(senderId, receiverId, message, status);
+
+// In driver_list_screen.dart:
+// Instead of: socket.emit('Accept_Bidding', {...});
+// Use: mapScreenInstance.emitAcceptBidding(uid, dId, requestId, price);
+
+ALTERNATIVE APPROACH:
+Create a global variable for MapScreen reference:
+
+// At the top of your app (main.dart or globals):
+MapScreenState? globalMapScreen;
+
+// In MapScreen initState():
+globalMapScreen = this;
+
+// In other files:
+globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
+*/
   late Timer timer;
 
   bool isTimerRunning = false;
@@ -1192,184 +1623,296 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    // initPlatformState(context: context);
-    // Buttonpresebottomshhet();
 
-    if (widget.selectvihical == true) {
-      print("TRUETRUETRUTRUETRUETRUETRUETRUEWTRUWEUETEWUETRUETR");
-      select1 = 0;
-      homeApiController
-          .homeApi(
-              uid: userid.toString(),
-              lat: lathome.toString(),
-              lon: longhome.toString())
-          .then(
-        (value) {
-          mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
-          mroal =
-              homeApiController.homeapimodel!.categoryList![0].role.toString();
-
-          calculateController
-              .calculateApi(
-                  context: context,
-                  uid: userid.toString(),
-                  mid: mid,
-                  mrole: mroal,
-                  pickup_lat_lon: "$latitudepick,$longitudepick",
-                  drop_lat_lon: "$latitudedrop,$longitudedrop",
-                  drop_lat_lon_list: onlypass)
-              .then(
-            (value) {
-              dropprice = 0;
-              minimumfare = 0;
-              maximumfare = 0;
-
-              if (value["Result"] == true) {
-                amountresponse = "true";
-                dropprice = value["drop_price"];
-                minimumfare = value["vehicle"]["minimum_fare"];
-                maximumfare = value["vehicle"]["maximum_fare"];
-                responsemessage = value["message"];
-
-                tot_hour = value["tot_hour"].toString();
-                tot_time = value["tot_minute"].toString();
-                vehicle_id = value["vehicle"]["id"].toString();
-                vihicalrice = double.parse(value["drop_price"].toString());
-                totalkm = double.parse(value["tot_km"].toString());
-                tot_secound = "0";
-
-                vihicalimage = value["vehicle"]["map_img"].toString();
-                vihicalname = value["vehicle"]["name"].toString();
-
-                setState(() {});
-              } else {
-                amountresponse = "false";
-                print("jojojojojojojojojojojojojojojojojojojojojojojojo");
-                setState(() {});
-              }
-
-              print("********** dropprice **********:----- $dropprice");
-              print("********** minimumfare **********:----- $minimumfare");
-              print("********** maximumfare **********:----- $maximumfare");
-            },
-          );
-        },
-      );
+    if (kDebugMode) {
+      print("DURATION SECOUNDE : - $durationInSeconds");
     }
 
+    // Initialize basic components first
     if (controller == null || !controller!.isAnimating) {
-      print("DURATION SECOUNDE : - ${durationInSeconds}");
       controller = AnimationController(
         duration: Duration(seconds: durationInSeconds),
         vsync: this,
       );
     }
 
-    // if(backbottomshet == true){
-    //   Buttonpresebottomshhet();
-    //   backbottomshet = false;
-    // }
-
-    // latitudepick = -13.1730189;
-    // longitudepick = -74.2070853;
-    // latitudedrop = -13.165876;
-    // longitudedrop = -74.21582719999999;
-    // pickupcontroller.text = "Ministerio de Agricultura, Avenida 9 de Diciembre, Miraflores, San Juan Bautista 05002, Peru";
-    // dropcontroller.text = "Ministerio de Agricultura, Avenida 9 de Diciembre, Miraflores, San Juan Bautista 05002, Peru";
-    // minimumfare = "20";
-    // maximumfare = "20";
-    // amountcontroller.text = "30";
-    // print("PICKUP LAT :- ${latitudepick}");
-    // print("PICKUP LONG :- ${longitudepick}");
-    // print("DROP LAT :- ${latitudedrop}");
-    // print("DROP LONG :- ${longitudedrop}");
-    // print("dropcontroller :- ${pickupcontroller}");
-    // print("dropcontroller :- ${dropcontroller}");
-    // print("minimumfare :- ${minimumfare}");
-    // print("maximumfare :- ${maximumfare}");
-    // print("amountcontroller.text :- ${amountcontroller.text}");
-
     mapThemeStyle(context: context);
     isControllerDisposed = false;
     plusetimer = "";
 
-    calculateController
-        .calculateApi(
-            context: context,
-            uid: useridgloable.toString(),
-            mid: mid,
-            mrole: mroal,
-            pickup_lat_lon: "$latitudepick,$longitudepick",
-            drop_lat_lon: "$latitudedrop,$longitudedrop",
-            drop_lat_lon_list: onlypass)
-        .then(
-      (value) {
-        print("eeeeeeeeeeeeee");
-      },
-    );
-
-    setState(() {});
-
-    fun().then((value) {
-      setState(() {});
-      getCurrentLatAndLong(lathome, longhome);
-      // _loadMapStyles();
-      socketConnect();
-    });
-
-    paymentGetApiController.paymentlistApi(context).then(
-      (value) {
-        for (int i = 1;
-            i < paymentGetApiController.paymentgetwayapi!.paymentList!.length;
-            i++) {
-          if (int.parse(paymentGetApiController.paymentgetwayapi!.defaultPayment
-                  .toString()) ==
-              paymentGetApiController.paymentgetwayapi!.paymentList![i].id) {
-            setState(() {
-              payment =
-                  paymentGetApiController.paymentgetwayapi!.paymentList![i].id!;
-              paymentname = paymentGetApiController
-                  .paymentgetwayapi!.paymentList![i].name!;
-              print("+++++$payment");
-              print("+++++$i");
-            });
-          }
-        }
-      },
-    );
-
+    // Initialize drop off points
     _dropOffPoints = [];
-    // _pickupPoint = LatLng(widget.latpic, widget.longpic);
-    // _dropPoint = LatLng(widget.latdrop, widget.longdrop);
     _dropOffPoints = destinationlat;
-    print("****////***:-----  $_dropOffPoints");
-
-    /// origin marker
-    _addMarker11(LatLng(latitudepick, longitudepick), "origin",
-        BitmapDescriptor.defaultMarker);
-
-    /// destination marker
-    _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
-        BitmapDescriptor.defaultMarkerWithHue(90));
-
-    for (int a = 0; a < _dropOffPoints.length; a++) {
-      _addMarker3("destination");
+    if (kDebugMode) {
+      print("****////***:-----  $_dropOffPoints");
     }
 
-    getDirections11(
-        lat1: PointLatLng(latitudepick, longitudepick),
-        lat2: PointLatLng(latitudedrop, longitudedrop),
-        dropOffPoints: _dropOffPoints);
-
-    pagelistcontroller.pagelistttApi(context);
+    // CRITICAL: Load user data FIRST, then call APIs
+    initializeApp();
   }
 
-  @override
-  void dispose() {
-    socket.dispose();
-    super.dispose();
+// New method to handle proper initialization order:
+  Future<void> initializeApp() async {
+    try {
+      // Step 1: Load user data first
+      await loadUserData();
+
+      if (userid == null) {
+        if (kDebugMode) {
+          print("User not logged in, redirecting to login");
+        }
+        Get.offAll(() => const OnboardingScreen());
+        return;
+      }
+
+      // Step 2: Initialize location and socket
+      await fun();
+      setState(() {});
+      getCurrentLatAndLong(lathome, longhome);
+
+      // Step 3: Initialize socket with user data
+      await socketConnect();
+
+      // Step 4: Now make API calls that need user data
+      makeInitialAPICalls();
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error in initializeApp: $e");
+      }
+      // Don't force logout for initialization errors
+    }
+  }
+
+// Load user data without socket
+  Future<void> loadUserData() async {
+    try {
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      var uid = preferences.getString("userLogin");
+      var currency = preferences.getString("currenci");
+
+      if (uid == null) {
+        if (kDebugMode) {
+          print("No user login data found");
+        }
+        throw Exception("No user data");
+      }
+
+      // Decode user data
+      decodeUid = jsonDecode(uid);
+      if (currency != null) {
+        currencyy = jsonDecode(currency);
+      } else {
+        currencyy = {};
+        if (kDebugMode) {
+          print("Warning: Currency data not found, using default");
+        }
+      }
+
+      // Set user variables
+      userid = decodeUid['id'];
+      username = decodeUid["name"] ?? "";
+      useridgloable = decodeUid['id'];
+
+      if (kDebugMode) {
+        print("User data loaded successfully:");
+        print("userid: $userid");
+        print("username: $username");
+        print("useridgloable: $useridgloable");
+      }
+
+      setState(() {});
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error loading user data: $e");
+      }
+      throw e;
+    }
+  }
+
+// Make API calls that need user data - ONLY after user data is loaded
+  void makeInitialAPICalls() {
+    if (userid == null) {
+      if (kDebugMode) {
+        print("Cannot make API calls - userid is null");
+      }
+      return;
+    }
+
+    if (kDebugMode) {
+      print("Making initial API calls with userid: $userid");
+    }
+
+    // Payment API call
+    paymentGetApiController.paymentlistApi(context).then((value) {
+      try {
+        if (paymentGetApiController.paymentgetwayapi?.paymentList != null) {
+          for (int i = 1;
+              i < paymentGetApiController.paymentgetwayapi!.paymentList!.length;
+              i++) {
+            if (int.parse(paymentGetApiController
+                    .paymentgetwayapi!.defaultPayment
+                    .toString()) ==
+                paymentGetApiController.paymentgetwayapi!.paymentList![i].id) {
+              setState(() {
+                payment = paymentGetApiController
+                    .paymentgetwayapi!.paymentList![i].id!;
+                paymentname = paymentGetApiController
+                    .paymentgetwayapi!.paymentList![i].name!;
+                if (kDebugMode) {
+                  print("+++++payment: $payment");
+                  print("+++++index: $i");
+                }
+              });
+            }
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print("Error processing payment data: $e");
+        }
+      }
+    }).catchError((error) {
+      if (kDebugMode) {
+        print("Error in payment API: $error");
+      }
+    });
+
+    // Page list API call
+    pagelistcontroller.pagelistttApi(context);
+
+    // Handle widget.selectvihical case
+    if (widget.selectvihical == true) {
+      if (kDebugMode) {
+        print("selectvihical is true - calling homeApi and calculateApi");
+      }
+      select1 = 0;
+
+      homeApiController
+          .homeApi(
+              uid: userid.toString(),
+              lat: lathome.toString(),
+              lon: longhome.toString())
+          .then((value) {
+        try {
+          if (homeApiController.homeapimodel?.categoryList?.isNotEmpty ==
+              true) {
+            mid =
+                homeApiController.homeapimodel!.categoryList![0].id.toString();
+            mroal = homeApiController.homeapimodel!.categoryList![0].role
+                .toString();
+
+            // Now call calculateApi with proper user data
+            calculateController
+                .calculateApi(
+                    context: context,
+                    uid: userid.toString(), // Now this has a proper value
+                    mid: mid,
+                    mrole: mroal,
+                    pickup_lat_lon: "$latitudepick,$longitudepick",
+                    drop_lat_lon: "$latitudedrop,$longitudedrop",
+                    drop_lat_lon_list: onlypass)
+                .then((value) {
+              try {
+                dropprice = 0;
+                minimumfare = 0;
+                maximumfare = 0;
+
+                if (value?["Result"] == true) {
+                  amountresponse = "true";
+                  dropprice = value["drop_price"];
+                  minimumfare = value["vehicle"]["minimum_fare"];
+                  maximumfare = value["vehicle"]["maximum_fare"];
+                  responsemessage = value["message"];
+
+                  tot_hour = value["tot_hour"]?.toString() ?? "0";
+                  tot_time = value["tot_minute"]?.toString() ?? "0";
+                  vehicle_id = value["vehicle"]["id"]?.toString() ?? "";
+                  vihicalrice =
+                      double.parse(value["drop_price"]?.toString() ?? "0");
+                  totalkm = double.parse(value["tot_km"]?.toString() ?? "0");
+                  tot_secound = "0";
+
+                  vihicalimage = value["vehicle"]["map_img"]?.toString() ?? "";
+                  vihicalname = value["vehicle"]["name"]?.toString() ?? "";
+
+                  setState(() {});
+                } else {
+                  amountresponse = "false";
+                  if (kDebugMode) {
+                    print("Calculate API returned false result");
+                  }
+                  setState(() {});
+                }
+
+                if (kDebugMode) {
+                  print("********** dropprice **********:----- $dropprice");
+                  print("********** minimumfare **********:----- $minimumfare");
+                  print("********** maximumfare **********:----- $maximumfare");
+                }
+              } catch (e) {
+                if (kDebugMode) {
+                  print("Error processing calculate API response: $e");
+                }
+              }
+            }).catchError((error) {
+              if (kDebugMode) {
+                print("Error in calculate API call: $error");
+              }
+            });
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error processing home API response: $e");
+          }
+        }
+      }).catchError((error) {
+        if (kDebugMode) {
+          print("Error in home API call: $error");
+        }
+      });
+    }
+
+    // Setup map markers after location is loaded
+    setupMapMarkers();
+  }
+
+// Setup map markers
+  void setupMapMarkers() {
+    try {
+      // Add markers only if coordinates are valid
+      if (latitudepick != 0.0 && longitudepick != 0.0) {
+        /// origin marker
+        _addMarker11(LatLng(latitudepick, longitudepick), "origin",
+            BitmapDescriptor.defaultMarker);
+      }
+
+      if (latitudedrop != 0.0 && longitudedrop != 0.0) {
+        /// destination marker
+        _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
+            BitmapDescriptor.defaultMarkerWithHue(90));
+      }
+
+      // Add drop-off point markers
+      for (int a = 0; a < _dropOffPoints.length; a++) {
+        _addMarker3("destination");
+      }
+
+      // Get directions if we have valid coordinates
+      if (latitudepick != 0.0 &&
+          longitudepick != 0.0 &&
+          latitudedrop != 0.0 &&
+          longitudedrop != 0.0) {
+        getDirections11(
+            lat1: PointLatLng(latitudepick, longitudepick),
+            lat2: PointLatLng(latitudedrop, longitudedrop),
+            dropOffPoints: _dropOffPoints);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error setting up map markers: $e");
+      }
+    }
   }
 
   // Poliline Map Code
@@ -1984,17 +2527,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   void _refreshPage() {
     setState(() {});
-  }
-
-  socateempt() {
-    print("SOCATE SCOCATDFJH");
-    socket.emit('vehiclerequest', {
-      // 'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
-      'requestid': request_id,
-      'driverid': calculateController.calCulateModel!.driverId,
-      'c_id': useridgloable
-    });
-    print("datadatatdatadtad:- ${socket}");
   }
 
   socatloadbidinfdata() {
@@ -3020,16 +3552,30 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                           ),
                                         ),
                                       ),
-                                homeApiController.homeapimodel!
-                                            .categoryList![select1].bidding ==
-                                        "1"
-                                    ? const SizedBox(
-                                        height: 10,
-                                      )
+                                (homeApiController.homeapimodel?.categoryList
+                                                ?.isNotEmpty ==
+                                            true &&
+                                        select1 <
+                                            homeApiController.homeapimodel!
+                                                .categoryList!.length &&
+                                        homeApiController
+                                                .homeapimodel!
+                                                .categoryList![select1]
+                                                .bidding ==
+                                            "1")
+                                    ? const SizedBox(height: 10)
                                     : const SizedBox(),
-                                homeApiController.homeapimodel!
-                                            .categoryList![select1].bidding ==
-                                        "1"
+                                (homeApiController.homeapimodel?.categoryList
+                                                ?.isNotEmpty ==
+                                            true &&
+                                        select1 <
+                                            homeApiController.homeapimodel!
+                                                .categoryList!.length &&
+                                        homeApiController
+                                                .homeapimodel!
+                                                .categoryList![select1]
+                                                .bidding ==
+                                            "1")
                                     ? Padding(
                                         padding: const EdgeInsets.only(
                                             left: 20, right: 20),

@@ -1,12 +1,11 @@
 import 'dart:convert';
-
+import 'package:flutter/foundation.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/common_code/config.dart';
-
+import 'package:qareeb/common_code/http_helper.dart';
 import '../api_model/home_api_model.dart';
 
 class HomeApiController extends GetxController implements GetxService {
@@ -15,47 +14,85 @@ class HomeApiController extends GetxController implements GetxService {
 
   Future homeApi(
       {required String uid, required String lat, required String lon}) async {
-    Map body = {"uid": uid, "lat": lat, "lon": lon};
+    try {
+      Map body = {"uid": uid, "lat": lat, "lon": lon};
 
-    Map<String, String> userHeader = {
-      "Content-type": "application/json",
-      "Accept": "application/json"
-    };
+      Map<String, String> userHeader = {
+        "Content-type": "application/json",
+        "Accept": "application/json"
+      };
 
-    var response = await http.post(Uri.parse(Config.baseurl + Config.home),
-        body: jsonEncode(body), headers: userHeader);
+      String url = Config.baseurl + Config.home;
 
-    print('- - - - -  home - - - - - - ${response.body}');
+      if (kDebugMode) {
+        print('Home API URL: $url');
+        print('Home API Body: $body');
+      }
 
-    var data = jsonDecode(response.body);
+      var response = await HttpHelper.post(url,
+              body: jsonEncode(body), headers: userHeader)
+          .timeout(Duration(seconds: 30));
 
-    if (response.statusCode == 200) {
-      if (data["Result"] == true) {
-        homeapimodel = homeModelFromJson(response.body);
-        if (homeapimodel!.result == true) {
-          SharedPreferences preferences = await SharedPreferences.getInstance();
-          preferences.setString(
-              "currenci", jsonEncode(data["general"]["site_currency"]));
-          // preferences.setString("plateformfee", jsonEncode(data["plaform_free"]));
+      if (kDebugMode) {
+        print('Home API Response Status: ${response.statusCode}');
+        print('Home API Response Body: ${response.body}');
+      }
 
-          isLoading = false;
-          update();
-          return data;
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+
+        if (data["Result"] == true) {
+          homeapimodel = homeModelFromJson(response.body);
+          if (homeapimodel!.result == true) {
+            SharedPreferences preferences =
+                await SharedPreferences.getInstance();
+            if (data["general"]?["site_currency"] != null) {
+              preferences.setString(
+                  "currenci", jsonEncode(data["general"]["site_currency"]));
+            }
+
+            isLoading = false;
+            update();
+            return data;
+          } else {
+            Fluttertoast.showToast(msg: "${homeapimodel!.message}");
+            return data;
+          }
         } else {
-          Fluttertoast.showToast(
-            msg: "${homeapimodel!.message}",
-          );
-          return data;
+          Fluttertoast.showToast(msg: "${data["message"]}");
+          return null;
         }
       } else {
+        if (kDebugMode) {
+          print('Home API HTTP Error: ${response.statusCode}');
+        }
         Fluttertoast.showToast(
-          msg: "${data["message"]}",
-        );
+            msg:
+                "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
+        return null;
       }
-    } else {
-      Fluttertoast.showToast(
-        msg: "Somthing went wrong!.....",
-      );
+    } catch (e) {
+      if (kDebugMode) {
+        print("Home API Error: $e");
+      }
+
+      String errorMessage = "فشل الاتصال"; // "Connection failed"
+      if (e.toString().contains('Failed host lookup')) {
+        errorMessage =
+            "لا يمكن الوصول إلى الخادم. تحقق من اتصال الإنترنت."; // "Server not reachable. Check your internet connection."
+      } else if (e.toString().contains('CERTIFICATE_VERIFY_FAILED')) {
+        errorMessage =
+            "خطأ في شهادة الأمان. جاري استخدام تجاوز الشهادة المؤقتة."; // "SSL Certificate error. Using self-signed certificate bypass."
+      } else if (e.toString().contains('TimeoutException')) {
+        errorMessage =
+            "انتهت مهلة الطلب. حاول مرة أخرى."; // "Request timeout. Please try again."
+      } else {
+        errorMessage =
+            "حدث خطأ ما. حاول مرة أخرى."; // "Something went wrong. Please try again."
+      }
+
+      Fluttertoast.showToast(msg: errorMessage);
+      return null;
     }
   }
 }

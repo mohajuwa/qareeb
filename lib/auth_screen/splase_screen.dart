@@ -64,7 +64,7 @@ class _Splase_ScreenState extends State<Splase_Screen> {
             Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => Permission_screen(),
+                  builder: (context) => PermissionScreen(),
                 ),
                 (route) => false);
           } else {

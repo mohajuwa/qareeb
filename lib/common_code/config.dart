@@ -23,7 +23,7 @@ class Config {
   static String home = '/customer/home';
   static String calculate = '/customer/calculate';
   static String modualcalculate = '/customer/module_calculate';
-  static String payment = '/payment/coupon_payment';
+  static String payment = '/customer/coupon_payment';
   static String vehicalcancelreason = '/customer/vehicle_cancel_reason';
   static String walletreportapi = '/customer/wallet';
   static String walletupapi = '/customer/add_wallet';
