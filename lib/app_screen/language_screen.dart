@@ -106,7 +106,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
                         });
                         Get.updateLocale(const Locale('en', 'English'));
                         Get.changeTheme(ThemeData(
-                          fontFamily: 'SofiaRegular',
+                          fontFamily: 'Khebrat',
                           useMaterial3: false,
                           splashColor: Colors.transparent,
                           hoverColor: Colors.transparent,

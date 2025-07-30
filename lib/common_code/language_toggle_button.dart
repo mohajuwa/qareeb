@@ -41,7 +41,7 @@ class _LanguageToggleButtonState extends State<LanguageToggleButton> {
       // Switch to English
       Get.updateLocale(const Locale('en', 'English'));
       Get.changeTheme(ThemeData(
-        fontFamily: 'SofiaRegular',
+        fontFamily: 'Khebrat',
         useMaterial3: false,
         splashColor: Colors.transparent,
         hoverColor: Colors.transparent,
