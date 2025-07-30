@@ -176,12 +176,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // late Animation<Color?> colorAnimation;
 
   // socate code
-
   socketConnect() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     var uid = preferences.getString("userLogin");
-
+    var currency = preferences.getString("currenci");
     decodeUid = jsonDecode(uid!);
+    currencyy = jsonDecode(currency!);
 
     userid = decodeUid['id'];
     username = decodeUid["name"];
@@ -192,10 +192,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     setState(() {});
 
-    socket = IO.io(Config.imageurl, <String, dynamic>{
+    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
       'autoConnect': false,
       'transports': ['websocket'],
+      'extraHeaders': {'Accept': '*/*'},
+      'timeout': 30000,
+      'forceNew': true,
     });
+
     socket.connect();
 
     socket.onConnect((_) {

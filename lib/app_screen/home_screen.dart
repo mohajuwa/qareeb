@@ -80,261 +80,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<PointLatLng> _dropOffPoints = [];
 
-  // void driverdetailfunction({required String d_id,required String request_id}) {
-  //   vihicalDriverDetailApiController.vihicaldriverdetailapi(driver_list: vihicalCalculateController.vihicalCalculateModel!.driverId!,uid: userid.toString(), d_id: d_id, request_id: request_id).then((value) {
-  //
-  //     print("/////////value///:-- $value");
-  //
-  //     setState(() {
-  //
-  //     });
-  //
-  //
-  //     if(value["Result"] == true){
-  //       tot_hour = value["accepted_d_detail"]["tot_hour"].toString();
-  //       tot_time = value["accepted_d_detail"]["tot_minute"].toString();
-  //       timeincressstatus = value["accepted_d_detail"]["status"].toString();
-  //       print("-----timeincressstatus---:-- ${timeincressstatus}");
-  //
-  //       // print("**************************:--- (${tot_hour})");
-  //       // print("**************************:--- (${tot_time})");
-  //       // print("************toString**************:--- (${value["accepted_d_detail"]["tot_hour"]})");
-  //       // print("***********toString***************:--- (${value["accepted_d_detail"]["tot_hour"]})");
-  //
-  //       socket.emit('AcceRemoveOther',{
-  //         'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
-  //         'driverid' : value["driverlist"],
-  //       });
-  //       Get.back();
-  //       Get.bottomSheet(
-  //           isDismissible: false,
-  //           enableDrag: false,
-  //           StatefulBuilder(builder: (context, setState) {
-  //             return Stack(
-  //               clipBehavior: Clip.none,
-  //               children: [
-  //                 GetBuilder<VihicalDriverDetailApiController>(builder: (vihicalDriverDetailApiController) {
-  //                   return Container(
-  //                     height: 400,
-  //                     width: Get.width,
-  //                     decoration: const BoxDecoration(
-  //                       color: Colors.white,
-  //                       borderRadius:  BorderRadius.only(topLeft: Radius.circular(15),topRight: Radius.circular(15)),
-  //                     ),
-  //                     child: Padding(
-  //                       padding: const EdgeInsets.only(left: 15,right: 15),
-  //                       child: SingleChildScrollView(
-  //                         child: Column(
-  //                           mainAxisAlignment: MainAxisAlignment.start,
-  //                           crossAxisAlignment: CrossAxisAlignment.center,
-  //                           children: [
-  //                             const SizedBox(height: 10,),
-  //                             Row(
-  //                               crossAxisAlignment: CrossAxisAlignment.center,
-  //                               mainAxisAlignment: MainAxisAlignment.center,
-  //                               children: [
-  //                                 Container(
-  //                                   height: 5,
-  //                                   width: 50,
-  //                                   decoration: BoxDecoration(
-  //                                     color: Colors.grey.withOpacity(0.4),
-  //                                     borderRadius: BorderRadius.circular(10),
-  //                                   ),
-  //                                 ),
-  //                               ],
-  //                             ),
-  //                             const SizedBox(height: 10,),
-  //                             Row(
-  //                               children: [
-  //
-  //                                 if(vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.status == "1")
-  //                                   const Text("Captain on the way",style: TextStyle(color: Colors.black,fontSize: 18),)
-  //                                 else if(vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.status == "2")
-  //                                   Column(
-  //                                     crossAxisAlignment: CrossAxisAlignment.start,
-  //                                     children: [
-  //                                       const Text("Captain has arrived",style: TextStyle(color: Colors.black,fontSize: 18),),
-  //                                        Text("Free wait time of ${tot_time} mins has started.",style: const TextStyle(color: Colors.black,fontSize: 12),),
-  //                                     ],
-  //                                   )
-  //                                 else if(vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.status == "3")
-  //                                     const Text("Heading to the destination",style: TextStyle(color: Colors.black,fontSize: 18),),
-  //
-  //
-  //
-  //                                 const Spacer(),
-  //                                 // Container(
-  //                                 //   height: 40,
-  //                                 //   width: 80,
-  //                                 //   decoration: BoxDecoration(
-  //                                 //       color: theamcolore,
-  //                                 //       borderRadius: BorderRadius.circular(30),
-  //                                 //   ),
-  //                                 //   child: Center(child: Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.pickupTime}",style: const TextStyle(color: Colors.white),),),
-  //                                 // ),
-  //                                 TimerScreen(hours: int.parse(tot_hour),minutes: int.parse(tot_time)-1,),
-  //                               ],
-  //                             ),
-  //                             const Divider(color: Colors.black,),
-  //                             Row(
-  //                               children: [
-  //                                 const Text("Start your order with PIN"),
-  //                                 // Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.otp}"),
-  //                                 const Spacer(),
-  //
-  //                                 for(int i=0; i<4; i++)
-  //                                   Padding(
-  //                                     padding: const EdgeInsets.only(left: 4.0),
-  //                                     child: Container(
-  //                                       height: 35,
-  //                                       width: 30,
-  //                                       decoration: BoxDecoration(
-  //                                         border: Border.all(color: Colors.grey),
-  //                                         borderRadius: BorderRadius.circular(10),
-  //                                       ),
-  //                                       child: Center(child: Text(vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.otp![i]),),
-  //                                     ),
-  //                                   )
-  //
-  //                               ],
-  //                             ),
-  //                             const SizedBox(height: 10,),
-  //                             Container(
-  //                               decoration: BoxDecoration(
-  //                                   color: greaycolore,
-  //                                   borderRadius: BorderRadius.circular(10)
-  //                               ),
-  //                               child: Padding(
-  //                                 padding: const EdgeInsets.all(8.0),
-  //                                 child: Column(
-  //                                   children: [
-  //                                     ListTile(
-  //                                       isThreeLine: true,
-  //                                       contentPadding: EdgeInsets.zero,
-  //                                       title: Column(
-  //                                         crossAxisAlignment: CrossAxisAlignment.start,
-  //                                         children: [
-  //                                           Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.vehicleNumber}",style: const TextStyle(fontSize: 18,color: Colors.black),),
-  //                                           const SizedBox(height: 5,),
-  //                                           Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.carName}",style: const TextStyle(fontSize: 15,color: Colors.grey)),
-  //                                           const SizedBox(height: 8,),
-  //                                         ],
-  //                                       ),
-  //                                       subtitle: Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.firstName} ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.lastName}",style: const TextStyle(fontSize: 15,color: Colors.grey)),
-  //                                       trailing: Stack(
-  //                                         clipBehavior: Clip.none,
-  //                                         children: [
-  //                                           Container(
-  //                                             height: 60,
-  //                                             width: 60,
-  //                                             decoration: BoxDecoration(
-  //                                                 shape: BoxShape.circle,
-  //                                                 image: DecorationImage(image: NetworkImage("${Config.imageurl}${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.profileImage}"),fit: BoxFit.cover)
-  //                                             ),
-  //                                             // child: Image(image: NetworkImage("https://i.pinimg.com/originals/a3/fc/98/a3fc98cd46931905114589e2e8abdc49.jpg"))
-  //                                           ),
-  //                                           Positioned(
-  //                                             bottom: -15,
-  //                                             left: 0,
-  //                                             right: 0,
-  //                                             child: Container(
-  //                                               height: 25,
-  //                                               width: 40,
-  //                                               decoration: BoxDecoration(
-  //                                                   color: Colors.white,
-  //                                                   border: Border.all(color: Colors.grey.withOpacity(0.2)),
-  //                                                   borderRadius: BorderRadius.circular(15)
-  //                                               ),
-  //                                               child: Center(child: Row(
-  //                                                 crossAxisAlignment: CrossAxisAlignment.center,
-  //                                                 mainAxisAlignment: MainAxisAlignment.center,
-  //                                                 children: [
-  //                                                   Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.rating}"),
-  //                                                   const SizedBox(width: 5,),
-  //                                                   const Icon(Icons.star,color: Colors.yellow,size: 15,)
-  //                                                 ],
-  //                                               ),),
-  //                                             ),
-  //                                           )
-  //                                         ],
-  //                                       ),
-  //                                     ),
-  //                                     const SizedBox(height: 20,),
-  //                                     Row(
-  //                                       children: [
-  //                                         Container(
-  //                                           height: 45,
-  //                                           width: 45,
-  //                                           decoration: BoxDecoration(
-  //                                               shape: BoxShape.circle,
-  //                                               border: Border.all(color: Colors.grey)
-  //                                           ),
-  //                                           child: const Center(child: Icon(Icons.call,color: Colors.grey,size: 20,),),
-  //                                         ),
-  //                                         const SizedBox(width: 10,),
-  //                                         Expanded(
-  //                                           child: Container(
-  //                                             height: 45,
-  //                                             decoration: BoxDecoration(
-  //                                                 borderRadius: BorderRadius.circular(30),
-  //                                                 border: Border.all(
-  //                                                   color: Colors.grey,
-  //                                                 )
-  //                                             ),
-  //                                             child: Row(
-  //                                               crossAxisAlignment: CrossAxisAlignment.center,
-  //                                               children: [
-  //                                                 const SizedBox(width: 10,),
-  //                                                 const Icon(Icons.message,color: Colors.grey,size: 20,),
-  //                                                 const SizedBox(width: 10,),
-  //                                                 Text("Message ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.firstName} ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.lastName}")
-  //                                               ],
-  //                                             ),
-  //                                           ),
-  //                                         )
-  //                                       ],
-  //                                     ),
-  //                                     const SizedBox(height: 10,),
-  //
-  //                                   ],
-  //                                 ),
-  //                               ),
-  //                             ),
-  //                             const SizedBox(height: 10,),
-  //                             ListTile(
-  //                               contentPadding: EdgeInsets.zero,
-  //                               title: const Text("Pickup From"),
-  //                               // subtitle: Text("31"),
-  //                               trailing: InkWell(
-  //                                 onTap: () {
-  //                                   commonbottomsheetcancelflow(context: context);
-  //                                   // commonbottomsheetrequestsend(context: context);
-  //                                 },
-  //                                 child: Container(
-  //                                   height: 40,
-  //                                   width: 100,
-  //                                   decoration: BoxDecoration(
-  //                                     border: Border.all(color: Colors.grey.withOpacity(0.4)),
-  //                                     borderRadius: BorderRadius.circular(30),
-  //                                   ),
-  //                                   child: const Center(child: Text("Trip Details"),),
-  //                                 ),
-  //                               ),
-  //                             )
-  //                           ],
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   );
-  //                 },),
-  //               ],
-  //             );
-  //           },)
-  //       );
-  //     }
-  //   });
-  // }
-
   // Socate Code
 
   var decodeUid;
@@ -342,29 +87,32 @@ class _HomeScreenState extends State<HomeScreen> {
   var currencyy;
   socketConnect() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
+
     var uid = preferences.getString("userLogin");
+
     var currency = preferences.getString("currenci");
+
     decodeUid = jsonDecode(uid!);
+
     currencyy = jsonDecode(currency!);
 
     useridgloable = decodeUid['id'];
+
     print("****home screen*****:--- ($useridgloable)");
+
     print("*********:--- ($currencyy)");
 
     setState(() {});
 
-    // socket = IO.io(Config.imageurl,<String,dynamic>{
-    //   'autoConnect': false,
-    //   'transports': ['websocket'],
-    //
-    // });
+    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
+      'autoConnect': false,
+      'transports': ['websocket'],
+      'extraHeaders': {'Accept': '*/*'},
+      'timeout': 30000,
+      'forceNew': true,
+    });
 
     socket.connect();
-
-    // socket.onConnect((_) {
-    //   print('Connected');
-    //   socket.emit('message', 'Hello from Flutter');
-    // });
 
     _connectSocket();
   }

@@ -113,18 +113,6 @@ class _TimerScreenState extends State<TimerScreen> {
     });
   }
 
-  // @override
-  // void dispose() {
-  //   _timer?.cancel();
-  //   super.dispose();
-  // }
-
-  // String _formatTime(int seconds) {
-  //   int minutes = seconds ~/ 60;
-  //   int remainingSeconds = seconds % 60;
-  //   return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
-  // }
-
   String _formatTime(int seconds) {
     int hours = seconds ~/ 3600;
     int minutes = (seconds % 3600) ~/ 60;
@@ -135,18 +123,15 @@ class _TimerScreenState extends State<TimerScreen> {
   socketConnect() async {
     setState(() {});
 
-    // socket = IO.io(Config.imageurl,<String,dynamic>{
-    //   'autoConnect': false,
-    //   'transports': ['websocket'],
-    //
-    // });
+    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
+      'autoConnect': false,
+      'transports': ['websocket'],
+      'extraHeaders': {'Accept': '*/*'},
+      'timeout': 30000,
+      'forceNew': true,
+    });
 
     socket.connect();
-
-    // socket.onConnect((_) {
-    //   print('Connected');
-    //   socket.emit('message', 'Hello from Flutter');
-    // });
 
     _connectSocket();
   }
@@ -187,8 +172,7 @@ class _TimerScreenState extends State<TimerScreen> {
     });
 
     socket.on('Vehicle_Ride_Start_End$useridgloable', (vehicleRideStartEnd) {
-      print(
-          "++++++ /Vehicle_Ride_Start_End/ ++++ :---  $vehicleRideStartEnd");
+      print("++++++ /Vehicle_Ride_Start_End/ ++++ :---  $vehicleRideStartEnd");
       print(
           "Vehicle_Ride_Start_End is of type: ${vehicleRideStartEnd.runtimeType}");
       print("Vehicle_Ride_Start_End keys: ${vehicleRideStartEnd.keys}");
@@ -227,8 +211,7 @@ class _TimerScreenState extends State<TimerScreen> {
           for (int i = 0; i < listdrop.length; i++) {
             print("objectMMMMMMMMM:-- ($i)");
             droppointstartscreen.add(PointLatLng(
-                double.parse(
-                    vehicleRideStartEnd["drop_list"][i]["latitude"]),
+                double.parse(vehicleRideStartEnd["drop_list"][i]["latitude"]),
                 double.parse(
                     vehicleRideStartEnd["drop_list"][i]["longitude"])));
             print(
@@ -266,8 +249,7 @@ class _TimerScreenState extends State<TimerScreen> {
           for (int i = 0; i < listdrop.length; i++) {
             print("objectHHHHH:-- ($i)");
             droppointstartscreen.add(PointLatLng(
-                double.parse(
-                    vehicleRideStartEnd["drop_list"][i]["latitude"]),
+                double.parse(vehicleRideStartEnd["drop_list"][i]["latitude"]),
                 double.parse(
                     vehicleRideStartEnd["drop_list"][i]["longitude"])));
             print(

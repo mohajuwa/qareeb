@@ -1,90 +1,81 @@
+// lib/api_code/profile_edit_api_controller.dart
+
 import 'dart:convert';
+
+import 'dart:io';
+
 import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:get/get.dart';
+
 import 'package:http/http.dart' as http;
+
+import 'package:http/io_client.dart';
+
 import '../common_code/config.dart';
 
-
-// class ProfileeditApiController extends GetxController implements GetxService {
-//
-//   // PageListApiiimodel? pageListApiiimodel;
-//   bool isLoading = true;
-//
-//   Future PrifileediteApi({required String id,required String name,required String email,required String password,required String profile_img}) async {
-//
-//     Map body = {
-//       'id' : id,
-//       'name': name,
-//       'email': email,
-//       'password':password,
-//       'profile_img':profile_img,
-//     };
-//
-//     print("+++ $body");
-//     try{
-//       var response2 = await http.post(Uri.parse('${Config.baseurl}${Config.editprofile}'), body: jsonEncode(body), headers: {
-//         'Content-Type': 'application/json',
-//       });
-//
-//       print(response2.body);
-//       if(response2.statusCode == 200){
-//         return jsonDecode(response2.body);
-//       }else{
-//         print('failed');
-//       }
-//
-//     }catch(e){
-//       print(e.toString());
-//     }
-//   }
-//
-// }
-
-
 class ProfileeditApiController extends GetxController implements GetxService {
-
   bool isLoading = true;
 
-  Future PrifileediteApi({required String id,required String name,required String email,required String password,required String profile_img,context}) async {
+  Future PrifileediteApi(
+      {required String id,
+      required String name,
+      required String email,
+      required String password,
+      required String profile_img,
+      context}) async {
+    try {
+      // Create HTTP client that handles SSL certificates
 
-    var request = http.MultipartRequest('POST', Uri.parse(Config.baseurl + Config.editprofile));
+      HttpClient httpClient = HttpClient();
 
-    request.fields.addAll({
-      'id' : id,
-      'name': name,
-      'email': email,
-      'password':password,
-    });
+      httpClient.badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
 
-    if(profile_img != ""){
-      request.files.add(await http.MultipartFile.fromPath('profile_img', profile_img));
-    }else{
-      print("ffffffffffff");
-    }
+      httpClient.connectionTimeout = Duration(seconds: 30);
 
-    http.StreamedResponse response = await request.send();
+      http.Client client = IOClient(httpClient);
 
-    final responseString = await response.stream.bytesToString();
-    final responsnessaj = jsonDecode(responseString);
+      var request = http.MultipartRequest(
+          'POST', Uri.parse(Config.baseurl + Config.editprofile));
 
-    if (response.statusCode == 200) {
+      request.fields.addAll({
+        'id': id,
+        'name': name,
+        'email': email,
+        'password': password,
+      });
 
-      if(responsnessaj["Result"] == true){
-        isLoading = false;
-
-        Fluttertoast.showToast(msg: responsnessaj["message"],);
-        return responsnessaj;
+      if (profile_img != "") {
+        request.files
+            .add(await http.MultipartFile.fromPath('profile_img', profile_img));
       }
-      else{
-        Fluttertoast.showToast(msg: responsnessaj["message"],);
+
+      http.StreamedResponse response = await client.send(request);
+
+      final responseString = await response.stream.bytesToString();
+
+      final responsnessaj = jsonDecode(responseString);
+
+      if (response.statusCode == 200) {
+        if (responsnessaj["Result"] == true) {
+          isLoading = false;
+
+          Fluttertoast.showToast(msg: responsnessaj["message"]);
+
+          return responsnessaj;
+        } else {
+          Fluttertoast.showToast(msg: responsnessaj["message"]);
+        }
+      } else {
+        Fluttertoast.showToast(msg: "HTTP Error: ${response.statusCode}");
       }
 
-    }
-    else{
-      Fluttertoast.showToast(
-        msg: responsnessaj["message"],
-      );
+      client.close();
+    } catch (e) {
+      print("Profile Edit API Error: $e");
+
+      Fluttertoast.showToast(msg: "Update failed. Please try again.");
     }
   }
-
 }

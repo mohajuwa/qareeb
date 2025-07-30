@@ -86,14 +86,19 @@ class _CounterBottomSheetState extends State<CounterBottomSheet> {
   socketConnect() async {
     setState(() {});
 
-    socket = IO.io(Config.imageurl, <String, dynamic>{
+    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
       'autoConnect': false,
       'transports': ['websocket'],
+      'extraHeaders': {'Accept': '*/*'},
+      'timeout': 30000,
+      'forceNew': true,
     });
+
     socket.connect();
 
     socket.onConnect((_) {
       print('Connected');
+
       socket.emit('message', 'Hello from Flutter');
     });
 

@@ -72,16 +72,22 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
 
   socketConnect() async {
     print("*****qqqq****:--- ($userid)");
+
     print("*****pppp****:--- ($currencyy)");
 
-    socket = IO.io(Config.imageurl, <String, dynamic>{
+    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
       'autoConnect': false,
       'transports': ['websocket'],
+      'extraHeaders': {'Accept': '*/*'},
+      'timeout': 30000,
+      'forceNew': true,
     });
+
     socket.connect();
 
     socket.onConnect((_) {
       print('Connected');
+
       socket.emit('message', 'Hello from Flutter');
     });
 

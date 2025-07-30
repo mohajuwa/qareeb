@@ -28,21 +28,35 @@ class _ChatScreenState extends State<ChatScreen> {
 
   List messaj = [];
 
-  socketConnect() async {
-    setState(() {});
-    // socket = IO.io(Config.imageurl,<String,dynamic>{
-    //   'autoConnect': false,
-    //   'transports': ['websocket'],
-    // });
-    socket.connect();
+socketConnect() async {
 
-    // socket.onConnect((_) {
-    //   print('Connected');
-    //   socket.emit('message', 'Hello from Flutter');
-    // });
+  setState(() {});
 
-    _connectSocket();
-  }
+  
+
+  // Use HTTPS with proper configuration
+
+  socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
+
+    'autoConnect': false,
+
+    'transports': ['websocket'],
+
+    'extraHeaders': {'Accept': '*/*'},
+
+    'timeout': 30000,
+
+    'forceNew': true,
+
+  });
+
+  
+
+  socket.connect();
+
+  _connectSocket();
+
+}
 
   _connectSocket() async {
     setState(() {});
@@ -367,269 +381,6 @@ class _ChatScreenState extends State<ChatScreen> {
                                 ),
                               ],
                             ),
-                            // Container(
-                            //   width: Get.size.width,
-                            //   margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            //   decoration: BoxDecoration(
-                            //     color: WhiteColor,
-                            //     borderRadius: BorderRadius.circular(15),
-                            //   ),
-                            //   padding: const EdgeInsets.symmetric(horizontal: 10),
-                            //   child: Column(
-                            //     mainAxisSize: MainAxisSize.min,
-                            //     crossAxisAlignment: CrossAxisAlignment.start,
-                            //     children: [
-                            //       const SizedBox(
-                            //         height: 10,
-                            //       ),
-                            //       Row(
-                            //         children: [
-                            //           const Text(
-                            //             "date",
-                            //             style: TextStyle(
-                            //               fontFamily: FontFamily.gilroyMedium,
-                            //             ),
-                            //           ),
-                            //           const Spacer(),
-                            //           Text(
-                            //             "Order ID: #",
-                            //             style: TextStyle(
-                            //               fontFamily: FontFamily.gilroyBold,
-                            //               color: BlackColor,
-                            //               fontSize: 16,
-                            //             ),
-                            //           ),
-                            //           // myOrderController.nOrderInfo
-                            //           //             ?.orderHistory[index].status ==
-                            //           //         "Pending"
-                            //           //     ? Row(
-                            //           //         children: [
-                            //           //           Image.asset(
-                            //           //             "assets/info-circle1.png",
-                            //           //             height: 20,
-                            //           //             width: 20,
-                            //           //           ),
-                            //           //           Text(
-                            //           //             myOrderController
-                            //           //                     .nOrderInfo
-                            //           //                     ?.orderHistory[index]
-                            //           //                     .status ??
-                            //           //                 "",
-                            //           //             style: TextStyle(
-                            //           //               fontFamily:
-                            //           //                   FontFamily.gilroyBold,
-                            //           //               color: Color(0xFFFFBB00),
-                            //           //             ),
-                            //           //           ),
-                            //           //         ],
-                            //           //       )
-                            //           //     : myOrderController
-                            //           //                 .nOrderInfo
-                            //           //                 ?.orderHistory[index]
-                            //           //                 .status ==
-                            //           //             "Processing"
-                            //           //         ? Row(
-                            //           //             children: [
-                            //           //               Image.asset(
-                            //           //                 "assets/boxStatus.png",
-                            //           //                 height: 20,
-                            //           //                 width: 20,
-                            //           //                 color: gradient.defoultColor,
-                            //           //               ),
-                            //           //               Text(
-                            //           //                 myOrderController
-                            //           //                         .nOrderInfo
-                            //           //                         ?.orderHistory[index]
-                            //           //                         .status ??
-                            //           //                     "",
-                            //           //                 style: TextStyle(
-                            //           //                   fontFamily:
-                            //           //                       FontFamily.gilroyBold,
-                            //           //                   color:
-                            //           //                       gradient.defoultColor,
-                            //           //                 ),
-                            //           //               ),
-                            //           //             ],
-                            //           //           )
-                            //           //         : Row(
-                            //           //             children: [
-                            //           //               Image.asset(
-                            //           //                 "assets/rocket-launchStatus.png",
-                            //           //                 height: 20,
-                            //           //                 width: 20,
-                            //           //                 color: gradient.defoultColor,
-                            //           //               ),
-                            //           //               Text(
-                            //           //                 myOrderController
-                            //           //                         .nOrderInfo
-                            //           //                         ?.orderHistory[index]
-                            //           //                         .status ??
-                            //           //                     "",
-                            //           //                 style: TextStyle(
-                            //           //                   fontFamily:
-                            //           //                       FontFamily.gilroyBold,
-                            //           //                   color:
-                            //           //                       gradient.defoultColor,
-                            //           //                 ),
-                            //           //               ),
-                            //           //             ],
-                            //           //           ),
-                            //         ],
-                            //       ),
-                            //       const SizedBox(
-                            //         height: 10,
-                            //       ),
-                            //       const Row(
-                            //         children: [
-                            //           // Spacer(),
-                            //           // Text(
-                            //           //   myOrderController.nOrderInfo
-                            //           //           ?.orderHistory[index].oType ??
-                            //           //       "",
-                            //           //   style: TextStyle(
-                            //           //     fontFamily: FontFamily.gilroyBold,
-                            //           //     fontSize: 13,
-                            //           //     color: gradient.defoultColor,
-                            //           //   ),
-                            //           // ),
-                            //         ],
-                            //       ),
-                            //       const SizedBox(
-                            //         height: 10,
-                            //       ),
-                            //       Row(
-                            //         crossAxisAlignment: CrossAxisAlignment.center,
-                            //         children: [
-                            //           // Container(
-                            //           //   height: 50,
-                            //           //   width: 50,
-                            //           //   alignment: Alignment.center,
-                            //           //   decoration: BoxDecoration(
-                            //           //     shape: BoxShape.circle,
-                            //           //     color: Colors.grey.shade200,
-                            //           //     image: DecorationImage(
-                            //           //       image: NetworkImage(
-                            //           //           "${ConfigPet.imageBaseurl}${orderDetailController.orderDetailModel!.pendingOrder[index].sitterLogo ?? ""}"),
-                            //           //       fit: BoxFit.cover,
-                            //           //     ),
-                            //           //   ),
-                            //           // ),
-                            //           const SizedBox(
-                            //             width: 4,
-                            //           ),
-                            //           Expanded(
-                            //             child: Column(
-                            //               crossAxisAlignment:
-                            //               CrossAxisAlignment.start,
-                            //               children: [
-                            //                 Row(
-                            //                   children: [
-                            //                     const SizedBox(
-                            //                       width: 5,
-                            //                     ),
-                            //                     Expanded(
-                            //                       child: Text(
-                            //                         "serviceName",
-                            //                         maxLines: 1,
-                            //                         style: TextStyle(
-                            //                           fontFamily:
-                            //                           FontFamily.gilroyBold,
-                            //                           fontSize: 15,
-                            //                           color: BlackColor,
-                            //                           overflow:
-                            //                           TextOverflow.ellipsis,
-                            //                         ),
-                            //                       ),
-                            //                     ),
-                            //                     Text(
-                            //                       "priceType" ,
-                            //                       maxLines: 1,
-                            //                       style: TextStyle(
-                            //                         fontFamily:
-                            //                         FontFamily.gilroyBold,
-                            //                         fontSize: 13,
-                            //                         color: BlackColor,
-                            //                         overflow:
-                            //                         TextOverflow.ellipsis,
-                            //                       ),
-                            //                     ),
-                            //                   ],
-                            //                 ),
-                            //                 const SizedBox(height: 7),
-                            //                 Row(
-                            //                   children: [
-                            //                     const SizedBox(
-                            //                       width: 5,
-                            //                     ),
-                            //                     Expanded(
-                            //                       child: Text(
-                            //                         "subSname",
-                            //                         maxLines: 1,
-                            //                         style: TextStyle(
-                            //                           fontFamily:
-                            //                           FontFamily.gilroyBold,
-                            //                           fontSize: 13,
-                            //                           color: BlackColor,
-                            //                           overflow:
-                            //                           TextOverflow.ellipsis,
-                            //                         ),
-                            //                       ),
-                            //                     ),
-                            //                     Text(
-                            //                       "totPrice",
-                            //                       maxLines: 1,
-                            //                       textAlign: TextAlign.end,
-                            //                       style: TextStyle(
-                            //                         fontFamily:
-                            //                         FontFamily.gilroyBold,
-                            //                         fontSize: 15,
-                            //                         color: BlackColor,
-                            //                         overflow:
-                            //                         TextOverflow.ellipsis,
-                            //                       ),
-                            //                     ),
-                            //                   ],
-                            //                 ),
-                            //               ],
-                            //             ),
-                            //           ),
-                            //
-                            //         ],
-                            //       ),
-                            //       const SizedBox(
-                            //         height: 5,
-                            //       ),
-                            //
-                            //       // stepper(status: myOrderController.nOrderInfo!.orderHistory[index].status),
-                            //       InkWell(
-                            //         // onTap: () {
-                            //         //   detailOrderController.detailOrderApi(orderID: orderDetailController.orderDetailModel!.pendingOrder[index].orderId.toString());
-                            //         //   // myOrderController ails(orderID: myOrderController.nOrderInfo?.orderHistory[index].id ?? "");
-                            //         //   // Get.toNamed(Routes.orderdetailsScreen, arguments: {"oID": myOrderController.nOrderInfo?.orderHistory[index].id ?? "",});
-                            //         //   Get.to(OrderdetailsScreen(orderId: orderDetailController.orderDetailModel!.pendingOrder[index].orderId.toString()));
-                            //         // },
-                            //         child: Container(
-                            //           height: 40,
-                            //           alignment: Alignment.center,
-                            //           margin: const EdgeInsets.all(10),
-                            //           decoration: BoxDecoration(
-                            //             borderRadius:
-                            //             BorderRadius.circular(20),
-                            //             gradient: gradient.btnGradient,
-                            //           ),
-                            //           child: Text(
-                            //             "Info".tr,
-                            //             style: TextStyle(
-                            //               fontFamily: FontFamily.gilroyMedium,
-                            //               color: WhiteColor,
-                            //               fontSize: 15,
-                            //             ),
-                            //           ),
-                            //         ),
-                            //       ),
-                            //     ],
-                            //   ),
-                            // ),
                           ],
                         ),
                       ),

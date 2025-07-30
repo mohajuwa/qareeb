@@ -1,54 +1,62 @@
+// lib/api_code/msg91_api_controller.dart
+
 import 'dart:convert';
 
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
+
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
-import 'package:http/http.dart' as http;
+
 import 'package:qareeb/common_code/config.dart';
 
+import 'package:qareeb/common_code/http_helper.dart';
+
 import '../api_model/mag91_api_model.dart';
+
 import '../common_code/common_button.dart';
 
 class MasgapiController extends GetxController implements GetxService {
   MsgApiModel? msgApiModel;
 
   Future msgApi({required String mobilenumber, context}) async {
-    Map body = {
-      "phoneno": mobilenumber,
-    };
+    try {
+      Map body = {
+        "phoneno": mobilenumber,
+      };
 
-    Map<String, String> userHeader = {
-      "Content-type": "application/json",
-      "Accept": "application/json"
-    };
+      Map<String, String> userHeader = {
+        "Content-type": "application/json",
+        "Accept": "application/json"
+      };
 
-    var response = await http.post(Uri.parse(Config.baseurl + Config.msgapi),
-        body: jsonEncode(body), headers: userHeader);
+      String url = Config.baseurl + Config.msgapi;
 
-    print('+ + + + + + + + + + + $body');
-    print('- - - - - - - - - - - ${response.body}');
+      var response = await HttpHelper.post(url,
+              body: jsonEncode(body), headers: userHeader)
+          .timeout(const Duration(seconds: 30));
 
-    var data = jsonDecode(response.body);
+      print('MSG91 API Body: $body');
 
-    if (response.statusCode == 200) {
-      if (data["Result"] == true) {
-        msgApiModel = msgApiModelFromJson(response.body);
-        update();
+      print('MSG91 API Response: ${response.body}');
 
-        // Fluttertoast.showToast(
-        //   msg: "${data["message"]}",
-        // );
-        snackbar(context: context, text: "${data["message"]}");
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+
+        if (data["Result"] == true) {
+          msgApiModel = msgApiModelFromJson(response.body);
+
+          update();
+
+          snackbar(context: context, text: "${data["message"]}");
+        } else {
+          snackbar(context: context, text: "${data["message"]}");
+        }
       } else {
-        // Fluttertoast.showToast(
-        //   msg: "${data["message"]}",
-        // );
-        snackbar(context: context, text: "${data["message"]}");
+        snackbar(context: context, text: "HTTP Error: ${response.statusCode}");
       }
-    } else {
-      // Fluttertoast.showToast(
-      //   msg: "Somthing went wrong!.....",
-      // );
-      snackbar(context: context, text: "Somthing went wrong!.....");
+    } catch (e) {
+      print("MSG91 API Error: $e");
+
+      snackbar(context: context, text: "Connection failed. Please try again.");
     }
   }
 }

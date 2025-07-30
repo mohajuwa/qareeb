@@ -249,20 +249,18 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
     addPolyLine(polylineCoordinates);
   }
 
-  // late IO.Socket socket;
   socketConnect() async {
     setState(() {});
-    // socket = IO.io(Config.imageurl,<String,dynamic>{
-    //   'autoConnect': false,
-    //   'transports': ['websocket'],
-    // });
+
+    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
+      'autoConnect': false,
+      'transports': ['websocket'],
+      'extraHeaders': {'Accept': '*/*'},
+      'timeout': 30000,
+      'forceNew': true,
+    });
+
     socket.connect();
-
-    // socket.onConnect((_) {
-    //   print('Connected');
-    //   socket.emit('message', 'Hello from Flutter');
-    // });
-
     _connectSocket();
   }
 

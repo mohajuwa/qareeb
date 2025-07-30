@@ -1,47 +1,76 @@
+// lib/api_code/sms_type_controller.dart
+
 import 'dart:convert';
 
 import 'package:get/get.dart';
+
 import 'package:qareeb/common_code/config.dart';
 
+import 'package:qareeb/common_code/http_helper.dart';
+
 import '../api_model/sms_type_api_model.dart';
-import 'package:http/http.dart' as http;
 
 import '../common_code/common_button.dart';
 
 class SmstypeApiController extends GetxController implements GetxService {
   SmaApiModel? smaApiModel;
+
   bool isLoading = true;
 
   smsApi(context) async {
-    Map<String, String> userHeader = {
-      "Content-type": "application/json",
-      "Accept": "application/json"
-    };
-    var response = await http.get(Uri.parse(Config.baseurl + Config.smstypeapi),
-        headers: userHeader);
+    try {
+      Map<String, String> userHeader = {
+        "Content-type": "application/json",
+        "Accept": "application/json"
+      };
 
-    print("++++:---- ${response.body}");
+      String url = Config.baseurl + Config.smstypeapi;
 
-    var data = jsonDecode(response.body);
+      print("SMS API URL: $url");
 
-    if (response.statusCode == 200) {
-      if (data["Result"] == true) {
-        smaApiModel = smaApiModelFromJson(response.body);
+      var response = await HttpHelper.get(url, headers: userHeader)
+          .timeout(Duration(seconds: 30));
 
-        // SharedPreferences preferences = await SharedPreferences.getInstance();
-        // preferences.setString("otpvalue", jsonEncode(data["message"]));
+      print("SMS API Response Status: ${response.statusCode}");
 
-        isLoading = false;
-        update();
+      print("SMS API Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+
+        if (data["Result"] == true) {
+          smaApiModel = smaApiModelFromJson(response.body);
+
+          isLoading = false;
+
+          update();
+        } else {
+          Get.back();
+
+          snackbar(context: context, text: "${data["message"]}");
+        }
       } else {
         Get.back();
-        // Fluttertoast.showToast(msg: "${data["message"]}");
-        snackbar(context: context, text: "${data["message"]}");
+
+        snackbar(context: context, text: "HTTP Error: ${response.statusCode}");
       }
-    } else {
+    } catch (e) {
+      print("SMS API Error: $e");
+
       Get.back();
-      // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Something went Wrong....!!!")));
-      snackbar(context: context, text: "Something went Wrong....!!!");
+
+      String errorMessage = "Connection failed";
+
+      if (e.toString().contains('Failed host lookup')) {
+        errorMessage = "Server not reachable. Check your internet connection.";
+      } else if (e.toString().contains('CERTIFICATE_VERIFY_FAILED')) {
+        errorMessage =
+            "SSL Certificate error. Using self-signed certificate bypass.";
+      } else if (e.toString().contains('TimeoutException')) {
+        errorMessage = "Request timeout. Please try again.";
+      }
+
+      snackbar(context: context, text: errorMessage);
     }
   }
 }
