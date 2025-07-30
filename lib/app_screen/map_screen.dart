@@ -3588,13 +3588,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 //   padding: const EdgeInsets.only(left: 10,top: 15,right: 10),
                 //   child: CommonOutLineButton(bordercolore: theamcolore, onPressed1: () {
                 //     loginSharedPreferencesSet(true);
-                //     Get.offAll(const OnbordingScreen());
+                //     Get.offAll(const OnboardingScreen());
                 //   },context: context,txt1: "Log Out"),
                 // ),
                 InkWell(
                   onTap: () {
                     loginSharedPreferencesSet(true);
-                    Get.offAll(const OnbordingScreen());
+                    Get.offAll(const OnboardingScreen());
                   },
                   child: Padding(
                     padding:
@@ -3722,7 +3722,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                 id: useridgloable.toString())
                                             .then(
                                           (value) {
-                                            Get.offAll(OnbordingScreen());
+                                            Get.offAll(OnboardingScreen());
                                           },
                                         ),
                                         // Delete_Api_Class(uid: userData["id"]).then((value) {

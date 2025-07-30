@@ -53,7 +53,7 @@ class _Splase_ScreenState extends State<Splase_Screen> {
           Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
-                builder: (context) => OnbordingScreen(),
+                builder: (context) => OnboardingScreen(),
               ),
               (route) => false);
         });
@@ -82,7 +82,7 @@ class _Splase_ScreenState extends State<Splase_Screen> {
     });
 
     // Timer(const Duration(seconds: 3), () {
-    //   Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => OnbordingScreen(),), (route) => false);
+    //   Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => OnboardingScreen(),), (route) => false);
     // });
   }
 
@@ -103,15 +103,10 @@ class _Splase_ScreenState extends State<Splase_Screen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset("assets/svgpicture/applogo.svg",
-                height: 150, width: 150),
-            const SizedBox(
-              height: 20,
-            ),
-            Text(
-              'Qareeb'.tr,
-              style: TextStyle(
-                  color: theamcolore, fontSize: 35, fontFamily: 'Khebrat'),
+            SvgPicture.asset(
+              "assets/svgpicture/applogo.svg",
+              height: 250,
+              width: 250,
             ),
           ],
         ),
