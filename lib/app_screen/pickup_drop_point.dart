@@ -11,6 +11,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/map_api_get.dart';
 import 'package:qareeb/app_screen/custom_location_select_screen.dart';
@@ -22,37 +23,7 @@ import '../common_code/common_button.dart';
 import 'map_screen.dart';
 import 'my_ride_screen.dart';
 
-TextEditingController pickupcontroller = TextEditingController();
-TextEditingController dropcontroller = TextEditingController();
-
-double latitudepick = 0.00;
-double longitudepick = 0.00;
-double latitudedrop = 0.00;
-double longitudedrop = 0.00;
-
-String picktitle = "";
-String picksubtitle = "";
-
-String droptitle = "";
-String dropsubtitle = "";
-
-List droptitlelist = [];
-
 List<DynamicWidget> textfieldlist = [];
-
-List<PointLatLng> destinationlat = [];
-List onlypass = [];
-List<LatLng> destinationlong = [];
-
-bool picanddrop = true;
-// bool multilistselection = false;
-var addresspickup;
-
-var dropprice;
-var minimumfare;
-var maximumfare;
-String amountresponse = "";
-String responsemessage = "";
 
 class PickupDropPoint extends StatefulWidget {
   final bool pagestate;
@@ -65,14 +36,6 @@ class PickupDropPoint extends StatefulWidget {
 }
 
 class _PickupDropPointState extends State<PickupDropPoint> {
-  // bool picanddrop = false;
-  // TextEditingController pickupcontroller = TextEditingController();
-  // TextEditingController dropcontroller = TextEditingController();
-
-  // String googleApiKey = "AIzaSyCRF9Q1ttrleh04hqRlP_CqsFCPU815jJk";
-  // List<PointLatLng>  destinationlat = [];
-  // List<LatLng> destinationlong = [];
-
   MapSuggestGetApiController mapSuggestGetApiController =
       Get.put(MapSuggestGetApiController());
   CalculateController calculateController = Get.put(CalculateController());
@@ -80,12 +43,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
       Get.put(Modual_CalculateController());
 
   Future<void> calculateDistance() async {
-    // double startLatitude = 37.7749;  // Example latitude
-    // double startLongitude = -122.4194; // Example longitude
-    // double endLatitude = 34.0522;    // Example latitude
-    // double endLongitude = -118.2437; // Example longitude
-
-    // Calculate distance in meters
     double distanceInMeters = Geolocator.distanceBetween(
       latitudepick,
       longitudepick,
@@ -93,7 +50,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
       longitudedrop,
     );
 
-    // Convert distance to kilometers
     double distanceInKilometers = distanceInMeters / 1000;
 
     print("Distance: $distanceInKilometers km");
@@ -101,10 +57,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    // mapSuggestGetApiController.mapApiModel?.results?.clear();
-    // dropcontroller.clear();
+
     datagetfunction();
     print("******:----suryo:---- ${widget.bidding}");
     fun().then(
@@ -137,136 +91,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
         desiredAccuracy: LocationAccuracy.high);
   }
 
-  // double latitudepick = 0.00;
-  // double longitudepick = 0.00;
-  //
-  // double latitudedrop = 0.00;
-  // double longitudedrop = 0.00;
-
-  // Future<void> _handlePressButtonpickup() async {
-  //
-  //   Prediction? prediction = await PlacesAutocomplete.show(
-  //     // context: context,
-  //     // apiKey: googleApiKey,
-  //     // mode: Mode.overlay,
-  //     // language: "en",
-  //     // types: ["en"],
-  //     // components: [Component(Component.country, "us")],
-  //
-  //     offset: 0,
-  //     radius: 1000,
-  //     strictbounds: false,
-  //     region: "us",
-  //     language: "en",
-  //     context: context,
-  //     mode: Mode.overlay,
-  //     apiKey: Config.mapkey,
-  //     components: [new Component(Component.country, "In")],
-  //     types: ["(cities)"],
-  //     hint: "Search City",
-  //   );
-  //
-  //   // if (prediction != null) {
-  //   //   // Handle the selected place
-  //   //   pickupcontroller.text = prediction.description.toString();
-  //   //   if(pickupcontroller.text.isNotEmpty && dropcontroller.text.isNotEmpty){
-  //   //     print("done++++++++++++++++");
-  //   //     Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen(),));
-  //   //   }
-  //   //   print("Selected place: ${prediction.description}");
-  //   // }
-  //
-  //   if (prediction != null) {
-  //     // Handle the selected place
-  //     pickupcontroller.text = prediction.description.toString();
-  //
-  //     // Fetch place details using placeId
-  //     final places = GoogleMapsPlaces(apiKey: Config.mapkey);
-  //     final placeDetails = await places.getDetailsByPlaceId(prediction.placeId!);
-  //
-  //     if (placeDetails != null && placeDetails.result != null) {
-  //        latitudepick = placeDetails.result.geometry!.location.lat;
-  //        longitudepick = placeDetails.result.geometry!.location.lng;
-  //
-  //       print("Selected place: ${prediction.description}");
-  //       print("PickupController : ---  Latitude: $latitudepick, Longitude: $longitudepick");
-  //
-  //       // Optional: Save these coordinates or use them as needed
-  //     }
-  //
-  //     if (pickupcontroller.text.isNotEmpty && dropcontroller.text.isNotEmpty) {
-  //       print("++++++++++++++++done++++++++++++++++");
-  //       Navigator.push(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,)),
-  //       );
-  //     }
-  //   }
-  //
-  // }
-  //
-  // Future<void> _handlePressButtondrop() async {
-  //
-  //   Prediction? prediction = await PlacesAutocomplete.show(
-  //     // context: context,
-  //     // apiKey: googleApiKey,
-  //     // mode: Mode.overlay,
-  //     // language: "en",
-  //     // types: ["en"],
-  //     // components: [Component(Component.country, "us")],
-  //
-  //     offset: 0,
-  //     radius: 1000,
-  //     strictbounds: false,
-  //     region: "us",
-  //     language: "en",
-  //     context: context,
-  //     mode: Mode.overlay,
-  //     apiKey: Config.mapkey,
-  //     components: [new Component(Component.country, "In")],
-  //     types: ["(cities)"],
-  //     hint: "Search City",
-  //   );
-  //
-  //   // if (prediction != null) {
-  //   //   // Handle the selected place
-  //   //   dropcontroller.text = prediction.description.toString();
-  //   //   if(pickupcontroller.text.isNotEmpty && dropcontroller.text.isNotEmpty){
-  //   //     print("++++++++++++++++done++++++++++++++++");
-  //   //     Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen(),));
-  //   //   }
-  //   //   print("Selected place: ${prediction.description}");
-  //   // }
-  //
-  //   if (prediction != null) {
-  //     // Handle the selected place
-  //     dropcontroller.text = prediction.description.toString();
-  //
-  //     // Fetch place details using placeId
-  //     final places = GoogleMapsPlaces(apiKey: Config.mapkey);
-  //     final placeDetails = await places.getDetailsByPlaceId(prediction.placeId!);
-  //
-  //     if (placeDetails != null && placeDetails.result != null) {
-  //       latitudedrop = placeDetails.result.geometry!.location.lat;
-  //       longitudedrop = placeDetails.result.geometry!.location.lng;
-  //
-  //       print("Selected place: ${prediction.description}");
-  //       print("DropController : ---  Latitude: $latitudedrop, Longitude: $longitudedrop");
-  //
-  //       // Optional: Save these coordinates or use them as needed
-  //     }
-  //
-  //     if (pickupcontroller.text.isNotEmpty && dropcontroller.text.isNotEmpty) {
-  //       print("++++++++++++++++done++++++++++++++++");
-  //       Navigator.push(
-  //         context,
-  //         MaterialPageRoute(builder: (context) =>  HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,)),
-  //       );
-  //     }
-  //
-  //   }
-  // }
-
   getCurrentLatAndLong(double latitude, double longitude) async {
     latitudepick = latitude;
     longitudepick = longitude;
@@ -280,7 +104,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
 
   bool destination = false;
 
-  // List<DynamicWidget> textfieldlist = [];
   List destinationname = [];
 
   submitDataName() {
@@ -327,7 +150,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
       ),
       child: WillPopScope(
         onWillPop: () async {
-          // Navigator.pop(context, RefreshData(true));
           Get.offAll(const MapScreen(
             selectvihical: false,
           ));
@@ -347,19 +169,15 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        // const SizedBox(height: 40),
                         Row(
                           children: [
                             InkWell(
                               onTap: () {
-                                // Navigator.pop(context, RefreshData(true));
                                 Get.offAll(const MapScreen(
                                   selectvihical: false,
                                 ));
                                 print(
                                     "++++dropcontroller++++:--- ${dropcontroller.text}");
-                                // Get.back();
-                                // textfieldlist.length;
                               },
                               child: Image(
                                 image: AssetImage("assets/arrow-left.png"),
@@ -379,22 +197,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                     style: TextStyle(
                                         fontSize: 20,
                                         color: notifier.textColor)),
-                            // const Spacer(),
-                            // Container(
-                            //   height: 45,
-                            //   padding: const EdgeInsets.only(left: 10,right: 10),
-                            //   decoration: BoxDecoration(
-                            //       border: Border.all(color: Colors.grey.withOpacity(0.4)),
-                            //       borderRadius: BorderRadius.circular(20),
-                            //   ),
-                            //   child: const Row(
-                            //     children: [
-                            //       Text("For me",style: TextStyle(fontSize: 16),),
-                            //       SizedBox(width: 5,),
-                            //       Image(image: AssetImage("assets/angle-down.png"),height: 20,),
-                            //     ],
-                            //   ),
-                            // ),
                           ],
                         ),
                         const SizedBox(height: 20),
@@ -509,8 +311,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                           setState(() {
                                             picanddrop = false;
                                             uthertextfilde = false;
-                                            // multilistselection = false;
-                                            // _handlePressButtonpickup();
                                           });
                                         },
                                         onChanged: (value) {
@@ -524,7 +324,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                         decoration: InputDecoration(
                                             contentPadding:
                                                 const EdgeInsets.only(left: 10),
-                                            // focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey.withOpacity(0.4))),
                                             border: OutlineInputBorder(
                                               borderRadius:
                                                   BorderRadius.circular(10),
@@ -550,7 +349,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                     .tr,
                                             hintStyle: TextStyle(
                                                 color: notifier.textColor),
-                                            // labelText: "Email",
                                             suffixIcon: pickupcontroller
                                                     .text.isEmpty
                                                 ? const SizedBox()
@@ -601,8 +399,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                           setState(() {
                                             picanddrop = true;
                                             uthertextfilde = false;
-                                            // multilistselection = false;
-                                            // _handlePressButtondrop();
                                           });
                                         },
                                         style: TextStyle(
@@ -640,11 +436,9 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                   color: Colors.grey
                                                       .withOpacity(0.4)),
                                             ),
-                                            // border: InputBorder.none,
                                             hintText: "Drop location".tr,
                                             hintStyle: TextStyle(
                                                 color: notifier.textColor),
-                                            // labelText: "Email",
                                             suffixIcon: dropcontroller
                                                     .text.isEmpty
                                                 ? const SizedBox()
@@ -693,7 +487,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                             ],
                           ),
                         ),
-                        // const SizedBox(height: 10),
                         textfieldlist.isEmpty
                             ? const SizedBox()
                             : ListView.builder(
@@ -847,7 +640,7 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                               },
                               child: Container(
                                 height: 40,
-                                width: 150,
+                                width: 180,
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                       color: Colors.grey.withOpacity(0.4)),
@@ -886,7 +679,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                     },
                                     child: Container(
                                       height: 40,
-                                      // width: 140,
                                       decoration: BoxDecoration(
                                         border: Border.all(
                                             color:
@@ -935,11 +727,7 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                   )
                           ],
                         ),
-
                         const SizedBox(height: 10),
-
-                        // (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) ? const Text("Empty") :
-
                         uthertextfilde == true
                             ? const SizedBox()
                             : picanddrop == true
@@ -969,7 +757,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                       print(
                                                           "****:--- ${mapSuggestGetApiController.mapApiModel!.results?[index].name}");
                                                       setState(() {
-                                                        // addresshome = mapSuggestGetApiController.mapApiModel!.results![index].name!;
                                                         pickupcontroller.text =
                                                             mapSuggestGetApiController
                                                                 .mapApiModel!
@@ -1036,7 +823,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                   : Navigator
                                                                       .push(
                                                                       context,
-                                                                      // MaterialPageRoute(builder: (context) =>  HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,destinationlat: destinationlat,destinationlong: destinationlong,)),
                                                                       MaterialPageRoute(
                                                                           builder: (context) =>
                                                                               HomeScreen(
@@ -1046,7 +832,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                                 longdrop: longitudedrop,
                                                                                 destinationlat: destinationlat,
                                                                               )),
-                                                                      // MaterialPageRoute(builder: (context) =>  HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,)),
                                                                     );
 
                                                           widget.bidding == "1"
@@ -1067,11 +852,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                           onlypass)
                                                                   .then(
                                                                   (value) {
-                                                                    // print("********** value **********:----- ${value}");
-                                                                    // print("********** value **********:----- ${value["drop_price"]}");
-                                                                    // print("********** value **********:----- ${value["vehicle"]["minimum_fare"]}");
-                                                                    // print("********** value **********:----- ${value["vehicle"]["maximum_fare"]}");
-
                                                                     dropprice =
                                                                         0;
                                                                     minimumfare =
@@ -1151,8 +931,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                           onlypass)
                                                                   .then(
                                                                   (value) {
-                                                                    // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
-                                                                    // vihicalrice = double.parse(modual_calculateController.modualCalculateApiModel!.caldriver![0].dropPrice!.toString());
                                                                     totalkm = double.parse(modual_calculateController
                                                                         .modualCalculateApiModel!
                                                                         .caldriver![
@@ -1197,7 +975,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                       });
                                                     },
                                                     child: Container(
-                                                      // height: 50,
                                                       width: Get.width,
                                                       margin: EdgeInsets.only(
                                                           top: 10),
@@ -1273,7 +1050,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                 },
                                               );
                                       }),
-
                         uthertextfilde == true
                             ? const SizedBox()
                             : picanddrop == false
@@ -1357,7 +1133,7 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                               false;
                                                           print(
                                                               "++++++++++++++++done++++++++++++++++");
-                                                          // socket.disconnected;
+
                                                           socket.close();
                                                           widget.bidding == "1"
                                                               ? Get.offAll(
@@ -1374,7 +1150,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                   : Navigator
                                                                       .push(
                                                                       context,
-                                                                      // MaterialPageRoute(builder: (context) =>  HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,destinationlat: destinationlat,destinationlong: destinationlong,)),
                                                                       MaterialPageRoute(
                                                                           builder: (context) => HomeScreen(
                                                                               latpic: latitudepick,
@@ -1382,7 +1157,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                               latdrop: latitudedrop,
                                                                               longdrop: longitudedrop,
                                                                               destinationlat: destinationlat)),
-                                                                      // MaterialPageRoute(builder: (context) =>  HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,)),
                                                                     );
                                                           widget.bidding == "1"
                                                               ? calculateController
@@ -1402,11 +1176,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                           onlypass)
                                                                   .then(
                                                                   (value) {
-                                                                    // print("********** value **********:----- ${value}");
-                                                                    // print("********** value **********:----- ${value["drop_price"]}");
-                                                                    // print("********** value **********:----- ${value["vehicle"]["minimum_fare"]}");
-                                                                    // print("********** value **********:----- ${value["vehicle"]["maximum_fare"]}");
-
                                                                     dropprice =
                                                                         0;
                                                                     minimumfare =
@@ -1505,8 +1274,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                           onlypass)
                                                                   .then(
                                                                   (value) {
-                                                                    // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
-                                                                    // vihicalrice = double.parse(modual_calculateController.modualCalculateApiModel!.caldriver![0].dropPrice!.toString());
                                                                     totalkm = double.parse(modual_calculateController
                                                                         .modualCalculateApiModel!
                                                                         .caldriver![
@@ -1550,14 +1317,12 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                         "GOGOGOGOGOGOGOGOGOGOGOGOG:- ${midseconde}");
                                                                     print(
                                                                         "GOGOGOGOGOGOGOGOGOGOGOGOG:- ${vihicalrice}");
-                                                                    // setState((){});
                                                                   },
                                                                 );
                                                         }
                                                       });
                                                     },
                                                     child: Container(
-                                                      // height: 50,
                                                       width: Get.width,
                                                       margin: EdgeInsets.only(
                                                           top: 10),
@@ -1633,7 +1398,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                 },
                                               );
                                       }),
-
                         uthertextfilde == false
                             ? const SizedBox()
                             : GetBuilder<MapSuggestGetApiController>(
@@ -1650,8 +1414,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                         itemBuilder: (context, index) {
                                           return InkWell(
                                             onTap: () {
-                                              // print("****:--- ${mapSuggestGetApiController.mapApiModel!.results?[index].name}");
-
                                               setState(() {
                                                 submitDataName();
                                                 textfieldlist[textFieldindex]
@@ -1728,7 +1490,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                         ))
                                                       : Navigator.push(
                                                           context,
-                                                          // MaterialPageRoute(builder: (context) =>  HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,destinationlat: destinationlat,destinationlong: destinationlong,)),
                                                           MaterialPageRoute(
                                                               builder: (context) => HomeScreen(
                                                                   latpic:
@@ -1741,7 +1502,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                       longitudedrop,
                                                                   destinationlat:
                                                                       destinationlat)),
-                                                          // MaterialPageRoute(builder: (context) =>  HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,)),
                                                         );
                                                   widget.bidding == "1"
                                                       ? calculateController
@@ -1759,11 +1519,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                   onlypass)
                                                           .then(
                                                           (value) {
-                                                            // print("********** value **********:----- ${value}");
-                                                            // print("********** value **********:----- ${value["drop_price"]}");
-                                                            // print("********** value **********:----- ${value["vehicle"]["minimum_fare"]}");
-                                                            // print("********** value **********:----- ${value["vehicle"]["maximum_fare"]}");
-
                                                             dropprice = 0;
                                                             minimumfare = 0;
                                                             maximumfare = 0;
@@ -1843,8 +1598,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                   onlypass)
                                                           .then(
                                                           (value) {
-                                                            // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
-                                                            // vihicalrice = double.parse(modual_calculateController.modualCalculateApiModel!.caldriver![0].dropPrice!.toString());
                                                             totalkm = double.parse(
                                                                 modual_calculateController
                                                                     .modualCalculateApiModel!
@@ -1894,7 +1647,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                               });
                                             },
                                             child: Container(
-                                              // height: 50,
                                               width: Get.width,
                                               margin: EdgeInsets.only(top: 10),
                                               decoration: BoxDecoration(
@@ -1902,7 +1654,6 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                 border: Border.all(
                                                     color: Colors.grey
                                                         .withOpacity(0.4)),
-                                                // border: Border.all(color: Colors.red),
                                                 borderRadius:
                                                     BorderRadius.circular(15),
                                               ),
@@ -1982,18 +1733,16 @@ class DynamicWidget extends StatelessWidget {
   final TextEditingController destinationcontroller = TextEditingController();
   ColorNotifier notifier = ColorNotifier();
   DynamicWidget({super.key});
-  // ColorNotifier notifier = ColorNotifier();
+
   @override
   Widget build(BuildContext context) {
     notifier = Provider.of<ColorNotifier>(context, listen: true);
-    // notifier = Provider.of<ColorNotifier>(context, listen: true);
+
     return Padding(
       padding: EdgeInsets.only(bottom: 8.0),
       child: TextFormField(
         style: TextStyle(color: notifier.textColor),
         controller: destinationcontroller,
-        // maxLength: 2,
-        // keyboardType: TextInputType.number,
         validator: (value) {
           if (value == null || value.isEmpty) {
             return '';
@@ -2002,13 +1751,10 @@ class DynamicWidget extends StatelessWidget {
         },
         onTap: () {
           uthertextfilde = true;
-          // multilistselection = true;
         },
         onChanged: (value) {
-          // setState(() {
           mapSuggestGetApiController.mapApi(
               context: context, suggestkey: destinationcontroller.text);
-          // });
         },
         decoration: InputDecoration(
             errorStyle: const TextStyle(fontSize: 0.1),
@@ -2016,7 +1762,6 @@ class DynamicWidget extends StatelessWidget {
             isDense: true,
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 13, horizontal: 10),
-            // contentPadding: const EdgeInsets.all(15),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: Colors.pink),
@@ -2030,32 +1775,7 @@ class DynamicWidget extends StatelessWidget {
               borderSide: BorderSide(color: Colors.grey.withOpacity(0.4)),
             ),
             hintText: 'Destination'.tr,
-            hintStyle: TextStyle(color: notifier.textColor)
-            // suffixIcon: const Padding(
-            //   padding: EdgeInsets.all(15),
-            //   child: Image(image: AssetImage("assets/menu-duo.png"),height: 20,),
-            // )
-            // suffixIcon: destinationcontroller.text.isEmpty ? const SizedBox() : Padding(
-            //   padding: const EdgeInsets.all(13),
-            //   child: InkWell(
-            //     onTap: () {
-            //       // setState((){
-            //         destinationcontroller.clear();
-            //       // });
-            //     },
-            //     child: Container(
-            //       height: 20,
-            //       width: 20,
-            //       decoration: BoxDecoration(
-            //           color: Colors.grey.withOpacity(0.2),
-            //           shape: BoxShape.circle
-            //       ),
-            //       child: Center(child: Image(image: AssetImage("assets/close.png"),height: 15,),),
-            //     ),
-            //   ),
-            // ),
-            // hintStyle: const TextStyle(fontSize: 14, color: Colors.grey)
-            ),
+            hintStyle: TextStyle(color: notifier.textColor)),
       ),
     );
   }

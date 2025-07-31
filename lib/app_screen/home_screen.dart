@@ -15,6 +15,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/vihical_calculate_api_controller.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
@@ -50,7 +51,6 @@ String vehicle_id = "";
 String extratime = "";
 
 String timeincressstatus = "";
-String request_id = "";
 String driver_id = "";
 var useridgloable;
 
@@ -80,37 +80,21 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<PointLatLng> _dropOffPoints = [];
 
-  // Socate Code
-
   var decodeUid;
-  // late IO.Socket socket;
+
   var currencyy;
   socketConnect() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
-
     var uid = preferences.getString("userLogin");
-
     var currency = preferences.getString("currenci");
-
     decodeUid = jsonDecode(uid!);
-
     currencyy = jsonDecode(currency!);
 
     useridgloable = decodeUid['id'];
-
     print("****home screen*****:--- ($useridgloable)");
-
     print("*********:--- ($currencyy)");
 
     setState(() {});
-
-    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
-      'autoConnect': false,
-      'transports': ['websocket'],
-      'extraHeaders': {'Accept': '*/*'},
-      'timeout': 30000,
-      'forceNew': true,
-    });
 
     socket.connect();
 
@@ -119,17 +103,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    // Cancel active socket listeners, streams, or timers here
     socket.dispose(); // or _socket?.close() if it's a socket
-    // _streamSubscription?.cancel(); // if you have a stream subscription
-    // _timer?.cancel(); // if you are using a Timer
+
     super.dispose();
   }
 
   _connectSocket() async {
-    setState(() {
-      // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
-    });
+    setState(() {});
 
     socket.onConnect(
         (data) => print('Connection established Connected home screen'));
@@ -149,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .then(
       (value) {
         print("-----------------:--- $value");
-        // print("-----------------:--- ${vihicalCalculateController.vihicalCalculateModel!.caldriver!.length}");
+
         for (int i = 0;
             i <
                 vihicalCalculateController
@@ -267,28 +247,21 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // getdata();
-    // select = 0;
+
     mapThemeStyle(context: context);
 
     setState(() {});
-    // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
 
     socketConnect();
 
-    // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
-
     _dropOffPoints = [];
-    // _pickupPoint = LatLng(widget.latpic, widget.longpic);
-    // _dropPoint = LatLng(widget.latdrop, widget.longdrop);
+
     _dropOffPoints = widget.destinationlat;
     print("****////***:-----  $_dropOffPoints");
 
-    /// origin marker
     _addMarker(LatLng(widget.latpic, widget.longpic), "origin",
         BitmapDescriptor.defaultMarker);
 
-    /// destination marker
     _addMarker2(LatLng(widget.latdrop, widget.longdrop), "destination",
         BitmapDescriptor.defaultMarkerWithHue(90));
 
@@ -300,10 +273,6 @@ class _HomeScreenState extends State<HomeScreen> {
         lat1: PointLatLng(widget.latpic, widget.longpic),
         lat2: PointLatLng(widget.latdrop, widget.longdrop),
         dropOffPoints: _dropOffPoints);
-
-    // _dropOffPoints.add(
-    //   map{}
-    // );
 
     for (int i = 1;
         i < paymentGetApiController.paymentgetwayapi!.paymentList!.length;
@@ -338,8 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late GoogleMapController mapController;
 
   Map<MarkerId, Marker> markers = {};
-  // Set<Marker> markers = {};
-  // Set<Marker> markers = Set();
+
   Map<PolylineId, Polyline> polylines = {};
   List<LatLng> polylineCoordinates = [];
   PolylinePoints polylinePoints = PolylinePoints();
@@ -490,7 +458,6 @@ class _HomeScreenState extends State<HomeScreen> {
       final Uint8List markIcon = await getImages("assets/drop.png", 80);
       MarkerId markerId = MarkerId(id[a]);
 
-      // Assuming _dropOffPoints[a] is of type PointLatLng, convert it to LatLng
       LatLng position =
           LatLng(_dropOffPoints[a].latitude, _dropOffPoints[a].longitude);
 
@@ -560,7 +527,6 @@ class _HomeScreenState extends State<HomeScreen> {
     Polyline polyline = Polyline(
       polylineId: id,
       color: theamcolore,
-      // points: [...polylineCoordinates,..._dropOffPoints],
       points: polylineCoordinates,
       width: 3,
     );
@@ -590,9 +556,7 @@ class _HomeScreenState extends State<HomeScreen> {
         for (var point in result.points) {
           polylineCoordinates.add(LatLng(point.latitude, point.longitude));
         }
-      } else {
-        // Handle the case where no route is found
-      }
+      } else {}
     }
 
     addPolyLine(polylineCoordinates);
@@ -626,7 +590,6 @@ class _HomeScreenState extends State<HomeScreen> {
     Future<BitmapDescriptor> loadIcon(String url) async {
       try {
         if (url.isEmpty || url.contains("undefined")) {
-          // Fallback to a default icon if the URL is invalid
           return BitmapDescriptor.defaultMarker;
         }
 
@@ -634,7 +597,6 @@ class _HomeScreenState extends State<HomeScreen> {
         if (response.statusCode == 200) {
           final Uint8List bytes = response.bodyBytes;
 
-          // Decode image and resize it
           final ui.Codec codec = await ui.instantiateImageCodec(bytes,
               targetWidth: 30, targetHeight: 50);
           final ui.FrameInfo frameInfo = await codec.getNextFrame();
@@ -646,13 +608,11 @@ class _HomeScreenState extends State<HomeScreen> {
           throw Exception('Failed to load image from $url');
         }
       } catch (e) {
-        // Log the error and return a default icon
         print("Error loading icon from $url: $e");
         return BitmapDescriptor.defaultMarker;
       }
     }
 
-    // Load all icons
     final List<BitmapDescriptor> icons = await Future.wait(
       _iconPathsbiddingoff.map((path) => loadIcon(path)),
     );
@@ -663,7 +623,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _addMarker(LatLng(widget.latpic, widget.longpic), "origin",
           BitmapDescriptor.defaultMarker);
 
-      /// destination marker
       _addMarker2(LatLng(widget.latdrop, widget.longdrop), "destination",
           BitmapDescriptor.defaultMarkerWithHue(90));
 
@@ -719,7 +678,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   clipBehavior: Clip.none,
                   children: [
                     Container(
-                      // alignment: Alignment.bottomCenter,
                       height: 430,
                       width: Get.width,
                       decoration: BoxDecoration(
@@ -742,7 +700,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   },
                                   shrinkWrap: true,
                                   scrollDirection: Axis.vertical,
-                                  // physics: BouncingScrollPhysics(),
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: modual_calculateController
                                       .modualCalculateApiModel!
@@ -754,7 +711,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       onTap: () {
                                         setState(() {
                                           select = index;
-                                          // markers.clear();
+
                                           vihicallocationsbiddingoff.clear();
                                           _iconPathsbiddingoff.clear();
                                           print(
@@ -835,7 +792,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                             .caldriver!
                                                             .length;
                                                     i++) {
-                                                  // print("+++vihicalCalculateController.vihicalCalculateModel!.caldriver!.length+++:-- ${vihicalCalculateController.vihicalCalculateModel!.caldriver!.length}");
                                                   vihicallocationsbiddingoff.add(LatLng(
                                                       double.parse(
                                                           vihicalCalculateController
@@ -860,7 +816,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     BitmapDescriptor
                                                         .defaultMarker);
 
-                                                /// destination marker
                                                 _addMarker2(
                                                     LatLng(widget.latdrop,
                                                         widget.longdrop),
@@ -887,14 +842,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                               }
                                             },
                                           );
-                                          // print("+++midseconde+++:-- ${midseconde}");
                                         });
                                       },
                                       child: Container(
                                         height: 80,
                                         width: Get.width,
                                         decoration: BoxDecoration(
-                                          // color: notifier.containercolore,
                                           border: Border.all(
                                               color: select == index
                                                   ? theamcolore
@@ -911,7 +864,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                               width: 50,
                                               decoration: const BoxDecoration(
                                                 shape: BoxShape.circle,
-                                                // image: DecorationImage(image: NetworkImage("${Config.imageurl}${modual_calculateController.modualCalculateApiModel!.caldriver![index].profileImage}"),fit: BoxFit.cover)
                                               ),
                                               child: Image.network(
                                                   "${Config.imageurl}${modual_calculateController.modualCalculateApiModel!.caldriver![index].image}"),
@@ -982,7 +934,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 140,
                       decoration: BoxDecoration(
                           color: notifier.containercolore,
-                          // border: Border.all(color: Colors.grey.withOpacity(0.4))
                           boxShadow: const [
                             BoxShadow(
                                 color: Colors.grey,
@@ -998,18 +949,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Expanded(
                                   child: InkWell(
                                     onTap: () {
-                                      // for(int i=1; i<paymentGetApiController.paymentgetwayapi!.paymentList!.length; i++){
-                                      //   if(int.parse(paymentGetApiController.paymentgetwayapi!.defaultPayment.toString()) == paymentGetApiController.paymentgetwayapi!.paymentList![i].id){
-                                      //     setState((){
-                                      //       payment = paymentGetApiController.paymentgetwayapi!.paymentList![i].id!;
-                                      //       print("+++++$payment");
-                                      //       print("-----$i");
-                                      //     });
-                                      //   }
-                                      // }
-
                                       showModalBottomSheet(
-                                        // isDismissible: false,
                                         shape: const RoundedRectangleBorder(
                                           borderRadius: BorderRadius.only(
                                               topLeft: Radius.circular(15),
@@ -1048,7 +988,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       context: context),
                                                 ),
                                                 body: Container(
-                                                  // height: 450,
                                                   decoration: BoxDecoration(
                                                     color: notifier
                                                         .containercolore,
@@ -1165,7 +1104,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                           () {
                                                                         setState(
                                                                             () {
-                                                                          // payment = index;
                                                                           payment = paymentGetApiController
                                                                               .paymentgetwayapi!
                                                                               .paymentList![index]
@@ -1174,7 +1112,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                               .paymentgetwayapi!
                                                                               .paymentList![index]
                                                                               .name!;
-                                                                          // paymentmethodId = paymentGetApiController.paymentgetwayapi!.paymentdata[index].id;
                                                                         });
                                                                       },
                                                                       child: paymentGetApiController.paymentgetwayapi!.paymentList![index].status ==
@@ -1185,7 +1122,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                               margin: const EdgeInsets.only(left: 10, right: 10, top: 6, bottom: 6),
                                                                               padding: const EdgeInsets.all(5),
                                                                               decoration: BoxDecoration(
-                                                                                // color: Colors.yellowAccent,
                                                                                 border: Border.all(color: payment == paymentGetApiController.paymentgetwayapi!.paymentList![index].id! ? theamcolore : Colors.grey.withOpacity(0.4)),
                                                                                 borderRadius: BorderRadius.circular(15),
                                                                               ),
@@ -1245,7 +1181,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     },
                                     child: ListTile(
                                       contentPadding: EdgeInsets.zero,
-                                      // leading: const Icon(Icons.card_giftcard_sharp),
                                       leading: const Image(
                                         image: AssetImage("assets/payment.png"),
                                         height: 30,
@@ -1303,7 +1238,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                           showModalBottomSheet(
                                             isScrollControlled: true,
-                                            // isDismissible: true,
                                             shape: const RoundedRectangleBorder(
                                               borderRadius: BorderRadius.only(
                                                   topLeft: Radius.circular(15),
@@ -1315,7 +1249,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                               return StatefulBuilder(
                                                   builder: (context, setState) {
                                                 return Scaffold(
-                                                  // backgroundColor: Colors.grey.withOpacity(0.1),
                                                   backgroundColor:
                                                       notifier.containercolore,
                                                   appBar: AppBar(
@@ -1396,7 +1329,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                 (context,
                                                                     index) {
                                                               return Container(
-                                                                // height: 230,
                                                                 margin: EdgeInsets
                                                                     .only(
                                                                         bottom:
@@ -1509,11 +1441,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                   onTap: () {
                                                                                     setState(() {
                                                                                       couponadd[index] = false;
-                                                                                      dropprice = mainamount;
+                                                                                      dropprice = mainamount as double;
                                                                                       vihicalrice = double.parse(mainamount);
                                                                                       couponname = "";
                                                                                       couponId = "";
-                                                                                      // couponid = "";
+
                                                                                       Get.back(result: {
                                                                                         "coupAdded": "",
                                                                                         "couponid": "",
@@ -1537,16 +1469,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                               : InkWell(
                                                                                   onTap: () {
                                                                                     if (vihicalrice >= double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount.toString())) {
-                                                                                      // cartController.checkCouponDataApi(cid: cartController.cartDataInfo?.couponList[index].id);
-
                                                                                       setState(() {
                                                                                         couponAmt = int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString());
-                                                                                        // couponadd[index] = true;
-                                                                                        // if(){}
 
                                                                                         setState(() {
                                                                                           couponname = paymentGetApiController.paymentgetwayapi!.couponList![index].title.toString();
-                                                                                          // couponid = paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString();
                                                                                         });
                                                                                         if (couponadd[index] == false) {
                                                                                           for (int i = 0; i < couponadd.length; i++) {
@@ -1561,8 +1488,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                       });
 
                                                                                       vihicalrice = vihicalrice - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount!);
-
-                                                                                      // print("----------------------------------------${double.parse(amountcontroller.text.toString())}");
 
                                                                                       couponId = paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString();
 
@@ -1612,7 +1537,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                             },
                                                           ),
                                                         )
-                                                        // Listview
                                                       ],
                                                     ),
                                                   ),
@@ -1621,7 +1545,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                             },
                                           ).then(
                                             (value) {
-                                              // couponname = ;
                                               setState(() {
                                                 couponname = value["coupAdded"];
                                                 couponId = value["couponid"];
@@ -1631,10 +1554,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                         },
                                         child: ListTile(
                                           contentPadding: EdgeInsets.zero,
-                                          // leading: const Padding(
-                                          //   padding: EdgeInsets.only(top: 8),
-                                          //   child: Icon(Icons.circle_notifications_sharp),
-                                          // ),
                                           leading: const Padding(
                                             padding: EdgeInsets.only(top: 6),
                                             child: Image(
@@ -1694,8 +1613,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 : CommonButton(
                                     containcolore: theamcolore,
                                     onPressed1: () {
-                                      // socket.close();
-
                                       homeWalletApiController
                                           .homwwalleteApi(
                                               uid: useridgloable.toString(),
@@ -1747,7 +1664,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                               droplistadd: droptitlelist,
                                               context: context,
                                               uid: useridgloable.toString(),
-                                              // uid: "",
                                               tot_km: "$totalkm",
                                               vehicle_id: vehicle_id,
                                               tot_minute: tot_time,
@@ -1806,7 +1722,6 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.only(left: 15, top: 60),
               child: InkWell(
                 onTap: () {
-                  // Get.back();
                   Get.offAll(MapScreen(
                     selectvihical: true,
                   ));

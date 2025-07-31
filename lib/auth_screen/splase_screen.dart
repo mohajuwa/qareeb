@@ -10,6 +10,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -103,11 +104,17 @@ class _Splase_ScreenState extends State<Splase_Screen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset(
-              "assets/svgpicture/applogo.svg",
-              height: 250,
-              width: 250,
-            ),
+            darkMode == true
+                ? SvgPicture.asset(
+                    "assets/svgpicture/app_logo_light.svg",
+                    height: 250,
+                    width: 250,
+                  )
+                : SvgPicture.asset(
+                    "assets/svgpicture/app_logo_dark.svg",
+                    height: 250,
+                    width: 250,
+                  ),
           ],
         ),
       ),

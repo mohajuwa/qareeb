@@ -5,6 +5,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -19,6 +20,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:qareeb/api_code/coupon_payment_api_contoller.dart';
@@ -59,33 +61,6 @@ import 'faq_screen.dart';
 import 'language_screen.dart';
 import 'my_ride_screen.dart';
 import 'notification_screen.dart';
-
-// bool bottomshhetopen = false;
-
-bool buttontimer = false;
-
-bool darkMode = false;
-num priceyourfare = 0;
-bool isControllerDisposed = false;
-bool isanimation = false;
-String mid = "";
-String mroal = "";
-int select1 = 0;
-String globalcurrency = "";
-List vehicle_bidding_driver = [];
-List vehicle_bidding_secounde = [];
-num walleteamount = 0.00;
-
-bool _socketInitialized = false;
-
-late IO.Socket socket;
-var lathomecurrent;
-var longhomecurrent;
-
-AnimationController? controller;
-late Animation<Color?> colorAnimation;
-
-int durationInSeconds = 0;
 
 class MapScreen extends StatefulWidget {
   final bool selectvihical;
@@ -178,11 +153,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // late AnimationController controller;
   // late Animation<Color?> colorAnimation;
 
-// At the top of your MapScreen class, add this flag:
-
-// At the top of your MapScreen class, add this flag:
-  bool _socketInitialized = false;
-
 // COMPLETE socketConnect method:
   socketConnect() async {
     try {
@@ -265,7 +235,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       });
 
       // Mark socket as initialized IMMEDIATELY after creation
-      _socketInitialized = true;
+      socketInitialized = true;
 
       // Set up basic socket events
       socket.onConnect((_) {
@@ -326,13 +296,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 // COMPLETE _connectSocket method:
   _connectSocket() async {
     // CRITICAL: Check if socket is initialized before doing anything
-    if (!_socketInitialized) {
+    if (!socketInitialized) {
       if (kDebugMode) {
         print("Socket not initialized yet, waiting...");
       }
       // Wait a bit and try again
       await Future.delayed(Duration(milliseconds: 500));
-      if (!_socketInitialized) {
+      if (!socketInitialized) {
         if (kDebugMode) {
           print("Socket still not initialized, aborting _connectSocket");
         }
@@ -568,9 +538,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                       runningRide.dropLatlon!.longitude.toString());
                 }
 
-                maximumfare = runningRide.maximumFare;
-                minimumfare = runningRide.minimumFare;
-                dropprice = runningRide.price?.toString() ?? "0";
+                maximumfare = runningRide.maximumFare as double;
+                minimumfare = runningRide.minimumFare as double;
+                dropprice = (runningRide.price?.toString() ?? "0") as double;
                 priceyourfare = runningRide.price ?? 0;
                 request_id = runningRide.id?.toString() ?? "";
 
@@ -998,10 +968,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
 // Helper methods for socket management and other files:
   bool isSocketInitialized() {
-    return _socketInitialized;
+    return socketInitialized;
   }
 
-  bool get socketReady => _socketInitialized && socket.connected;
+  bool get socketReady => socketInitialized && socket.connected;
 
 // Safe socket emit method for other files to use
   void emitSocketEvent(String event, dynamic data) {
@@ -1039,7 +1009,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 // Add this to your dispose method:
   @override
   void dispose() {
-    if (_socketInitialized) {
+    if (socketInitialized) {
       try {
         socket.dispose();
       } catch (e) {
@@ -1047,7 +1017,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           print("Error disposing socket: $e");
         }
       }
-      _socketInitialized = false;
+      socketInitialized = false;
     }
     super.dispose();
   }
@@ -2384,20 +2354,43 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
     lathomecurrent = latitude;
     longhomecurrent = longitude;
 
-    await placemarkFromCoordinates(lathome, longhome)
-        .then((List<Placemark> placemarks) {
+    try {
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(lathome, longhome)
+              .timeout(const Duration(seconds: 10));
+
       addresshome =
           '${placemarks.first.name}, ${placemarks.first.locality}, ${placemarks.first.country}';
 
       if (pickupcontroller.text.isEmpty) {
         pickupcontroller.text = addresshome.toString();
-      } else {}
+      }
 
-      print("FIRST USER CURRENT LOCATION :-- $addresshome");
-      print("FIRST USER CURRENT LOCATION :-- $lathome");
-      print("FIRST USER CURRENT LOCATION :-- $longhome");
-    });
+      if (kDebugMode) {
+        print("FIRST USER CURRENT LOCATION :-- $addresshome");
+        print("FIRST USER CURRENT LOCATION :-- $lathome");
+        print("FIRST USER CURRENT LOCATION :-- $longhome");
+      }
+    } catch (e) {
+      addresshome = 'Location: $latitude, $longitude';
+      if (pickupcontroller.text.isEmpty) {
+        pickupcontroller.text = addresshome;
+      }
+      if (kDebugMode) print("Geocoding error: $e");
+    }
+
     setState(() {});
+  }
+
+// Simple network check without external plugin
+  Future<bool> _hasNetworkConnection() async {
+    try {
+      final result = await InternetAddress.lookup('google.com')
+          .timeout(Duration(seconds: 3));
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<Uint8List> getImages(String path, int width) async {
@@ -2898,378 +2891,353 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                       shrinkWrap: true,
                                       itemBuilder: (context, index) {
                                         return InkWell(
-                                          onTap: () {
-                                            setState(() {
-                                              select1 = index;
-                                              // dropcontroller.clear();
-                                              mid = homeApiController
-                                                  .homeapimodel!
-                                                  .categoryList![index]
-                                                  .id
-                                                  .toString();
-                                              mroal = homeApiController
-                                                  .homeapimodel!
-                                                  .categoryList![index]
-                                                  .role
-                                                  .toString();
-                                              print(
-                                                  "*****mid*-**:::::------$mid");
-                                              _iconPaths.clear();
-                                              vihicallocations.clear();
-                                              _iconPathsbiddingon.clear();
-                                              vihicallocationsbiddingon.clear();
+                                            onTap: () {
+                                              setState(() {
+                                                select1 = index;
+                                                // dropcontroller.clear();
+                                                mid = homeApiController
+                                                    .homeapimodel!
+                                                    .categoryList![index]
+                                                    .id
+                                                    .toString();
+                                                mroal = homeApiController
+                                                    .homeapimodel!
+                                                    .categoryList![index]
+                                                    .role
+                                                    .toString();
+                                                print(
+                                                    "*****mid*-**:::::------$mid");
+                                                _iconPaths.clear();
+                                                vihicallocations.clear();
+                                                _iconPathsbiddingon.clear();
+                                                vihicallocationsbiddingon
+                                                    .clear();
 
-                                              pickupcontroller.text.isEmpty ||
-                                                      dropcontroller
-                                                          .text.isEmpty
-                                                  ? markers.clear()
-                                                  : "";
-                                              pickupcontroller.text.isEmpty ||
-                                                      dropcontroller
-                                                          .text.isEmpty
-                                                  ? fun().then((value) {
-                                                      setState(() {});
-                                                      getCurrentLatAndLong(
-                                                          lathome, longhome);
-                                                      // _loadMapStyles();
-                                                      // socketConnect();
-                                                    })
-                                                  : "";
-
-                                              // vihicallocations.clear();
-                                              // markers.clear();
-                                              // _addMarkers();
-
-                                              pickupcontroller.text.isEmpty ||
-                                                      dropcontroller
-                                                          .text.isEmpty
-                                                  ? homeMapController
-                                                      .homemapApi(
-                                                          mid: mid,
-                                                          lat: lathome
-                                                              .toString(),
-                                                          lon: longhome
-                                                              .toString())
-                                                      .then(
-                                                      (value) {
+                                                pickupcontroller.text.isEmpty ||
+                                                        dropcontroller
+                                                            .text.isEmpty
+                                                    ? markers.clear()
+                                                    : "";
+                                                pickupcontroller.text.isEmpty ||
+                                                        dropcontroller
+                                                            .text.isEmpty
+                                                    ? fun().then((value) {
                                                         setState(() {});
-                                                        print(
-                                                            "///:---  ${value["Result"]}");
+                                                        getCurrentLatAndLong(
+                                                            lathome, longhome);
+                                                        // _loadMapStyles();
+                                                        // socketConnect();
+                                                      })
+                                                    : "";
 
-                                                        if (value["Result"] ==
-                                                            false) {
-                                                          setState(() {
-                                                            vihicallocations
-                                                                .clear();
-                                                            markers.clear();
-                                                            _addMarkers();
-                                                            fun().then((value) {
-                                                              setState(() {});
-                                                              getCurrentLatAndLong(
-                                                                  lathome,
-                                                                  longhome);
-                                                              // socketConnect();
+                                                // vihicallocations.clear();
+                                                // markers.clear();
+                                                // _addMarkers();
+
+                                                pickupcontroller.text.isEmpty ||
+                                                        dropcontroller
+                                                            .text.isEmpty
+                                                    ? homeMapController
+                                                        .homemapApi(
+                                                            mid: mid,
+                                                            lat: lathome
+                                                                .toString(),
+                                                            lon: longhome
+                                                                .toString())
+                                                        .then(
+                                                        (value) {
+                                                          setState(() {});
+                                                          print(
+                                                              "///:---  ${value["Result"]}");
+
+                                                          if (value["Result"] ==
+                                                              false) {
+                                                            setState(() {
+                                                              vihicallocations
+                                                                  .clear();
+                                                              markers.clear();
+                                                              _addMarkers();
+                                                              fun().then(
+                                                                  (value) {
+                                                                setState(() {});
+                                                                getCurrentLatAndLong(
+                                                                    lathome,
+                                                                    longhome);
+                                                                // socketConnect();
+                                                              });
+                                                              print(
+                                                                  "***if condition+++:---  $vihicallocations");
                                                             });
-                                                            print(
-                                                                "***if condition+++:---  $vihicallocations");
-                                                          });
-                                                        } else {
-                                                          setState(() {});
-                                                          for (int i = 0;
-                                                              i <
-                                                                  homeMapController
+                                                          } else {
+                                                            setState(() {});
+                                                            for (int i = 0;
+                                                                i <
+                                                                    homeMapController
+                                                                        .homeMapApiModel!
+                                                                        .list!
+                                                                        .length;
+                                                                i++) {
+                                                              vihicallocations.add(LatLng(
+                                                                  double.parse(homeMapController
                                                                       .homeMapApiModel!
-                                                                      .list!
-                                                                      .length;
-                                                              i++) {
-                                                            vihicallocations.add(LatLng(
-                                                                double.parse(homeMapController
-                                                                    .homeMapApiModel!
-                                                                    .list![i]
-                                                                    .latitude
-                                                                    .toString()),
-                                                                double.parse(homeMapController
-                                                                    .homeMapApiModel!
-                                                                    .list![i]
-                                                                    .longitude
-                                                                    .toString())));
-                                                            _iconPaths.add(
-                                                                "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                                                                      .list![i]
+                                                                      .latitude
+                                                                      .toString()),
+                                                                  double.parse(homeMapController
+                                                                      .homeMapApiModel!
+                                                                      .list![i]
+                                                                      .longitude
+                                                                      .toString())));
+                                                              _iconPaths.add(
+                                                                  "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                                                            }
+                                                            _addMarkers();
                                                           }
-                                                          _addMarkers();
-                                                        }
 
-                                                        print(
-                                                            "******-**:::::------$vihicallocations");
-                                                      },
-                                                    )
-                                                  : homeMapController
-                                                      .homemapApi(
-                                                          mid: mid,
-                                                          lat: lathome
-                                                              .toString(),
-                                                          lon: longhome
-                                                              .toString())
-                                                      .then(
-                                                      (value) {
-                                                        setState(() {});
-                                                        print(
-                                                            "///:---  ${value["Result"]}");
+                                                          print(
+                                                              "******-**:::::------$vihicallocations");
+                                                        },
+                                                      )
+                                                    : homeMapController
+                                                        .homemapApi(
+                                                            mid: mid,
+                                                            lat: lathome
+                                                                .toString(),
+                                                            lon: longhome
+                                                                .toString())
+                                                        .then(
+                                                        (value) {
+                                                          setState(() {});
+                                                          print(
+                                                              "///:---  ${value["Result"]}");
 
-                                                        if (value["Result"] ==
-                                                            false) {
-                                                          setState(() {
-                                                            vihicallocationsbiddingon
-                                                                .clear();
-                                                            markers.clear();
+                                                          if (value["Result"] ==
+                                                              false) {
+                                                            setState(() {
+                                                              vihicallocationsbiddingon
+                                                                  .clear();
+                                                              markers.clear();
+                                                              _addMarkers2();
+                                                              print(
+                                                                  "***if condition+++:---  $vihicallocationsbiddingon");
+                                                            });
+                                                          } else {
+                                                            setState(() {});
+                                                            for (int i = 0;
+                                                                i <
+                                                                    homeMapController
+                                                                        .homeMapApiModel!
+                                                                        .list!
+                                                                        .length;
+                                                                i++) {
+                                                              vihicallocationsbiddingon.add(LatLng(
+                                                                  double.parse(homeMapController
+                                                                      .homeMapApiModel!
+                                                                      .list![i]
+                                                                      .latitude
+                                                                      .toString()),
+                                                                  double.parse(homeMapController
+                                                                      .homeMapApiModel!
+                                                                      .list![i]
+                                                                      .longitude
+                                                                      .toString())));
+                                                              _iconPathsbiddingon
+                                                                  .add(
+                                                                      "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                                                            }
                                                             _addMarkers2();
-                                                            print(
-                                                                "***if condition+++:---  $vihicallocationsbiddingon");
-                                                          });
-                                                        } else {
-                                                          setState(() {});
-                                                          for (int i = 0;
-                                                              i <
-                                                                  homeMapController
-                                                                      .homeMapApiModel!
-                                                                      .list!
-                                                                      .length;
-                                                              i++) {
-                                                            vihicallocationsbiddingon.add(LatLng(
-                                                                double.parse(homeMapController
-                                                                    .homeMapApiModel!
-                                                                    .list![i]
-                                                                    .latitude
-                                                                    .toString()),
-                                                                double.parse(homeMapController
-                                                                    .homeMapApiModel!
-                                                                    .list![i]
-                                                                    .longitude
-                                                                    .toString())));
-                                                            _iconPathsbiddingon.add(
-                                                                "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
                                                           }
-                                                          _addMarkers2();
-                                                        }
 
-                                                        print(
-                                                            "******-**:::::------$vihicallocationsbiddingon");
-                                                      },
-                                                    );
+                                                          print(
+                                                              "******-**:::::------$vihicallocationsbiddingon");
+                                                        },
+                                                      );
 
-                                              calculateController
-                                                  .calculateApi(
-                                                      context: context,
-                                                      uid: userid.toString(),
-                                                      mid: mid,
-                                                      mrole: mroal,
-                                                      pickup_lat_lon:
-                                                          "$latitudepick,$longitudepick",
-                                                      drop_lat_lon:
-                                                          "$latitudedrop,$longitudedrop",
-                                                      drop_lat_lon_list:
-                                                          onlypass)
-                                                  .then(
-                                                (value) {
-                                                  dropprice = 0;
-                                                  minimumfare = 0;
-                                                  maximumfare = 0;
+                                                calculateController
+                                                    .calculateApi(
+                                                        context: context,
+                                                        uid: userid.toString(),
+                                                        mid: mid,
+                                                        mrole: mroal,
+                                                        pickup_lat_lon:
+                                                            "$latitudepick,$longitudepick",
+                                                        drop_lat_lon:
+                                                            "$latitudedrop,$longitudedrop",
+                                                        drop_lat_lon_list:
+                                                            onlypass)
+                                                    .then(
+                                                  (value) {
+                                                    dropprice = 0;
+                                                    minimumfare = 0;
+                                                    maximumfare = 0;
 
-                                                  if (value["Result"] == true) {
-                                                    amountresponse = "true";
-                                                    dropprice =
-                                                        value["drop_price"];
-                                                    minimumfare =
-                                                        value["vehicle"]
-                                                            ["minimum_fare"];
-                                                    maximumfare =
-                                                        value["vehicle"]
-                                                            ["maximum_fare"];
-                                                    responsemessage =
-                                                        value["message"];
+                                                    if (value["Result"] ==
+                                                        true) {
+                                                      amountresponse = "true";
+                                                      dropprice =
+                                                          value["drop_price"];
+                                                      minimumfare =
+                                                          value["vehicle"]
+                                                              ["minimum_fare"];
+                                                      maximumfare =
+                                                          value["vehicle"]
+                                                              ["maximum_fare"];
+                                                      responsemessage =
+                                                          value["message"];
 
-                                                    tot_hour = value["tot_hour"]
-                                                        .toString();
-                                                    tot_time =
-                                                        value["tot_minute"]
-                                                            .toString();
-                                                    vehicle_id =
-                                                        value["vehicle"]["id"]
-                                                            .toString();
-                                                    vihicalrice = double.parse(
-                                                        value["drop_price"]
-                                                            .toString());
-                                                    totalkm = double.parse(
-                                                        value["tot_km"]
-                                                            .toString());
-                                                    tot_secound = "0";
+                                                      tot_hour =
+                                                          value["tot_hour"]
+                                                              .toString();
+                                                      tot_time =
+                                                          value["tot_minute"]
+                                                              .toString();
+                                                      vehicle_id =
+                                                          value["vehicle"]["id"]
+                                                              .toString();
+                                                      vihicalrice =
+                                                          double.parse(value[
+                                                                  "drop_price"]
+                                                              .toString());
+                                                      totalkm = double.parse(
+                                                          value["tot_km"]
+                                                              .toString());
+                                                      tot_secound = "0";
 
-                                                    vihicalimage =
-                                                        value["vehicle"]
-                                                                ["map_img"]
-                                                            .toString();
-                                                    vihicalname =
-                                                        value["vehicle"]["name"]
-                                                            .toString();
+                                                      vihicalimage =
+                                                          value["vehicle"]
+                                                                  ["map_img"]
+                                                              .toString();
+                                                      vihicalname =
+                                                          value["vehicle"]
+                                                                  ["name"]
+                                                              .toString();
 
-                                                    setState(() {});
-                                                  } else {
-                                                    amountresponse = "false";
+                                                      setState(() {});
+                                                    } else {
+                                                      amountresponse = "false";
+                                                      print(
+                                                          "jojojojojojojojojojojojojojojojojojojojojojojojo");
+                                                      setState(() {});
+                                                    }
+
                                                     print(
-                                                        "jojojojojojojojojojojojojojojojojojojojojojojojo");
-                                                    setState(() {});
-                                                  }
-
-                                                  print(
-                                                      "********** dropprice **********:----- $dropprice");
-                                                  print(
-                                                      "********** minimumfare **********:----- $minimumfare");
-                                                  print(
-                                                      "********** maximumfare **********:----- $maximumfare");
-                                                },
-                                              );
-                                              // Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen()));
-                                            });
-                                          },
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(4),
-                                            child: Container(
-                                              height: 50,
-                                              // width: 100,
-                                              decoration: BoxDecoration(
-                                                color: select1 == index
-                                                    ? theamcolore
-                                                        .withOpacity(0.08)
-                                                    : notifier.containercolore,
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: Column(
-                                                  crossAxisAlignment: select1 ==
-                                                          index
-                                                      ? CrossAxisAlignment.start
-                                                      : CrossAxisAlignment
-                                                          .center,
-                                                  children: [
-                                                    Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        SizedBox(
-                                                          height: 40,
-                                                          width: 40,
-                                                          child: Image(
-                                                            image: NetworkImage(
-                                                                "${Config.imageurl}${homeApiController.homeapimodel!.categoryList![index].image}"),
-                                                            height: 40,
-                                                          ),
-                                                        ),
+                                                        "********** dropprice **********:----- $dropprice");
+                                                    print(
+                                                        "********** minimumfare **********:----- $minimumfare");
+                                                    print(
+                                                        "********** maximumfare **********:----- $maximumfare");
+                                                  },
+                                                );
+                                                // Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen()));
+                                              });
+                                            },
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4),
+                                              child: Container(
+                                                constraints: BoxConstraints(
+                                                  minWidth: 80,
+                                                  maxWidth: 120,
+                                                  minHeight: 80,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: select1 == index
+                                                      ? theamcolore
+                                                          .withOpacity(0.08)
+                                                      : notifier
+                                                          .containercolore,
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize
+                                                        .min, // Important: prevents overflow
+                                                    crossAxisAlignment:
                                                         select1 == index
-                                                            ? const SizedBox(
-                                                                width: 5,
-                                                              )
-                                                            : const SizedBox(),
-                                                        select1 == index
-                                                            ? InkWell(
-                                                                onTap: () {
-                                                                  setState(() {
-                                                                    vihicalInformationApiController
-                                                                        .vihicalinformationApi(
-                                                                            vehicle_id:
-                                                                                homeApiController.homeapimodel!.categoryList![index].id.toString())
-                                                                        .then(
-                                                                      (value) {
-                                                                        Get.bottomSheet(
-                                                                          // isScrollControlled: true,
-                                                                          // isDismissible: false,
-                                                                          // enableDrag: false,
-                                                                          StatefulBuilder(
-                                                                            builder:
-                                                                                (context, setState) {
-                                                                              return Container(
-                                                                                clipBehavior: Clip.hardEdge,
-                                                                                // height: 260,
-                                                                                width: Get.width,
-                                                                                // padding: const EdgeInsets.all(12),
-                                                                                decoration: BoxDecoration(
-                                                                                  color: notifier.containercolore,
-                                                                                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-                                                                                ),
-                                                                                child: Padding(
-                                                                                  padding: const EdgeInsets.all(15),
-                                                                                  child: Column(
-                                                                                    mainAxisSize: MainAxisSize.min,
-                                                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                                                    mainAxisAlignment: MainAxisAlignment.start,
-                                                                                    children: [
-                                                                                      Image.network(
-                                                                                        "${Config.imageurl}${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.image}",
-                                                                                        height: 60,
-                                                                                      ),
-                                                                                      Text(
-                                                                                        "${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.name}",
-                                                                                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: notifier.textColor),
-                                                                                      ),
-                                                                                      const SizedBox(
-                                                                                        height: 10,
-                                                                                      ),
-                                                                                      Text(
-                                                                                        "${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.description}",
-                                                                                        style: TextStyle(fontSize: 16, color: notifier.textColor),
-                                                                                      ),
-                                                                                      const SizedBox(
-                                                                                        height: 20,
-                                                                                      ),
-                                                                                      CommonOutLineButton(
-                                                                                          bordercolore: theamcolore,
-                                                                                          onPressed1: () {
-                                                                                            Get.back();
-                                                                                          },
-                                                                                          txt1: "Close".tr,
-                                                                                          context: context)
-                                                                                    ],
-                                                                                  ),
-                                                                                ),
-                                                                              );
-                                                                            },
-                                                                          ),
-                                                                        );
-                                                                      },
-                                                                    );
-                                                                  });
-                                                                },
+                                                            ? CrossAxisAlignment
+                                                                .start
+                                                            : CrossAxisAlignment
+                                                                .center,
+                                                    children: [
+                                                      Flexible(
+                                                        // Wrap the Row with Flexible
+                                                        child: Row(
+                                                          mainAxisSize: MainAxisSize
+                                                              .min, // Important: prevents overflow
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Flexible(
+                                                              // Make image flexible
+                                                              child: SizedBox(
+                                                                height:
+                                                                    30, // Reduced from 40
+                                                                width:
+                                                                    30, // Reduced from 40
                                                                 child: Image(
-                                                                  image: const AssetImage(
-                                                                      "assets/info-circle.png"),
-                                                                  height: 20,
-                                                                  color:
-                                                                      theamcolore,
-                                                                ))
-                                                            : const SizedBox(),
-                                                      ],
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 10,
-                                                    ),
-                                                    Text(
-                                                      "${homeApiController.homeapimodel!.categoryList![index].name}",
-                                                      style: TextStyle(
-                                                          color: notifier
-                                                              .textColor),
-                                                    ),
-                                                  ],
+                                                                  image: NetworkImage(
+                                                                      "${Config.imageurl}${homeApiController.homeapimodel!.categoryList![index].image}"),
+                                                                  height: 30,
+                                                                  fit: BoxFit
+                                                                      .contain, // Ensure proper scaling
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            if (select1 ==
+                                                                index) ...[
+                                                              const SizedBox(
+                                                                  width: 5),
+                                                              Flexible(
+                                                                // Make info icon flexible
+                                                                child: InkWell(
+                                                                  onTap: () {
+                                                                    // Vehicle info logic here
+                                                                  },
+                                                                  child: Image(
+                                                                    image: const AssetImage(
+                                                                        "assets/info-circle.png"),
+                                                                    height:
+                                                                        16, // Reduced from 20
+                                                                    color:
+                                                                        theamcolore,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                          height:
+                                                              8), // Reduced spacing
+                                                      Flexible(
+                                                        // Make text flexible
+                                                        child: Text(
+                                                          "${homeApiController.homeapimodel!.categoryList![index].name}",
+                                                          style: TextStyle(
+                                                            color: notifier
+                                                                .textColor,
+                                                            fontSize:
+                                                                12, // Smaller font
+                                                          ),
+                                                          maxLines: 2,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                        );
+                                            ));
                                       },
                                     ),
                                   ),
@@ -4344,8 +4312,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
       amountcontroller.text = dropprice.toString();
       // var maxprice =  dropprice + (dropprice * int.parse(maximumfare) / 100);
       // var minprice =  dropprice - (dropprice * int.parse(minimumfare) / 100);
-      int maxprice = int.parse(maximumfare);
-      int minprice = int.parse(minimumfare);
+      int maxprice = int.parse(maximumfare as String);
+      int minprice = int.parse(minimumfare as String);
       print("**maxprice**:-- $maxprice");
       print("**maxprice**:-- $minprice");
       // controller.reset();
@@ -4546,7 +4514,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                       } else {
                                         toast = 0;
                                         dropprice =
-                                            int.parse(amountcontroller.text);
+                                            int.parse(amountcontroller.text)
+                                                as double;
                                         mainamount = amountcontroller.text;
                                         // dropprice = amountcontroller.text;
                                       }
@@ -5221,7 +5190,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                                                                 setState(() {
                                                                                   // couponindex = index;
                                                                                   couponadd[index] = false;
-                                                                                  dropprice = mainamount;
+                                                                                  dropprice = mainamount as double;
                                                                                   amountcontroller.text = mainamount;
                                                                                   couponname = "";
                                                                                   couponId = "";
@@ -5760,9 +5729,4 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
       },
     );
   }
-}
-
-class RefreshData {
-  final bool shouldRefresh;
-  RefreshData(this.shouldRefresh);
 }

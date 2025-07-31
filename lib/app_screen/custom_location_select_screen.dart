@@ -11,9 +11,9 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:qareeb/app_screen/pickup_drop_point.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/common_button.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import 'dart:ui' as ui;
 import '../api_code/calculate_api_controller.dart';
 import '../api_code/modual_calculate_api_controller.dart';
@@ -54,6 +54,8 @@ class _CustomLocationSelectScreenState
       });
     }
   }
+
+  bool isLoadingLocation = true;
 
   @override
   void initState() {
@@ -109,6 +111,31 @@ class _CustomLocationSelectScreenState
           '${placemarks.first.name}, ${placemarks.first.locality}, ${placemarks.first.country}';
       print("FIRST USER CURRENT LOCATION :-- $address");
     });
+  }
+
+  void _moveToUserLocation(GoogleMapController controller) async {
+    setState(() => isLoadingLocation = true);
+
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium,
+        timeLimit: const Duration(seconds: 5), // optional timeout
+      );
+
+      final userLatLng = LatLng(position.latitude, position.longitude);
+
+      controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: userLatLng, zoom: 14),
+      ));
+
+      getCurrentLatAndLong(position.latitude, position.longitude);
+
+      _onAddMarkerButtonPressed(position.latitude, position.longitude);
+    } catch (e) {
+      print("Error: $e");
+    }
+
+    setState(() => isLoadingLocation = false);
   }
 
   Future<Uint8List> getImages(String path, int width) async {
@@ -451,14 +478,15 @@ class _CustomLocationSelectScreenState
               }
             },
             context: context,
-            txt1: "Done"),
+            txt1: "Done".tr),
       ),
       body: GoogleMap(
         gestureRecognizers: {
           Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())
         },
-        initialCameraPosition:
-            const CameraPosition(target: LatLng(21.2408, 72.8806), zoom: 13),
+        initialCameraPosition: const CameraPosition(
+            target: LatLng(15.3694, 44.1910), zoom: 14), // Sana'a
+
         mapType: MapType.normal,
         markers: Set<Marker>.of(markers),
         onTap: (argument) {
@@ -484,6 +512,7 @@ class _CustomLocationSelectScreenState
             controller.setMapStyle(themeForMap);
             mapController1 = controller;
           });
+          _moveToUserLocation(controller);
         },
       ),
     );
