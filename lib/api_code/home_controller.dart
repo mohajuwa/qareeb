@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,7 +31,7 @@ class HomeApiController extends GetxController implements GetxService {
 
       var response = await HttpHelper.post(url,
               body: jsonEncode(body), headers: userHeader)
-          .timeout(Duration(seconds: 30));
+          .timeout(const Duration(seconds: 30));
 
       if (kDebugMode) {
         print('Home API Response Status: ${response.statusCode}');
@@ -55,20 +55,19 @@ class HomeApiController extends GetxController implements GetxService {
             update();
             return data;
           } else {
-            Fluttertoast.showToast(msg: "${homeapimodel!.message}");
+            ToastService.showToast("${homeapimodel!.message}");
             return data;
           }
         } else {
-          Fluttertoast.showToast(msg: "${data["message"]}");
+          ToastService.showToast("${data["message"]}");
           return null;
         }
       } else {
         if (kDebugMode) {
           print('Home API HTTP Error: ${response.statusCode}');
         }
-        Fluttertoast.showToast(
-            msg:
-                "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
+        ToastService.showToast(
+            "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
         return null;
       }
     } catch (e) {
@@ -91,7 +90,7 @@ class HomeApiController extends GetxController implements GetxService {
             "حدث خطأ ما. حاول مرة أخرى."; // "Something went wrong. Please try again."
       }
 
-      Fluttertoast.showToast(msg: errorMessage);
+      ToastService.showToast(errorMessage);
       return null;
     }
   }

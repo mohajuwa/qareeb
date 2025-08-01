@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:qareeb/common_code/config.dart';
@@ -29,7 +29,7 @@ class WalletReportApiController extends GetxController implements GetxService {
 
       var response = await HttpHelper.post(url,
               body: jsonEncode(body), headers: userHeader)
-          .timeout(Duration(seconds: 30));
+          .timeout(const Duration(seconds: 30));
 
       if (kDebugMode) {
         print('Wallet Report Response Status: ${response.statusCode}');
@@ -45,15 +45,14 @@ class WalletReportApiController extends GetxController implements GetxService {
             isLoading = false;
             update();
           } else {
-            Fluttertoast.showToast(msg: "${walletReportApiModel!.message}");
+            ToastService.showToast("${walletReportApiModel!.message}");
           }
         } else {
-          Fluttertoast.showToast(msg: "${data["ResponseMsg"]}");
+          ToastService.showToast("${data["ResponseMsg"]}");
         }
       } else {
-        Fluttertoast.showToast(
-            msg:
-                "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
+        ToastService.showToast(
+            "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
       }
     } catch (e) {
       if (kDebugMode) {
@@ -75,7 +74,7 @@ class WalletReportApiController extends GetxController implements GetxService {
             "حدث خطأ ما. حاول مرة أخرى."; // "Something went wrong. Please try again."
       }
 
-      Fluttertoast.showToast(msg: errorMessage);
+      ToastService.showToast(errorMessage);
     }
   }
 }

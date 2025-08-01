@@ -5,7 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -66,7 +66,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
   }
 
   _addMarker(LatLng position, String id, BitmapDescriptor descriptor) async {
-    final Uint8List markIcon = await getImages("assets/pickup.png", 80);
+    final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
     MarkerId markerId = MarkerId(id);
     Marker marker = Marker(
       markerId: markerId,
@@ -356,8 +356,8 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
           "++++++ /request_id new/ ++++ :---  ${Vehicle_Accept_Cancel["request_id"].toString()}");
 
       // if(request_id.toString() == Vehicle_Accept_Cancel["request_id"].toString()){
-      Get.offAll(const MapScreen(
-        selectvihical: false,
+      Get.offAll(const ModernMapScreen(
+        selectVehicle: false,
       ));
       // }else{
       //   print(">>>>>OOOOOOPPPPPP<<<<<<<:::");
@@ -441,7 +441,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
     if (darkMode == true) {
       setState(() {
         DefaultAssetBundle.of(context)
-            .loadString("assets/dark_mode_style.json")
+            .loadString("assets/map_styles/dark_style.json")
             .then(
           (value) {
             setState(() {
@@ -815,10 +815,10 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
         throw 'Could not launch $url';
       }
     } else if (status.isPermanentlyDenied) {
-      Fluttertoast.showToast(msg: "Please allow calls Permission");
+      ToastService.showToast("Please allow calls Permission");
       await openAppSettings();
     } else {
-      Fluttertoast.showToast(msg: "Please allow calls Permission");
+      ToastService.showToast("Please allow calls Permission");
       await openAppSettings();
     }
   }
@@ -859,8 +859,8 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                   padding: const EdgeInsets.only(left: 15, top: 60),
                   child: InkWell(
                     onTap: () {
-                      Get.offAll(const MapScreen(
-                        selectvihical: false,
+                      Get.offAll(const ModernMapScreen(
+                        selectVehicle: false,
                       ));
                     },
                     child: Container(

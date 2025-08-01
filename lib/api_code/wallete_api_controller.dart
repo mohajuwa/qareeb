@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get.dart';
 import 'package:qareeb/common_code/config.dart';
 import 'package:qareeb/common_code/http_helper.dart';
 import '../api_model/wallete_api_model.dart';
-import '../app_screen/top_up_screen.dart';
 
 class WalletApiController extends GetxController implements GetxService {
   WalletAddApiModel? walletAddApiModel;
@@ -38,7 +37,7 @@ class WalletApiController extends GetxController implements GetxService {
 
       var response = await HttpHelper.post(url,
               body: jsonEncode(body), headers: userHeader)
-          .timeout(Duration(seconds: 30));
+          .timeout(const Duration(seconds: 30));
 
       if (kDebugMode) {
         print('Wallet Add Response Status: ${response.statusCode}');
@@ -50,7 +49,7 @@ class WalletApiController extends GetxController implements GetxService {
         walletAddApiModel = walletAddApiModelFromJson(response.body);
 
         if (data["Result"] == true) {
-          Fluttertoast.showToast(msg: walletAddApiModel!.message.toString());
+          ToastService.showToast(walletAddApiModel!.message.toString());
 
           showModalBottomSheet(
             isDismissible: false,
@@ -76,7 +75,7 @@ class WalletApiController extends GetxController implements GetxService {
                       size: 100,
                     ),
                     const SizedBox(height: 20),
-                    Text(
+                    const Text(
                       "Payment Successful!",
                       style: TextStyle(
                         fontSize: 24,
@@ -86,12 +85,12 @@ class WalletApiController extends GetxController implements GetxService {
                     const SizedBox(height: 10),
                     Text(
                       "Amount: $amount",
-                      style: TextStyle(fontSize: 18),
+                      style: const TextStyle(fontSize: 18),
                     ),
                     const SizedBox(height: 30),
                     ElevatedButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: Text("Close"),
+                      child: const Text("Close"),
                     ),
                   ],
                 ),
@@ -99,12 +98,11 @@ class WalletApiController extends GetxController implements GetxService {
             },
           );
         } else {
-          Fluttertoast.showToast(msg: "${data["message"]}");
+          ToastService.showToast("${data["message"]}");
         }
       } else {
-        Fluttertoast.showToast(
-            msg:
-                "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
+        ToastService.showToast(
+            "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
       }
     } catch (e) {
       if (kDebugMode) {
@@ -126,7 +124,7 @@ class WalletApiController extends GetxController implements GetxService {
             "حدث خطأ ما. حاول مرة أخرى."; // "Something went wrong. Please try again."
       }
 
-      Fluttertoast.showToast(msg: errorMessage);
+      ToastService.showToast(errorMessage);
     }
   }
 }

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:qareeb/common_code/config.dart';
@@ -29,7 +29,7 @@ class DeleteAccount extends GetxController implements GetxService {
 
       var response = await HttpHelper.post(url,
               body: jsonEncode(body), headers: userHeader)
-          .timeout(Duration(seconds: 30));
+          .timeout(const Duration(seconds: 30));
 
       if (kDebugMode) {
         print('Delete Account Response Status: ${response.statusCode}');
@@ -43,19 +43,18 @@ class DeleteAccount extends GetxController implements GetxService {
           deleteApiModel = accountDeleteApiModelFromJson(response.body);
           if (deleteApiModel!.result == true) {
             isLoading = false;
-            Fluttertoast.showToast(msg: "${deleteApiModel!.message}");
+            ToastService.showToast("${deleteApiModel!.message}");
             update();
             return data;
           } else {
-            Fluttertoast.showToast(msg: "${deleteApiModel!.message}");
+            ToastService.showToast("${deleteApiModel!.message}");
           }
         } else {
-          Fluttertoast.showToast(msg: "${data["message"]}");
+          ToastService.showToast("${data["message"]}");
         }
       } else {
-        Fluttertoast.showToast(
-            msg:
-                "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
+        ToastService.showToast(
+            "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
       }
     } catch (e) {
       if (kDebugMode) {
@@ -77,7 +76,7 @@ class DeleteAccount extends GetxController implements GetxService {
             "حدث خطأ ما. حاول مرة أخرى."; // "Something went wrong. Please try again."
       }
 
-      Fluttertoast.showToast(msg: errorMessage);
+      ToastService.showToast(errorMessage);
     }
   }
 }

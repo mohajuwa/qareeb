@@ -40,19 +40,19 @@ class TimeoutRequestApiController extends GetxController
           update();
           return data;
         } else {
-          // Fluttertoast.showToast(
+          // ToastService.showToast(
           //   msg: "${timeOutRequest!.message}",
           // );
           return data;
         }
       } else {
-        // Fluttertoast.showToast(
+        // ToastService.showToast(
         //   msg: "${data["ResponseMsg"]}",
         // );
         return data;
       }
     } else {
-      // Fluttertoast.showToast(
+      // ToastService.showToast(
       //   msg: "Somthing went wrong!.....",
       // );
     }

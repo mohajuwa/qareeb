@@ -12,7 +12,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/my_ride_detail_api.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:qareeb/common_code/common_button.dart';
@@ -133,7 +132,7 @@ class _MyRideDetailScreenState extends State<MyRideDetailScreen> {
   }
 
   _addMarker(LatLng position, String id, BitmapDescriptor descriptor) async {
-    final Uint8List markIcon = await getImages("assets/pickup.png", 80);
+    final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
     MarkerId markerId = MarkerId(id);
     Marker marker = Marker(
       markerId: markerId,
@@ -146,7 +145,7 @@ class _MyRideDetailScreenState extends State<MyRideDetailScreen> {
 
   _addMarker3(String id) async {
     for (int a = 0; a < _dropOffPoints.length; a++) {
-      final Uint8List markIcon = await getImages("assets/drop.png", 80);
+      final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
       MarkerId markerId = MarkerId(id[a]);
 
       // Assuming _dropOffPoints[a] is of type PointLatLng, convert it to LatLng
@@ -231,7 +230,7 @@ class _MyRideDetailScreenState extends State<MyRideDetailScreen> {
   //     print(result);
   //     print('png done');
   //     // showToastMessage("Image saved in gallery");
-  //     Fluttertoast.showToast(
+  //     ToastService.showToast(
   //       msg: "Image saved in gallery",
   //     );
   //     return pngBytes;

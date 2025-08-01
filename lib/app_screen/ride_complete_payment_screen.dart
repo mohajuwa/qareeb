@@ -8,7 +8,8 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qareeb/common_code/toastification.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -199,15 +200,12 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
   }
 
   void handlePaymentError(PaymentFailureResponse response) {
-    Fluttertoast.showToast(
-        msg: 'ERROR HERE: ${response.code} - ${response.message}',
-        timeInSecForIosWeb: 4);
+    ToastService.showToast('ERROR HERE: ${response.code} - ${response.message}',
+        type: ToastType.error, timeInSecForIosWeb: 4);
   }
 
   void handleExternalWallet(ExternalWalletResponse response) {
-    Fluttertoast.showToast(
-        msg: 'EXTERNAL_WALLET IS: ${response.walletName}',
-        timeInSecForIosWeb: 4);
+    ToastService.showToast("Please Select Image", type: ToastType.error);
   }
 
   File? _selectedImage;
@@ -497,8 +495,8 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                             containcolore:
                                                 theamcolore.withOpacity(0.1),
                                             onPressed1: () {
-                                              Fluttertoast.showToast(
-                                                  msg: "Please Select Image");
+                                              ToastService.showToast(
+                                                  "Please Select Image");
                                             },
                                             context: context,
                                             txt1: "Next"),
@@ -698,8 +696,8 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                             containcolore:
                                                 theamcolore.withOpacity(0.1),
                                             onPressed1: () {
-                                              Fluttertoast.showToast(
-                                                msg: "Please Select Image",
+                                              ToastService.showToast(
+                                                "Please Select Image",
                                               );
                                             },
                                             context: context,

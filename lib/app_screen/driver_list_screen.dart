@@ -35,7 +35,7 @@ class _DriverListScreenState extends State<DriverListScreen>
   GlobalDriverAcceptClass globalDriverAcceptClass =
       Get.put(GlobalDriverAcceptClass());
   CalculateController calculateController = Get.put(CalculateController());
-  // late AnimationController controller;
+  late AnimationController controller;
   List<double> progressList = [];
 
   List<AnimationController> controllers = [];
@@ -194,7 +194,7 @@ class _DriverListScreenState extends State<DriverListScreen>
 
 //   onWillPop:  () async {
 //   // Navigator.pop(context, RefreshData(true));
-//   Get.offAll(const MapScreen());
+//   Get.offAll(const ModernMapScreen());
 //   return false;
 // },
   ColorNotifier notifier = ColorNotifier();

@@ -62,15 +62,16 @@ import 'language_screen.dart';
 import 'my_ride_screen.dart';
 import 'notification_screen.dart';
 
-class MapScreen extends StatefulWidget {
-  final bool selectvihical;
-  const MapScreen({super.key, required this.selectvihical});
+class ModernMapScreen extends StatefulWidget {
+  final bool selectVehicle;
+  const ModernMapScreen({super.key, required this.selectVehicle});
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  State<ModernMapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
+class _MapScreenState extends State<ModernMapScreen>
+    with TickerProviderStateMixin {
   final List<LatLng> vihicallocations = [];
   final List<String> _iconPaths = [];
   final List<String> _iconPathsbiddingon = [];
@@ -86,7 +87,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (darkMode == true) {
       setState(() {
         DefaultAssetBundle.of(context)
-            .loadString("assets/dark_mode_style.json")
+            .loadString("assets/map_styles/dark_style.json")
             .then(
           (value) {
             setState(() {
@@ -1086,7 +1087,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 /*
 TO USE SOCKET IN OTHER FILES:
 
-1. Get reference to MapScreen (where socket is initialized)
+1. Get reference to ModernMapScreen (where socket is initialized)
 2. Use the helper methods instead of direct socket access
 
 Example in other files:
@@ -1104,12 +1105,12 @@ Example in other files:
 // Use: mapScreenInstance.emitAcceptBidding(uid, dId, requestId, price);
 
 ALTERNATIVE APPROACH:
-Create a global variable for MapScreen reference:
+Create a global variable for ModernMapScreen reference:
 
 // At the top of your app (main.dart or globals):
 MapScreenState? globalMapScreen;
 
-// In MapScreen initState():
+// In ModernMapScreen initState():
 globalMapScreen = this;
 
 // In other files:
@@ -1751,10 +1752,10 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
     // Page list API call
     pagelistcontroller.pagelistttApi(context);
 
-    // Handle widget.selectvihical case
-    if (widget.selectvihical == true) {
+    // Handle widget.selectVehicle case
+    if (widget.selectVehicle == true) {
       if (kDebugMode) {
-        print("selectvihical is true - calling homeApi and calculateApi");
+        print("selectVehicle is true - calling homeApi and calculateApi");
       }
       select1 = 0;
 
@@ -1913,7 +1914,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
   // Multiple pin function
 
   _addMarker11(LatLng position, String id, BitmapDescriptor descriptor) async {
-    final Uint8List markIcon = await getImages("assets/pickup.png", 80);
+    final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
     MarkerId markerId = MarkerId(id);
     Marker marker = Marker(
       markerId: markerId,
@@ -1978,7 +1979,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 
   Future _addMarker2(
       LatLng position, String id, BitmapDescriptor descriptor) async {
-    final Uint8List markIcon = await getImages("assets/drop.png", 80);
+    final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
     MarkerId markerId = MarkerId(id);
     Marker marker = Marker(
       markerId: markerId,
@@ -2041,7 +2042,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 
   _addMarker3(String id) async {
     for (int a = 0; a < _dropOffPoints.length; a++) {
-      final Uint8List markIcon = await getImages("assets/drop.png", 80);
+      final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
       MarkerId markerId = MarkerId(id[a]);
 
       // Assuming _dropOffPoints[a] is of type PointLatLng, convert it to LatLng
@@ -2404,7 +2405,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
   }
 
   Future<void> _onAddMarkerButtonPressed(double? lat, long) async {
-    final Uint8List markIcon = await getImages("assets/pickup.png", 80);
+    final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
     // markers.add(Marker(
     //   markerId: const MarkerId("1"),
     //   position: LatLng(double.parse(lat.toString()),double.parse(long.toString())),
@@ -3929,8 +3930,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                             droptitle = "";
                             dropsubtitle = "";
                             droptitlelist = [];
-                            Get.offAll(const MapScreen(
-                              selectvihical: false,
+                            Get.offAll(const ModernMapScreen(
+                              selectVehicle: false,
                             ));
                           case 1:
                             Navigator.of(context).push(MaterialPageRoute(
@@ -4006,8 +4007,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                                 prefs.setBool("isDark", value);
                                                 notifier.isAvailable(value);
                                                 darkMode = value;
-                                                Get.offAll(MapScreen(
-                                                  selectvihical: false,
+                                                Get.offAll(ModernMapScreen(
+                                                  selectVehicle: false,
                                                 ));
                                               });
                                               // mapThemeStyle(context: context);
@@ -4301,7 +4302,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
       );
     } else if (amountresponse == "false") {
       Fluttertoast.showToast(
-        msg: "Address is not in the zone!",
+        msg: "Address is not in the zone! map screen",
       );
     } else if (dropprice == 0) {
       Fluttertoast.showToast(
@@ -4345,7 +4346,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                       children: [
                         isanimation == false
                             ? const SizedBox()
-                            : lottie.Lottie.asset("assets/lottie/loadding.json",
+                            : lottie.Lottie.asset(
+                                "assets/lottie/map_loading.json",
                                 height: 30),
 
                         const SizedBox(

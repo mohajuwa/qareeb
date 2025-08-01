@@ -150,8 +150,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
       ),
       child: WillPopScope(
         onWillPop: () async {
-          Get.offAll(const MapScreen(
-            selectvihical: false,
+          Get.offAll(const ModernMapScreen(
+            selectVehicle: false,
           ));
           return false;
         },
@@ -173,8 +173,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                           children: [
                             InkWell(
                               onTap: () {
-                                Get.offAll(const MapScreen(
-                                  selectvihical: false,
+                                Get.offAll(const ModernMapScreen(
+                                  selectVehicle: false,
                                 ));
                                 print(
                                     "++++dropcontroller++++:--- ${dropcontroller.text}");
@@ -810,8 +810,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                               "++++++++++++++++done++++++++++++++++");
                                                           widget.bidding == "1"
                                                               ? Get.offAll(
-                                                                  const MapScreen(
-                                                                  selectvihical:
+                                                                  const ModernMapScreen(
+                                                                  selectVehicle:
                                                                       false,
                                                                 ))
                                                               : widget.pagestate ==
@@ -849,71 +849,117 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                       drop_lat_lon:
                                                                           "${latitudedrop},${longitudedrop}",
                                                                       drop_lat_lon_list:
-                                                                          onlypass)
-                                                                  .then(
-                                                                  (value) {
-                                                                    dropprice =
-                                                                        0;
-                                                                    minimumfare =
-                                                                        0;
-                                                                    maximumfare =
-                                                                        0;
+                                                                          onlypass // This will automatically handle string/object conversion
 
-                                                                    if (value[
-                                                                            "Result"] ==
-                                                                        true) {
-                                                                      dropprice =
-                                                                          value[
-                                                                              "drop_price"];
-                                                                      minimumfare =
-                                                                          value["vehicle"]
-                                                                              [
-                                                                              "minimum_fare"];
-                                                                      maximumfare =
-                                                                          value["vehicle"]
-                                                                              [
-                                                                              "maximum_fare"];
-                                                                      responsemessage =
+                                                                      )
+                                                                  .then(
+                                                                      (value) {
+                                                                  if (value !=
+                                                                          null &&
+                                                                      value["Result"] ==
+                                                                          true) {
+                                                                    // Success - update your variables
+
+                                                                    dropprice =
+                                                                        value[
+                                                                            "drop_price"];
+
+                                                                    minimumfare =
+                                                                        value["vehicle"]
+                                                                            [
+                                                                            "minimum_fare"];
+
+                                                                    maximumfare =
+                                                                        value["vehicle"]
+                                                                            [
+                                                                            "maximum_fare"];
+
+                                                                    responsemessage =
+                                                                        value[
+                                                                            "message"];
+
+                                                                    tot_hour = value[
+                                                                            "tot_hour"]
+                                                                        .toString();
+
+                                                                    tot_time = value[
+                                                                            "tot_minute"]
+                                                                        .toString();
+
+                                                                    vehicle_id =
+                                                                        value["vehicle"]["id"]
+                                                                            .toString();
+
+                                                                    vihicalrice =
+                                                                        double.parse(
+                                                                            value["drop_price"].toString());
+
+                                                                    totalkm = double.parse(
+                                                                        value["tot_km"]
+                                                                            .toString());
+
+                                                                    tot_secound =
+                                                                        "0";
+
+                                                                    vihicalimage =
+                                                                        value["vehicle"]["map_img"]
+                                                                            .toString();
+
+                                                                    vihicalname =
+                                                                        value["vehicle"]["name"]
+                                                                            .toString();
+
+                                                                    setState(
+                                                                        () {
+                                                                      amountresponse =
+                                                                          "true";
+                                                                    });
+
+                                                                    print(
+                                                                        "********** Success **********");
+
+                                                                    print(
+                                                                        "Drop price: $dropprice YER");
+
+                                                                    print(
+                                                                        "Distance: $totalkm km");
+
+                                                                    print(
+                                                                        "Time: ${tot_hour}h ${tot_time}m");
+                                                                  } else {
+                                                                    // Handle different error types
+
+                                                                    setState(
+                                                                        () {
+                                                                      amountresponse =
+                                                                          "false";
+                                                                    });
+
+                                                                    if (value !=
+                                                                            null &&
+                                                                        value["message"] !=
+                                                                            null) {
+                                                                      String
+                                                                          message =
                                                                           value[
                                                                               "message"];
 
-                                                                      tot_hour =
-                                                                          value["tot_hour"]
-                                                                              .toString();
-                                                                      tot_time =
-                                                                          value["tot_minute"]
-                                                                              .toString();
-                                                                      vehicle_id =
-                                                                          value["vehicle"]["id"]
-                                                                              .toString();
-                                                                      vihicalrice =
-                                                                          double.parse(
-                                                                              value["drop_price"].toString());
-                                                                      totalkm =
-                                                                          double.parse(
-                                                                              value["tot_km"].toString());
-                                                                      tot_secound =
-                                                                          "0";
+                                                                      if (message
+                                                                          .contains(
+                                                                              "zone")) {
+                                                                        // Zone error - suggest using test coordinates
 
-                                                                      vihicalimage =
-                                                                          value["vehicle"]["map_img"]
-                                                                              .toString();
-                                                                      vihicalname =
-                                                                          value["vehicle"]["name"]
-                                                                              .toString();
-                                                                    } else {
-                                                                      print(
-                                                                          "jojojojojojojojojojojojojojojojojojojojojojojojo");
+                                                                        print(
+                                                                            "Zone error - coordinates outside service area");
+                                                                      } else if (message
+                                                                          .contains(
+                                                                              "Vehicle Not Found")) {
+                                                                        print(
+                                                                            "Vehicle error - check vehicle ID");
+                                                                      }
                                                                     }
-
-                                                                    print(
-                                                                        "********** dropprice **********:----- ${dropprice}");
-                                                                    print(
-                                                                        "********** minimumfare **********:----- ${minimumfare}");
-                                                                    print(
-                                                                        "********** maximumfare **********:----- ${maximumfare}");
-                                                                  },
-                                                                )
+                                                                  }
+                                                                })
                                                               : modual_calculateController
                                                                   .modualcalculateApi(
                                                                       context:
@@ -1137,8 +1183,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                           socket.close();
                                                           widget.bidding == "1"
                                                               ? Get.offAll(
-                                                                  const MapScreen(
-                                                                  selectvihical:
+                                                                  const ModernMapScreen(
+                                                                  selectVehicle:
                                                                       false,
                                                                 ))
                                                               : widget.pagestate ==
@@ -1173,90 +1219,117 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                       drop_lat_lon:
                                                                           "${latitudedrop},${longitudedrop}",
                                                                       drop_lat_lon_list:
-                                                                          onlypass)
-                                                                  .then(
-                                                                  (value) {
-                                                                    dropprice =
-                                                                        0;
-                                                                    minimumfare =
-                                                                        0;
-                                                                    maximumfare =
-                                                                        0;
+                                                                          onlypass // This will automatically handle string/object conversion
 
-                                                                    if (value[
-                                                                            "Result"] ==
-                                                                        true) {
+                                                                      )
+                                                                  .then(
+                                                                      (value) {
+                                                                  if (value !=
+                                                                          null &&
+                                                                      value["Result"] ==
+                                                                          true) {
+                                                                    // Success - update your variables
+
+                                                                    dropprice =
+                                                                        value[
+                                                                            "drop_price"];
+
+                                                                    minimumfare =
+                                                                        value["vehicle"]
+                                                                            [
+                                                                            "minimum_fare"];
+
+                                                                    maximumfare =
+                                                                        value["vehicle"]
+                                                                            [
+                                                                            "maximum_fare"];
+
+                                                                    responsemessage =
+                                                                        value[
+                                                                            "message"];
+
+                                                                    tot_hour = value[
+                                                                            "tot_hour"]
+                                                                        .toString();
+
+                                                                    tot_time = value[
+                                                                            "tot_minute"]
+                                                                        .toString();
+
+                                                                    vehicle_id =
+                                                                        value["vehicle"]["id"]
+                                                                            .toString();
+
+                                                                    vihicalrice =
+                                                                        double.parse(
+                                                                            value["drop_price"].toString());
+
+                                                                    totalkm = double.parse(
+                                                                        value["tot_km"]
+                                                                            .toString());
+
+                                                                    tot_secound =
+                                                                        "0";
+
+                                                                    vihicalimage =
+                                                                        value["vehicle"]["map_img"]
+                                                                            .toString();
+
+                                                                    vihicalname =
+                                                                        value["vehicle"]["name"]
+                                                                            .toString();
+
+                                                                    setState(
+                                                                        () {
                                                                       amountresponse =
                                                                           "true";
-                                                                      dropprice =
-                                                                          value[
-                                                                              "drop_price"];
-                                                                      minimumfare =
-                                                                          value["vehicle"]
-                                                                              [
-                                                                              "minimum_fare"];
-                                                                      maximumfare =
-                                                                          value["vehicle"]
-                                                                              [
-                                                                              "maximum_fare"];
-                                                                      responsemessage =
+                                                                    });
+
+                                                                    print(
+                                                                        "********** Success **********");
+
+                                                                    print(
+                                                                        "Drop price: $dropprice YER");
+
+                                                                    print(
+                                                                        "Distance: $totalkm km");
+
+                                                                    print(
+                                                                        "Time: ${tot_hour}h ${tot_time}m");
+                                                                  } else {
+                                                                    // Handle different error types
+
+                                                                    setState(
+                                                                        () {
+                                                                      amountresponse =
+                                                                          "false";
+                                                                    });
+
+                                                                    if (value !=
+                                                                            null &&
+                                                                        value["message"] !=
+                                                                            null) {
+                                                                      String
+                                                                          message =
                                                                           value[
                                                                               "message"];
 
-                                                                      tot_hour =
-                                                                          value["tot_hour"]
-                                                                              .toString();
-                                                                      tot_time =
-                                                                          value["tot_minute"]
-                                                                              .toString();
-                                                                      vehicle_id =
-                                                                          value["vehicle"]["id"]
-                                                                              .toString();
-                                                                      vihicalrice =
-                                                                          double.parse(
-                                                                              value["drop_price"].toString());
-                                                                      totalkm =
-                                                                          double.parse(
-                                                                              value["tot_km"].toString());
-                                                                      tot_secound =
-                                                                          "0";
+                                                                      if (message
+                                                                          .contains(
+                                                                              "zone")) {
+                                                                        // Zone error - suggest using test coordinates
 
-                                                                      vihicalimage =
-                                                                          value["vehicle"]["map_img"]
-                                                                              .toString();
-                                                                      vihicalname =
-                                                                          value["vehicle"]["name"]
-                                                                              .toString();
-
-                                                                      print(
-                                                                          ".......>>>>>> ${tot_hour}");
-                                                                      print(
-                                                                          ".......>>>>>> ${tot_time}");
-                                                                      print(
-                                                                          ".......>>>>>> ${vehicle_id}");
-                                                                      print(
-                                                                          ".......>>>>>> ${vihicalrice}");
-                                                                      print(
-                                                                          ".......>>>>>> ${totalkm}");
-                                                                      print(
-                                                                          ".......>>>>>> ${totalkm}");
-                                                                      print(
-                                                                          ".......>>>>>> ${totalkm}");
-                                                                    } else {
-                                                                      amountresponse =
-                                                                          "false";
-                                                                      print(
-                                                                          "jojojojojojojojojojojojojojojojojojojojojojojojo");
+                                                                        print(
+                                                                            "Zone error - coordinates outside service area");
+                                                                      } else if (message
+                                                                          .contains(
+                                                                              "Vehicle Not Found")) {
+                                                                        print(
+                                                                            "Vehicle error - check vehicle ID");
+                                                                      }
                                                                     }
-
-                                                                    print(
-                                                                        "********** dropprice **********:----- ${dropprice}");
-                                                                    print(
-                                                                        "********** minimumfare **********:----- ${minimumfare}");
-                                                                    print(
-                                                                        "********** maximumfare **********:----- ${maximumfare}");
-                                                                  },
-                                                                )
+                                                                  }
+                                                                })
                                                               : modual_calculateController
                                                                   .modualcalculateApi(
                                                                       context:
@@ -1485,8 +1558,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                       "++++++++++++++++longitudedrop++++++++++++++++ $longitudedrop");
                                                   widget.bidding == "1"
                                                       ? Get.offAll(
-                                                          const MapScreen(
-                                                          selectvihical: false,
+                                                          const ModernMapScreen(
+                                                          selectVehicle: false,
                                                         ))
                                                       : Navigator.push(
                                                           context,
@@ -1516,73 +1589,113 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                               drop_lat_lon:
                                                                   "${latitudedrop},${longitudedrop}",
                                                               drop_lat_lon_list:
-                                                                  onlypass)
-                                                          .then(
-                                                          (value) {
-                                                            dropprice = 0;
-                                                            minimumfare = 0;
-                                                            maximumfare = 0;
+                                                                  onlypass // This will automatically handle string/object conversion
 
-                                                            if (value[
-                                                                    "Result"] ==
-                                                                true) {
-                                                              dropprice = value[
-                                                                  "drop_price"];
-                                                              minimumfare = value[
-                                                                      "vehicle"]
-                                                                  [
-                                                                  "minimum_fare"];
-                                                              maximumfare = value[
-                                                                      "vehicle"]
-                                                                  [
-                                                                  "maximum_fare"];
-                                                              responsemessage =
+                                                              )
+                                                          .then((value) {
+                                                          if (value != null &&
+                                                              value["Result"] ==
+                                                                  true) {
+                                                            // Success - update your variables
+
+                                                            dropprice = value[
+                                                                "drop_price"];
+
+                                                            minimumfare = value[
+                                                                    "vehicle"][
+                                                                "minimum_fare"];
+
+                                                            maximumfare = value[
+                                                                    "vehicle"][
+                                                                "maximum_fare"];
+
+                                                            responsemessage =
+                                                                value[
+                                                                    "message"];
+
+                                                            tot_hour = value[
+                                                                    "tot_hour"]
+                                                                .toString();
+
+                                                            tot_time = value[
+                                                                    "tot_minute"]
+                                                                .toString();
+
+                                                            vehicle_id =
+                                                                value["vehicle"]
+                                                                        ["id"]
+                                                                    .toString();
+
+                                                            vihicalrice = double
+                                                                .parse(value[
+                                                                        "drop_price"]
+                                                                    .toString());
+
+                                                            totalkm = double
+                                                                .parse(value[
+                                                                        "tot_km"]
+                                                                    .toString());
+
+                                                            tot_secound = "0";
+
+                                                            vihicalimage =
+                                                                value["vehicle"]
+                                                                        [
+                                                                        "map_img"]
+                                                                    .toString();
+
+                                                            vihicalname =
+                                                                value["vehicle"]
+                                                                        ["name"]
+                                                                    .toString();
+
+                                                            setState(() {
+                                                              amountresponse =
+                                                                  "true";
+                                                            });
+
+                                                            print(
+                                                                "********** Success **********");
+
+                                                            print(
+                                                                "Drop price: $dropprice YER");
+
+                                                            print(
+                                                                "Distance: $totalkm km");
+
+                                                            print(
+                                                                "Time: ${tot_hour}h ${tot_time}m");
+                                                          } else {
+                                                            // Handle different error types
+
+                                                            setState(() {
+                                                              amountresponse =
+                                                                  "false";
+                                                            });
+
+                                                            if (value != null &&
+                                                                value["message"] !=
+                                                                    null) {
+                                                              String message =
                                                                   value[
                                                                       "message"];
 
-                                                              tot_hour = value[
-                                                                      "tot_hour"]
-                                                                  .toString();
-                                                              tot_time = value[
-                                                                      "tot_minute"]
-                                                                  .toString();
-                                                              vehicle_id =
-                                                                  value["vehicle"]
-                                                                          ["id"]
-                                                                      .toString();
-                                                              vihicalrice = double
-                                                                  .parse(value[
-                                                                          "drop_price"]
-                                                                      .toString());
-                                                              totalkm = double
-                                                                  .parse(value[
-                                                                          "tot_km"]
-                                                                      .toString());
-                                                              tot_secound = "0";
+                                                              if (message
+                                                                  .contains(
+                                                                      "zone")) {
+                                                                // Zone error - suggest using test coordinates
 
-                                                              vihicalimage = value[
-                                                                          "vehicle"]
-                                                                      [
-                                                                      "map_img"]
-                                                                  .toString();
-                                                              vihicalname =
-                                                                  value["vehicle"]
-                                                                          [
-                                                                          "name"]
-                                                                      .toString();
-                                                            } else {
-                                                              print(
-                                                                  "jojojojojojojojojojojojojojojojojojojojojojojojo");
+                                                                print(
+                                                                    "Zone error - coordinates outside service area");
+                                                              } else if (message
+                                                                  .contains(
+                                                                      "Vehicle Not Found")) {
+                                                                print(
+                                                                    "Vehicle error - check vehicle ID");
+                                                              }
                                                             }
-
-                                                            print(
-                                                                "********** dropprice **********:----- ${dropprice}");
-                                                            print(
-                                                                "********** minimumfare **********:----- ${minimumfare}");
-                                                            print(
-                                                                "********** maximumfare **********:----- ${maximumfare}");
-                                                          },
-                                                        )
+                                                          }
+                                                        })
                                                       : modual_calculateController
                                                           .modualcalculateApi(
                                                               context: context,

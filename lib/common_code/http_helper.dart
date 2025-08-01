@@ -20,8 +20,8 @@ class HttpHelper {
       };
 
       // Set timeouts
-      httpClient.connectionTimeout = Duration(seconds: 30);
-      httpClient.idleTimeout = Duration(seconds: 30);
+      httpClient.connectionTimeout = const Duration(seconds: 30);
+      httpClient.idleTimeout = const Duration(seconds: 30);
 
       _client = IOClient(httpClient);
     }

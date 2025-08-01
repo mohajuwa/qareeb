@@ -5,7 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -119,7 +119,7 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
   }
 
   _addMarker(LatLng position, String id, BitmapDescriptor descriptor) async {
-    final Uint8List markIcon = await getImages("assets/pickup.png", 80);
+    final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
     MarkerId markerId = MarkerId(id);
     Marker marker = Marker(
       markerId: markerId,
@@ -131,7 +131,7 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
 
   _addMarker3(String id) async {
     for (int a = 0; a < droppointstartscreen.length; a++) {
-      final Uint8List markIcon = await getImages("assets/drop.png", 80);
+      final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
       MarkerId markerId = MarkerId(id[a]);
 
       // Assuming _dropOffPoints[a] is of type PointLatLng, convert it to LatLng
@@ -356,7 +356,7 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
     if (darkMode == true) {
       setState(() {
         DefaultAssetBundle.of(context)
-            .loadString("assets/dark_mode_style.json")
+            .loadString("assets/map_styles/dark_style.json")
             .then(
           (value) {
             setState(() {
@@ -421,10 +421,10 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
         throw 'Could not launch $url';
       }
     } else if (status.isPermanentlyDenied) {
-      Fluttertoast.showToast(msg: "Please allow calls Permission");
+      ToastService.showToast("Please allow calls Permission");
       await openAppSettings();
     } else {
-      Fluttertoast.showToast(msg: "Please allow calls Permission");
+      ToastService.showToast("Please allow calls Permission");
       await openAppSettings();
     }
   }
@@ -743,8 +743,8 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
               padding: const EdgeInsets.only(left: 15, top: 60),
               child: InkWell(
                 onTap: () {
-                  Get.offAll(const MapScreen(
-                    selectvihical: false,
+                  Get.offAll(const ModernMapScreen(
+                    selectVehicle: false,
                   ));
                 },
                 child: Container(

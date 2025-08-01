@@ -11,8 +11,8 @@ Future<void> initPlatformState({context}) async {
 
   if (permissionGranted) {
     print("Notification permission granted.");
-    Get.offAll(const MapScreen(
-      selectvihical: false,
+    Get.offAll(const ModernMapScreen(
+      selectVehicle: false,
     ));
   } else {
     print("Notification permission denied.");

@@ -117,9 +117,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   getlocledata().then(
                     (value) async {
                       // await Future.delayed(Duration(seconds: 10),() {
-                      //   Navigator.push(context, MaterialPageRoute(builder: (context) => const MapScreen(),));
-                      Get.offAll(const MapScreen(
-                        selectvihical: false,
+                      //   Navigator.push(context, MaterialPageRoute(builder: (context) => const ModernMapScreen(),));
+                      Get.offAll(const ModernMapScreen(
+                        selectVehicle: false,
                       ));
                       // },);
                     },

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get.dart';
 import 'package:qareeb/common_code/config.dart';
 import 'package:qareeb/common_code/http_helper.dart';
@@ -25,7 +25,7 @@ class PaymentGetApiController extends GetxController implements GetxService {
       }
 
       var response = await HttpHelper.get(url, headers: userHeader)
-          .timeout(Duration(seconds: 30));
+          .timeout(const Duration(seconds: 30));
 
       if (kDebugMode) {
         print("Payment API Response Status: ${response.statusCode}");
@@ -41,13 +41,12 @@ class PaymentGetApiController extends GetxController implements GetxService {
           update();
         } else {
           Get.back();
-          Fluttertoast.showToast(msg: "${data["message"]}");
+          ToastService.showToast("${data["message"]}");
         }
       } else {
         Get.back();
-        Fluttertoast.showToast(
-            msg:
-                "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
+        ToastService.showToast(
+            "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
       }
     } catch (e) {
       if (kDebugMode) {

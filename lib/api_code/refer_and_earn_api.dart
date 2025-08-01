@@ -28,7 +28,7 @@ class referandearnApiController extends GetxController implements GetxService {
 
       var response = await HttpHelper.post(url,
               body: jsonEncode(body), headers: userHeader)
-          .timeout(Duration(seconds: 30));
+          .timeout(const Duration(seconds: 30));
 
       if (kDebugMode) {
         print('Refer and Earn Response Status: ${response.statusCode}');

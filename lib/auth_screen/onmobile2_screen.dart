@@ -6,7 +6,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get.dart';
 import 'package:otp_text_field/otp_field.dart';
 import 'package:otp_text_field/otp_field_style.dart';
@@ -280,11 +280,11 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                             builder: (context) => const Onmobile3Screen(),
                           ));
                     } else {
-                      Fluttertoast.showToast(
-                          msg: "Incorrect OTP. Please try again.".tr);
+                      ToastService.showToast(
+                          "Incorrect OTP. Please try again.".tr);
                     }
                   } else {
-                    Fluttertoast.showToast(msg: "Please Enter Otp.".tr);
+                    ToastService.showToast("Please Enter Otp.".tr);
                   }
                 },
                 context: context,

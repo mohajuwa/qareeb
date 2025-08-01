@@ -22,7 +22,7 @@ class SmstypeApiController extends GetxController implements GetxService {
       print("SMS API URL: $url");
 
       var response = await HttpHelper.get(url, headers: userHeader)
-          .timeout(Duration(seconds: 30));
+          .timeout(const Duration(seconds: 30));
 
       print("SMS API Response Status: ${response.statusCode}");
       print("SMS API Response Body: ${response.body}");

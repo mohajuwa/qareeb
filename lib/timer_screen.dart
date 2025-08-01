@@ -6,7 +6,6 @@ import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/global_variables.dart';
 import 'app_screen/driver_startride_screen.dart';
 import 'app_screen/home_screen.dart';
-import 'app_screen/map_screen.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'app_screen/my_ride_screen.dart';
 import 'app_screen/ride_complete_payment_screen.dart';

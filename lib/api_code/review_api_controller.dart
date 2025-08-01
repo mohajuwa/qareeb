@@ -49,8 +49,8 @@ class DriverReviewDetailApiController extends GetxController
           // Get.offAll(BoardingPage());
           update();
           showToastForDuration("${data["message"]}", 2);
-          Get.offAll(const MapScreen(
-            selectvihical: false,
+          Get.offAll(const ModernMapScreen(
+            selectVehicle: false,
           ));
           return data;
         } else {

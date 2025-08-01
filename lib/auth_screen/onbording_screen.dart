@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:lottie/lottie.dart';
@@ -9,7 +9,6 @@ import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui' as ui;
 
-import 'package:qareeb/auth_screen/onmobile1_screen.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/language_toggle_button.dart';
 import '../api_code/forgot_api_controller.dart';
@@ -402,7 +401,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         _navigateToOnboarding3();
         break;
       default:
-        Fluttertoast.showToast(msg: "No Service".tr);
+        ToastService.showToast( "No Service".tr);
     }
   }
 
@@ -558,7 +557,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _handleForgotPassword() {
     if (_forgotPhoneController.text.isEmpty) {
-      Fluttertoast.showToast(msg: 'Enter Mobile Number...!!!'.tr);
+      ToastService.showToast( 'Enter Mobile Number...!!!'.tr);
       return;
     }
 
@@ -584,10 +583,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _showCreatePasswordBottomSheet();
           break;
         default:
-          Fluttertoast.showToast(msg: "No Service".tr);
+          ToastService.showToast( "No Service".tr);
       }
     } else {
-      Fluttertoast.showToast(msg: "${value['message']}");
+      ToastService.showToast( "${value['message']}");
     }
   }
 
@@ -699,7 +698,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (expectedOtp == _otpVariableForgot) {
       _showCreatePasswordBottomSheet();
     } else {
-      Fluttertoast.showToast(msg: "Incorrect OTP. Please try again.".tr);
+      ToastService.showToast( "Incorrect OTP. Please try again.".tr);
     }
   }
 
@@ -756,7 +755,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _handlePasswordReset() {
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      Fluttertoast.showToast(msg: "Please enter current password".tr);
+      ToastService.showToast( "Please enter current password".tr);
       return;
     }
 
@@ -771,7 +770,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (value["ResponseCode"] == "200") {
         Get.back();
       }
-      Fluttertoast.showToast(msg: value["message"]);
+      ToastService.showToast( value["message"]);
     });
   }
 

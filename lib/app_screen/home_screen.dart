@@ -5,7 +5,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -232,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (darkMode == true) {
       setState(() {
         DefaultAssetBundle.of(context)
-            .loadString("assets/dark_mode_style.json")
+            .loadString("assets/map_styles/dark_style.json")
             .then(
           (value) {
             setState(() {
@@ -327,7 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _addMarker(LatLng position, String id, BitmapDescriptor descriptor) async {
-    final Uint8List markIcon = await getImages("assets/pickup.png", 80);
+    final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
     MarkerId markerId = MarkerId(id);
     Marker marker = Marker(
       markerId: markerId,
@@ -392,7 +391,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future _addMarker2(
       LatLng position, String id, BitmapDescriptor descriptor) async {
-    final Uint8List markIcon = await getImages("assets/drop.png", 80);
+    final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
     MarkerId markerId = MarkerId(id);
     Marker marker = Marker(
       markerId: markerId,
@@ -455,7 +454,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   _addMarker3(String id) async {
     for (int a = 0; a < _dropOffPoints.length; a++) {
-      final Uint8List markIcon = await getImages("assets/drop.png", 80);
+      final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
       MarkerId markerId = MarkerId(id[a]);
 
       LatLng position =
@@ -664,7 +663,7 @@ class _HomeScreenState extends State<HomeScreen> {
     notifier = Provider.of<ColorNotifier>(context, listen: true);
     return WillPopScope(
       onWillPop: () async {
-        return await Get.offAll(MapScreen(selectvihical: true));
+        return await Get.offAll(ModernMapScreen(selectVehicle: true));
       },
       child: Scaffold(
         extendBody: true,
@@ -1722,8 +1721,8 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.only(left: 15, top: 60),
               child: InkWell(
                 onTap: () {
-                  Get.offAll(MapScreen(
-                    selectvihical: true,
+                  Get.offAll(ModernMapScreen(
+                    selectVehicle: true,
                   ));
                 },
                 child: Container(

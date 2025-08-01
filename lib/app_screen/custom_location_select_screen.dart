@@ -43,7 +43,7 @@ class _CustomLocationSelectScreenState
     if (darkMode == true) {
       setState(() {
         DefaultAssetBundle.of(context)
-            .loadString("assets/dark_mode_style.json")
+            .loadString("assets/map_styles/dark_style.json")
             .then(
           (value) {
             setState(() {
@@ -149,7 +149,7 @@ class _CustomLocationSelectScreenState
   }
 
   Future<void> _onAddMarkerButtonPressed(double? lat, long) async {
-    final Uint8List markIcon = await getImages("assets/pickup.png", 80);
+    final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
     markers.add(Marker(
       markerId: const MarkerId("1"),
       onTap: () {
@@ -237,8 +237,8 @@ class _CustomLocationSelectScreenState
                   print("++++++++++++++++done++++++++++++++++");
 
                   widget.bidding == "1"
-                      ? Get.offAll(const MapScreen(
-                          selectvihical: false,
+                      ? Get.offAll(const ModernMapScreen(
+                          selectVehicle: false,
                         ))
                       : widget.pagestate == true
                           ? Navigator.pop(context, RefreshData(true))
@@ -356,8 +356,8 @@ class _CustomLocationSelectScreenState
                   print("++++++++++++++++done++++++++++++++++");
 
                   widget.bidding == "1"
-                      ? Get.offAll(const MapScreen(
-                          selectvihical: false,
+                      ? Get.offAll(const ModernMapScreen(
+                          selectVehicle: false,
                         ))
                       : widget.pagestate == true
                           ? Navigator.pop(context, RefreshData(true))
