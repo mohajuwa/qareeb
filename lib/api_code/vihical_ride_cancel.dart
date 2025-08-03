@@ -10,6 +10,8 @@ class VihicalCancelRideApiController extends GetxController
     implements GetxService {
   VihicalRideCancelModel? vihicalRideCancelModel;
 
+  bool isloadoing = true;
+
   Future vihicalcancelapi(
       {context,
       required String uid,
@@ -41,6 +43,7 @@ class VihicalCancelRideApiController extends GetxController
     var data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
+      isloadoing = false;
       if (data["Result"] == true) {
         vihicalRideCancelModel = vihicalRideCancelModelFromJson(response.body);
         if (vihicalRideCancelModel!.result == true) {
@@ -57,6 +60,8 @@ class VihicalCancelRideApiController extends GetxController
         return data;
       }
     } else {
+      isloadoing = false;
+
       showToastForDuration("Somthing went wrong!.....", 2);
     }
   }

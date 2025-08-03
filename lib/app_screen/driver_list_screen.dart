@@ -156,7 +156,7 @@ class _DriverListScreenState extends State<DriverListScreen>
     buttontimer = true;
     print("========= BOTTONTIMER :- ${buttontimer}");
 
-    if (controller == null || !controller!.isAnimating) {
+    if (!controller.isAnimating) {
       controller = AnimationController(
         vsync: this,
         duration: Duration(
@@ -164,7 +164,7 @@ class _DriverListScreenState extends State<DriverListScreen>
         ),
       );
 
-      controller!.addStatusListener((status) {
+      controller.addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           print("Timer finished!");
 
@@ -176,7 +176,7 @@ class _DriverListScreenState extends State<DriverListScreen>
         }
       });
 
-      controller!.forward();
+      controller.forward();
     }
   }
 
@@ -447,10 +447,9 @@ class _DriverListScreenState extends State<DriverListScreen>
                                               buttontimer = false;
                                               isanimation = false;
                                               isControllerDisposed = true;
-                                              if (controller != null &&
-                                                  controller!.isAnimating) {
+                                              if (controller.isAnimating) {
                                                 print("vgvgvgvgvgvgvgvgvgvgv");
-                                                controller!.dispose();
+                                                controller.dispose();
                                               }
                                               d_id =
                                                   vehicle_bidding_driver[index]

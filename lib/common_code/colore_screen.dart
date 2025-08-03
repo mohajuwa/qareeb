@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qareeb/common_code/global_variables.dart';
 
-
 Color theamcolore = const Color(0xff00cdbc);
 Color greaycolore = const Color(0xffF6F6F6);
 
@@ -15,6 +14,8 @@ class ColorNotifier with ChangeNotifier {
       isDark ? const Color(0xff232323) : const Color(0xffEEEEEE);
   get driverlistcolore =>
       isDark ? const Color(0xff232323) : const Color(0xffF6F6F6);
+  Color get backgroundgrey =>
+      darkMode ? const Color(0xFF1E1E2E) : const Color(0xFFF5F5F5);
 
   // // get backgroundgray => isDark ? const Color(0xff181A20) : const Color(0xffF5F5F5);
   // get backgroundgray => isDark ? const Color(0xff161616) : const Color(0xffF5F5F5);

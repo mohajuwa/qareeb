@@ -14,7 +14,8 @@ import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/map_api_get.dart';
-import 'package:qareeb/app_screen/custom_location_select_screen.dart';
+import 'package:qareeb/app_screen/custom_location_select_screen.dart'
+    hide RefreshData;
 import 'package:qareeb/app_screen/home_screen.dart';
 import '../api_code/calculate_api_controller.dart';
 import '../api_code/modual_calculate_api_controller.dart';

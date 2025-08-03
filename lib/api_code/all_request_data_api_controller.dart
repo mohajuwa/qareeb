@@ -5,8 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:qareeb/common_code/config.dart';
 import 'package:qareeb/common_code/http_helper.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import '../api_model/all_request_api_model.dart';
-import 'calculate_api_controller.dart';
+import 'calculate_api_controller.dart' hide ToastService;
 
 class AllRequestDataApiController extends GetxController
     implements GetxService {

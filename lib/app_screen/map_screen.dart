@@ -193,7 +193,7 @@ class _MapScreenState extends State<ModernMapScreen>
           print("currency content: $currency");
         }
         // Don't redirect to login for currency decode errors, only for uid errors
-        if (uid == null || uid.isEmpty) {
+        if (uid.isEmpty) {
           await preferences.remove("userLogin");
           await preferences.remove("currenci");
           Get.offAll(() => const OnboardingScreen());
@@ -1697,7 +1697,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
       if (kDebugMode) {
         print("Error loading user data: $e");
       }
-      throw e;
+      rethrow;
     }
   }
 
