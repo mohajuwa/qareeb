@@ -12,6 +12,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/type_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/map_api_get.dart';
 import 'package:qareeb/app_screen/custom_location_select_screen.dart'
@@ -892,12 +893,11 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                             .toString();
 
                                                                     vihicalrice =
-                                                                        double.parse(
-                                                                            value["drop_price"].toString());
-
-                                                                    totalkm = double.parse(
-                                                                        value["tot_km"]
-                                                                            .toString());
+                                                                        safeParseDouble(
+                                                                            value["drop_price"]);
+                                                                    totalkm =
+                                                                        safeParseDouble(
+                                                                            value["tot_km"]);
 
                                                                     tot_secound =
                                                                         "0";

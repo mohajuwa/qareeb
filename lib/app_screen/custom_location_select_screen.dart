@@ -6,6 +6,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -13,6 +14,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/common_button.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/type_utils.dart';
 import 'dart:ui' as ui;
 import '../api_code/calculate_api_controller.dart';
 import '../api_code/modual_calculate_api_controller.dart';
@@ -401,20 +403,18 @@ class _CustomLocationSelectScreenState
         amountresponse = "true";
 
         // Safe type conversion with null checks
-        dropprice = _safeParseInt(value["drop_price"]) as double;
-        minimumfare =
-            _safeParseInt(value["vehicle"]?["minimum_fare"]) as double;
-        maximumfare =
-            _safeParseInt(value["vehicle"]?["maximum_fare"]) as double;
+        dropprice = value["drop_price"]; // Direct assignment ✅
+        minimumfare = value["vehicle"]["minimum_fare"]; // Direct assignment ✅
+        maximumfare = value["vehicle"]["maximum_fare"]; // Direct assignment ✅
         responsemessage = value["message"]?.toString() ?? "";
 
         tot_hour = value["tot_hour"]?.toString() ?? "0";
         tot_time = value["tot_minute"]?.toString() ?? "0";
         vehicle_id = value["vehicle"]?["id"]?.toString() ?? "";
 
-        // Safe double conversion
-        vihicalrice = _safeParseDouble(value["drop_price"]);
-        totalkm = _safeParseDouble(value["tot_km"]);
+        // Use safeParseDouble for double variables (vihicalrice and totalkm are doubles)
+        vihicalrice = safeParseDouble(value["drop_price"]);
+        totalkm = safeParseDouble(value["tot_km"]);
         tot_secound = "0";
 
         vihicalimage = value["vehicle"]?["map_img"]?.toString() ?? "";
@@ -456,27 +456,6 @@ class _CustomLocationSelectScreenState
     }
   }
 
-  // Safe parsing functions to prevent type conversion errors
-  int _safeParseInt(dynamic value) {
-    if (value == null) return 0;
-    if (value is int) return value;
-    if (value is double) return value.toInt();
-    if (value is String) {
-      return int.tryParse(value) ?? 0;
-    }
-    return 0;
-  }
-
-  double _safeParseDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) {
-      return double.tryParse(value) ?? 0.0;
-    }
-    return 0.0;
-  }
-
   // Show error message
   void _showErrorMessage(String message) {
     if (mounted) {
@@ -495,4 +474,10 @@ class _CustomLocationSelectScreenState
     mapController?.dispose();
     super.dispose();
   }
+}
+
+// Helper class for refresh data
+class RefreshData {
+  final bool refresh;
+  RefreshData(this.refresh);
 }

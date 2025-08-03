@@ -21,6 +21,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/type_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:qareeb/api_code/coupon_payment_api_contoller.dart';
@@ -1799,9 +1800,9 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                   tot_hour = value["tot_hour"]?.toString() ?? "0";
                   tot_time = value["tot_minute"]?.toString() ?? "0";
                   vehicle_id = value["vehicle"]["id"]?.toString() ?? "";
-                  vihicalrice =
-                      double.parse(value["drop_price"]?.toString() ?? "0");
-                  totalkm = double.parse(value["tot_km"]?.toString() ?? "0");
+                  vihicalrice = safeParseDouble(value["drop_price"]);
+
+                  totalkm = safeParseDouble(value["tot_km"]);
                   tot_secound = "0";
 
                   vihicalimage = value["vehicle"]["map_img"]?.toString() ?? "";
@@ -3698,18 +3699,17 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                                                 .modualCalculateApiModel!
                                                                 .caldriver![0]
                                                                 .id!;
-                                                        vihicalrice = double.parse(
+                                                        vihicalrice = safeParseDouble(
                                                             modual_calculateController
                                                                 .modualCalculateApiModel!
                                                                 .caldriver![0]
-                                                                .dropPrice!
-                                                                .toString());
-                                                        totalkm = double.parse(
+                                                                .dropPrice);
+                                                        totalkm = safeParseDouble(
                                                             modual_calculateController
                                                                 .modualCalculateApiModel!
                                                                 .caldriver![0]
-                                                                .dropKm!
-                                                                .toString());
+                                                                .dropKm);
+
                                                         tot_time =
                                                             modual_calculateController
                                                                 .modualCalculateApiModel!
@@ -4311,10 +4311,9 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
     } else {
       toast = 0;
       amountcontroller.text = dropprice.toString();
-      // var maxprice =  dropprice + (dropprice * int.parse(maximumfare) / 100);
-      // var minprice =  dropprice - (dropprice * int.parse(minimumfare) / 100);
-      int maxprice = int.parse(maximumfare as String);
-      int minprice = int.parse(minimumfare as String);
+      int maxprice = safeParseInt(maximumfare);
+
+      int minprice = safeParseInt(minimumfare);
       print("**maxprice**:-- $maxprice");
       print("**maxprice**:-- $minprice");
       // controller.reset();
