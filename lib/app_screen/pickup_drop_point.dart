@@ -978,12 +978,11 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                           onlypass)
                                                                   .then(
                                                                   (value) {
-                                                                    totalkm = double.parse(modual_calculateController
+                                                                    totalkm = safeParseDouble(modual_calculateController
                                                                         .modualCalculateApiModel!
                                                                         .caldriver![
-                                                                            0]
-                                                                        .dropKm!
-                                                                        .toString());
+                                                                            index]
+                                                                        .dropKm); // ✅ Safe
                                                                     tot_time = modual_calculateController
                                                                         .modualCalculateApiModel!
                                                                         .caldriver![
@@ -1262,12 +1261,12 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                             .toString();
 
                                                                     vihicalrice =
-                                                                        double.parse(
-                                                                            value["drop_price"].toString());
+                                                                        safeParseDouble(
+                                                                            value["drop_price"]);
 
-                                                                    totalkm = double.parse(
-                                                                        value["tot_km"]
-                                                                            .toString());
+                                                                    totalkm =
+                                                                        safeParseDouble(
+                                                                            value["tot_km"]);
 
                                                                     tot_secound =
                                                                         "0";
@@ -1348,12 +1347,11 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                           onlypass)
                                                                   .then(
                                                                   (value) {
-                                                                    totalkm = double.parse(modual_calculateController
+                                                                    totalkm = safeParseDouble(modual_calculateController
                                                                         .modualCalculateApiModel!
                                                                         .caldriver![
-                                                                            0]
-                                                                        .dropKm!
-                                                                        .toString());
+                                                                            index]
+                                                                        .dropKm); // ✅ Safe
                                                                     tot_time = modual_calculateController
                                                                         .modualCalculateApiModel!
                                                                         .caldriver![
@@ -1627,16 +1625,15 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                         ["id"]
                                                                     .toString();
 
-                                                            vihicalrice = double
-                                                                .parse(value[
-                                                                        "drop_price"]
-                                                                    .toString());
+                                                            vihicalrice =
+                                                                safeParseDouble(
+                                                                    value[
+                                                                        "drop_price"]);
 
-                                                            totalkm = double
-                                                                .parse(value[
-                                                                        "tot_km"]
-                                                                    .toString());
-
+                                                            totalkm =
+                                                                safeParseDouble(
+                                                                    value[
+                                                                        "tot_km"]);
                                                             tot_secound = "0";
 
                                                             vihicalimage =

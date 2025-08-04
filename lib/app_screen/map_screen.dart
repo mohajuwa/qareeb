@@ -1792,9 +1792,13 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 
                 if (value?["Result"] == true) {
                   amountresponse = "true";
-                  dropprice = value["drop_price"];
-                  minimumfare = value["vehicle"]["minimum_fare"];
-                  maximumfare = value["vehicle"]["maximum_fare"];
+                  dropprice = safeParseDouble(value["drop_price"]); // ✅ Safe
+
+                  minimumfare = safeParseDouble(
+                      value["vehicle"]["minimum_fare"]); // ✅ Safe
+
+                  maximumfare = safeParseDouble(
+                      value["vehicle"]["maximum_fare"]); // ✅ Safe
                   responsemessage = value["message"];
 
                   tot_hour = value["tot_hour"]?.toString() ?? "0";
@@ -3077,7 +3081,9 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                                         true) {
                                                       amountresponse = "true";
                                                       dropprice =
-                                                          value["drop_price"];
+                                                          safeParseDouble(value[
+                                                              "drop_price"]);
+
                                                       minimumfare =
                                                           value["vehicle"]
                                                               ["minimum_fare"];
@@ -3097,12 +3103,11 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                                           value["vehicle"]["id"]
                                                               .toString();
                                                       vihicalrice =
-                                                          double.parse(value[
-                                                                  "drop_price"]
-                                                              .toString());
-                                                      totalkm = double.parse(
-                                                          value["tot_km"]
-                                                              .toString());
+                                                          safeParseDouble(value[
+                                                              "drop_price"]);
+
+                                                      totalkm = safeParseDouble(
+                                                          value["tot_km"]);
                                                       tot_secound = "0";
 
                                                       vihicalimage =
@@ -5715,9 +5720,13 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 
         if (value["Result"] == true) {
           amountresponse = "true";
-          dropprice = value["drop_price"];
-          minimumfare = value["vehicle"]["minimum_fare"];
-          maximumfare = value["vehicle"]["maximum_fare"];
+          dropprice = safeParseDouble(value["drop_price"]); // ✅ Safe
+
+          minimumfare =
+              safeParseDouble(value["vehicle"]["minimum_fare"]); // ✅ Safe
+
+          maximumfare =
+              safeParseDouble(value["vehicle"]["maximum_fare"]); // ✅ Safe
           responsemessage = value["message"];
         } else {
           amountresponse = "false";

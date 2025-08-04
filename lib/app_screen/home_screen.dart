@@ -15,6 +15,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/type_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/vihical_calculate_api_controller.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
@@ -724,12 +725,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   .modualCalculateApiModel!
                                                   .caldriver![index]
                                                   .id!;
-                                          vihicalrice = double.parse(
+                                          vihicalrice = safeParseDouble(
                                               modual_calculateController
                                                   .modualCalculateApiModel!
                                                   .caldriver![index]
-                                                  .dropPrice!
-                                                  .toString());
+                                                  .dropPrice); // ✅ Safe
                                           totalkm = double.parse(
                                               modual_calculateController
                                                   .modualCalculateApiModel!

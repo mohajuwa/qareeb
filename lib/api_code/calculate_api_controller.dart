@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:qareeb/common_code/http_helper.dart';
+import 'package:qareeb/common_code/type_utils.dart';
 import '../api_model/calculate_api_model.dart';
 import '../common_code/config.dart';
 
@@ -34,13 +35,15 @@ class CalculateController extends GetxController implements GetxService {
       update();
 
       // Enhanced coordinate validation
-      if (!_isValidCoordinate(pickup_lat_lon) || !_isValidCoordinate(drop_lat_lon)) {
+      if (!_isValidCoordinate(pickup_lat_lon) ||
+          !_isValidCoordinate(drop_lat_lon)) {
         _showErrorToast("إحداثيات غير صحيحة");
         return _createErrorResponse("Invalid coordinates format");
       }
 
       // Validate coordinates are within reasonable bounds for Yemen
-      if (!_isWithinYemenBounds(pickup_lat_lon) || !_isWithinYemenBounds(drop_lat_lon)) {
+      if (!_isWithinYemenBounds(pickup_lat_lon) ||
+          !_isWithinYemenBounds(drop_lat_lon)) {
         _showZoneErrorToast("الموقع خارج نطاق اليمن");
         return _createZoneErrorResponse({});
       }
@@ -68,8 +71,10 @@ class CalculateController extends GetxController implements GetxService {
       if (kDebugMode) {
         print('🚗 Calculate URL: $url');
         print('📍 Calculate Body: $body');
-        print('🔍 Pickup coordinates: ${pickup_lat_lon.split(',')[0]}, ${pickup_lat_lon.split(',')[1]}');
-        print('🔍 Drop coordinates: ${drop_lat_lon.split(',')[0]}, ${drop_lat_lon.split(',')[1]}');
+        print(
+            '🔍 Pickup coordinates: ${pickup_lat_lon.split(',')[0]}, ${pickup_lat_lon.split(',')[1]}');
+        print(
+            '🔍 Drop coordinates: ${drop_lat_lon.split(',')[0]}, ${drop_lat_lon.split(',')[1]}');
       }
 
       // Use provided timeout or default
@@ -90,17 +95,30 @@ class CalculateController extends GetxController implements GetxService {
         var data = jsonDecode(response.body);
 
         if (data["ResponseCode"] == 200 && data["Result"] == true) {
-          // Successful calculation
-          calCulateModel = calCulateModelFromJson(response.body);
+          calCulateModel = CalCulateModel.fromJson(data);
+
+          // Safe parsing for UI updates
+
+          double distance = safeParseDouble(data["tot_km"]);
+
+          double price = safeParseDouble(data["drop_price"]);
+
+          int hours = data["tot_hour"] as int? ?? 0;
+
+          int minutes = data["tot_minute"] as int? ?? 0;
 
           if (kDebugMode) {
             print('✅ Calculation successful:');
-            print('   Distance: ${data["tot_km"]} km');
-            print('   Price: ${data["drop_price"]}');
-            print('   Time: ${data["tot_hour"]}h ${data["tot_minute"]}m');
+
+            print('   Distance: $distance km');
+
+            print('   Price: $price');
+
+            print('   Time: ${hours}h ${minutes}m');
           }
 
           _showSuccessToast("تم حساب الأجرة بنجاح");
+
           return data;
         } else if (data["ResponseCode"] == 401) {
           // Handle specific error cases
@@ -229,13 +247,15 @@ class CalculateController extends GetxController implements GetxService {
   }
 
   // Validate coordinates are in service area
-  bool validateCoordinatesInServiceArea(double lat, double lng, {bool showToast = true}) {
+  bool validateCoordinatesInServiceArea(double lat, double lng,
+      {bool showToast = true}) {
     var zone = getServiceZoneForCoordinates(lat, lng);
 
     if (zone == null) {
       if (showToast) {
         String availableZones = serviceZones.map((z) => z.name).join("، ");
-        _showZoneErrorToast("هذه المنطقة غير مخدومة. المناطق المتاحة: $availableZones");
+        _showZoneErrorToast(
+            "هذه المنطقة غير مخدومة. المناطق المتاحة: $availableZones");
       }
       return false;
     }
@@ -248,13 +268,15 @@ class CalculateController extends GetxController implements GetxService {
 
   // Get the nearest service zone center for suggestions
   Map<String, double> getNearestServiceZoneCenter(double lat, double lng) {
-    if (serviceZones.isEmpty) return {"lat": 13.9667, "lng": 44.1833}; // Default to Ibb
+    if (serviceZones.isEmpty)
+      return {"lat": 13.9667, "lng": 44.1833}; // Default to Ibb
 
     double minDistance = double.infinity;
     ServiceZone? nearestZone;
 
     for (var zone in serviceZones) {
-      double distance = _calculateDistance(lat, lng, zone.center["lat"]!, zone.center["lng"]!);
+      double distance = _calculateDistance(
+          lat, lng, zone.center["lat"]!, zone.center["lng"]!);
       if (distance < minDistance) {
         minDistance = distance;
         nearestZone = zone;
@@ -265,7 +287,8 @@ class CalculateController extends GetxController implements GetxService {
   }
 
   // Calculate distance between two points
-  double _calculateDistance(double lat1, double lng1, double lat2, double lng2) {
+  double _calculateDistance(
+      double lat1, double lng1, double lat2, double lng2) {
     const double earthRadius = 6371; // km
     double dLat = _toRadians(lat2 - lat1);
     double dLng = _toRadians(lng2 - lng1);
@@ -291,14 +314,16 @@ class CalculateController extends GetxController implements GetxService {
       print('   Drop: ${data["drop_coords"] ?? "unknown"}');
     }
 
-    if (message.contains("calculate = 0") || message.contains("No valid route segments")) {
+    if (message.contains("calculate = 0") ||
+        message.contains("No valid route segments")) {
       _showZoneErrorToast("لا يمكن حساب المسار - تحقق من نقاط التوصيل");
 
       // Show debug info in development
       if (kDebugMode && data["debug"] != null) {
         print('🐛 Debug info: ${data["debug"]}');
       }
-    } else if (message.contains("zone") || message.contains("Address is not in the zone")) {
+    } else if (message.contains("zone") ||
+        message.contains("Address is not in the zone")) {
       _showZoneErrorToast("إحدى النقاط خارج منطقة الخدمة");
     } else if (message.contains("Vehicle Not Found")) {
       _showErrorToast("المركبة غير متوفرة حالياً");
@@ -358,7 +383,8 @@ class CalculateController extends GetxController implements GetxService {
   }
 
   // Create zone error response
-  Map<String, dynamic> _createZoneErrorResponse(Map<String, dynamic> originalData) {
+  Map<String, dynamic> _createZoneErrorResponse(
+      Map<String, dynamic> originalData) {
     return {
       "ResponseCode": 401,
       "Result": false,
@@ -490,7 +516,8 @@ class CalculateController extends GetxController implements GetxService {
         }
 
         if (retryCount == maxRetries - 1) {
-          return _createErrorResponse("فشل بعد $maxRetries محاولات: ${_getLocalizedErrorMessage(e.toString())}");
+          return _createErrorResponse(
+              "فشل بعد $maxRetries محاولات: ${_getLocalizedErrorMessage(e.toString())}");
         }
       }
 
@@ -554,7 +581,9 @@ class ZoneBounds {
 
 // Enhanced toast service enums
 enum ToastType { success, error, warning, info }
+
 enum ToastLength { short, long }
+
 enum ToastGravity { top, center, bottom }
 
 // Enhanced toast service class
@@ -592,7 +621,6 @@ void showToastForDuration(String message, int durationInSeconds) {
     //   toastLength: durationInSeconds > 2 ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT,
     //   gravity: ToastGravity.CENTER,
     // );
-
   } catch (e) {
     if (kDebugMode) {
       print("❌ Toast error: $e");

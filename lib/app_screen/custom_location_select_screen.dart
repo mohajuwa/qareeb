@@ -364,9 +364,10 @@ class _CustomLocationSelectScreenState
   }
 
   // Enhanced calculation with proper error handling and type safety
+// Enhanced calculation with proper error handling and type safety
   Future<void> _performCalculation() async {
     try {
-      // Show loading indicator
+      // Show loading indicator (store reference for cleanup)
       if (mounted) {
         showDialog(
           context: context,
@@ -389,30 +390,30 @@ class _CustomLocationSelectScreenState
           )
           .timeout(_apiTimeout);
 
-      // Hide loading indicator
+      // ALWAYS hide loading indicator first
       if (mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
       }
 
       // Reset values with type safety
-      dropprice = 0;
-      minimumfare = 0;
-      maximumfare = 0;
+      dropprice = 0.0;
+      minimumfare = 0.0;
+      maximumfare = 0.0;
 
       if (value != null && value["Result"] == true) {
         amountresponse = "true";
 
-        // Safe type conversion with null checks
-        dropprice = value["drop_price"]; // Direct assignment ✅
-        minimumfare = value["vehicle"]["minimum_fare"]; // Direct assignment ✅
-        maximumfare = value["vehicle"]["maximum_fare"]; // Direct assignment ✅
-        responsemessage = value["message"]?.toString() ?? "";
+        // ✅ FIXED: Use safeParseDouble for all numeric values
+        dropprice = safeParseDouble(value["drop_price"]);
+        minimumfare = safeParseDouble(value["vehicle"]["minimum_fare"]);
+        maximumfare = safeParseDouble(value["vehicle"]["maximum_fare"]);
 
+        responsemessage = value["message"]?.toString() ?? "";
         tot_hour = value["tot_hour"]?.toString() ?? "0";
         tot_time = value["tot_minute"]?.toString() ?? "0";
         vehicle_id = value["vehicle"]?["id"]?.toString() ?? "";
 
-        // Use safeParseDouble for double variables (vihicalrice and totalkm are doubles)
+        // Use safeParseDouble for double variables
         vihicalrice = safeParseDouble(value["drop_price"]);
         totalkm = safeParseDouble(value["tot_km"]);
         tot_secound = "0";
@@ -436,7 +437,7 @@ class _CustomLocationSelectScreenState
         _showErrorMessage(errorMsg);
       }
     } catch (e) {
-      // Hide loading indicator
+      // CRITICAL: Always hide loading indicator in catch block
       if (mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
       }

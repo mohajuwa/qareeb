@@ -16,19 +16,20 @@ int safeParseInt(dynamic value) {
   return 0;
 }
 
-/// Safely converts any value to double
-/// Returns 0.0 if conversion fails or value is null
 double safeParseDouble(dynamic value) {
   if (value == null) return 0.0;
+
   if (value is double) return value;
+
   if (value is int) return value.toDouble();
+
   if (value is String) {
     return double.tryParse(value) ?? 0.0;
   }
+
   return 0.0;
 }
 
-/// Safely converts any value to string
 /// Returns empty string if value is null
 String safeParseString(dynamic value) {
   if (value == null) return '';

@@ -9,6 +9,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/type_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/app_screen/my_ride_detail_screen.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
@@ -396,13 +397,12 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                               .id
                                                               .toString();
 
-                                                      vihicalrice = double.parse(
+                                                      vihicalrice = safeParseDouble(
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
                                                               .reuqestList![
                                                                   index]
-                                                              .price
-                                                              .toString());
+                                                              .price); // ✅ Safe
 
                                                       // for(int i=0; i<allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList!.length; i++){
                                                       //   droptitlelist.add(
@@ -571,13 +571,12 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                               .drop!
                                                               .subtitle
                                                               .toString();
-                                                      vihicalrice = double.parse(
+                                                      vihicalrice = safeParseDouble(
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
                                                               .reuqestList![
                                                                   index]
-                                                              .price
-                                                              .toString());
+                                                              .price); // ✅ Safe
                                                       request_id =
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
@@ -728,13 +727,12 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                               .drop!
                                                               .subtitle
                                                               .toString();
-                                                      vihicalrice = double.parse(
+                                                      vihicalrice = safeParseDouble(
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
                                                               .reuqestList![
                                                                   index]
-                                                              .price
-                                                              .toString());
+                                                              .price); // ✅ Safe
                                                       request_id =
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
@@ -855,13 +853,12 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                               .drop!
                                                               .subtitle
                                                               .toString();
-                                                      vihicalrice = double.parse(
+                                                      vihicalrice = safeParseDouble(
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
                                                               .reuqestList![
                                                                   index]
-                                                              .price
-                                                              .toString());
+                                                              .price); // ✅ Safe
                                                       statusridestart =
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
@@ -1072,13 +1069,12 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                               .drop!
                                                               .subtitle
                                                               .toString();
-                                                      vihicalrice = double.parse(
+                                                      vihicalrice = safeParseDouble(
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
                                                               .reuqestList![
                                                                   index]
-                                                              .price
-                                                              .toString());
+                                                              .price); // ✅ Safe
                                                       statusridestart =
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
