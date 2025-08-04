@@ -431,10 +431,11 @@ class _CustomLocationSelectScreenState
       } else {
         amountresponse = "false";
         String errorMsg = value?["message"]?.toString() ?? "فشل في حساب الأجرة";
+        _showErrorMessage(errorMsg);
+
         if (kDebugMode) {
           print("❌ Calculate API failed: $errorMsg");
         }
-        _showErrorMessage(errorMsg);
       }
     } catch (e) {
       // CRITICAL: Always hide loading indicator in catch block

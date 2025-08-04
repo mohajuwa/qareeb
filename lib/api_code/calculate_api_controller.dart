@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:qareeb/common_code/http_helper.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:qareeb/common_code/type_utils.dart';
 import '../api_model/calculate_api_model.dart';
 import '../common_code/config.dart';
@@ -32,23 +33,51 @@ class CalculateController extends GetxController implements GetxService {
   }) async {
     try {
       isLoading = true;
+
       update();
 
+      // Show loading overlay
+
+      if (context != null) {
+        showModernLoading(
+          context: context,
+          message: "جاري حساب المسافة والأجرة...",
+          dismissible: false,
+        );
+      }
+
       // Enhanced coordinate validation
+
       if (!_isValidCoordinate(pickup_lat_lon) ||
           !_isValidCoordinate(drop_lat_lon)) {
+        if (context != null) hideModernLoading(context);
+
         _showErrorToast("إحداثيات غير صحيحة");
+
+        isLoading = false;
+
+        update();
+
         return _createErrorResponse("Invalid coordinates format");
       }
 
       // Validate coordinates are within reasonable bounds for Yemen
+
       if (!_isWithinYemenBounds(pickup_lat_lon) ||
           !_isWithinYemenBounds(drop_lat_lon)) {
+        if (context != null) hideModernLoading(context);
+
         _showZoneErrorToast("الموقع خارج نطاق اليمن");
+
+        isLoading = false;
+
+        update();
+
         return _createZoneErrorResponse({});
       }
 
       // Convert drop_lat_lon_list to proper format
+
       List<String> formattedDropList = _formatDropList(drop_lat_lon_list);
 
       Map body = {
@@ -70,15 +99,19 @@ class CalculateController extends GetxController implements GetxService {
 
       if (kDebugMode) {
         print('🚗 Calculate URL: $url');
+
         print('📍 Calculate Body: $body');
+
         print(
             '🔍 Pickup coordinates: ${pickup_lat_lon.split(',')[0]}, ${pickup_lat_lon.split(',')[1]}');
+
         print(
             '🔍 Drop coordinates: ${drop_lat_lon.split(',')[0]}, ${drop_lat_lon.split(',')[1]}');
       }
 
-      // Use provided timeout or default
-      Duration apiTimeout = timeout ?? _defaultTimeout;
+      // Use provided timeout or default (increased to 30 seconds)
+
+      Duration apiTimeout = timeout ?? const Duration(seconds: 30);
 
       var response = await HttpHelper.post(
         url,
@@ -86,8 +119,15 @@ class CalculateController extends GetxController implements GetxService {
         headers: userHeader,
       ).timeout(apiTimeout);
 
+      // Hide loading overlay
+
+      if (context != null) {
+        hideModernLoading(context);
+      }
+
       if (kDebugMode) {
         print('📡 Response Status: ${response.statusCode}');
+
         print('📨 Response Body: ${response.body}');
       }
 
@@ -119,31 +159,66 @@ class CalculateController extends GetxController implements GetxService {
 
           _showSuccessToast("تم حساب الأجرة بنجاح");
 
+          isLoading = false;
+
+          update();
+
           return data;
         } else if (data["ResponseCode"] == 401) {
           // Handle specific error cases
+
+          isLoading = false;
+
+          update();
+
           return _handleAPIError(data);
         } else {
-          String message = data["message"] ?? "فشل في حساب الأجرة";
+          String message = data["message"] ?? "حدث خطأ في الحساب";
+
           _showErrorToast(message);
-          return data;
+
+          isLoading = false;
+
+          update();
+
+          return _createErrorResponse(message);
         }
       } else {
-        _showErrorToast("خطأ في الشبكة: ${response.statusCode}");
-        return _createErrorResponse("HTTP Error: ${response.statusCode}");
+        _showErrorToast("خطأ في الاتصال بالخادم");
+
+        isLoading = false;
+
+        update();
+
+        return _createErrorResponse("Server error: ${response.statusCode}");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("💥 Calculate API Error: $e");
-      }
-      String errorMessage = _getLocalizedErrorMessage(e.toString());
-      _showErrorToast(errorMessage);
+      // Hide loading overlay in case of error
 
-      // Return detailed error for debugging
-      return _createErrorResponse(e.toString());
-    } finally {
+      if (context != null) {
+        try {
+          hideModernLoading(context);
+        } catch (_) {}
+      }
+
       isLoading = false;
+
       update();
+
+      if (kDebugMode) {
+        print('❌ Calculate API Error: $e');
+      }
+
+      if (e is TimeoutException) {
+        _showErrorToast("انتهت مهلة الاتصال، يرجى المحاولة مرة أخرى");
+
+        return _createErrorResponse("Request timeout");
+      } else {
+        _showErrorToast("حدث خطأ غير متوقع");
+        isLoading = false;
+
+        return _createErrorResponse("Unexpected error: $e");
+      }
     }
   }
 

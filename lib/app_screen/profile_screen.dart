@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/profile_edit_api_controller.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
@@ -156,10 +157,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
       body: loading == true
-          ? Center(
-              child: CircularProgressIndicator(
-              color: theamcolore,
-            ))
+          ? const Center(
+              child: ModernLoadingWidget(
+                message: "جaري تحميل الملف الشخصي...",
+              ),
+            )
           : Padding(
               padding: const EdgeInsets.all(15),
               child: Column(

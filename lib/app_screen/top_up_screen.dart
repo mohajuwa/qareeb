@@ -8,6 +8,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
@@ -159,10 +160,11 @@ class _TopUpScreenState extends State<TopUpScreen> {
       body: GetBuilder<WalletReportApiController>(
         builder: (walletReportApiController) {
           return walletReportApiController.isLoading
-              ? Center(
-                  child: CircularProgressIndicator(
-                  color: theamcolore,
-                ))
+              ? const Center(
+                  child: ModernLoadingWidget(
+                    message: "جاري تحميل المحفظة...",
+                  ),
+                )
               : Padding(
                   padding: const EdgeInsets.all(15),
                   child: Column(

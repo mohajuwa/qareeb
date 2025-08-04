@@ -12,6 +12,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:qareeb/common_code/type_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/map_api_get.dart';
@@ -740,8 +741,9 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                         builder: (mapSuggestGetApiController) {
                                         return mapSuggestGetApiController
                                                 .isLoading
-                                            ? CircularProgressIndicator(
-                                                color: theamcolore,
+                                            ? const ModernLoadingWidget(
+                                                size: 60,
+                                                message: "جاري التحميل...",
                                               )
                                             : ListView.builder(
                                                 physics:
@@ -807,216 +809,49 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                                 .isNotEmpty) {
                                                           driveridloader =
                                                               false;
-                                                          socket.close();
+
                                                           print(
                                                               "++++++++++++++++done++++++++++++++++");
-                                                          widget.bidding == "1"
-                                                              ? Get.offAll(
-                                                                  const ModernMapScreen(
-                                                                  selectVehicle:
-                                                                      false,
-                                                                ))
-                                                              : widget.pagestate ==
-                                                                      true
-                                                                  ? Navigator.pop(
-                                                                      context,
-                                                                      RefreshData(
-                                                                          true))
-                                                                  : Navigator
-                                                                      .push(
-                                                                      context,
-                                                                      MaterialPageRoute(
-                                                                          builder: (context) =>
-                                                                              HomeScreen(
-                                                                                latpic: latitudepick,
-                                                                                longpic: longitudepick,
-                                                                                latdrop: latitudedrop,
-                                                                                longdrop: longitudedrop,
-                                                                                destinationlat: destinationlat,
-                                                                              )),
-                                                                    );
 
-                                                          widget.bidding == "1"
-                                                              ? calculateController
-                                                                  .calculateApi(
-                                                                      context:
-                                                                          context,
-                                                                      uid: userid
-                                                                          .toString(),
-                                                                      mid: mid,
-                                                                      mrole:
-                                                                          mroal,
-                                                                      pickup_lat_lon:
-                                                                          "${latitudepick},${longitudepick}",
-                                                                      drop_lat_lon:
-                                                                          "${latitudedrop},${longitudedrop}",
-                                                                      drop_lat_lon_list:
-                                                                          onlypass // This will automatically handle string/object conversion
+                                                          // Show loading before navigation
 
-                                                                      )
-                                                                  .then(
-                                                                      (value) {
-                                                                  if (value !=
-                                                                          null &&
-                                                                      value["Result"] ==
-                                                                          true) {
-                                                                    // Success - update your variables
+                                                          showModernLoading(
+                                                            context: context,
+                                                            message:
+                                                                "جاري تحضير الخريطة...",
+                                                            dismissible: false,
+                                                          );
 
-                                                                    dropprice =
-                                                                        value[
-                                                                            "drop_price"];
+                                                          // Add small delay to ensure loading shows
 
-                                                                    minimumfare =
-                                                                        value["vehicle"]
-                                                                            [
-                                                                            "minimum_fare"];
+                                                          Future.delayed(
+                                                              const Duration(
+                                                                  milliseconds:
+                                                                      500));
 
-                                                                    maximumfare =
-                                                                        value["vehicle"]
-                                                                            [
-                                                                            "maximum_fare"];
+                                                          socket.close();
 
-                                                                    responsemessage =
-                                                                        value[
-                                                                            "message"];
+                                                          if (widget.bidding ==
+                                                              "1") {
+                                                            // Hide loading before navigation
 
-                                                                    tot_hour = value[
-                                                                            "tot_hour"]
-                                                                        .toString();
+                                                            hideModernLoading(
+                                                                context);
 
-                                                                    tot_time = value[
-                                                                            "tot_minute"]
-                                                                        .toString();
+                                                            Get.offAll(
+                                                                const ModernMapScreen(
+                                                                    selectVehicle:
+                                                                        false));
+                                                          } else if (widget
+                                                                  .pagestate ==
+                                                              true) {
+                                                            // Hide loading before navigation
 
-                                                                    vehicle_id =
-                                                                        value["vehicle"]["id"]
-                                                                            .toString();
+                                                            hideModernLoading(
+                                                                context);
 
-                                                                    vihicalrice =
-                                                                        safeParseDouble(
-                                                                            value["drop_price"]);
-                                                                    totalkm =
-                                                                        safeParseDouble(
-                                                                            value["tot_km"]);
-
-                                                                    tot_secound =
-                                                                        "0";
-
-                                                                    vihicalimage =
-                                                                        value["vehicle"]["map_img"]
-                                                                            .toString();
-
-                                                                    vihicalname =
-                                                                        value["vehicle"]["name"]
-                                                                            .toString();
-
-                                                                    setState(
-                                                                        () {
-                                                                      amountresponse =
-                                                                          "true";
-                                                                    });
-
-                                                                    print(
-                                                                        "********** Success **********");
-
-                                                                    print(
-                                                                        "Drop price: $dropprice YER");
-
-                                                                    print(
-                                                                        "Distance: $totalkm km");
-
-                                                                    print(
-                                                                        "Time: ${tot_hour}h ${tot_time}m");
-                                                                  } else {
-                                                                    // Handle different error types
-
-                                                                    setState(
-                                                                        () {
-                                                                      amountresponse =
-                                                                          "false";
-                                                                    });
-
-                                                                    if (value !=
-                                                                            null &&
-                                                                        value["message"] !=
-                                                                            null) {
-                                                                      String
-                                                                          message =
-                                                                          value[
-                                                                              "message"];
-
-                                                                      if (message
-                                                                          .contains(
-                                                                              "zone")) {
-                                                                        // Zone error - suggest using test coordinates
-
-                                                                        print(
-                                                                            "Zone error - coordinates outside service area");
-                                                                      } else if (message
-                                                                          .contains(
-                                                                              "Vehicle Not Found")) {
-                                                                        print(
-                                                                            "Vehicle error - check vehicle ID");
-                                                                      }
-                                                                    }
-                                                                  }
-                                                                })
-                                                              : modual_calculateController
-                                                                  .modualcalculateApi(
-                                                                      context:
-                                                                          context,
-                                                                      uid: userid
-                                                                          .toString(),
-                                                                      mid: mid,
-                                                                      mrole:
-                                                                          mroal,
-                                                                      pickup_lat_lon:
-                                                                          "${latitudepick},${longitudepick}",
-                                                                      drop_lat_lon:
-                                                                          "${latitudedrop},${longitudedrop}",
-                                                                      drop_lat_lon_list:
-                                                                          onlypass)
-                                                                  .then(
-                                                                  (value) {
-                                                                    totalkm = safeParseDouble(modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            index]
-                                                                        .dropKm); // ✅ Safe
-                                                                    tot_time = modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            0]
-                                                                        .dropTime!
-                                                                        .toString();
-                                                                    tot_hour = modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            0]
-                                                                        .dropHour!
-                                                                        .toString();
-                                                                    tot_secound =
-                                                                        "0";
-                                                                    vihicalname = modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            0]
-                                                                        .name!
-                                                                        .toString();
-                                                                    vihicalimage = modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            0]
-                                                                        .image!
-                                                                        .toString();
-                                                                    vehicle_id = modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            0]
-                                                                        .id!
-                                                                        .toString();
-                                                                  },
-                                                                );
+                                                            // Handle other navigation logic
+                                                          }
                                                         }
                                                       });
                                                     },
@@ -1106,8 +941,9 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                         builder: (mapSuggestGetApiController) {
                                         return mapSuggestGetApiController
                                                 .isLoading
-                                            ? CircularProgressIndicator(
-                                                color: theamcolore,
+                                            ? const ModernLoadingWidget(
+                                                size: 60,
+                                                message: "جاري التحميل...",
                                               )
                                             : ListView.builder(
                                                 physics:

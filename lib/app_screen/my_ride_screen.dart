@@ -9,6 +9,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:qareeb/common_code/type_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/app_screen/my_ride_detail_screen.dart';
@@ -170,7 +171,11 @@ class _MyRideScreenState extends State<MyRideScreen>
       body: GetBuilder<AllRequestDataApiController>(
         builder: (allRequestDataApiController) {
           return loader
-              ? Center(child: CircularProgressIndicator(color: theamcolore))
+              ? Center(
+                  child: const ModernLoadingWidget(
+                  size: 60,
+                  message: "جاري تحميل الرحلات...",
+                ))
               : Padding(
                   padding:
                       const EdgeInsets.only(left: 15, right: 15, bottom: 15),

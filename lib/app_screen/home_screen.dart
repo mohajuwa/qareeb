@@ -15,6 +15,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:qareeb/common_code/type_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/vihical_calculate_api_controller.dart';
@@ -672,7 +673,12 @@ class _HomeScreenState extends State<HomeScreen> {
         bottomNavigationBar: GetBuilder<Modual_CalculateController>(
             builder: (modual_calculateController) {
           return modual_calculateController.isLoading
-              ? Center(child: CircularProgressIndicator(color: theamcolore))
+              ? const Center(
+                  child: ModernLoadingWidget(
+                    size: 60,
+                    message: "جاري البحث...",
+                  ),
+                )
               : Stack(
                   alignment: Alignment.bottomCenter,
                   clipBehavior: Clip.none,

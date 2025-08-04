@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import '../api_code/faq_api_controller.dart';
 
 class FaqScreen extends StatefulWidget {
@@ -43,9 +44,10 @@ class _FaqScreenState extends State<FaqScreen> {
       body: GetBuilder<FaqApiController>(
         builder: (faqApiController) {
           return faqApiController.isLoading
-              ? Center(
-                  child: CircularProgressIndicator(color: theamcolore),
-                )
+              ? const Center(
+                  child: ModernLoadingWidget(
+                  size: 60,
+                ))
               : SingleChildScrollView(
                   scrollDirection: Axis.vertical,
                   child: Column(

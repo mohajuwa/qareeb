@@ -9,6 +9,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/cancel_rason_request_api_controller.dart';
 import '../api_code/remove_request.dart';
@@ -121,9 +122,9 @@ Future commonbottomsheetrequestsend({required context}) {
                       height: 10,
                     ),
                     cancelloader == true
-                        ? Center(
-                            child: CircularProgressIndicator(
-                              color: theamcolore,
+                        ? const Center(
+                            child: ModernLoadingWidget(
+                              message: "جاري المعالجة...",
                             ),
                           )
                         : CommonOutLineButton(
@@ -1306,10 +1307,11 @@ Future rateBottomSheet() {
     GetBuilder<ReviewDataApiController>(
       builder: (reviewDataApiController) {
         return reviewDataApiController.isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                color: theamcolore,
-              ))
+            ? const Center(
+                child: ModernLoadingWidget(
+                  message: "جاري المعالجة...",
+                ),
+              )
             : StatefulBuilder(
                 builder: (context, setState) {
                   return Stack(
