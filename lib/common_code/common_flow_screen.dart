@@ -132,7 +132,7 @@ Future commonbottomsheetrequestsend({required context}) {
                             onPressed1: () {
                               cancelloader = true;
                               removeRequest
-                                  .removeApi(uid: useridgloable.toString())
+                                  .removeApi(uid: useridgloable.toString(),context: context)
                                   .then(
                                 (value) {
                                   socket.emit('AcceRemoveOther', {

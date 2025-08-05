@@ -1009,15 +1009,22 @@ class _MapScreenState extends State<ModernMapScreen>
   }
 
 // Add this to your dispose method:
+// FIX: Full and correct dispose method
   @override
   void dispose() {
+    // Dispose of all controllers to prevent memory leaks and errors
+    controller?.dispose();
+    amountcontroller.dispose();
+    sheetController.dispose();
+    _focusNode.dispose();
+
+    // Disconnect the socket
     if (socketInitialized) {
       try {
         socket.dispose();
+        if (kDebugMode) print("Socket disposed.");
       } catch (e) {
-        if (kDebugMode) {
-          print("Error disposing socket: $e");
-        }
+        if (kDebugMode) print("Error disposing socket: $e");
       }
       socketInitialized = false;
     }
@@ -1117,25 +1124,25 @@ globalMapScreen = this;
 // In other files:
 globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 */
-  late Timer timer;
+  // late Timer timer;
 
-  bool isTimerRunning = false;
+  // bool isTimerRunning = false;
 
-  void startTimer() {
-    if (isTimerRunning) return; // Prevent multiple timers from starting
+  // void startTimer() {
+  //   if (isTimerRunning) return; // Prevent multiple timers from starting
 
-    isTimerRunning = true;
-  }
+  //   isTimerRunning = true;
+  // }
 
-  void cancelTimer() {
-    print("object hjhjhjhjjhjhhjhjhj");
-    // cancelloader = false;
-    if (isTimerRunning) {
-      timer.cancel();
-      isTimerRunning = false; // Mark timer as not running
-      print("Timer canceled");
-    }
-  }
+  // void cancelTimer() {
+  //   print("object hjhjhjhjjhjhhjhjhj");
+  //   // cancelloader = false;
+  //   if (isTimerRunning) {
+  //     timer.cancel();
+  //     isTimerRunning = false; // Mark timer as not running
+  //     print("Timer canceled");
+  //   }
+  // }
 
   requesttime() {
     // timeout = false;
@@ -1146,8 +1153,6 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
     durationInSeconds = int.parse(
         calculateController.calCulateModel!.offerExpireTime.toString());
     print("DURATION IN SECOUNDE : - ${durationInSeconds}");
-
-    startTimer();
 
     controller = AnimationController(
       vsync: this,
@@ -1168,6 +1173,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
     controller!.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         print("Timer finished!");
+        if (!mounted) return;
 
         if (isControllerDisposed) {
           print(
@@ -1176,9 +1182,10 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
         }
         // Use post-frame callback to safely access the context
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+
           if (mounted) {
             // Open bottom sheet when animation is completed
-            cancelTimer();
             print("Timer finished 111 !");
             isanimation = false;
             // bottomshhetopen = false;
@@ -1195,6 +1202,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
               (value) {
                 print("*****value data******:--- $value");
                 print("*****value data******:--- ${value["driverid"]}");
+                if (!mounted) return;
 
                 // socateemptrequesttimeout();
                 Get.bottomSheet(isDismissible: false, enableDrag: false,
@@ -1554,7 +1562,9 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                 bordercolore: theamcolore,
                                 onPressed1: () {
                                   removeRequest
-                                      .removeApi(uid: userid.toString())
+                                      .removeApi(
+                                          uid: userid.toString(),
+                                          context: context)
                                       .then(
                                     (value) {
                                       Get.back();
@@ -2331,6 +2341,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
   Map<MarkerId, Marker> markers = {};
 
   late GoogleMapController mapController1;
+  bool isMapReady = false;
 
   Future fun() async {
     LocationPermission permission;
@@ -2593,6 +2604,29 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                             color: theamcolore,
                           ))
                         : GoogleMap(
+                            onMapCreated:
+                                (GoogleMapController controller) async {
+                              try {
+                                mapController = controller;
+                                // Apply theme only if it loaded successfully
+                                if (themeForMap.isNotEmpty) {
+                                  await controller.setMapStyle(themeForMap);
+                                }
+                                isMapReady = true;
+                                if (mounted) {
+                                  setState(() {});
+                                }
+                              } catch (e) {
+                                if (kDebugMode) {
+                                  print("❌ Map initialization error: $e");
+                                }
+                                // Map will use default style if theme fails to load
+                                isMapReady = true;
+                                if (mounted) {
+                                  setState(() {});
+                                }
+                              }
+                            },
                             gestureRecognizers: {
                               Factory<OneSequenceGestureRecognizer>(
                                   () => EagerGestureRecognizer())
@@ -2607,6 +2641,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                     zoom: 13),
                             // initialCameraPosition:  CameraPosition(target: LatLng(21.2408,72.8806), zoom: 13),
                             mapType: MapType.normal,
+
                             // markers: markers.,
                             markers: pickupcontroller.text.isEmpty ||
                                     dropcontroller.text.isEmpty
@@ -2679,12 +2714,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                             zoomGesturesEnabled: true,
                             tiltGesturesEnabled: true,
                             zoomControlsEnabled: true,
-                            onMapCreated: (controller) {
-                              setState(() {
-                                controller.setMapStyle(themeForMap);
-                                mapController1 = controller;
-                              });
-                            },
+
                             polylines: Set<Polyline>.of(polylines11.values),
                           ),
                     //   : GoogleMap(
@@ -3085,11 +3115,13 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                                               "drop_price"]);
 
                                                       minimumfare =
-                                                          value["vehicle"]
-                                                              ["minimum_fare"];
+                                                          safeParseDouble(value[
+                                                                  "vehicle"]
+                                                              ["minimum_fare"]);
                                                       maximumfare =
-                                                          value["vehicle"]
-                                                              ["maximum_fare"];
+                                                          safeParseDouble(value[
+                                                                  "vehicle"]
+                                                              ["maximum_fare"]);
                                                       responsemessage =
                                                           value["message"];
 
@@ -4004,19 +4036,29 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                             // This bool value toggles the switch.
                                             value: notifier.isDark,
                                             activeColor: theamcolore,
-                                            onChanged: (bool value) {
-                                              setState(() async {
-                                                SharedPreferences prefs =
-                                                    await SharedPreferences
-                                                        .getInstance();
-                                                prefs.setBool("isDark", value);
-                                                notifier.isAvailable(value);
-                                                darkMode = value;
-                                                Get.offAll(ModernMapScreen(
-                                                  selectVehicle: false,
-                                                ));
-                                              });
-                                              // mapThemeStyle(context: context);
+                                            onChanged: (bool value) async {
+                                              // Make the onChanged callback async
+                                              // 1. Perform all asynchronous work first
+                                              SharedPreferences prefs =
+                                                  await SharedPreferences
+                                                      .getInstance();
+                                              await prefs.setBool(
+                                                  "isDark", value);
+
+                                              // 2. Update the state synchronously
+                                              if (mounted) {
+                                                // Safety check
+                                                setState(() {
+                                                  darkMode = value;
+                                                  // The notifier is also a state change, so it can go here too
+                                                  notifier.isAvailable(value);
+                                                });
+                                              }
+
+                                              // 3. Navigate after the state has been updated
+                                              Get.offAll(const ModernMapScreen(
+                                                selectVehicle: false,
+                                              ));
                                             },
                                           ),
                                         ),
@@ -4350,8 +4392,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                       children: [
                         isanimation == false
                             ? const SizedBox()
-                            : lottie.Lottie.asset(
-                                "assets/lottie/map_loading.json",
+                            : lottie.Lottie.asset("assets/lottie/loading.json",
                                 height: 30),
 
                         const SizedBox(
@@ -5578,7 +5619,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                               "++CANCEL LOADER++:- ${cancelloader}");
                                           removeRequest
                                               .removeApi(
-                                                  uid: useridgloable.toString())
+                                                  uid: useridgloable.toString(),
+                                                  context: context)
                                               .then(
                                             (value) {
                                               socket.emit('AcceRemoveOther', {
@@ -5606,7 +5648,6 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                             print("vgvgvgvgvgvgvgvgvgvgv");
                                             controller!.dispose();
                                           }
-                                          cancelTimer();
                                         });
                                       },
                                       context: context,

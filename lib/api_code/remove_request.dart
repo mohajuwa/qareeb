@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
@@ -10,8 +11,9 @@ import '../api_model/remove_request_api_model.dart';
 class RemoveRequest extends GetxController implements GetxService {
   RemoveVihicalRequest? removeVihicalRequest;
   bool isLoading = true;
+  BuildContext? context;
 
-  Future removeApi({required String uid}) async {
+  Future removeApi({required String uid, BuildContext? context}) async {
     try {
       Map body = {"uid": uid};
 
@@ -43,13 +45,15 @@ class RemoveRequest extends GetxController implements GetxService {
           removeVihicalRequest = removeVihicalRequestFromJson(response.body);
           if (removeVihicalRequest!.result == true) {
             isLoading = false;
-            ToastService.showToast("${removeVihicalRequest!.message}");
+            ToastService.showToast(
+                context: context, "${removeVihicalRequest!.message}");
             update();
             return data;
           }
         }
       } else {
         ToastService.showToast(
+            context: context,
             "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
       }
     } catch (e) {
@@ -72,7 +76,7 @@ class RemoveRequest extends GetxController implements GetxService {
             "حدث خطأ ما. حاول مرة أخرى."; // "Something went wrong. Please try again."
       }
 
-      ToastService.showToast(errorMessage);
+      ToastService.showToast(context: context, errorMessage);
     }
   }
 }

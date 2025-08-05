@@ -538,7 +538,9 @@ class _CounterBottomSheetState extends State<CounterBottomSheet> {
                                 bordercolore: theamcolore,
                                 onPressed1: () {
                                   removeRequest
-                                      .removeApi(uid: userid.toString())
+                                      .removeApi(
+                                          uid: userid.toString(),
+                                          context: context)
                                       .then(
                                     (value) {
                                       Get.back();

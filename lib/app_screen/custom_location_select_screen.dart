@@ -221,7 +221,7 @@ class _CustomLocationSelectScreenState
                       double.tryParse(lat.toString()) ?? 13.9667,
                       double.tryParse(long.toString()) ?? 44.1833,
                     ),
-                    zoom: 16.0,
+                    zoom: 13.0,
                   ),
                   onCameraMove: (CameraPosition position) {
                     lat = position.target.latitude;
@@ -336,12 +336,20 @@ class _CustomLocationSelectScreenState
         print("++++++++++++++++done++++++++++++++++");
       }
 
+      // ✅ FIXED LOGIC: Perform calculation BEFORE navigating
       if (widget.bidding == "1") {
-        Get.offAll(const ModernMapScreen(selectVehicle: false));
+        // 1. Perform the calculation first. This method will show and hide
+        //    its own loading indicator using the current, valid context.
         await _performCalculation();
+
+        // 2. Once the calculation is complete, navigate to the new screen.
+        //    We use `Get.offAll` so the user can't go back to the selection screen.
+        Get.offAll(() => const ModernMapScreen(selectVehicle: false));
       } else if (widget.pagestate == true) {
+        // This part is correct, no changes needed
         Navigator.pop(context, RefreshData(true));
       } else {
+        // This part is also correct, no changes needed
         Navigator.push(
           context,
           MaterialPageRoute(

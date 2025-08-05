@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:qareeb/common_code/config.dart';
+import 'package:qareeb/common_code/toastification.dart';
 import '../api_model/add_vihical_api_model.dart';
-import 'calculate_api_controller.dart';
+import 'calculate_api_controller.dart' hide ToastService;
 
 class AddVihicalCalculateController extends GetxController
     implements GetxService {
@@ -71,18 +72,18 @@ class AddVihicalCalculateController extends GetxController
         if (addVihicalCalculateModel!.result == true) {
           // Get.offAll(BoardingPage());
           update();
-          showToastForDuration("${data["message"]}", 2);
+          ToastService.showToast("${data["message"]}", context: context);
           return data;
         } else {
-          showToastForDuration("${data["message"]}", 2);
+          ToastService.showToast("${data["message"]}", context: context);
           return data;
         }
       } else {
-        showToastForDuration("${data["message"]}", 2);
+        ToastService.showToast("${data["message"]}", context: context);
         return data;
       }
     } else {
-      showToastForDuration("Somthing went wrong!.....", 2);
+      ToastService.showToast("Somthing went wrong!.....", context: context);
     }
   }
 }
