@@ -35,32 +35,50 @@ class _DriverListScreenState extends State<DriverListScreen>
   GlobalDriverAcceptClass globalDriverAcceptClass =
       Get.put(GlobalDriverAcceptClass());
   CalculateController calculateController = Get.put(CalculateController());
-  late AnimationController controller;
+  AnimationController? controller; // ✅ Changed to nullable
+
   List<double> progressList = [];
 
   List<AnimationController> controllers = [];
 
   socketConnect() async {
-    socket.connect();
+    // ✅ Safe to use now. Ensure it's connected.
+
+    if (socket?.connected == false) {
+      socket?.connect();
+    }
     _connectSocket();
   }
 
   _connectSocket() async {
     print("DATADATADATADATADATADATDATADTADLOADLOAD");
 
-    // socket.on("removecustomerdata${useridgloable}", (removecustomerdata) async {
-    //   print("++++++ removecustomerdata ++++++ :---  $removecustomerdata");
-    //   print("++++++ request_id running ride ++++++ :---  $request_id");
-    //
-    //   if(removecustomerdata["requestid"] == request_id){
-    //     print("REQUEST ID MATCH");
-    //     Get.back();
-    //   }
-    //   else{
-    //     print("REQUEST ID NOT MATCH");
-    //   }
-    //
-    // });
+    // Listen for accept confirmation from backend
+    socket.on("accept_bidding_success$useridgloable", (data) {
+      print("Accept bidding success: $data");
+      if (data != null && data["success"] == true) {
+        // Now call the API with the cart ID from socket response
+        globalDriverAcceptClass.driverdetailfunction(
+          context: context,
+          lat: latitudepick,
+          long: longitudepick,
+          d_id: d_id.toString(),
+          request_id:
+              data["cart_id"]?.toString() ?? "", // Use cart ID from socket
+        );
+      }
+    });
+
+    // Listen for accept errors
+    socket.on("accept_bidding_error$useridgloable", (data) {
+      print("Accept bidding error: $data");
+      setState(() {
+        buttontimer = true; // Re-enable timer
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("${data["message"]}")),
+      );
+    });
   }
 
   acceptsocate() {
@@ -150,42 +168,36 @@ class _DriverListScreenState extends State<DriverListScreen>
   @override
   void initState() {
     super.initState();
+
+    // Initialize controller FIRST
+    controller = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: durationInSeconds),
+    );
+
     socketConnect();
     startTimer();
-    print("Initializing with duration (${durationInSeconds})");
+    print("Initializing with duration ($durationInSeconds)");
     buttontimer = true;
-    print("========= BOTTONTIMER :- ${buttontimer}");
+    print("========= BOTTONTIMER :- $buttontimer");
 
-    if (!controller.isAnimating) {
-      controller = AnimationController(
-        vsync: this,
-        duration: Duration(
-          seconds: durationInSeconds,
-        ),
-      );
+    controller!.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        print("Timer finished!");
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Get.back();
+          }
+        });
+      }
+    });
 
-      controller.addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          print("Timer finished!");
-
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              Get.back();
-            }
-          });
-        }
-      });
-
-      controller.forward();
-    }
+    controller!.forward();
   }
 
   @override
   void dispose() {
-    // for (var controller in controllers) {
-    //   controller.dispose();
-    // }
-    // controller.dispose();
+    controller!.dispose();
     countdownTimer?.cancel();
     super.dispose();
   }
@@ -443,13 +455,12 @@ class _DriverListScreenState extends State<DriverListScreen>
                                           containcolore: Colors.green,
                                           onPressed1: () {
                                             setState(() {
-                                              // acceptloader = true;
                                               buttontimer = false;
                                               isanimation = false;
                                               isControllerDisposed = true;
-                                              if (controller.isAnimating) {
+                                              if (controller!.isAnimating) {
                                                 print("vgvgvgvgvgvgvgvgvgvgv");
-                                                controller.dispose();
+                                                controller!.dispose();
                                               }
                                               d_id =
                                                   vehicle_bidding_driver[index]
@@ -465,20 +476,17 @@ class _DriverListScreenState extends State<DriverListScreen>
                                                   vehicle_bidding_driver[index]
                                                           ["price"]
                                                       .toString());
+
                                               print("****:-- ${d_id}");
                                               print("****:-- ${price}");
                                               print(
                                                   "**driver_id**:-- ${driver_id}");
+
+                                              // Only emit socket event, wait for confirmation
                                               acceptsocate();
 
-                                              globalDriverAcceptClass
-                                                  .driverdetailfunction(
-                                                      context: context,
-                                                      lat: latitudepick,
-                                                      long: longitudepick,
-                                                      d_id: d_id.toString(),
-                                                      request_id: "");
-                                              // acceptloader = false;
+                                              // DON'T call driverdetailfunction here anymore
+                                              // It will be called in the socket success handler
                                             });
                                           },
                                           context: context,

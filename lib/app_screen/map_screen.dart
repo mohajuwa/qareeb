@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, unnecessary_cast
 // ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
 // ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
@@ -6,6 +6,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -13,10 +15,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/toastification.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
@@ -38,7 +45,7 @@ import 'package:qareeb/common_code/common_button.dart';
 import 'package:qareeb/common_code/common_flow_screen.dart';
 import 'package:qareeb/common_code/config.dart';
 import '../api_code/add_vehical_api_controller.dart';
-import '../api_code/calculate_api_controller.dart';
+import '../api_code/calculate_api_controller.dart' hide ToastService;
 import '../api_code/delete_api_controller.dart';
 import '../api_code/home_map_api_controller.dart';
 import '../api_code/home_wallet_api_controller.dart';
@@ -72,7 +79,7 @@ class ModernMapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<ModernMapScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final List<LatLng> vihicallocations = [];
   final List<String> _iconPaths = [];
   final List<String> _iconPathsbiddingon = [];
@@ -80,7 +87,19 @@ class _MapScreenState extends State<ModernMapScreen>
   List<PointLatLng> _dropOffPoints = [];
   List<bool> couponadd = [];
 
-  // bool timeout = false;
+  // Socket management variables
+
+  IO.Socket? socket;
+
+  bool socketInitialized = false;
+
+  bool _disposed = false;
+
+  Timer? _socketReconnectTimer;
+
+  Timer? _requestTimer;
+
+  StreamSubscription? _appStateSubscription;
 
   String themeForMap = "";
 
@@ -89,6 +108,18 @@ class _MapScreenState extends State<ModernMapScreen>
       setState(() {
         DefaultAssetBundle.of(context)
             .loadString("assets/map_styles/dark_style.json")
+            .then(
+          (value) {
+            setState(() {
+              themeForMap = value;
+            });
+          },
+        );
+      });
+    } else {
+      setState(() {
+        DefaultAssetBundle.of(context)
+            .loadString("assets/map_styles/light_style.json")
             .then(
           (value) {
             setState(() {
@@ -151,11 +182,230 @@ class _MapScreenState extends State<ModernMapScreen>
   GlobalDriverAcceptClass globalDriverAcceptClass =
       Get.put(GlobalDriverAcceptClass());
   TextEditingController amountcontroller = TextEditingController();
+  // CRITICAL: Lifecycle management
 
-  // late AnimationController controller;
-  // late Animation<Color?> colorAnimation;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeApp(); // This will now handle the initial reset
+  }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        if (kDebugMode) print("🔄 App paused - disconnecting socket");
+        _cleanupSocket();
+        break;
+
+      case AppLifecycleState.resumed:
+        if (kDebugMode)
+          print("🔄 App resumed - reconnecting socket and clearing state");
+
+        // ✅ STEP 2: Clear the state when the user returns to the app.
+        _clearGlobalState();
+
+        // We also need to re-initialize the data after clearing it.
+        // Calling _initializeApp will handle this perfectly.
+        _initializeApp();
+
+        // The original socket reconnect logic is now handled inside _initializeApp
+        // if (!_disposed) {
+        //   _delayedSocketReconnect();
+        // }
+        break;
+
+      case AppLifecycleState.detached:
+        if (kDebugMode) print("🔄 App detached - full cleanup");
+        _fullCleanup();
+        break;
+      default:
+        break;
+    }
+  }
+  // 🚨 CRITICAL: Complete disposal to prevent memory leaks
+
+  @override
+  void dispose() {
+    if (kDebugMode) print("🧹 Starting map screen disposal");
+    _disposed = true;
+
+    // Remove lifecycle observer
+
+    WidgetsBinding.instance.removeObserver(this);
+
+    // Cancel all timers
+
+    _requestTimer?.cancel();
+    _socketReconnectTimer?.cancel();
+
+    // ✅ CORRECT LIFECYCLE MANAGEMENT:
+
+    // Dispose of all controllers here to prevent memory leaks.
+
+    controller?.dispose();
+    pickupcontroller.dispose();
+    dropcontroller.dispose();
+    amountcontroller.dispose();
+    _focusNode.dispose();
+
+    // Cancel subscription
+
+    _appStateSubscription?.cancel();
+
+    // Clean up socket completely
+
+    _fullCleanup();
+
+    // ❌ REMOVED: Do NOT clear global state here.
+
+    // This was causing the reset during normal navigation.
+
+    // _clearGlobalState();
+
+    super.dispose();
+    if (kDebugMode) print("✅ Map screen disposal complete");
+  }
+// 🧹 Complete socket cleanup - MODIFIED
+
+  void _fullCleanup() {
+    try {
+      // ❌ DO NOT dispose or nullify the global socket here.
+
+      // We only want to disconnect it when the app is paused or this screen is disposed.
+
+      if (socket?.connected == true) {
+        if (kDebugMode)
+          print("🔌 Disconnecting socket, but keeping instance alive.");
+        socket?.disconnect();
+      }
+    } catch (e) {
+      if (kDebugMode) print("⚠️ Error during socket cleanup: $e");
+    }
+    // ❌ REMOVED:
+
+    // finally {
+
+    //   socket = null;
+
+    //   socketInitialized = false;
+
+    // }
+  }
+
+// 🧹 Soft socket cleanup (for app lifecycle changes)
+
+  void _cleanupSocket() {
+    try {
+      if (socket?.connected == true) {
+        socket?.disconnect();
+        if (kDebugMode) print("🔌 Socket disconnected on app pause");
+      }
+    } catch (e) {
+      if (kDebugMode) print("⚠️ Error during socket disconnect: $e");
+    }
+  }
+  // 🔄 Delayed socket reconnection
+
+  void _delayedSocketReconnect() {
+    _socketReconnectTimer?.cancel();
+
+    _socketReconnectTimer = Timer(const Duration(seconds: 2), () {
+      if (!_disposed && mounted) {
+        _reconnectSocket();
+      }
+    });
+  }
+
+  // 🔄 Socket reconnection logic
+
+  void _reconnectSocket() {
+    if (_disposed || !mounted) return;
+
+    try {
+      if (socket?.connected != true) {
+        socket?.connect();
+
+        if (kDebugMode) print("🔄 Socket reconnected");
+      }
+    } catch (e) {
+      if (kDebugMode) print("⚠️ Socket reconnection failed: $e");
+    }
+  }
+
+  // 🗑️ Clear global state variables
+
+  void _clearGlobalState() {
+    // Clear pickup/drop data
+
+    pickupcontroller.clear();
+
+    dropcontroller.clear();
+
+    latitudepick = 0.0;
+
+    longitudepick = 0.0;
+
+    latitudedrop = 0.0;
+
+    longitudedrop = 0.0;
+
+    // Clear titles and lists
+
+    picktitle = "";
+
+    picksubtitle = "";
+
+    droptitle = "";
+
+    dropsubtitle = "";
+
+    droptitlelist.clear();
+
+    textfieldlist.clear();
+
+    destinationlat.clear();
+
+    // Clear markers and map data
+
+    markers.clear();
+
+    markers11.clear();
+
+    polylines11.clear();
+
+    // Clear pricing data
+
+    dropprice = 0.0;
+
+    minimumfare = 0.0;
+
+    maximumfare = 0.0;
+
+    vihicalrice = 0.0;
+
+    // Clear driver data
+
+    vehicle_bidding_driver.clear();
+
+    vehicle_bidding_secounde.clear();
 // COMPLETE socketConnect method:
+
+    // Reset flags
+
+    isanimation = false;
+
+    loadertimer = false;
+
+    driveridloader = false;
+
+    if (kDebugMode) print("🗑️ Global state cleared");
+  }
+
   socketConnect() async {
     try {
       SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -240,27 +490,27 @@ class _MapScreenState extends State<ModernMapScreen>
       socketInitialized = true;
 
       // Set up basic socket events
-      socket.onConnect((_) {
+      socket!.onConnect((_) {
         if (kDebugMode) {
           print('Socket Connected successfully');
         }
-        socket.emit('message', 'Hello from Flutter');
+        socket!.emit('message', 'Hello from Flutter');
       });
 
-      socket.onDisconnect((_) {
+      socket!.onDisconnect((_) {
         if (kDebugMode) {
           print('Socket Disconnected');
         }
       });
 
-      socket.onConnectError((error) {
+      socket!.onConnectError((error) {
         if (kDebugMode) {
           print('Socket Connection Error: $error');
         }
       });
 
       // Connect the socket
-      socket.connect();
+      socket!.connect();
 
       // Wait a moment for socket to initialize properly, then call _connectSocket
       await Future.delayed(Duration(milliseconds: 200));
@@ -295,701 +545,723 @@ class _MapScreenState extends State<ModernMapScreen>
     }
   }
 
-// COMPLETE _connectSocket method:
-  _connectSocket() async {
-    // CRITICAL: Check if socket is initialized before doing anything
-    if (!socketInitialized) {
-      if (kDebugMode) {
-        print("Socket not initialized yet, waiting...");
-      }
-      // Wait a bit and try again
-      await Future.delayed(Duration(milliseconds: 500));
-      if (!socketInitialized) {
-        if (kDebugMode) {
-          print("Socket still not initialized, aborting _connectSocket");
-        }
-        return;
-      }
-    }
+  // 🚀 Initialize app with proper error handling
+
+  Future<void> _initializeApp() async {
+    // ✅ STEP 1: Clear the state right at the beginning.
+
+    // This handles the "refresh" or first-time load scenario.
+
+    _clearGlobalState();
 
     try {
-      // Additional check - make sure socket exists and is connected
-      if (!socket.connected) {
-        if (kDebugMode) {
-          print("Socket not connected, waiting for connection...");
-        }
-        await Future.delayed(Duration(milliseconds: 1000));
-      }
+      await _loadUserData();
 
-      setState(() {});
-      SharedPreferences preferences = await SharedPreferences.getInstance();
-
-      // Make sure userid is available before making API calls
-      if (userid == null) {
-        if (kDebugMode) {
-          print(
-              "Error: userid is null in _connectSocket - user may not be properly logged in");
-        }
-        // Don't redirect here, just return
+      if (useridgloable == null) {
+        Get.offAll(() => const OnboardingScreen());
         return;
       }
 
-      // Wallet API call
-      homeWalletApiController
-          .homwwalleteApi(uid: userid.toString(), context: context)
-          .then((value) {
-        try {
-          if (value != null && value["wallet_amount"] != null) {
-            print("{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
-            walleteamount = double.parse(value["wallet_amount"].toString());
-            print(
-                "[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print("Error parsing wallet amount: $e");
-          }
-        }
-      }).catchError((error) {
-        if (kDebugMode) {
-          print("Error in wallet API: $error");
-        }
-      });
+      await _initializeLocation();
+      await _initializeSocket();
+      makeInitialAPICalls();
+    } catch (e) {
+      if (kDebugMode) print("❌ App initialization error: $e");
+      if (e.toString().contains('userLogin')) {
+        Get.offAll(() => const OnboardingScreen());
+      }
+    }
+  }
+  // 📱 Load user data safely
 
-      // Home API call
+  Future<void> _loadUserData() async {
+    try {
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+
+      var uid = preferences.getString("userLogin");
+
+      var currencyy = preferences.getString("currenci");
+
+      if (uid == null) throw Exception("No user data");
+
+      decodeUid = jsonDecode(uid);
+
+      if (currencyy != null) {
+        currencyy = jsonDecode(currencyy);
+      } else {
+        currencyy = {} as String?;
+      }
+
+      useridgloable = decodeUid['id'];
+
+      username = decodeUid["name"] ?? "";
+
+      useridgloable = decodeUid['id'];
+
+      if (kDebugMode) print("✅ User data loaded: $useridgloable");
+    } catch (e) {
+      if (kDebugMode) print("❌ User data loading failed: $e");
+
+      rethrow;
+    }
+  }
+
+  // 🗺️ Initialize location
+
+  Future<void> _initializeLocation() async {
+    try {
+      await fun();
+
+      if (mounted) setState(() {});
+
+      getCurrentLatAndLong(lathome, longhome);
+    } catch (e) {
+      if (kDebugMode) print("❌ Location initialization failed: $e");
+    }
+  }
+
+  // 🔌 Initialize socket with proper error handling
+
+  Future<void> _initializeSocket() async {
+    if (_disposed) return;
+
+    try {
+      // ✅ Use the new global initializer
+
+      _initializeSocket();
+
+      // Just connect if not already connected
+
+      if (socket?.connected == false) {
+        socket?.connect();
+      }
+
+      await Future.delayed(const Duration(milliseconds: 500));
+      _connectSocket();
+      if (kDebugMode) print("✅ Socket connected from MapScreen");
+    } catch (e) {
+      if (kDebugMode) print("❌ Socket initialization failed: $e");
+    }
+  }
+  // 👂 Setup socket event listeners
+
+  void _setupSocketListeners() {
+    if (socket == null) return;
+
+    socket!.onConnect((_) {
+      if (kDebugMode) print('🔌 Socket connected');
+
+      socket!.emit('message', 'Hello from Flutter');
+    });
+
+    socket!.onDisconnect((_) {
+      if (kDebugMode) print('🔌 Socket disconnected');
+    });
+
+    socket!.onConnectError((error) {
+      if (kDebugMode) print('❌ Socket connection error: $error');
+    });
+  }
+
+  // 🔄 Socket connection logic
+
+  void _connectSocket() {
+    if (!socketInitialized || socket == null || _disposed) return;
+
+    try {
+      // Wallet API
+
+      homeWalletApiController
+          .homwwalleteApi(uid: useridgloable.toString(), context: context)
+          .then(_handleWalletResponse)
+          .catchError(_handleError);
+
+      // Home API
+
       homeApiController
           .homeApi(
-              uid: userid.toString(),
+              uid: useridgloable.toString(),
               lat: lathome.toString(),
               lon: longhome.toString())
-          .then((value) {
-        try {
-          if (homeApiController.homeapimodel?.categoryList?.isNotEmpty ==
-              true) {
-            mid =
-                homeApiController.homeapimodel!.categoryList![0].id.toString();
-            mroal = homeApiController.homeapimodel!.categoryList![0].role
-                .toString();
+          .then(_handleHomeResponse)
+          .catchError(_handleError);
 
-            var currency = preferences.getString("currenci");
-            if (currency != null) {
+      // Setup socket event listeners for real-time updates
+
+      _setupRealTimeListeners();
+    } catch (e) {
+      if (kDebugMode) print("❌ Socket connection error: $e");
+    }
+  }
+
+  // 👂 Setup real-time listeners
+
+  void _setupRealTimeListeners() {
+    if (socket == null || _disposed) return;
+
+    // Driver location updates
+
+    socket!.on("Driver_location_On", _handleDriverLocationOn);
+
+    socket!.on("Drive_location_Off", _handleDriverLocationOff);
+
+    socket!.on("Driver_location_Update", _handleDriverLocationUpdate);
+
+    // Bidding updates
+
+    socket!.on("Vehicle_Bidding$useridgloable", _handleVehicleBidding);
+
+    // Request acceptance
+
+    socket!.on('acceptvehrequest$useridgloable', _handleRequestAccepted);
+  }
+
+  // 📊 Handle wallet response
+
+  void _handleWalletResponse(dynamic value) {
+    try {
+      if (value != null && value["wallet_amount"] != null) {
+        walleteamount = double.parse(value["wallet_amount"].toString());
+
+        if (kDebugMode) print("💰 Wallet amount: $walleteamount");
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Wallet response error: $e");
+    }
+  }
+
+  // 🏠 Handle home response
+
+  void _handleHomeResponse(dynamic value) {
+    try {
+      if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
+        mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+
+        mroal =
+            homeApiController.homeapimodel!.categoryList![0].role.toString();
+
+        // Load map data based on current state
+
+        _loadMapData();
+
+        // Handle running rides
+
+        _handleRunningRides();
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Home response error: $e");
+    }
+  }
+
+  // 🗺️ Load map data
+
+  void _loadMapData() {
+    if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
+      _loadNormalVehicles();
+    } else {
+      _loadBiddingVehicles();
+    }
+  }
+
+  // 🚗 Load normal vehicles
+
+  void _loadNormalVehicles() {
+    homeMapController
+        .homemapApi(mid: mid, lat: lathome.toString(), lon: longhome.toString())
+        .then(_handleNormalVehiclesResponse)
+        .catchError(_handleError);
+  }
+
+  // 🚗 Load bidding vehicles
+
+  void _loadBiddingVehicles() {
+    homeMapController
+        .homemapApi(mid: mid, lat: lathome.toString(), lon: longhome.toString())
+        .then(_handleBiddingVehiclesResponse)
+        .catchError(_handleError);
+  }
+
+  // Handle responses for normal vehicles
+
+  void _handleNormalVehiclesResponse(dynamic value) {
+    if (!mounted || _disposed) return;
+
+    try {
+      if (value?["Result"] == false) {
+        setState(() {
+          vihicallocations.clear();
+
+          markers.clear();
+
+          _addMarkers();
+        });
+      } else {
+        setState(() {
+          vihicallocations.clear();
+
+          _iconPaths.clear();
+
+          if (homeMapController.homeMapApiModel?.list != null) {
+            for (int i = 0;
+                i < homeMapController.homeMapApiModel!.list!.length;
+                i++) {
               try {
-                currencyy = jsonDecode(currency);
-                globalcurrency = currencyy;
+                double lat = double.parse(homeMapController
+                    .homeMapApiModel!.list![i].latitude
+                    .toString());
+
+                double lng = double.parse(homeMapController
+                    .homeMapApiModel!.list![i].longitude
+                    .toString());
+
+                vihicallocations.add(LatLng(lat, lng));
+
+                _iconPaths.add(
+                    "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
               } catch (e) {
-                if (kDebugMode) {
-                  print("Error decoding currency: $e");
-                }
+                if (kDebugMode) print("❌ Vehicle parsing error: $e");
               }
             }
 
-            // Handle map data based on pickup/drop controller state
-            if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
-              // No pickup/drop selected - show normal vehicle locations
-              homeMapController
-                  .homemapApi(
-                      mid: mid,
-                      lat: lathome.toString(),
-                      lon: longhome.toString())
-                  .then((value) {
-                try {
-                  setState(() {});
-                  print("///:---  ${value?["Result"]}");
+            _addMarkers();
+          }
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Normal vehicles response error: $e");
+    }
+  }
 
-                  if (value?["Result"] == false) {
-                    setState(() {
-                      vihicallocations.clear();
-                      markers.clear();
-                      _addMarkers();
-                      print("***if condition+++:---  $vihicallocations");
-                    });
-                  } else {
-                    setState(() {});
-                    if (homeMapController.homeMapApiModel?.list != null) {
-                      vihicallocations.clear();
-                      _iconPaths.clear();
+  // Handle responses for bidding vehicles
 
-                      for (int i = 0;
-                          i < homeMapController.homeMapApiModel!.list!.length;
-                          i++) {
-                        try {
-                          double lat = double.parse(homeMapController
-                              .homeMapApiModel!.list![i].latitude
-                              .toString());
-                          double lng = double.parse(homeMapController
-                              .homeMapApiModel!.list![i].longitude
-                              .toString());
+  void _handleBiddingVehiclesResponse(dynamic value) {
+    if (!mounted || _disposed) return;
 
-                          vihicallocations.add(LatLng(lat, lng));
-                          _iconPaths.add(
-                              "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                        } catch (e) {
-                          if (kDebugMode) {
-                            print("Error parsing vehicle location $i: $e");
-                          }
-                        }
-                      }
-                      _addMarkers();
-                    }
-                  }
-                  print("******-**:::::------$vihicallocations");
-                } catch (e) {
-                  if (kDebugMode) {
-                    print("Error in homeMapApi (empty controllers): $e");
-                  }
-                }
-              }).catchError((error) {
-                if (kDebugMode) {
-                  print("Error in homeMapApi call (empty controllers): $error");
-                }
-              });
-            } else {
-              // Pickup/drop selected - show bidding vehicle locations
-              homeMapController
-                  .homemapApi(
-                      mid: mid,
-                      lat: lathome.toString(),
-                      lon: longhome.toString())
-                  .then((value) {
-                try {
-                  setState(() {});
-                  print("///:---  ${value?["Result"]}");
+    try {
+      if (value?["Result"] == false) {
+        setState(() {
+          vihicallocationsbiddingon.clear();
 
-                  if (value?["Result"] == false) {
-                    setState(() {
-                      vihicallocationsbiddingon.clear();
-                      markers.clear();
-                      _addMarkers2();
-                      print(
-                          "***if condition+++:---  $vihicallocationsbiddingon");
-                    });
-                  } else {
-                    setState(() {});
-                    if (homeMapController.homeMapApiModel?.list != null) {
-                      vihicallocationsbiddingon.clear();
-                      _iconPathsbiddingon.clear();
+          markers.clear();
 
-                      for (int i = 0;
-                          i < homeMapController.homeMapApiModel!.list!.length;
-                          i++) {
-                        try {
-                          double lat = double.parse(homeMapController
-                              .homeMapApiModel!.list![i].latitude
-                              .toString());
-                          double lng = double.parse(homeMapController
-                              .homeMapApiModel!.list![i].longitude
-                              .toString());
+          _addMarkers2();
+        });
+      } else {
+        setState(() {
+          vihicallocationsbiddingon.clear();
 
-                          vihicallocationsbiddingon.add(LatLng(lat, lng));
-                          _iconPathsbiddingon.add(
-                              "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                        } catch (e) {
-                          if (kDebugMode) {
-                            print(
-                                "Error parsing bidding vehicle location $i: $e");
-                          }
-                        }
-                      }
-                      _addMarkers2();
-                    }
-                  }
-                  print("******-**:::::------$vihicallocationsbiddingon");
-                } catch (e) {
-                  if (kDebugMode) {
-                    print("Error in homeMapApi (with controllers): $e");
-                  }
-                }
-              }).catchError((error) {
-                if (kDebugMode) {
-                  print("Error in homeMapApi call (with controllers): $error");
-                }
-              });
-            }
+          _iconPathsbiddingon.clear();
 
-            // Handle running rides
-            if (homeApiController.homeapimodel?.runnigRide?.isEmpty != false) {
-              // No running rides
-              if (kDebugMode) {
-                print("No running rides found");
-              }
-            } else if (homeApiController.homeapimodel!.runnigRide!.isNotEmpty) {
-              // Handle existing running ride
+          if (homeMapController.homeMapApiModel?.list != null) {
+            for (int i = 0;
+                i < homeMapController.homeMapApiModel!.list!.length;
+                i++) {
               try {
-                var runningRide =
-                    homeApiController.homeapimodel!.runnigRide![0];
+                double lat = double.parse(homeMapController
+                    .homeMapApiModel!.list![i].latitude
+                    .toString());
 
-                pickupcontroller.text =
-                    runningRide.pickAdd?.title?.toString() ?? "";
-                dropcontroller.text =
-                    runningRide.dropAdd?.title?.toString() ?? "";
+                double lng = double.parse(homeMapController
+                    .homeMapApiModel!.list![i].longitude
+                    .toString());
 
-                if (runningRide.pickLatlon?.latitude != null) {
-                  latitudepick =
-                      double.parse(runningRide.pickLatlon!.latitude.toString());
-                }
-                if (runningRide.pickLatlon?.longitude != null) {
-                  longitudepick = double.parse(
-                      runningRide.pickLatlon!.longitude.toString());
-                }
-                if (runningRide.dropLatlon?.latitude != null) {
-                  latitudedrop =
-                      double.parse(runningRide.dropLatlon!.latitude.toString());
-                }
-                if (runningRide.dropLatlon?.longitude != null) {
-                  longitudedrop = double.parse(
-                      runningRide.dropLatlon!.longitude.toString());
-                }
+                vihicallocationsbiddingon.add(LatLng(lat, lng));
 
-                maximumfare = runningRide.maximumFare as double;
-                minimumfare = runningRide.minimumFare as double;
-                dropprice = (runningRide.price?.toString() ?? "0") as double;
-                priceyourfare = runningRide.price ?? 0;
-                request_id = runningRide.id?.toString() ?? "";
+                _iconPathsbiddingon.add(
+                    "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+              } catch (e) {
+                if (kDebugMode) print("❌ Bidding vehicle parsing error: $e");
+              }
+            }
 
-                picktitle = runningRide.pickAdd?.title?.toString() ?? "";
-                picksubtitle = runningRide.pickAdd?.subtitle?.toString() ?? "";
-                droptitle = runningRide.dropAdd?.title?.toString() ?? "";
-                dropsubtitle = runningRide.dropAdd?.subtitle?.toString() ?? "";
+            _addMarkers2();
+          }
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Bidding vehicles response error: $e");
+    }
+  }
 
-                tot_hour = runningRide.totHour?.toString() ?? "0";
-                tot_time = runningRide.totMinute?.toString() ?? "0";
-                tot_secound = "0";
+// 🚙 Handle running rides - FIXED VERSION
+  void _handleRunningRides() {
+    if (!mounted || _disposed) return;
 
-                // Calculate API call for running ride
-                calculateController
-                    .calculateApi(
-                        context: context,
-                        uid: useridgloable.toString(),
-                        mid: mid,
-                        mrole: mroal,
-                        pickup_lat_lon: "$latitudepick,$longitudepick",
-                        drop_lat_lon: "$latitudedrop,$longitudedrop",
-                        drop_lat_lon_list: onlypass)
-                    .then((value) {
-                  try {
-                    print("CALCULATE DATA LOAD");
+    try {
+      if (homeApiController.homeapimodel?.runnigRide?.isEmpty != false) {
+        // No running rides
+        if (kDebugMode) print("No running rides found");
+      } else if (homeApiController.homeapimodel!.runnigRide!.isNotEmpty) {
+        // Handle existing running ride
+        var runningRide = homeApiController.homeapimodel!.runnigRide![0];
 
-                    if (runningRide.increasedTime != null) {
-                      calculateController.calCulateModel!.offerExpireTime =
-                          int.parse(runningRide.increasedTime.toString());
-                    }
-                    calculateController.calCulateModel!.driverId =
-                        runningRide.dId;
+        pickupcontroller.text = runningRide.pickAdd?.title?.toString() ?? "";
+        dropcontroller.text = runningRide.dropAdd?.title?.toString() ?? "";
 
-                    isanimation = true;
-                    loadertimer = true;
-                    offerpluse = false;
+        // ✅ FIXED: Safe coordinate parsing
+        if (runningRide.pickLatlon?.latitude != null) {
+          latitudepick =
+              (runningRide.pickLatlon?.latitude as num?)?.toDouble() ?? 0.0;
+        }
+        if (runningRide.pickLatlon?.longitude != null) {
+          longitudepick =
+              (runningRide.pickLatlon?.longitude as num?)?.toDouble() ?? 0.0;
+        }
+        if (runningRide.dropLatlon?.latitude != null) {
+          latitudedrop =
+              (runningRide.dropLatlon?.latitude as num?)?.toDouble() ?? 0.0;
+        }
+        if (runningRide.dropLatlon?.longitude != null) {
+          longitudedrop =
+              (runningRide.dropLatlon?.longitude as num?)?.toDouble() ?? 0.0;
+        }
 
-                    // Clear existing markers and locations
-                    mid = homeApiController.homeapimodel!.categoryList![0].id
-                        .toString();
-                    mroal = homeApiController
-                        .homeapimodel!.categoryList![0].role
-                        .toString();
-                    print("*****mid*-**:::::------$mid");
+        // ✅ FIXED: Safe fare parsing - avoid converting to string then casting to double
+        maximumfare =
+            double.tryParse(runningRide.maximumFare?.toString() ?? "0") ?? 0.0;
+        minimumfare =
+            double.tryParse(runningRide.minimumFare?.toString() ?? "0") ?? 0.0;
+        dropprice = (runningRide.price as num?)?.toDouble() ?? 0.0;
+        priceyourfare = (runningRide.price as num?)?.toDouble() ?? 0.0;
 
-                    _iconPaths.clear();
-                    vihicallocations.clear();
-                    _iconPathsbiddingon.clear();
-                    vihicallocationsbiddingon.clear();
+        request_id = runningRide.id?.toString() ?? "";
 
-                    if (pickupcontroller.text.isEmpty ||
-                        dropcontroller.text.isEmpty) {
-                      markers.clear();
-                      fun().then((value) {
-                        setState(() {});
-                        getCurrentLatAndLong(lathome, longhome);
-                      });
-                    }
+        picktitle = runningRide.pickAdd?.title?.toString() ?? "";
+        picksubtitle = runningRide.pickAdd?.subtitle?.toString() ?? "";
+        droptitle = runningRide.dropAdd?.title?.toString() ?? "";
+        dropsubtitle = runningRide.dropAdd?.subtitle?.toString() ?? "";
 
-                    // Additional calculate API call
-                    calculateController
-                        .calculateApi(
-                            context: context,
-                            uid: userid.toString(),
-                            mid: mid,
-                            mrole: mroal,
-                            pickup_lat_lon: "$latitudepick,$longitudepick",
-                            drop_lat_lon: "$latitudedrop,$longitudedrop",
-                            drop_lat_lon_list: onlypass)
-                        .then((value) {
-                      try {
-                        dropprice = 0;
-                        minimumfare = 0;
-                        maximumfare = 0;
+        tot_hour = runningRide.totHour?.toString() ?? "0";
+        tot_time = runningRide.totMinute?.toString() ?? "0";
+        tot_secound = "0";
 
-                        if (value?["Result"] == true) {
-                          tot_hour = value["tot_hour"]?.toString() ?? "0";
-                          tot_time = value["tot_minute"]?.toString() ?? "0";
-                          vihicalimage =
-                              value["vehicle"]?["map_img"]?.toString() ?? "";
-                          vihicalname =
-                              value["vehicle"]?["name"]?.toString() ?? "";
-                          setState(() {});
-                        } else {
-                          amountresponse = "false";
-                          setState(() {});
-                        }
-                      } catch (e) {
-                        if (kDebugMode) {
-                          print("Error in additional calculate API: $e");
-                        }
-                      }
-                    }).catchError((error) {
-                      if (kDebugMode) {
-                        print("Error in additional calculate API call: $error");
-                      }
-                    });
+        // Calculate API call for running ride
+        calculateController
+            .calculateApi(
+                context: context,
+                uid: useridgloable.toString(),
+                mid: mid,
+                mrole: mroal,
+                pickup_lat_lon: "$latitudepick,$longitudepick",
+                drop_lat_lon: "$latitudedrop,$longitudedrop",
+                drop_lat_lon_list: onlypass)
+            .then((value) {
+          try {
+            if (runningRide.increasedTime != null) {
+              calculateController.calCulateModel!.offerExpireTime =
+                  (runningRide.increasedTime as num?)?.toInt() ?? 0;
+            }
+            calculateController.calCulateModel!.driverId = runningRide.dId;
 
-                    requesttime();
-                    Buttonpresebottomshhet();
+            isanimation = true;
+            loadertimer = true;
+            offerpluse = false;
 
-                    print(
-                        "11111(calculateController.calCulateModel!.offerExpireTime)22222:- ${calculateController.calCulateModel!.offerExpireTime}");
-                    print(
-                        "11111(calculateController.calCulateModel!.driverId)22222:- ${calculateController.calCulateModel!.driverId}");
-                  } catch (e) {
-                    if (kDebugMode) {
-                      print("Error in running ride calculate API: $e");
-                    }
-                  }
-                }).catchError((error) {
-                  if (kDebugMode) {
-                    print("Error in running ride calculate API call: $error");
+            requesttime();
+            Buttonpresebottomshhet();
+          } catch (e) {
+            if (kDebugMode) print("❌ Error in running ride calculate API: $e");
+          }
+        }).catchError((error) {
+          if (kDebugMode)
+            print("❌ Error in running ride calculate API call: $error");
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error processing running ride: $e");
+    }
+  }
+
+  void _handleError(dynamic error) {
+    if (kDebugMode) print("❌ API Error: $error");
+  }
+
+// Event handlers for real-time updates
+  void _handleDriverLocationOn(dynamic data) {
+    if (_disposed || !mounted) return;
+
+    try {
+      if (kDebugMode) print("++++++ Driver_location_On ++++ :---  $data");
+
+      if (data != null && data["zone_list"] != null) {
+        List zonelist = List.from(data["zone_list"]);
+
+        if (homeMapController.homeMapApiModel?.zoneId != null &&
+            zonelist.contains(homeMapController.homeMapApiModel!.zoneId)) {
+          if (data["latitude"] != null &&
+              data["longitude"] != null &&
+              data["id"] != null) {
+            try {
+              LatLng position = LatLng(
+                  double.parse(data["latitude"].toString()),
+                  double.parse(data["longitude"].toString()));
+
+              if (data["image"] != null) {
+                getNetworkImage("${Config.imageurl}${data["image"]}")
+                    .then((markIcon) {
+                  if (!_disposed && mounted) {
+                    MarkerId markerId = MarkerId(data["id"].toString());
+                    Marker marker = Marker(
+                      markerId: markerId,
+                      icon: BitmapDescriptor.fromBytes(markIcon),
+                      position: position,
+                    );
+                    markers[markerId] = marker;
+                    markers11[markerId] = marker;
+                    setState(() {});
                   }
                 });
-              } catch (e) {
-                if (kDebugMode) {
-                  print("Error processing running ride: $e");
-                }
               }
+            } catch (e) {
+              if (kDebugMode) print("❌ Error processing driver location: $e");
             }
           }
-        } catch (e) {
-          if (kDebugMode) {
-            print("Error in home API processing: $e");
-          }
         }
-      }).catchError((error) {
-        if (kDebugMode) {
-          print("Error in home API call: $error");
-        }
-      });
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error in Driver_location_On: $e");
+    }
+  }
 
-      // Socket event listeners with error handling
-      socket.on('home', (messaj) {
+  void _handleDriverLocationOff(dynamic data) {
+    if (_disposed || !mounted) return;
+
+    try {
+      if (kDebugMode) print("++++++ Drive_location_Off ++++ :---  $data");
+
+      if (data != null && data["id"] != null) {
+        MarkerId markerId = MarkerId(data["id"].toString());
+        markers.remove(markerId);
+        markers11.remove(markerId);
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error in Drive_location_Off: $e");
+    }
+  }
+
+  void _handleDriverLocationUpdate(dynamic data) {
+    if (_disposed || !mounted) return;
+
+    try {
+      if (kDebugMode) print("++++++ Driver_location_Update ++++ :---  $data");
+
+      if (data != null &&
+          data["latitude"] != null &&
+          data["longitude"] != null &&
+          data["id"] != null) {
         try {
-          print("++++++++++ :---  $messaj");
-          print("Vehicle is of type: ${messaj.runtimeType}");
-          print("Vehicle keys: ${messaj.keys}");
+          LatLng position = LatLng(double.parse(data["latitude"].toString()),
+              double.parse(data["longitude"].toString()));
 
-          if (messaj != null &&
-              messaj['uid'] != null &&
-              messaj['lat'] != null &&
-              messaj['lon'] != null) {
-            homeApiController
-                .homeApi(
-                    uid: messaj['uid'].toString(),
-                    lat: messaj['lat'].toString(),
-                    lon: messaj['lon'].toString())
-                .then((value) {
-              try {
-                if (homeApiController.homeapimodel?.categoryList?.isNotEmpty ==
-                    true) {
-                  mid = homeApiController.homeapimodel!.categoryList![0].id
-                      .toString();
-                  mroal = homeApiController.homeapimodel!.categoryList![0].role
-                      .toString();
-                }
-              } catch (e) {
-                if (kDebugMode) {
-                  print("Error in home socket event API processing: $e");
-                }
-              }
-            }).catchError((error) {
-              if (kDebugMode) {
-                print("Error in home socket event API call: $error");
+          if (data["image"] != null) {
+            getNetworkImage("${Config.imageurl}${data["image"]}")
+                .then((markIcon) {
+              if (!_disposed && mounted) {
+                MarkerId markerId = MarkerId(data["id"].toString());
+                Marker marker = Marker(
+                  markerId: markerId,
+                  icon: BitmapDescriptor.fromBytes(markIcon),
+                  position: position,
+                );
+
+                markers[markerId] = marker;
+                markers11[markerId] = marker;
+                setState(() {});
               }
             });
           }
         } catch (e) {
-          if (kDebugMode) {
-            print("Error in 'home' socket event: $e");
-          }
+          if (kDebugMode) print("❌ Error updating driver location: $e");
         }
-      });
-
-      List zonelist = [];
-
-      socket.on("Driver_location_On", (Driver_location_On) async {
-        try {
-          print("++++++ Driver_location_On ++++ :---  $Driver_location_On");
-
-          if (Driver_location_On != null &&
-              Driver_location_On["zone_list"] != null) {
-            zonelist = List.from(Driver_location_On["zone_list"]);
-
-            if (homeMapController.homeMapApiModel?.zoneId != null &&
-                zonelist.contains(homeMapController.homeMapApiModel!.zoneId)) {
-              if (Driver_location_On["latitude"] != null &&
-                  Driver_location_On["longitude"] != null &&
-                  Driver_location_On["id"] != null) {
-                try {
-                  LatLng postion = LatLng(
-                      double.parse(Driver_location_On["latitude"].toString()),
-                      double.parse(Driver_location_On["longitude"].toString()));
-
-                  if (Driver_location_On["image"] != null) {
-                    final Uint8List markIcon = await getNetworkImage(
-                        "${Config.imageurl}${Driver_location_On["image"]}");
-
-                    MarkerId markerId =
-                        MarkerId(Driver_location_On["id"].toString());
-                    Marker marker = Marker(
-                      markerId: markerId,
-                      icon: BitmapDescriptor.fromBytes(markIcon),
-                      position: postion,
-                    );
-                    markers[markerId] = marker;
-
-                    // Poline Marker Update Code
-                    final markerId1 =
-                        MarkerId(Driver_location_On["id"].toString());
-                    final marker1 = Marker(
-                      markerId: markerId1,
-                      position: postion,
-                      icon: BitmapDescriptor.fromBytes(markIcon),
-                    );
-                    markers11[markerId1] = marker1;
-                    setState(() {});
-                  }
-                } catch (e) {
-                  if (kDebugMode) {
-                    print("Error processing driver location: $e");
-                  }
-                }
-              }
-            } else {
-              print("<<<<<<<<<<else>>>>>>>>>>>> $zonelist");
-            }
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print("Error in Driver_location_On: $e");
-          }
-        }
-      });
-
-      socket.on("Drive_location_Off", (Drive_location_Off) {
-        try {
-          print("++++++ Drive_location_Off ++++ :---  $Drive_location_Off");
-
-          if (Drive_location_Off != null) {
-            if (Drive_location_Off["zone_list"] != null) {
-              zonelist = List.from(Drive_location_Off["zone_list"]);
-            }
-
-            if (Drive_location_Off["id"] != null) {
-              MarkerId markerId = MarkerId(Drive_location_Off["id"].toString());
-              markers.remove(markerId);
-              markers11.remove(markerId);
-              setState(() {});
-            }
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print("Error in Drive_location_Off: $e");
-          }
-        }
-      });
-
-      socket.on("Driver_location_Update", (Driver_location_Update) async {
-        try {
-          print(
-              "++++++ Driver_location_Update ++++ :---  $Driver_location_Update");
-
-          if (Driver_location_Update != null &&
-              Driver_location_Update["latitude"] != null &&
-              Driver_location_Update["longitude"] != null &&
-              Driver_location_Update["id"] != null) {
-            try {
-              LatLng postion = LatLng(
-                  double.parse(Driver_location_Update["latitude"].toString()),
-                  double.parse(Driver_location_Update["longitude"].toString()));
-
-              if (Driver_location_Update["image"] != null) {
-                final Uint8List markIcon = await getNetworkImage(
-                    "${Config.imageurl}${Driver_location_Update["image"]}");
-
-                MarkerId markerId =
-                    MarkerId(Driver_location_Update["id"].toString());
-                Marker marker = Marker(
-                  markerId: markerId,
-                  icon: BitmapDescriptor.fromBytes(markIcon),
-                  position: postion,
-                );
-
-                markers[markerId] = marker;
-                if (markers.containsKey(markerId)) {
-                  final Marker oldMarker = markers[markerId]!;
-                  final Marker updatedMarker = oldMarker.copyWith(
-                    positionParam: postion,
-                  );
-                  markers[markerId] = updatedMarker;
-                }
-
-                // Poline Marker Update Code
-                final markerId1 =
-                    MarkerId(Driver_location_Update["id"].toString());
-                final marker1 = Marker(
-                  markerId: markerId1,
-                  position: postion,
-                  icon: BitmapDescriptor.fromBytes(markIcon),
-                );
-                markers11[markerId1] = marker1;
-                if (markers11.containsKey(markerId1)) {
-                  final Marker oldMarker = markers11[markerId1]!;
-                  final Marker updatedMarker = oldMarker.copyWith(
-                    positionParam: postion,
-                  );
-                  markers11[markerId1] = updatedMarker;
-                }
-                setState(() {});
-              }
-            } catch (e) {
-              if (kDebugMode) {
-                print("Error updating driver location: $e");
-              }
-            }
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print("Error in Driver_location_Update: $e");
-          }
-        }
-      });
-
-      socket.on("Vehicle_Bidding$userid", (Vehicle_Bidding) {
-        try {
-          print("++++++ Vehicle_Bidding ++++ :---  $Vehicle_Bidding");
-
-          if (Vehicle_Bidding != null &&
-              Vehicle_Bidding["bidding_list"] != null) {
-            vehicle_bidding_driver = List.from(Vehicle_Bidding["bidding_list"]);
-            vehicle_bidding_secounde = [];
-
-            for (int i = 0; i < vehicle_bidding_driver.length; i++) {
-              if (vehicle_bidding_driver[i]["diff_second"] != null) {
-                vehicle_bidding_secounde
-                    .add(vehicle_bidding_driver[i]["diff_second"]);
-              }
-            }
-
-            Get.back();
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const DriverListScreen()));
-
-            if (vehicle_bidding_driver.isEmpty) {
-              Get.back();
-              Buttonpresebottomshhet();
-            }
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print("Error in Vehicle_Bidding: $e");
-          }
-        }
-      });
-
-      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
-        try {
-          socket.close();
-
-          print("++++++ /acceptvehrequest map/ ++++ :---  $acceptvehrequest");
-          print(
-              "acceptvehrequest is of type map: ${acceptvehrequest.runtimeType}");
-
-          isanimation = false;
-          isControllerDisposed = true;
-
-          if (controller != null && controller!.isAnimating) {
-            print("Disposing animation controller");
-            controller!.dispose();
-          }
-
-          loadertimer = true;
-
-          // Handle amount controller
-          if (amountcontroller.text.isNotEmpty) {
-            try {
-              vihicalrice = double.parse(amountcontroller.text);
-            } catch (e) {
-              if (kDebugMode) {
-                print("Error parsing amount: $e");
-              }
-            }
-          }
-
-          if (acceptvehrequest != null &&
-              acceptvehrequest["c_id"] != null &&
-              acceptvehrequest["c_id"]
-                  .toString()
-                  .contains(useridgloable.toString())) {
-            print("condition done");
-            driveridloader = false;
-            print("condition done1");
-            print("condition done0 ${context}");
-
-            if (acceptvehrequest["uid"] != null &&
-                acceptvehrequest["request_id"] != null) {
-              globalDriverAcceptClass.driverdetailfunction(
-                  context: context,
-                  lat: latitudepick,
-                  long: longitudepick,
-                  d_id: acceptvehrequest["uid"].toString(),
-                  request_id: acceptvehrequest["request_id"].toString());
-              print("condition done2");
-            }
-          } else {
-            print("condition not done");
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print("Error in acceptvehrequest: $e");
-          }
-        }
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error in _connectSocket: $e");
       }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error in Driver_location_Update: $e");
     }
   }
 
-// Helper methods for socket management and other files:
-  bool isSocketInitialized() {
-    return socketInitialized;
+  void _handleVehicleBidding(dynamic data) {
+    if (_disposed || !mounted) return;
+
+    try {
+      if (kDebugMode) print("++++++ Vehicle_Bidding ++++ :---  $data");
+
+      if (data != null && data["bidding_list"] != null) {
+        vehicle_bidding_driver = List.from(data["bidding_list"]);
+        vehicle_bidding_secounde = [];
+
+        for (int i = 0; i < vehicle_bidding_driver.length; i++) {
+          if (vehicle_bidding_driver[i]["diff_second"] != null) {
+            vehicle_bidding_secounde
+                .add(vehicle_bidding_driver[i]["diff_second"]);
+          }
+        }
+
+        Get.back();
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const DriverListScreen()));
+
+        if (vehicle_bidding_driver.isEmpty) {
+          Get.back();
+          Buttonpresebottomshhet();
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error in Vehicle_Bidding: $e");
+    }
   }
 
-  bool get socketReady => socketInitialized && socket.connected;
+  void _handleRequestAccepted(dynamic data) {
+    if (_disposed || !mounted) return;
 
-// Safe socket emit method for other files to use
-  void emitSocketEvent(String event, dynamic data) {
-    if (!isSocketInitialized()) {
-      if (kDebugMode) {
-        print("Socket not initialized, cannot emit: $event");
+    try {
+      if (kDebugMode) print("++++++ acceptvehrequest map ++++ :---  $data");
+
+      if (socket != null) {
+        socket!.close();
       }
+
+      isanimation = false;
+      isControllerDisposed = true;
+
+      if (controller != null && controller!.isAnimating) {
+        controller!.dispose();
+      }
+
+      loadertimer = true;
+
+      // Handle amount controller
+      if (amountcontroller.text.isNotEmpty) {
+        try {
+          vihicalrice = double.parse(amountcontroller.text);
+        } catch (e) {
+          if (kDebugMode) print("❌ Error parsing amount: $e");
+        }
+      }
+
+      if (data != null &&
+          data["c_id"] != null &&
+          data["c_id"].toString().contains(useridgloable.toString())) {
+        driveridloader = false;
+
+        if (data["uid"] != null && data["request_id"] != null) {
+          globalDriverAcceptClass.driverdetailfunction(
+              context: context,
+              lat: latitudepick,
+              long: longitudepick,
+              d_id: data["uid"].toString(),
+              request_id: data["request_id"].toString());
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error in acceptvehrequest: $e");
+    }
+  }
+
+// Add this helper method for getting network images
+  Future<Uint8List> getNetworkImage(String path) async {
+    try {
+      final http.Response response = await http.get(Uri.parse(path));
+      if (response.statusCode == 200) {
+        final Uint8List bytes = response.bodyBytes;
+        final ui.Codec codec = await ui.instantiateImageCodec(bytes,
+            targetWidth: 50, targetHeight: 50);
+        final ui.FrameInfo frameInfo = await codec.getNextFrame();
+        final ByteData? byteData =
+            await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+        return byteData!.buffer.asUint8List();
+      } else {
+        throw Exception('Failed to load image from $path');
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error loading network image: $e");
+      // Return a default marker icon
+      final ByteData data = await rootBundle.load("assets/pickup_marker.png");
+      return data.buffer.asUint8List();
+    }
+  }
+
+  // 💳 Handle payment response
+
+  void _handlePaymentResponse(dynamic value) {
+    try {
+      if (paymentGetApiController.paymentgetwayapi?.paymentList != null) {
+        for (int i = 1;
+            i < paymentGetApiController.paymentgetwayapi!.paymentList!.length;
+            i++) {
+          if (int.parse(paymentGetApiController.paymentgetwayapi!.defaultPayment
+                  .toString()) ==
+              paymentGetApiController.paymentgetwayapi!.paymentList![i].id) {
+            if (mounted) {
+              setState(() {
+                payment = paymentGetApiController
+                    .paymentgetwayapi!.paymentList![i].id!;
+
+                paymentname = paymentGetApiController
+                    .paymentgetwayapi!.paymentList![i].name!;
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Payment response error: $e");
+    }
+  }
+
+  // 🚗 Handle vehicle selection
+
+  void _handleVehicleSelection() {
+    // Your existing vehicle selection logic
+  }
+
+  // 🗺️ Setup map markers
+
+  void _setupMapMarkers() {
+    try {
+      if (latitudepick != 0.0 && longitudepick != 0.0) {
+        _addMarker11(LatLng(latitudepick, longitudepick), "origin",
+            BitmapDescriptor.defaultMarker);
+      }
+
+      if (latitudedrop != 0.0 && longitudedrop != 0.0) {
+        _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
+            BitmapDescriptor.defaultMarkerWithHue(90));
+      }
+
+      for (int a = 0; a < _dropOffPoints.length; a++) {
+        _addMarker3("destination");
+      }
+
+      if (latitudepick != 0.0 &&
+          longitudepick != 0.0 &&
+          latitudedrop != 0.0 &&
+          longitudedrop != 0.0) {
+        getDirections11(
+            lat1: PointLatLng(latitudepick, longitudepick),
+            lat2: PointLatLng(latitudedrop, longitudedrop),
+            dropOffPoints: _dropOffPoints);
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Map markers setup error: $e");
+    }
+  }
+
+  // 📡 Safe socket emit method
+
+  void emitSocketEvent(String event, dynamic data) {
+    if (_disposed || !socketInitialized || socket?.connected != true) {
+      if (kDebugMode) print("⚠️ Cannot emit socket event: $event");
+
       return;
     }
 
-    if (socket.connected) {
-      socket.emit(event, data);
-    } else {
-      if (kDebugMode) {
-        print("Socket not connected, cannot emit: $event");
-      }
+    try {
+      socket!.emit(event, data);
+
+      if (kDebugMode) print("📡 Socket event emitted: $event");
+    } catch (e) {
+      if (kDebugMode) print("❌ Socket emit error: $e");
     }
   }
 
@@ -1008,32 +1280,6 @@ class _MapScreenState extends State<ModernMapScreen>
     });
   }
 
-// Add this to your dispose method:
-// FIX: Full and correct dispose method
-  @override
-  void dispose() {
-    // Dispose of all controllers to prevent memory leaks and errors
-    controller?.dispose();
-    amountcontroller.dispose();
-    sheetController.dispose();
-    _focusNode.dispose();
-
-    // Disconnect the socket
-    if (socketInitialized) {
-      try {
-        socket.dispose();
-        if (kDebugMode) print("Socket disposed.");
-      } catch (e) {
-        if (kDebugMode) print("Error disposing socket: $e");
-      }
-      socketInitialized = false;
-    }
-    super.dispose();
-  }
-
-// For other files that need to emit socket events, create helper methods:
-// These methods can be called from other files safely
-
   void emitVehicleRideCancel(String uid, List driverid) {
     emitSocketEvent('Vehicle_Ride_Cancel', {
       'uid': uid,
@@ -1041,9 +1287,10 @@ class _MapScreenState extends State<ModernMapScreen>
     });
   }
 
-  void emitVehiclePaymentChange(String userid, String dId, int paymentId) {
+  void emitVehiclePaymentChange(
+      String useridgloable, String dId, int paymentId) {
     emitSocketEvent('Vehicle_P_Change', {
-      'userid': userid,
+      'useridgloable': useridgloable,
       'd_id': dId,
       'payment_id': paymentId,
     });
@@ -1101,15 +1348,15 @@ TO USE SOCKET IN OTHER FILES:
 Example in other files:
 
 // In ride_complete_payment_screen.dart:
-// Instead of: socket.emit('Vehicle_P_Change', {...});
-// Use: mapScreenInstance.emitVehiclePaymentChange(userid, driver_id, payment);
+// Instead of: socket!.emit('Vehicle_P_Change', {...});
+// Use: mapScreenInstance.emitVehiclePaymentChange(useridgloable, driver_id, payment);
 
 // In chat_screen.dart:
-// Instead of: socket.emit('Send_Chat', {...});
+// Instead of: socket!.emit('Send_Chat', {...});
 // Use: mapScreenInstance.emitSendChat(senderId, receiverId, message, status);
 
 // In driver_list_screen.dart:
-// Instead of: socket.emit('Accept_Bidding', {...});
+// Instead of: socket!.emit('Accept_Bidding', {...});
 // Use: mapScreenInstance.emitAcceptBidding(uid, dId, requestId, price);
 
 ALTERNATIVE APPROACH:
@@ -1122,7 +1369,7 @@ MapScreenState? globalMapScreen;
 globalMapScreen = this;
 
 // In other files:
-globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
+globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
 */
   // late Timer timer;
 
@@ -1197,7 +1444,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
             Get.back();
             timeoutRequestApiController
                 .timeoutrequestApi(
-                    uid: userid.toString(), request_id: request_id.toString())
+                    uid: useridgloable.toString(),
+                    request_id: request_id.toString())
                 .then(
               (value) {
                 print("*****value data******:--- $value");
@@ -1530,20 +1778,20 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                 onPressed1: () {
                                   Get.back();
 
-                                  // removeRequest.removeApi(uid: userid.toString()).then((value) {
+                                  // removeRequest.removeApi(uid: useridgloable.toString()).then((value) {
                                   //   Get.back();
                                   //   print("+++ removeApi +++:- ${value["driver_list"]}");
-                                  //   socket.emit('Vehicle_Ride_Cancel',{
+                                  //   socket!.emit('Vehicle_Ride_Cancel',{
                                   //     'uid': "$useridgloable",
                                   //     'driverid' : value["driver_list"],
                                   //   });
                                   // },);
 
                                   // isanimation = true;
-                                  // resendRequestApiController.resendrequestApi(uid: userid.toString(), driverid: calculateController.calCulateModel!.driverId!).then((value) {
+                                  // resendRequestApiController.resendrequestApi(uid: useridgloable.toString(), driverid: calculateController.calCulateModel!.driverId!).then((value) {
                                   //   print("+++ resendrequestApi +++ :- ${value["driver_list"]}");
                                   //   Get.back();
-                                  //   socket.emit('vehiclerequest',{
+                                  //   socket!.emit('vehiclerequest',{
                                   //     'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
                                   //     'driverid' : value["driver_list"],
                                   //   });
@@ -1563,7 +1811,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                 onPressed1: () {
                                   removeRequest
                                       .removeApi(
-                                          uid: userid.toString(),
+                                          uid: useridgloable.toString(),
                                           context: context)
                                       .then(
                                     (value) {
@@ -1571,7 +1819,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                       print(
                                           "+++ removeApi +++:- ${value["driver_list"]}");
 
-                                      socket.emit('Vehicle_Ride_Cancel', {
+                                      socket!.emit('Vehicle_Ride_Cancel', {
                                         'uid': "$useridgloable",
                                         'driverid': value["driver_list"],
                                       });
@@ -1603,44 +1851,13 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 
   pagelistApiController pagelistcontroller = Get.put(pagelistApiController());
 
-  @override
-  void initState() {
-    super.initState();
-
-    if (kDebugMode) {
-      print("DURATION SECOUNDE : - $durationInSeconds");
-    }
-
-    // Initialize basic components first
-    if (controller == null || !controller!.isAnimating) {
-      controller = AnimationController(
-        duration: Duration(seconds: durationInSeconds),
-        vsync: this,
-      );
-    }
-
-    mapThemeStyle(context: context);
-    isControllerDisposed = false;
-    plusetimer = "";
-
-    // Initialize drop off points
-    _dropOffPoints = [];
-    _dropOffPoints = destinationlat;
-    if (kDebugMode) {
-      print("****////***:-----  $_dropOffPoints");
-    }
-
-    // CRITICAL: Load user data FIRST, then call APIs
-    initializeApp();
-  }
-
 // New method to handle proper initialization order:
   Future<void> initializeApp() async {
     try {
       // Step 1: Load user data first
       await loadUserData();
 
-      if (userid == null) {
+      if (useridgloable == null) {
         if (kDebugMode) {
           print("User not logged in, redirecting to login");
         }
@@ -1671,7 +1888,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
     try {
       SharedPreferences preferences = await SharedPreferences.getInstance();
       var uid = preferences.getString("userLogin");
-      var currency = preferences.getString("currenci");
+      var currencyy = preferences.getString("currenci");
 
       if (uid == null) {
         if (kDebugMode) {
@@ -1682,23 +1899,23 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 
       // Decode user data
       decodeUid = jsonDecode(uid);
-      if (currency != null) {
-        currencyy = jsonDecode(currency);
+      if (currencyy != null) {
+        currencyy = jsonDecode(currencyy);
       } else {
-        currencyy = {};
+        currencyy = {} as String?;
         if (kDebugMode) {
           print("Warning: Currency data not found, using default");
         }
       }
 
       // Set user variables
-      userid = decodeUid['id'];
+      useridgloable = decodeUid['id'];
       username = decodeUid["name"] ?? "";
       useridgloable = decodeUid['id'];
 
       if (kDebugMode) {
         print("User data loaded successfully:");
-        print("userid: $userid");
+        print("useridgloable: $useridgloable");
         print("username: $username");
         print("useridgloable: $useridgloable");
       }
@@ -1714,15 +1931,15 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 
 // Make API calls that need user data - ONLY after user data is loaded
   void makeInitialAPICalls() {
-    if (userid == null) {
+    if (useridgloable == null) {
       if (kDebugMode) {
-        print("Cannot make API calls - userid is null");
+        print("Cannot make API calls - useridgloable is null");
       }
       return;
     }
 
     if (kDebugMode) {
-      print("Making initial API calls with userid: $userid");
+      print("Making initial API calls with useridgloable: $useridgloable");
     }
 
     // Payment API call
@@ -1772,7 +1989,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 
       homeApiController
           .homeApi(
-              uid: userid.toString(),
+              uid: useridgloable.toString(),
               lat: lathome.toString(),
               lon: longhome.toString())
           .then((value) {
@@ -1788,7 +2005,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
             calculateController
                 .calculateApi(
                     context: context,
-                    uid: userid.toString(), // Now this has a proper value
+                    uid:
+                        useridgloable.toString(), // Now this has a proper value
                     mid: mid,
                     mrole: mroal,
                     pickup_lat_lon: "$latitudepick,$longitudepick",
@@ -2540,7 +2758,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
   }
 
   socatloadbidinfdata() {
-    socket.emit('load_bidding_data', {
+    socket!.emit('load_bidding_data', {
       'uid': useridgloable,
       'request_id': request_id,
       'd_id': calculateController.calCulateModel!.driverId
@@ -3092,7 +3310,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                                 calculateController
                                                     .calculateApi(
                                                         context: context,
-                                                        uid: userid.toString(),
+                                                        uid: useridgloable
+                                                            .toString(),
                                                         mid: mid,
                                                         mrole: mroal,
                                                         pickup_lat_lon:
@@ -3594,7 +3813,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                             // }else{
                                             //   isLoad = true;
                                             // }
-                                            // homeApiController.homeApi(uid: userid.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
+                                            // homeApiController.homeApi(uid: useridgloable.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
                                             //   if(value["Result"] == true){
                                             //     setState(() {
                                             //       Buttonpresebottomshhet();
@@ -3686,7 +3905,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                                     // }else{
                                                     //   isLoad = true;
                                                     // }
-                                                    // homeApiController.homeApi(uid: userid.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
+                                                    // homeApiController.homeApi(uid: useridgloable.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
                                                     //   if(value["Result"] == true){
                                                     //    setState(() {
                                                     //      Buttonpresebottomshhet();
@@ -3719,7 +3938,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                                     modual_calculateController
                                                         .modualcalculateApi(
                                                             context: context,
-                                                            uid: userid
+                                                            uid: useridgloable
                                                                 .toString(),
                                                             mid: mid,
                                                             mrole: mroal,
@@ -4344,17 +4563,12 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 
   Buttonpresebottomshhet() {
     if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
-      Fluttertoast.showToast(
-        msg: "Select Pickup and Drop",
-      );
+      ToastService.showToast(context: context, "Select Pickup and Drop");
     } else if (amountresponse == "false") {
-      Fluttertoast.showToast(
-        msg: "Address is not in the zone! map screen",
-      );
+      ToastService.showToast(
+          context: context, "Address is not in the zone! map screen");
     } else if (dropprice == 0) {
-      Fluttertoast.showToast(
-        msg: responsemessage,
-      );
+      ToastService.showToast(context: context, responsemessage);
     } else {
       toast = 0;
       amountcontroller.text = dropprice.toString();
@@ -4434,10 +4648,9 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                 setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
-                                    Fluttertoast.showToast(
-                                      msg:
-                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                    );
+                                    ToastService.showToast(
+                                        context: context,
+                                        "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.");
                                   } else {
                                     Get.back();
                                   }
@@ -4475,10 +4688,9 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                 setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
-                                    Fluttertoast.showToast(
-                                      msg:
-                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                    );
+                                    ToastService.showToast(
+                                        context: context,
+                                        "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.");
                                   } else {
                                     if (double.parse(dropprice.toString()) >
                                         minprice) {
@@ -4539,9 +4751,9 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                   onTap: () {
                                     controller != null &&
                                             controller!.isAnimating
-                                        ? Fluttertoast.showToast(
-                                            msg:
-                                                "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                        ? ToastService.showToast(
+                                            context: context,
+                                            "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
                                           )
                                         : "";
                                   },
@@ -4577,9 +4789,9 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                 setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
-                                    Fluttertoast.showToast(
-                                      msg:
-                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                    ToastService.showToast(
+                                      context: context,
+                                      "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
                                     );
                                   } else {
                                     if (double.parse(dropprice.toString()) <
@@ -4672,10 +4884,9 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                 onChanged: controller != null &&
                                         controller!.isAnimating
                                     ? (bool value) {
-                                        Fluttertoast.showToast(
-                                          msg:
-                                              "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                        );
+                                        ToastService.showToast(
+                                            context: context,
+                                            "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.");
                                       }
                                     : (bool value) {
                                         setState(() {
@@ -5586,7 +5797,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                       bordercolore: theamcolore,
                                       onPressed1: () {
                                         setState(() {
-                                          // socket.connect();
+                                          // socket!.connect();
                                           homeApiController
                                               .homeapimodel!
                                               .runnigRide![0]
@@ -5623,12 +5834,12 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                                   context: context)
                                               .then(
                                             (value) {
-                                              socket.emit('AcceRemoveOther', {
+                                              socket!.emit('AcceRemoveOther', {
                                                 'requestid': request_id,
                                                 'driverid': calculateController
                                                     .calCulateModel!.driverId!,
                                               });
-                                              // socket.emit('Vehicle_Ride_Cancel',{
+                                              // socket!.emit('Vehicle_Ride_Cancel',{
                                               //   'uid': "$useridgloable",
                                               //   'driverid' : value["driver_list"],
                                               // });
@@ -5678,10 +5889,10 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
     print("DRIVER ID:- ${calculateController.calCulateModel!.driverId!}");
     print("PICK LOCATION:- ${pickupcontroller.text}");
     print("DROP LOCATION:- ${dropcontroller.text}");
-    socket.connect();
+    socket!.connect();
 
     homeWalletApiController
-        .homwwalleteApi(uid: userid.toString(), context: context)
+        .homwwalleteApi(uid: useridgloable.toString(), context: context)
         .then(
       (value) {
         print("{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
@@ -5742,7 +5953,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
     calculateController
         .calculateApi(
             context: context,
-            uid: userid.toString(),
+            uid: useridgloable.toString(),
             mid: mid,
             mrole: mroal,
             pickup_lat_lon: "$latitudepick,$longitudepick",
