@@ -22,6 +22,7 @@ class MapState extends ChangeNotifier {
   PolylinePoints get polylinePoints => _polylinePoints;
   PolylinePoints get polylinePoints11 => _polylinePoints11;
 
+  // Methods
   void setMapController(GoogleMapController controller) {
     _mapController = controller;
     notifyListeners();
@@ -32,23 +33,8 @@ class MapState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateMarkers11(Map<MarkerId, Marker> newMarkers) {
-    _markers11 = newMarkers;
-    notifyListeners();
-  }
-
-  void updatePolylines(Map<PolylineId, Polyline> newPolylines) {
-    _polylines = newPolylines;
-    notifyListeners();
-  }
-
-  void updatePolylines11(Map<PolylineId, Polyline> newPolylines) {
-    _polylines11 = newPolylines;
-    notifyListeners();
-  }
-
-  void updatePolylineCoordinates(List<LatLng> coordinates) {
-    _polylineCoordinates = coordinates;
+  void addMarker(MarkerId markerId, Marker marker) {
+    _markers[markerId] = marker;
     notifyListeners();
   }
 
@@ -60,10 +46,5 @@ class MapState extends ChangeNotifier {
     _polylineCoordinates.clear();
     notifyListeners();
   }
-
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
-  }
 }
+

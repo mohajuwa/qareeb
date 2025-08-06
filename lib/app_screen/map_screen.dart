@@ -96,8 +96,6 @@ class _MapScreenState extends State<ModernMapScreen>
 
   // Socket management variables
 
-  IO.Socket? socket;
-
   bool socketInitialized = false;
 
   bool _disposed = false;
@@ -2494,9 +2492,6 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
     });
   }
 
-  Map<MarkerId, Marker> markers = {};
-
-  late GoogleMapController mapController1;
   bool isMapReady = false;
 
   Future fun() async {

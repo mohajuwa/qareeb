@@ -52,7 +52,7 @@ class CalculateController extends GetxController implements GetxService {
 
       if (!_isValidCoordinate(pickup_lat_lon) ||
           !_isValidCoordinate(drop_lat_lon)) {
-        if (context != null) hideModernLoading(context);
+        if (context != null) LoadingService.hide(context);
 
         _showErrorToast("إحداثيات غير صحيحة");
 
@@ -67,7 +67,7 @@ class CalculateController extends GetxController implements GetxService {
 
       if (!_isWithinYemenBounds(pickup_lat_lon) ||
           !_isWithinYemenBounds(drop_lat_lon)) {
-        if (context != null) hideModernLoading(context);
+        if (context != null) LoadingService.hide(context);
 
         _showZoneErrorToast("الموقع خارج نطاق اليمن");
 
@@ -124,7 +124,7 @@ class CalculateController extends GetxController implements GetxService {
       // Hide loading overlay
 
       if (context != null) {
-        hideModernLoading(context);
+        LoadingService.hide(context);
       }
 
       if (kDebugMode) {
@@ -199,7 +199,7 @@ class CalculateController extends GetxController implements GetxService {
 
       if (context != null) {
         try {
-          hideModernLoading(context);
+          LoadingService.hide(context);
         } catch (_) {}
       }
 

@@ -13,6 +13,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
 import 'package:qareeb/common_code/modern_loading_widget.dart';
+import 'package:qareeb/common_code/socket_service.dart';
 import 'package:qareeb/common_code/type_utils.dart';
 import 'package:qareeb/providers/dynamic_fields_state.dart';
 import 'package:qareeb/providers/location_state.dart';
@@ -28,8 +29,6 @@ import '../common_code/common_button.dart';
 import 'map_screen.dart';
 import 'my_ride_screen.dart';
 
-List<DynamicWidget> textfieldlist = [];
-
 class PickupDropPoint extends StatefulWidget {
   final bool pagestate;
   final String bidding;
@@ -43,16 +42,39 @@ class PickupDropPoint extends StatefulWidget {
 class _PickupDropPointState extends State<PickupDropPoint> {
   MapSuggestGetApiController mapSuggestGetApiController =
       Get.put(MapSuggestGetApiController());
+
   CalculateController calculateController = Get.put(CalculateController());
+
   Modual_CalculateController modual_calculateController =
       Get.put(Modual_CalculateController());
 
+  // KEEP THESE:
+
+  bool destination = false;
+
+  List destinationname = [];
+
+  int textFieldindex = 0;
+
+  FocusNode focusNode1 = FocusNode();
+
+  FocusNode focusNode2 = FocusNode();
+
+  int selectedIndex = 0;
+
+  var decodeUid;
+
+  var userid;
+
+  ColorNotifier notifier = ColorNotifier();
   Future<void> calculateDistance() async {
+    final locationState = context.read<LocationState>();
+
     double distanceInMeters = Geolocator.distanceBetween(
-      latitudepick,
-      longitudepick,
-      latitudedrop,
-      longitudedrop,
+      locationState.latitudePick,
+      locationState.longitudePick,
+      locationState.latitudeDrop,
+      locationState.longitudeDrop,
     );
 
     double distanceInKilometers = distanceInMeters / 1000;
@@ -65,30 +87,43 @@ class _PickupDropPointState extends State<PickupDropPoint> {
     super.initState();
 
     datagetfunction();
+
     print("******:----suryo:---- ${widget.bidding}");
-    fun().then(
-      (value) {
-        setState(() {});
-        getCurrentLatAndLong(latitudepick, longitudepick);
-      },
-    );
+
+    fun().then((value) {
+      setState(() {});
+
+      final locationState = context.read<LocationState>();
+
+      getCurrentLatAndLong(
+          locationState.latitudePick, locationState.longitudePick);
+    });
+
     print("********** bidding **********:--- (${widget.bidding})");
   }
 
   Future fun() async {
     LocationPermission permission;
+
     permission = await Geolocator.checkPermission();
+
     permission = await Geolocator.requestPermission();
+
     if (permission == LocationPermission.denied) {}
+
     var currentLocation = await locateUser();
+
     debugPrint('location: ${currentLocation.latitude}');
+
     getCurrentLatAndLong(
-      currentLocation.latitude,
-      currentLocation.longitude,
-    );
+        currentLocation.latitude, currentLocation.longitude); // ✅ CORRECT
 
     print("????????????${currentLocation.longitude}");
-    print("SECOND USER hhhhhhhhhhhhhh CURRENT LOCATION : --  $addresspickup");
+
+    final locationState = context.read<LocationState>();
+
+    print(
+        "SECOND USER hhhhhhhhhhhhhh CURRENT LOCATION : --  ${locationState.addressPickup}"); // ✅ PROVIDER
   }
 
   Future<Position> locateUser() async {
@@ -114,32 +149,23 @@ class _PickupDropPointState extends State<PickupDropPoint> {
     });
   }
 
-  bool destination = false;
-
-  List destinationname = [];
-
   submitDataName() {
     destinationname = [];
 
-    for (int a = 0; a < textfieldlist.length; a++) {
-      if (textfieldlist[a].destinationcontroller.text.isNotEmpty) {
-        destinationname.add(textfieldlist[a].destinationcontroller.text);
+    final dynamicFields = context.read<DynamicFieldsState>();
+
+    for (int a = 0; a < dynamicFields.textFieldList.length; a++) {
+      if (dynamicFields
+          .textFieldList[a].destinationcontroller.text.isNotEmpty) {
+        destinationname
+            .add(dynamicFields.textFieldList[a].destinationcontroller.text);
+
         textFieldindex = a;
       }
     }
 
     setState(() {});
   }
-
-  int textFieldindex = 0;
-
-  FocusNode focusNode1 = FocusNode();
-  FocusNode focusNode2 = FocusNode();
-
-  int selectedIndex = 0;
-
-  var decodeUid;
-  var userid;
 
   datagetfunction() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -151,1543 +177,1600 @@ class _PickupDropPointState extends State<PickupDropPoint> {
     setState(() {});
   }
 
-  ColorNotifier notifier = ColorNotifier();
   @override
   Widget build(BuildContext context) {
     notifier = Provider.of<ColorNotifier>(context, listen: true);
-    return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topRight: Radius.circular(15),
-        topLeft: Radius.circular(15),
-      ),
-      child: WillPopScope(
-        onWillPop: () async {
-          Get.offAll(const ModernMapScreen(
-            selectVehicle: false,
-          ));
-          return false;
-        },
-        child: Scaffold(
-          backgroundColor: notifier.background,
-          body: ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topRight: Radius.circular(15),
-              topLeft: Radius.circular(15),
-            ),
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return Padding(
-                  padding: const EdgeInsets.all(15),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                Get.offAll(const ModernMapScreen(
-                                  selectVehicle: false,
-                                ));
-                                print(
-                                    "++++dropcontroller++++:--- ${dropcontroller.text}");
-                              },
-                              child: Image(
-                                image: AssetImage("assets/arrow-left.png"),
-                                height: 25,
-                                color: notifier.textColor,
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 15,
-                            ),
-                            picanddrop == false
-                                ? Text("Pickup".tr,
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        color: notifier.textColor))
-                                : Text("Drop".tr,
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        color: notifier.textColor)),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Padding(
-                          padding: const EdgeInsets.all(0),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+
+    return Consumer2<LocationState, DynamicFieldsState>(
+        builder: (context, locationState, dynamicFields, child) {
+      return ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(15),
+          topLeft: Radius.circular(15),
+        ),
+        child: WillPopScope(
+          onWillPop: () async {
+            Get.offAll(const ModernMapScreen(
+              selectVehicle: false,
+            ));
+            return false;
+          },
+          child: Scaffold(
+            backgroundColor: notifier.background,
+            body: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(15),
+                topLeft: Radius.circular(15),
+              ),
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Row(
                             children: [
-                              Expanded(
-                                flex: 1,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                      top: 16, bottom: 20, left: 0),
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        height: 15,
-                                        width: 15,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                              color: Colors.green, width: 4),
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        height: 4,
-                                      ),
-                                      Container(
-                                        height: 10,
-                                        width: 3,
-                                        decoration: BoxDecoration(
-                                            color: Colors.grey.withOpacity(0.4),
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
-                                      ),
-                                      const SizedBox(
-                                        height: 4,
-                                      ),
-                                      Container(
-                                        height: 10,
-                                        width: 3,
-                                        decoration: BoxDecoration(
-                                            color: Colors.grey.withOpacity(0.4),
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
-                                      ),
-                                      const SizedBox(
-                                        height: 4,
-                                      ),
-                                      textfieldlist.isNotEmpty
-                                          ? const SizedBox()
-                                          : Container(
-                                              height: 10,
-                                              width: 3,
-                                              decoration: BoxDecoration(
-                                                  color: Colors.grey
-                                                      .withOpacity(0.4),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                            ),
-                                      const SizedBox(
-                                        height: 4,
-                                      ),
-                                      Container(
-                                        height: 15,
-                                        width: 15,
-                                        decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                                color: Colors.red, width: 4)),
-                                      ),
-                                      const SizedBox(
-                                        height: 4,
-                                      ),
-                                      textfieldlist.isEmpty
-                                          ? const SizedBox()
-                                          : Container(
-                                              height: 10,
-                                              width: 3,
-                                              decoration: BoxDecoration(
-                                                  color: Colors.grey
-                                                      .withOpacity(0.4),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                            ),
-                                    ],
-                                  ),
+                              InkWell(
+                                onTap: () {
+                                  Get.offAll(const ModernMapScreen(
+                                    selectVehicle: false,
+                                  ));
+                                  print(
+                                      "++++locationState.dropController++++:--- ${locationState.dropController.text}");
+                                },
+                                child: Image(
+                                  image: AssetImage("assets/arrow-left.png"),
+                                  height: 25,
+                                  color: notifier.textColor,
                                 ),
                               ),
                               const SizedBox(
-                                width: 10,
+                                width: 15,
                               ),
-                              Expanded(
-                                flex: 12,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 10),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      TextField(
-                                        style: TextStyle(
-                                            color: notifier.textColor),
-                                        controller: pickupcontroller,
-                                        focusNode: focusNode1,
-                                        onTap: () {
-                                          setState(() {
-                                            picanddrop = false;
-                                            uthertextfilde = false;
-                                          });
-                                        },
-                                        onChanged: (value) {
-                                          setState(() {
-                                            mapSuggestGetApiController.mapApi(
-                                                context: context,
-                                                suggestkey:
-                                                    pickupcontroller.text);
-                                          });
-                                        },
-                                        decoration: InputDecoration(
-                                            contentPadding:
-                                                const EdgeInsets.only(left: 10),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              borderSide: const BorderSide(
-                                                  color: Colors.pink),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  const BorderRadius.all(
-                                                      Radius.circular(10)),
-                                              borderSide: BorderSide(
-                                                  color: theamcolore),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              borderSide: BorderSide(
-                                                  color: Colors.grey
-                                                      .withOpacity(0.4)),
-                                            ),
-                                            hintText:
-                                                "Searching for you on the map..."
-                                                    .tr,
-                                            hintStyle: TextStyle(
-                                                color: notifier.textColor),
-                                            suffixIcon: pickupcontroller
-                                                    .text.isEmpty
-                                                ? const SizedBox()
-                                                : Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            13),
-                                                    child: InkWell(
-                                                      onTap: () {
-                                                        setState(() {
-                                                          pickupcontroller
-                                                              .clear();
-                                                        });
-                                                      },
-                                                      child: Container(
-                                                        height: 20,
-                                                        width: 20,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                                color: Colors
-                                                                    .grey
-                                                                    .withOpacity(
-                                                                        0.2),
-                                                                shape: BoxShape
-                                                                    .circle),
-                                                        child: Center(
-                                                          child: Image(
-                                                            image: AssetImage(
-                                                                "assets/close.png"),
-                                                            height: 15,
-                                                            color: notifier
-                                                                .textColor,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                            labelStyle: const TextStyle(
-                                                color: Color(0xFF424242))),
-                                      ),
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                      TextField(
-                                        controller: dropcontroller,
-                                        focusNode: focusNode2,
-                                        onTap: () {
-                                          setState(() {
-                                            picanddrop = true;
-                                            uthertextfilde = false;
-                                          });
-                                        },
-                                        style: TextStyle(
-                                            color: notifier.textColor),
-                                        onChanged: (value) {
-                                          setState(() {
-                                            mapSuggestGetApiController.mapApi(
-                                                context: context,
-                                                suggestkey:
-                                                    dropcontroller.text);
-                                            print(
-                                                "---:-  ${dropcontroller.text}");
-                                          });
-                                        },
-                                        decoration: InputDecoration(
-                                            contentPadding:
-                                                const EdgeInsets.only(left: 10),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              borderSide: const BorderSide(
-                                                  color: Colors.pink),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  const BorderRadius.all(
-                                                      Radius.circular(10)),
-                                              borderSide: BorderSide(
-                                                  color: theamcolore),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              borderSide: BorderSide(
-                                                  color: Colors.grey
-                                                      .withOpacity(0.4)),
-                                            ),
-                                            hintText: "Drop location".tr,
-                                            hintStyle: TextStyle(
-                                                color: notifier.textColor),
-                                            suffixIcon: dropcontroller
-                                                    .text.isEmpty
-                                                ? const SizedBox()
-                                                : Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            13),
-                                                    child: InkWell(
-                                                      onTap: () {
-                                                        setState(() {
-                                                          dropcontroller
-                                                              .clear();
-                                                        });
-                                                      },
-                                                      child: Container(
-                                                        height: 20,
-                                                        width: 20,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                                color: Colors
-                                                                    .grey
-                                                                    .withOpacity(
-                                                                        0.2),
-                                                                shape: BoxShape
-                                                                    .circle),
-                                                        child: Center(
-                                                          child: Image(
-                                                            image: AssetImage(
-                                                                "assets/close.png"),
-                                                            height: 15,
-                                                            color: notifier
-                                                                .textColor,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                            labelStyle: const TextStyle(
-                                              color: Color(0xFF424242),
-                                            )),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                              Consumer<LocationState>(
+                                builder: (context, locationState, child) {
+                                  return !locationState.picAndDrop
+                                      ? Text("Pickup".tr,
+                                          style: TextStyle(
+                                              fontSize: 20,
+                                              color: notifier.textColor))
+                                      : Text("Drop".tr,
+                                          style: TextStyle(
+                                              fontSize: 20,
+                                              color: notifier.textColor));
+                                },
+                              )
                             ],
                           ),
-                        ),
-                        textfieldlist.isEmpty
-                            ? const SizedBox()
-                            : Consumer<DynamicFieldsState>(
-                                builder: (context, dynamicFields, child) {
-                                return ListView.builder(
-                                  itemCount: dynamicFields.textFieldList.length,
-                                  itemBuilder: (context, index) {
-                                    return Row(
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.all(0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 16, bottom: 20, left: 0),
+                                    child: Column(
                                       children: [
-                                        Expanded(
-                                          flex: 1,
-                                          child: ListView.builder(
-                                            padding: EdgeInsets.zero,
-                                            clipBehavior: Clip.none,
-                                            shrinkWrap: true,
-                                            itemCount: 1,
-                                            itemBuilder: (context, index) {
-                                              return Transform.translate(
-                                                offset: const Offset(-5, -15),
-                                                child: Column(
-                                                  children: [
-                                                    const SizedBox(
-                                                      height: 4,
-                                                    ),
-                                                    Container(
-                                                      height: 10,
-                                                      width: 3,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.grey
-                                                            .withOpacity(0.4),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
+                                        Container(
+                                          height: 15,
+                                          width: 15,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                                color: Colors.green, width: 4),
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 4,
+                                        ),
+                                        Container(
+                                          height: 10,
+                                          width: 3,
+                                          decoration: BoxDecoration(
+                                              color:
+                                                  Colors.grey.withOpacity(0.4),
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                        ),
+                                        const SizedBox(
+                                          height: 4,
+                                        ),
+                                        Container(
+                                          height: 10,
+                                          width: 3,
+                                          decoration: BoxDecoration(
+                                              color:
+                                                  Colors.grey.withOpacity(0.4),
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                        ),
+                                        const SizedBox(
+                                          height: 4,
+                                        ),
+                                        dynamicFields.textFieldList.isNotEmpty
+                                            ? const SizedBox()
+                                            : Container(
+                                                height: 10,
+                                                width: 3,
+                                                decoration: BoxDecoration(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.4),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10)),
+                                              ),
+                                        const SizedBox(
+                                          height: 4,
+                                        ),
+                                        Container(
+                                          height: 15,
+                                          width: 15,
+                                          decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                  color: Colors.red, width: 4)),
+                                        ),
+                                        const SizedBox(
+                                          height: 4,
+                                        ),
+                                        dynamicFields.textFieldList.isEmpty
+                                            ? const SizedBox()
+                                            : Container(
+                                                height: 10,
+                                                width: 3,
+                                                decoration: BoxDecoration(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.4),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10)),
+                                              ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Expanded(
+                                  flex: 12,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 10),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Consumer<LocationState>(builder:
+                                            (context, locationState, child) {
+                                          return TextField(
+                                            style: TextStyle(
+                                                color: notifier.textColor),
+                                            controller:
+                                                locationState.pickupController,
+                                            onTap: () {
+                                              setState(() {
+                                                locationState
+                                                    .setPicAndDrop(false);
+
+                                                uthertextfilde = false;
+                                              });
+                                            },
+                                            onChanged: (value) {
+                                              setState(() {
+                                                mapSuggestGetApiController
+                                                    .mapApi(
+                                                        context: context,
+                                                        suggestkey: locationState
+                                                            .pickupController
+                                                            .text);
+                                              });
+                                            },
+                                            decoration: InputDecoration(
+                                                contentPadding:
+                                                    const EdgeInsets.only(
+                                                        left: 10),
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  borderSide: const BorderSide(
+                                                      color: Colors.pink),
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      const BorderRadius.all(
+                                                          Radius.circular(10)),
+                                                  borderSide: BorderSide(
+                                                      color: theamcolore),
+                                                ),
+                                                enabledBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey
+                                                          .withOpacity(0.4)),
+                                                ),
+                                                hintText:
+                                                    "Searching for you on the map..."
+                                                        .tr,
+                                                hintStyle: TextStyle(
+                                                    color: notifier.textColor),
+                                                suffixIcon: locationState
+                                                        .pickupController
+                                                        .text
+                                                        .isEmpty
+                                                    ? const SizedBox()
+                                                    : Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(13),
+                                                        child: InkWell(
+                                                          onTap: () {
+                                                            setState(() {
+                                                              locationState
+                                                                  .pickupController
+                                                                  .clear();
+                                                            });
+                                                          },
+                                                          child: Container(
+                                                            height: 20,
+                                                            width: 20,
+                                                            decoration: BoxDecoration(
+                                                                color: Colors
+                                                                    .grey
+                                                                    .withOpacity(
+                                                                        0.2),
+                                                                shape: BoxShape
+                                                                    .circle),
+                                                            child: Center(
+                                                              child: Image(
+                                                                image: AssetImage(
+                                                                    "assets/close.png"),
+                                                                height: 15,
+                                                                color: notifier
+                                                                    .textColor,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                labelStyle: const TextStyle(
+                                                    color: Color(0xFF424242))),
+                                          );
+                                        }),
+                                        const SizedBox(
+                                          height: 5,
+                                        ),
+                                        TextField(
+                                          controller:
+                                              locationState.dropController,
+                                          onTap: () {
+                                            setState(() {
+                                              locationState.setPicAndDrop(true);
+
+                                              uthertextfilde = false;
+                                            });
+                                          },
+                                          style: TextStyle(
+                                              color: notifier.textColor),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              mapSuggestGetApiController.mapApi(
+                                                  context: context,
+                                                  suggestkey: locationState
+                                                      .dropController.text);
+                                              print(
+                                                  "++++locationState.dropController++++:--- ${locationState.dropController.text}");
+                                            });
+                                          },
+                                          decoration: InputDecoration(
+                                              contentPadding:
+                                                  const EdgeInsets.only(
+                                                      left: 10),
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                borderSide: const BorderSide(
+                                                    color: Colors.pink),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    const BorderRadius.all(
+                                                        Radius.circular(10)),
+                                                borderSide: BorderSide(
+                                                    color: theamcolore),
+                                              ),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                borderSide: BorderSide(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.4)),
+                                              ),
+                                              hintText: "Drop location".tr,
+                                              hintStyle: TextStyle(
+                                                  color: notifier.textColor),
+                                              suffixIcon: locationState
+                                                      .dropController
+                                                      .text
+                                                      .isEmpty
+                                                  ? const SizedBox()
+                                                  : Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              13),
+                                                      child: InkWell(
+                                                        onTap: () {
+                                                          setState(() {
+                                                            locationState
+                                                                .dropController
+                                                                .clear();
+                                                          });
+                                                        },
+                                                        child: Container(
+                                                          height: 20,
+                                                          width: 20,
+                                                          decoration: BoxDecoration(
+                                                              color: Colors.grey
+                                                                  .withOpacity(
+                                                                      0.2),
+                                                              shape: BoxShape
+                                                                  .circle),
+                                                          child: Center(
+                                                            child: Image(
+                                                              image: AssetImage(
+                                                                  "assets/close.png"),
+                                                              height: 15,
+                                                              color: notifier
+                                                                  .textColor,
+                                                            ),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
-                                                    const SizedBox(
-                                                      height: 4,
-                                                    ),
-                                                    Container(
-                                                      height: 10,
-                                                      width: 3,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.grey
-                                                            .withOpacity(0.4),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
+                                              labelStyle: const TextStyle(
+                                                color: Color(0xFF424242),
+                                              )),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          dynamicFields.textFieldList.isEmpty
+                              ? const SizedBox()
+                              : Consumer<DynamicFieldsState>(
+                                  builder: (context, dynamicFields, child) {
+                                  return ListView.builder(
+                                    itemCount:
+                                        dynamicFields.textFieldList.length,
+                                    itemBuilder: (context, index) {
+                                      return Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: ListView.builder(
+                                              padding: EdgeInsets.zero,
+                                              clipBehavior: Clip.none,
+                                              shrinkWrap: true,
+                                              itemCount: 1,
+                                              itemBuilder: (context, index) {
+                                                return Transform.translate(
+                                                  offset: const Offset(-5, -15),
+                                                  child: Column(
+                                                    children: [
+                                                      const SizedBox(
+                                                        height: 4,
                                                       ),
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 4,
-                                                    ),
-                                                    Container(
-                                                      height: 15,
-                                                      width: 15,
-                                                      decoration: BoxDecoration(
-                                                          color: Colors.white,
-                                                          shape:
-                                                              BoxShape.circle,
-                                                          border: Border.all(
-                                                              color: Colors.red,
-                                                              width: 4)),
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 4,
-                                                    ),
-                                                    Container(
-                                                      height: 10,
-                                                      width: 3,
-                                                      decoration: BoxDecoration(
+                                                      Container(
+                                                        height: 10,
+                                                        width: 3,
+                                                        decoration:
+                                                            BoxDecoration(
                                                           color: Colors.grey
                                                               .withOpacity(0.4),
                                                           borderRadius:
                                                               BorderRadius
-                                                                  .circular(
-                                                                      10)),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 8,
-                                          child: Transform.translate(
-                                            offset: const Offset(0, -7),
-                                            child: textfieldlist[index],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        InkWell(
-                                          onTap: () {
-                                            setState(() {
-                                              selectedIndex = index;
-                                            });
-
-                                            setState(() {
-                                              textfieldlist.removeAt(index);
-                                              destinationlat.removeAt(index);
-                                              onlypass.removeAt(index);
-                                              droptitlelist.removeAt(index);
-
-                                              print(
-                                                  ">>>>>>>>>>>>>>>>textfieldlist<<<<<<<<<<<<<<<< ${textfieldlist}");
-                                              print(
-                                                  ">>>>>>>>>>>>>>>>onlypass<<<<<<<<<<<<<<<< ${onlypass}");
-                                              print(
-                                                  ">>>>>>>>>>>>>>>>destinationlat<<<<<<<<<<<<<<<< ${destinationlat}");
-                                              print(
-                                                  ">>>>>>>>>>>>>>>>droptitlelist<<<<<<<<<<<<<<<< ${droptitlelist}");
-                                            });
-                                          },
-                                          child: Transform.translate(
-                                            offset: const Offset(0, -9),
-                                            child: Container(
-                                                height: 25,
-                                                width: 25,
-                                                decoration: BoxDecoration(
-                                                    color: Colors.grey
-                                                        .withOpacity(0.2),
-                                                    shape: BoxShape.circle),
-                                                child: Padding(
-                                                  padding: EdgeInsets.all(4.0),
-                                                  child: Image(
-                                                    image: AssetImage(
-                                                        "assets/close.png"),
-                                                    height: 15,
-                                                    color: notifier.textColor,
+                                                                  .circular(10),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 4,
+                                                      ),
+                                                      Container(
+                                                        height: 10,
+                                                        width: 3,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.grey
+                                                              .withOpacity(0.4),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(10),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 4,
+                                                      ),
+                                                      Container(
+                                                        height: 15,
+                                                        width: 15,
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.white,
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            border: Border.all(
+                                                                color:
+                                                                    Colors.red,
+                                                                width: 4)),
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 4,
+                                                      ),
+                                                      Container(
+                                                        height: 10,
+                                                        width: 3,
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.grey
+                                                                .withOpacity(
+                                                                    0.4),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10)),
+                                                      ),
+                                                    ],
                                                   ),
-                                                )),
+                                                );
+                                              },
+                                            ),
                                           ),
+                                          Expanded(
+                                            flex: 8,
+                                            child: Transform.translate(
+                                              offset: const Offset(0, -7),
+                                              child: dynamicFields
+                                                  .textFieldList[index],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          InkWell(
+                                            onTap: () {
+                                              setState(() {
+                                                selectedIndex = index;
+                                              });
+
+                                              setState(() {
+                                                dynamicFields
+                                                    .removeTextField(index);
+
+                                                // Remove corresponding location data
+
+                                                if (index <
+                                                    locationState
+                                                        .dropTitleList.length) {
+                                                  locationState.dropTitleList
+                                                      .removeAt(index);
+                                                }
+
+                                                if (index <
+                                                    locationState.destinationLat
+                                                        .length) {
+                                                  final newDestinationLat =
+                                                      List<PointLatLng>.from(
+                                                          locationState
+                                                              .destinationLat);
+
+                                                  newDestinationLat
+                                                      .removeAt(index);
+
+                                                  locationState
+                                                      .updateDestinationLat(
+                                                          newDestinationLat);
+                                                }
+
+                                                if (index <
+                                                    locationState
+                                                        .onlyPass.length) {
+                                                  locationState.onlyPass
+                                                      .removeAt(index);
+                                                }
+
+                                                print(
+                                                    ">>>>>>>>>>>>>>>>textFieldList<<<<<<<<<<<<<<<< ${dynamicFields.textFieldList}");
+
+                                                print(
+                                                    ">>>>>>>>>>>>>>>>onlypass<<<<<<<<<<<<<<<< ${locationState.onlyPass}");
+
+                                                print(
+                                                    ">>>>>>>>>>>>>>>>destinationlat<<<<<<<<<<<<<<<< ${locationState.destinationLat}");
+
+                                                print(
+                                                    ">>>>>>>>>>>>>>>>dropTitleList<<<<<<<<<<<<<<<< ${locationState.dropTitleList}");
+                                              });
+                                            },
+                                            child: Transform.translate(
+                                              offset: const Offset(0, -9),
+                                              child: Container(
+                                                  height: 25,
+                                                  width: 25,
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.grey
+                                                          .withOpacity(0.2),
+                                                      shape: BoxShape.circle),
+                                                  child: Padding(
+                                                    padding:
+                                                        EdgeInsets.all(4.0),
+                                                    child: Image(
+                                                      image: AssetImage(
+                                                          "assets/close.png"),
+                                                      height: 15,
+                                                      color: notifier.textColor,
+                                                    ),
+                                                  )),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            CustomLocationSelectScreen(
+                                          bidding: widget.bidding,
+                                          pagestate: widget.pagestate,
                                         ),
+                                      ));
+                                },
+                                child: Container(
+                                  height: 40,
+                                  width: 180,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Colors.grey.withOpacity(0.4)),
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  child: Center(
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.pin_drop_outlined,
+                                          color: notifier.textColor,
+                                        ),
+                                        SizedBox(
+                                          width: 5,
+                                        ),
+                                        Text(
+                                          "Select on map".tr,
+                                          style: TextStyle(
+                                              color: notifier.textColor),
+                                        )
                                       ],
-                                    );
-                                  },
-                                );
-                              }),
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          CustomLocationSelectScreen(
-                                        bidding: widget.bidding,
-                                        pagestate: widget.pagestate,
-                                      ),
-                                    ));
-                              },
-                              child: Container(
-                                height: 40,
-                                width: 180,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: Colors.grey.withOpacity(0.4)),
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                child: Center(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.pin_drop_outlined,
-                                        color: notifier.textColor,
-                                      ),
-                                      SizedBox(
-                                        width: 5,
-                                      ),
-                                      Text(
-                                        "Select on map".tr,
-                                        style: TextStyle(
-                                            color: notifier.textColor),
-                                      )
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const Spacer(),
-                            widget.pagestate == true
-                                ? const SizedBox()
-                                : InkWell(
-                                    onTap: () {
-                                      context
-                                          .read<DynamicFieldsState>()
-                                          .addTextField();
-                                      setState(() {
-                                        uthertextfilde = true;
-                                      });
-                                    },
-                                    child: Container(
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                            color:
-                                                Colors.grey.withOpacity(0.4)),
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const SizedBox(
-                                            width: 10,
-                                          ),
-                                          Container(
-                                            height: 20,
-                                            width: 20,
-                                            alignment: Alignment.center,
-                                            decoration: const BoxDecoration(
-                                              color: Colors.deepOrangeAccent,
-                                              shape: BoxShape.circle,
+                              const Spacer(),
+                              widget.pagestate == true
+                                  ? const SizedBox()
+                                  : InkWell(
+                                      onTap: () {
+                                        context
+                                            .read<DynamicFieldsState>()
+                                            .addTextField();
+                                        setState(() {
+                                          uthertextfilde = true;
+                                        });
+                                      },
+                                      child: Container(
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                              color:
+                                                  Colors.grey.withOpacity(0.4)),
+                                          borderRadius:
+                                              BorderRadius.circular(30),
+                                        ),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const SizedBox(
+                                              width: 10,
                                             ),
-                                            child: const Center(
-                                              child: Icon(
-                                                Icons.add,
-                                                color: Colors.white,
-                                                size: 15,
+                                            Container(
+                                              height: 20,
+                                              width: 20,
+                                              alignment: Alignment.center,
+                                              decoration: const BoxDecoration(
+                                                color: Colors.deepOrangeAccent,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.add,
+                                                  color: Colors.white,
+                                                  size: 15,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          const SizedBox(
-                                            width: 10,
-                                          ),
-                                          Text(
-                                            "Add a destination".tr,
-                                            style: TextStyle(
-                                                color: notifier.textColor),
-                                          ),
-                                          const SizedBox(
-                                            width: 10,
-                                          ),
-                                        ],
+                                            const SizedBox(
+                                              width: 10,
+                                            ),
+                                            Text(
+                                              "Add a destination".tr,
+                                              style: TextStyle(
+                                                  color: notifier.textColor),
+                                            ),
+                                            const SizedBox(
+                                              width: 10,
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  )
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        uthertextfilde == true
-                            ? const SizedBox()
-                            : picanddrop == true
-                                ? const SizedBox()
-                                : pickupcontroller.text.isEmpty
-                                    ? const SizedBox()
-                                    : GetBuilder<MapSuggestGetApiController>(
-                                        builder: (mapSuggestGetApiController) {
-                                        return mapSuggestGetApiController
-                                                .isLoading
-                                            ? const ModernLoadingWidget(
-                                                size: 60,
-                                                message: "جاري التحميل...",
-                                              )
-                                            : ListView.builder(
-                                                physics:
-                                                    const NeverScrollableScrollPhysics(),
-                                                padding: EdgeInsets.zero,
-                                                shrinkWrap: true,
-                                                itemCount:
-                                                    mapSuggestGetApiController
-                                                        .mapApiModel!
-                                                        .results
-                                                        ?.length,
-                                                itemBuilder: (context, index) {
-                                                  return InkWell(
-                                                    onTap: () {
-                                                      print(
-                                                          "****:--- ${mapSuggestGetApiController.mapApiModel!.results?[index].name}");
-                                                      setState(() {
-                                                        pickupcontroller.text =
-                                                            mapSuggestGetApiController
-                                                                .mapApiModel!
-                                                                .results![index]
-                                                                .name!;
-                                                        latitudepick =
-                                                            mapSuggestGetApiController
-                                                                .mapApiModel!
-                                                                .results![index]
-                                                                .geometry!
-                                                                .location!
-                                                                .lat!;
-                                                        longitudepick =
-                                                            mapSuggestGetApiController
-                                                                .mapApiModel!
-                                                                .results![index]
-                                                                .geometry!
-                                                                .location!
-                                                                .lng!;
-
+                                    )
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          uthertextfilde == true
+                              ? const SizedBox()
+                              : locationState.picAndDrop == true
+                                  ? const SizedBox()
+                                  : locationState.pickupController.text.isEmpty
+                                      ? const SizedBox()
+                                      : GetBuilder<MapSuggestGetApiController>(
+                                          builder:
+                                              (mapSuggestGetApiController) {
+                                          return mapSuggestGetApiController
+                                                  .isLoading
+                                              ? const ModernLoadingWidget(
+                                                  size: 60,
+                                                  message: "جاري التحميل...",
+                                                )
+                                              : ListView.builder(
+                                                  physics:
+                                                      const NeverScrollableScrollPhysics(),
+                                                  padding: EdgeInsets.zero,
+                                                  shrinkWrap: true,
+                                                  itemCount:
+                                                      mapSuggestGetApiController
+                                                          .mapApiModel!
+                                                          .results
+                                                          ?.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    return InkWell(
+                                                      onTap: () {
                                                         print(
-                                                            " {{{{{PICK LAT}}}}} :- (${latitudepick})");
-                                                        print(
-                                                            " {{{{{PICK LONG}}}}} :- (${longitudepick})");
+                                                            "****:--- ${mapSuggestGetApiController.mapApiModel!.results?[index].name}");
+                                                        setState(() {
+                                                          final lat =
+                                                              mapSuggestGetApiController
+                                                                  .mapApiModel!
+                                                                  .results![
+                                                                      index]
+                                                                  .geometry!
+                                                                  .location!
+                                                                  .lat!;
 
-                                                        picktitle =
-                                                            mapSuggestGetApiController
-                                                                .mapApiModel!
-                                                                .results![index]
-                                                                .name!;
-                                                        picksubtitle =
-                                                            mapSuggestGetApiController
-                                                                .mapApiModel!
-                                                                .results![index]
-                                                                .formattedAddress!;
+                                                          final lng =
+                                                              mapSuggestGetApiController
+                                                                  .mapApiModel!
+                                                                  .results![
+                                                                      index]
+                                                                  .geometry!
+                                                                  .location!
+                                                                  .lng!;
 
-                                                        mapSuggestGetApiController
-                                                            .mapApiModel
-                                                            ?.results
-                                                            ?.clear();
-                                                        focusNode1.unfocus();
-                                                        if (pickupcontroller
-                                                                .text
-                                                                .isNotEmpty &&
-                                                            dropcontroller.text
-                                                                .isNotEmpty) {
-                                                          driveridloader =
-                                                              false;
+                                                          final title =
+                                                              mapSuggestGetApiController
+                                                                  .mapApiModel!
+                                                                  .results![
+                                                                      index]
+                                                                  .name!;
+
+                                                          final subtitle =
+                                                              mapSuggestGetApiController
+                                                                  .mapApiModel!
+                                                                  .results![
+                                                                      index]
+                                                                  .formattedAddress!;
+                                                          context
+                                                              .read<
+                                                                  LocationState>()
+                                                              .setPickupLocation(
+                                                                  lat,
+                                                                  lng,
+                                                                  title,
+                                                                  subtitle);
 
                                                           print(
-                                                              "++++++++++++++++done++++++++++++++++");
+                                                              " {{{{{PICK LAT}}}}} :- (${locationState.latitudePick})");
 
-                                                          // Show loading before navigation
-
-                                                          LoadingService
-                                                              .showLoadingDialog(
-                                                            context: context,
-                                                            message:
-                                                                "جاري تحضير الخريطة...",
-                                                            customAnimation:
-                                                                'assets/lottie/loading.json',
-                                                            dismissible: false,
-                                                          );
-
-                                                          LoadingService.hide(
-                                                              context);
-
-                                                          // Add small delay to ensure loading shows
-
-                                                          Future.delayed(
-                                                              const Duration(
-                                                                  milliseconds:
-                                                                      500));
-
-                                                          socket.close();
-
-                                                          if (widget.bidding ==
-                                                              "1") {
-                                                            // Hide loading before navigation
-
-                                                            hideModernLoading(
-                                                                context);
-
-                                                            Get.offAll(
-                                                                const ModernMapScreen(
-                                                                    selectVehicle:
-                                                                        false));
-                                                          } else if (widget
-                                                                  .pagestate ==
-                                                              true) {
-                                                            // Hide loading before navigation
-
-                                                            hideModernLoading(
-                                                                context);
-
-                                                            // Handle other navigation logic
-                                                          }
-                                                        }
-                                                      });
-                                                    },
-                                                    child: Container(
-                                                      width: Get.width,
-                                                      margin: EdgeInsets.only(
-                                                          top: 10),
-                                                      decoration: BoxDecoration(
-                                                        color: notifier
-                                                            .containercolore,
-                                                        border: Border.all(
-                                                            color: Colors.grey
-                                                                .withOpacity(
-                                                                    0.4)),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(15),
-                                                      ),
-                                                      child: Column(
-                                                        children: [
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    left: 10,
-                                                                    right: 10,
-                                                                    top: 10,
-                                                                    bottom: 10),
-                                                            child: ListTile(
-                                                              contentPadding:
-                                                                  EdgeInsets
-                                                                      .zero,
-                                                              leading: Image(
-                                                                image: AssetImage(
-                                                                    "assets/location-pin.png"),
-                                                                height: 25,
-                                                                color: notifier
-                                                                    .textColor,
-                                                              ),
-                                                              title: Transform
-                                                                  .translate(
-                                                                      offset:
-                                                                          const Offset(
-                                                                              -10,
-                                                                              0),
-                                                                      child:
-                                                                          Text(
-                                                                        "${mapSuggestGetApiController.mapApiModel!.results?[index].name}",
-                                                                        style: TextStyle(
-                                                                            fontSize:
-                                                                                15,
-                                                                            color:
-                                                                                notifier.textColor),
-                                                                      )),
-                                                              subtitle: Transform
-                                                                  .translate(
-                                                                      offset:
-                                                                          const Offset(
-                                                                              -10,
-                                                                              5),
-                                                                      child:
-                                                                          Text(
-                                                                        "${mapSuggestGetApiController.mapApiModel!.results?[index].formattedAddress}",
-                                                                        style: const TextStyle(
-                                                                            color:
-                                                                                Colors.grey,
-                                                                            fontSize: 12),
-                                                                        maxLines:
-                                                                            2,
-                                                                      )),
-                                                            ),
-                                                          )
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              );
-                                      }),
-                        uthertextfilde == true
-                            ? const SizedBox()
-                            : picanddrop == false
-                                ? const SizedBox()
-                                : dropcontroller.text.isEmpty
-                                    ? const SizedBox()
-                                    : GetBuilder<MapSuggestGetApiController>(
-                                        builder: (mapSuggestGetApiController) {
-                                        return mapSuggestGetApiController
-                                                .isLoading
-                                            ? const ModernLoadingWidget(
-                                                size: 60,
-                                                message: "جاري التحميل...",
-                                              )
-                                            : ListView.builder(
-                                                physics:
-                                                    const NeverScrollableScrollPhysics(),
-                                                padding: EdgeInsets.zero,
-                                                shrinkWrap: true,
-                                                itemCount:
-                                                    mapSuggestGetApiController
-                                                        .mapApiModel!
-                                                        .results
-                                                        ?.length,
-                                                itemBuilder: (context, index) {
-                                                  return InkWell(
-                                                    onTap: () {
-                                                      print(
-                                                          "****:--- ${mapSuggestGetApiController.mapApiModel!.results?[index].name}");
-                                                      setState(() {
-                                                        print(
-                                                            "++++++++++++++++lat++++++++++++++++ ${mapSuggestGetApiController.mapApiModel!.results![index].geometry!.location!.lat!}");
-                                                        print(
-                                                            "++++++++++++++++lng++++++++++++++++ ${mapSuggestGetApiController.mapApiModel!.results![index].geometry!.location!.lng!}");
-                                                        dropcontroller.text =
-                                                            mapSuggestGetApiController
-                                                                .mapApiModel!
-                                                                .results![index]
-                                                                .name!;
-                                                        latitudedrop =
-                                                            mapSuggestGetApiController
-                                                                .mapApiModel!
-                                                                .results![index]
-                                                                .geometry!
-                                                                .location!
-                                                                .lat!;
-                                                        longitudedrop =
-                                                            mapSuggestGetApiController
-                                                                .mapApiModel!
-                                                                .results![index]
-                                                                .geometry!
-                                                                .location!
-                                                                .lng!;
-
-                                                        print(
-                                                            " {{{{{DROP LAT}}}}} :- (${latitudedrop})");
-                                                        print(
-                                                            " {{{{{DROP LONG}}}}} :- (${longitudedrop})");
-
-                                                        droptitle =
-                                                            mapSuggestGetApiController
-                                                                .mapApiModel!
-                                                                .results![index]
-                                                                .name!;
-                                                        dropsubtitle =
-                                                            mapSuggestGetApiController
-                                                                .mapApiModel!
-                                                                .results![index]
-                                                                .formattedAddress!;
-
-                                                        mapSuggestGetApiController
-                                                            .mapApiModel
-                                                            ?.results
-                                                            ?.clear();
-                                                        focusNode2.unfocus();
-                                                        if (pickupcontroller
-                                                                .text
-                                                                .isNotEmpty &&
-                                                            dropcontroller.text
-                                                                .isNotEmpty) {
-                                                          driveridloader =
-                                                              false;
                                                           print(
-                                                              "++++++++++++++++done++++++++++++++++");
+                                                              " {{{{{PICK LONG}}}}} :- (${locationState.longitudePick})");
 
-                                                          socket.close();
-                                                          widget.bidding == "1"
-                                                              ? Get.offAll(
+                                                          mapSuggestGetApiController
+                                                              .mapApiModel
+                                                              ?.results
+                                                              ?.clear();
+                                                          focusNode1.unfocus();
+                                                          if (locationState
+                                                                  .pickupController
+                                                                  .text
+                                                                  .isNotEmpty &&
+                                                              locationState
+                                                                  .dropController
+                                                                  .text
+                                                                  .isNotEmpty) {
+                                                            print(
+                                                                "++++++++++++++++done++++++++++++++++");
+
+                                                            // Show loading before navigation
+
+                                                            LoadingService
+                                                                .showLoadingDialog(
+                                                              context: context,
+                                                              message:
+                                                                  "جاري تحضير الخريطة...",
+                                                              customAnimation:
+                                                                  'assets/lottie/loading.json',
+                                                              dismissible:
+                                                                  false,
+                                                            );
+
+                                                            LoadingService.hide(
+                                                                context);
+
+                                                            // Add small delay to ensure loading shows
+
+                                                            Future.delayed(
+                                                                const Duration(
+                                                                    milliseconds:
+                                                                        500));
+
+                                                            SocketService
+                                                                .instance
+                                                                .disconnect();
+
+                                                            if (widget
+                                                                    .bidding ==
+                                                                "1") {
+                                                              // Hide loading before navigation
+
+                                                              LoadingService
+                                                                  .hide(
+                                                                      context);
+
+                                                              Get.offAll(
                                                                   const ModernMapScreen(
-                                                                  selectVehicle:
-                                                                      false,
-                                                                ))
-                                                              : widget.pagestate ==
-                                                                      true
-                                                                  ? Navigator.pop(
-                                                                      context,
-                                                                      RefreshData(
-                                                                          true))
-                                                                  : Navigator
-                                                                      .push(
-                                                                      context,
-                                                                      MaterialPageRoute(
-                                                                          builder: (context) => HomeScreen(
-                                                                              latpic: latitudepick,
-                                                                              longpic: longitudepick,
-                                                                              latdrop: latitudedrop,
-                                                                              longdrop: longitudedrop,
-                                                                              destinationlat: destinationlat)),
-                                                                    );
-                                                          widget.bidding == "1"
-                                                              ? calculateController
-                                                                  .calculateApi(
-                                                                      context:
-                                                                          context,
-                                                                      uid: userid
-                                                                          .toString(),
-                                                                      mid: mid,
-                                                                      mrole:
-                                                                          mroal,
-                                                                      pickup_lat_lon:
-                                                                          "${latitudepick},${longitudepick}",
-                                                                      drop_lat_lon:
-                                                                          "${latitudedrop},${longitudedrop}",
-                                                                      drop_lat_lon_list:
-                                                                          onlypass // This will automatically handle string/object conversion
+                                                                      selectVehicle:
+                                                                          false));
+                                                            } else if (widget
+                                                                    .pagestate ==
+                                                                true) {
+                                                              // Hide loading before navigation
 
-                                                                      )
-                                                                  .then(
-                                                                      (value) {
-                                                                  if (value !=
-                                                                          null &&
-                                                                      value["Result"] ==
-                                                                          true) {
-                                                                    // Success - update your variables
+                                                              LoadingService
+                                                                  .hide(
+                                                                      context);
 
-                                                                    dropprice =
-                                                                        value[
-                                                                            "drop_price"];
+                                                              // Handle other navigation logic
+                                                            }
+                                                          }
+                                                        });
+                                                      },
+                                                      child: Container(
+                                                        width: Get.width,
+                                                        margin: EdgeInsets.only(
+                                                            top: 10),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: notifier
+                                                              .containercolore,
+                                                          border: Border.all(
+                                                              color: Colors.grey
+                                                                  .withOpacity(
+                                                                      0.4)),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(15),
+                                                        ),
+                                                        child: Column(
+                                                          children: [
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                      left: 10,
+                                                                      right: 10,
+                                                                      top: 10,
+                                                                      bottom:
+                                                                          10),
+                                                              child: ListTile(
+                                                                contentPadding:
+                                                                    EdgeInsets
+                                                                        .zero,
+                                                                leading: Image(
+                                                                  image: AssetImage(
+                                                                      "assets/location-pin.png"),
+                                                                  height: 25,
+                                                                  color: notifier
+                                                                      .textColor,
+                                                                ),
+                                                                title: Transform
+                                                                    .translate(
+                                                                        offset: const Offset(
+                                                                            -10,
+                                                                            0),
+                                                                        child:
+                                                                            Text(
+                                                                          "${mapSuggestGetApiController.mapApiModel!.results?[index].name}",
+                                                                          style: TextStyle(
+                                                                              fontSize: 15,
+                                                                              color: notifier.textColor),
+                                                                        )),
+                                                                subtitle: Transform
+                                                                    .translate(
+                                                                        offset: const Offset(
+                                                                            -10,
+                                                                            5),
+                                                                        child:
+                                                                            Text(
+                                                                          "${mapSuggestGetApiController.mapApiModel!.results?[index].formattedAddress}",
+                                                                          style: const TextStyle(
+                                                                              color: Colors.grey,
+                                                                              fontSize: 12),
+                                                                          maxLines:
+                                                                              2,
+                                                                        )),
+                                                              ),
+                                                            )
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                );
+                                        }),
+                          uthertextfilde == true
+                              ? const SizedBox()
+                              : locationState.picAndDrop == false
+                                  ? const SizedBox()
+                                  : locationState.dropController.text.isEmpty
+                                      ? const SizedBox()
+                                      : GetBuilder<MapSuggestGetApiController>(
+                                          builder:
+                                              (mapSuggestGetApiController) {
+                                          return mapSuggestGetApiController
+                                                  .isLoading
+                                              ? const ModernLoadingWidget(
+                                                  size: 60,
+                                                  message: "جاري التحميل...",
+                                                )
+                                              : ListView.builder(
+                                                  physics:
+                                                      const NeverScrollableScrollPhysics(),
+                                                  padding: EdgeInsets.zero,
+                                                  shrinkWrap: true,
+                                                  itemCount:
+                                                      mapSuggestGetApiController
+                                                          .mapApiModel!
+                                                          .results
+                                                          ?.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    return InkWell(
+                                                      onTap: () {
+                                                        setState(() {
+                                                          // ✅ USE PROVIDERS for location data
 
-                                                                    minimumfare =
-                                                                        value["vehicle"]
-                                                                            [
-                                                                            "minimum_fare"];
+                                                          final lat =
+                                                              mapSuggestGetApiController
+                                                                  .mapApiModel!
+                                                                  .results![
+                                                                      index]
+                                                                  .geometry!
+                                                                  .location!
+                                                                  .lat!;
 
-                                                                    maximumfare =
-                                                                        value["vehicle"]
-                                                                            [
-                                                                            "maximum_fare"];
+                                                          final lng =
+                                                              mapSuggestGetApiController
+                                                                  .mapApiModel!
+                                                                  .results![
+                                                                      index]
+                                                                  .geometry!
+                                                                  .location!
+                                                                  .lng!;
 
-                                                                    responsemessage =
-                                                                        value[
-                                                                            "message"];
+                                                          final title =
+                                                              mapSuggestGetApiController
+                                                                  .mapApiModel!
+                                                                  .results![
+                                                                      index]
+                                                                  .name!;
 
-                                                                    tot_hour = value[
-                                                                            "tot_hour"]
-                                                                        .toString();
+                                                          final subtitle =
+                                                              mapSuggestGetApiController
+                                                                  .mapApiModel!
+                                                                  .results![
+                                                                      index]
+                                                                  .formattedAddress!;
 
-                                                                    tot_time = value[
-                                                                            "tot_minute"]
-                                                                        .toString();
+                                                          context
+                                                              .read<
+                                                                  LocationState>()
+                                                              .setDropLocation(
+                                                                  lat,
+                                                                  lng,
+                                                                  title,
+                                                                  subtitle);
 
-                                                                    vehicle_id =
-                                                                        value["vehicle"]["id"]
-                                                                            .toString();
+                                                          // ✅ USE GLOBALS for pricing/vehicle data (no providers yet)
 
-                                                                    vihicalrice =
-                                                                        safeParseDouble(
-                                                                            value["drop_price"]);
+                                                          if (locationState
+                                                                  .pickupController
+                                                                  .text
+                                                                  .isNotEmpty &&
+                                                              locationState
+                                                                  .dropController
+                                                                  .text
+                                                                  .isNotEmpty) {
+                                                            SocketService
+                                                                .instance
+                                                                .disconnect();
 
-                                                                    totalkm =
-                                                                        safeParseDouble(
-                                                                            value["tot_km"]);
+                                                            widget.bidding ==
+                                                                    "1"
+                                                                ? calculateController
+                                                                    .calculateApi(
+                                                                        context:
+                                                                            context,
+                                                                        uid: userid
+                                                                            .toString(),
+                                                                        mid:
+                                                                            mid, // ✅ GLOBAL - no provider yet
 
-                                                                    tot_secound =
-                                                                        "0";
+                                                                        mrole:
+                                                                            mroal, // ✅ GLOBAL - no provider yet
 
-                                                                    vihicalimage =
-                                                                        value["vehicle"]["map_img"]
-                                                                            .toString();
+                                                                        pickup_lat_lon:
+                                                                            "${locationState.latitudePick},${locationState.longitudePick}", // ✅ PROVIDER
 
-                                                                    vihicalname =
-                                                                        value["vehicle"]["name"]
-                                                                            .toString();
+                                                                        drop_lat_lon:
+                                                                            "${locationState.latitudeDrop},${locationState.longitudeDrop}", // ✅ PROVIDER
 
-                                                                    setState(
-                                                                        () {
-                                                                      amountresponse =
-                                                                          "true";
-                                                                    });
+                                                                        drop_lat_lon_list:
+                                                                            locationState
+                                                                                .onlyPass // ✅ PROVIDER
 
-                                                                    print(
-                                                                        "********** Success **********");
-
-                                                                    print(
-                                                                        "Drop price: $dropprice YER");
-
-                                                                    print(
-                                                                        "Distance: $totalkm km");
-
-                                                                    print(
-                                                                        "Time: ${tot_hour}h ${tot_time}m");
-                                                                  } else {
-                                                                    // Handle different error types
-
-                                                                    setState(
-                                                                        () {
-                                                                      amountresponse =
-                                                                          "false";
-                                                                    });
-
+                                                                        )
+                                                                    .then(
+                                                                        (value) {
                                                                     if (value !=
                                                                             null &&
-                                                                        value["message"] !=
-                                                                            null) {
-                                                                      String
-                                                                          message =
+                                                                        value["Result"] ==
+                                                                            true) {
+                                                                      // ✅ KEEP THESE GLOBALS - no providers yet
+
+                                                                      dropprice =
+                                                                          value[
+                                                                              "drop_price"];
+
+                                                                      minimumfare =
+                                                                          value["vehicle"]
+                                                                              [
+                                                                              "minimum_fare"];
+
+                                                                      maximumfare =
+                                                                          value["vehicle"]
+                                                                              [
+                                                                              "maximum_fare"];
+
+                                                                      responsemessage =
                                                                           value[
                                                                               "message"];
 
-                                                                      if (message
-                                                                          .contains(
-                                                                              "zone")) {
-                                                                        // Zone error - suggest using test coordinates
+                                                                      tot_hour =
+                                                                          value["tot_hour"]
+                                                                              .toString();
 
-                                                                        print(
-                                                                            "Zone error - coordinates outside service area");
-                                                                      } else if (message
-                                                                          .contains(
-                                                                              "Vehicle Not Found")) {
-                                                                        print(
-                                                                            "Vehicle error - check vehicle ID");
-                                                                      }
+                                                                      tot_time =
+                                                                          value["tot_minute"]
+                                                                              .toString();
+
+                                                                      vehicle_id =
+                                                                          value["vehicle"]["id"]
+                                                                              .toString();
+
+                                                                      vihicalrice =
+                                                                          safeParseDouble(
+                                                                              value["drop_price"]);
+
+                                                                      totalkm =
+                                                                          safeParseDouble(
+                                                                              value["tot_km"]);
+
+                                                                      tot_secound =
+                                                                          "0";
+
+                                                                      vihicalimage =
+                                                                          value["vehicle"]["map_img"]
+                                                                              .toString();
+
+                                                                      vihicalname =
+                                                                          value["vehicle"]["name"]
+                                                                              .toString();
+
+                                                                      setState(
+                                                                          () {
+                                                                        amountresponse =
+                                                                            "true"; // ✅ GLOBAL - no provider yet
+                                                                      });
                                                                     }
-                                                                  }
-                                                                })
-                                                              : modual_calculateController
-                                                                  .modualcalculateApi(
-                                                                      context:
-                                                                          context,
-                                                                      uid: userid
-                                                                          .toString(),
-                                                                      mid: mid,
-                                                                      mrole:
-                                                                          mroal,
-                                                                      pickup_lat_lon:
-                                                                          "${latitudepick},${longitudepick}",
-                                                                      drop_lat_lon:
-                                                                          "${latitudedrop},${longitudedrop}",
-                                                                      drop_lat_lon_list:
-                                                                          onlypass)
-                                                                  .then(
-                                                                  (value) {
-                                                                    totalkm = safeParseDouble(modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            index]
-                                                                        .dropKm); // ✅ Safe
-                                                                    tot_time = modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            0]
-                                                                        .dropTime!
-                                                                        .toString();
-                                                                    tot_hour = modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            0]
-                                                                        .dropHour!
-                                                                        .toString();
-                                                                    tot_secound =
-                                                                        "0";
-                                                                    vihicalname = modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            0]
-                                                                        .name!
-                                                                        .toString();
-                                                                    vihicalimage = modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            0]
-                                                                        .image!
-                                                                        .toString();
-                                                                    vehicle_id = modual_calculateController
-                                                                        .modualCalculateApiModel!
-                                                                        .caldriver![
-                                                                            0]
-                                                                        .id!
-                                                                        .toString();
+                                                                  })
+                                                                : modual_calculateController
+                                                                    .modualcalculateApi(
+                                                                        context:
+                                                                            context,
+                                                                        uid: userid
+                                                                            .toString(),
+                                                                        mid:
+                                                                            mid,
+                                                                        mrole:
+                                                                            mroal,
+                                                                        pickup_lat_lon:
+                                                                            "${locationState.latitudePick},${locationState.longitudePick}",
+                                                                        drop_lat_lon:
+                                                                            "${locationState.latitudeDrop},${locationState.longitudeDrop}",
+                                                                        drop_lat_lon_list:
+                                                                            locationState.onlyPass)
+                                                                    .then(
+                                                                    (value) {
+                                                                      totalkm = safeParseDouble(modual_calculateController
+                                                                          .modualCalculateApiModel!
+                                                                          .caldriver![
+                                                                              index]
+                                                                          .dropKm); // ✅ Safe
+                                                                      tot_time = modual_calculateController
+                                                                          .modualCalculateApiModel!
+                                                                          .caldriver![
+                                                                              0]
+                                                                          .dropTime!
+                                                                          .toString();
+                                                                      tot_hour = modual_calculateController
+                                                                          .modualCalculateApiModel!
+                                                                          .caldriver![
+                                                                              0]
+                                                                          .dropHour!
+                                                                          .toString();
+                                                                      tot_secound =
+                                                                          "0";
+                                                                      vihicalname = modual_calculateController
+                                                                          .modualCalculateApiModel!
+                                                                          .caldriver![
+                                                                              0]
+                                                                          .name!
+                                                                          .toString();
+                                                                      vihicalimage = modual_calculateController
+                                                                          .modualCalculateApiModel!
+                                                                          .caldriver![
+                                                                              0]
+                                                                          .image!
+                                                                          .toString();
+                                                                      vehicle_id = modual_calculateController
+                                                                          .modualCalculateApiModel!
+                                                                          .caldriver![
+                                                                              0]
+                                                                          .id!
+                                                                          .toString();
 
-                                                                    print(
-                                                                        "GOGOGOGOGOGOGOGOGOGOGOGOG:- ${midseconde}");
-                                                                    print(
-                                                                        "GOGOGOGOGOGOGOGOGOGOGOGOG:- ${vihicalrice}");
-                                                                  },
-                                                                );
-                                                        }
-                                                      });
-                                                    },
-                                                    child: Container(
-                                                      width: Get.width,
-                                                      margin: EdgeInsets.only(
-                                                          top: 10),
-                                                      decoration: BoxDecoration(
-                                                        color: notifier
-                                                            .containercolore,
-                                                        border: Border.all(
-                                                            color: Colors.grey
-                                                                .withOpacity(
-                                                                    0.4)),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(15),
-                                                      ),
-                                                      child: Column(
-                                                        children: [
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    left: 10,
-                                                                    right: 10,
-                                                                    top: 10,
-                                                                    bottom: 10),
-                                                            child: ListTile(
-                                                              contentPadding:
-                                                                  EdgeInsets
-                                                                      .zero,
-                                                              leading: Image(
-                                                                image: AssetImage(
-                                                                    "assets/location-pin.png"),
-                                                                height: 25,
-                                                                color: notifier
-                                                                    .textColor,
+                                                                      print(
+                                                                          "GOGOGOGOGOGOGOGOGOGOGOGOG:- ${midseconde}");
+                                                                      print(
+                                                                          "GOGOGOGOGOGOGOGOGOGOGOGOG:- ${vihicalrice}");
+                                                                    },
+                                                                  );
+                                                          }
+                                                        });
+                                                      },
+                                                      child: Container(
+                                                        width: Get.width,
+                                                        margin: EdgeInsets.only(
+                                                            top: 10),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: notifier
+                                                              .containercolore,
+                                                          border: Border.all(
+                                                              color: Colors.grey
+                                                                  .withOpacity(
+                                                                      0.4)),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(15),
+                                                        ),
+                                                        child: Column(
+                                                          children: [
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                      left: 10,
+                                                                      right: 10,
+                                                                      top: 10,
+                                                                      bottom:
+                                                                          10),
+                                                              child: ListTile(
+                                                                contentPadding:
+                                                                    EdgeInsets
+                                                                        .zero,
+                                                                leading: Image(
+                                                                  image: AssetImage(
+                                                                      "assets/location-pin.png"),
+                                                                  height: 25,
+                                                                  color: notifier
+                                                                      .textColor,
+                                                                ),
+                                                                title: Transform
+                                                                    .translate(
+                                                                        offset: const Offset(
+                                                                            -10,
+                                                                            0),
+                                                                        child:
+                                                                            Text(
+                                                                          "${mapSuggestGetApiController.mapApiModel!.results?[index].name}",
+                                                                          style: TextStyle(
+                                                                              fontSize: 15,
+                                                                              color: notifier.textColor),
+                                                                        )),
+                                                                subtitle: Transform
+                                                                    .translate(
+                                                                        offset: const Offset(
+                                                                            -10,
+                                                                            5),
+                                                                        child:
+                                                                            Text(
+                                                                          "${mapSuggestGetApiController.mapApiModel!.results?[index].formattedAddress}",
+                                                                          style: const TextStyle(
+                                                                              color: Colors.grey,
+                                                                              fontSize: 12),
+                                                                          maxLines:
+                                                                              2,
+                                                                        )),
                                                               ),
-                                                              title: Transform
-                                                                  .translate(
-                                                                      offset:
-                                                                          const Offset(
-                                                                              -10,
-                                                                              0),
-                                                                      child:
-                                                                          Text(
-                                                                        "${mapSuggestGetApiController.mapApiModel!.results?[index].name}",
-                                                                        style: TextStyle(
-                                                                            fontSize:
-                                                                                15,
-                                                                            color:
-                                                                                notifier.textColor),
-                                                                      )),
-                                                              subtitle: Transform
-                                                                  .translate(
-                                                                      offset:
-                                                                          const Offset(
-                                                                              -10,
-                                                                              5),
-                                                                      child:
-                                                                          Text(
-                                                                        "${mapSuggestGetApiController.mapApiModel!.results?[index].formattedAddress}",
-                                                                        style: const TextStyle(
-                                                                            color:
-                                                                                Colors.grey,
-                                                                            fontSize: 12),
-                                                                        maxLines:
-                                                                            2,
-                                                                      )),
-                                                            ),
-                                                          )
-                                                        ],
+                                                            )
+                                                          ],
+                                                        ),
                                                       ),
-                                                    ),
-                                                  );
-                                                },
-                                              );
-                                      }),
-                        uthertextfilde == false
-                            ? const SizedBox()
-                            : GetBuilder<MapSuggestGetApiController>(
-                                builder: (mapSuggestGetApiController) {
-                                return mapSuggestGetApiController.isLoading
-                                    ? const SizedBox()
-                                    : ListView.builder(
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        padding: EdgeInsets.zero,
-                                        shrinkWrap: true,
-                                        itemCount: mapSuggestGetApiController
-                                            .mapApiModel!.results?.length,
-                                        itemBuilder: (context, index) {
-                                          return InkWell(
-                                            onTap: () {
-                                              setState(() {
-                                                submitDataName();
-                                                textfieldlist[textFieldindex]
-                                                        .destinationcontroller
-                                                        .text =
-                                                    mapSuggestGetApiController
-                                                        .mapApiModel!
-                                                        .results![index]
-                                                        .name!;
-                                                destinationlat.add(PointLatLng(
-                                                    mapSuggestGetApiController
-                                                        .mapApiModel!
-                                                        .results![index]
-                                                        .geometry!
-                                                        .location!
-                                                        .lat!,
-                                                    mapSuggestGetApiController
-                                                        .mapApiModel!
-                                                        .results![index]
-                                                        .geometry!
-                                                        .location!
-                                                        .lng!));
-                                                onlypass.add({
-                                                  "lat":
+                                                    );
+                                                  },
+                                                );
+                                        }),
+                          uthertextfilde == false
+                              ? const SizedBox()
+                              : GetBuilder<MapSuggestGetApiController>(
+                                  builder: (mapSuggestGetApiController) {
+                                  return mapSuggestGetApiController.isLoading
+                                      ? const SizedBox()
+                                      : ListView.builder(
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          padding: EdgeInsets.zero,
+                                          shrinkWrap: true,
+                                          itemCount: mapSuggestGetApiController
+                                              .mapApiModel!.results?.length,
+                                          itemBuilder: (context, index) {
+                                            return InkWell(
+                                              onTap: () {
+                                                setState(() {
+                                                  submitDataName();
+                                                  final dynamicFields =
+                                                      context.read<
+                                                          DynamicFieldsState>();
+
+                                                  final locationState = context
+                                                      .read<LocationState>();
+
+                                                  dynamicFields
+                                                          .textFieldList[
+                                                              textFieldindex]
+                                                          .destinationcontroller
+                                                          .text =
+                                                      mapSuggestGetApiController
+                                                          .mapApiModel!
+                                                          .results![index]
+                                                          .name!;
+
+                                                  final pointLatLng = PointLatLng(
                                                       mapSuggestGetApiController
                                                           .mapApiModel!
                                                           .results![index]
                                                           .geometry!
                                                           .location!
                                                           .lat!,
-                                                  "long":
                                                       mapSuggestGetApiController
                                                           .mapApiModel!
                                                           .results![index]
                                                           .geometry!
                                                           .location!
-                                                          .lng!
-                                                });
+                                                          .lng!);
 
-                                                droptitlelist.add({
-                                                  "title":
-                                                      mapSuggestGetApiController
-                                                          .mapApiModel!
-                                                          .results![index]
-                                                          .name,
-                                                  "subt":
-                                                      mapSuggestGetApiController
-                                                          .mapApiModel!
-                                                          .results![index]
-                                                          .formattedAddress
-                                                });
+                                                  locationState
+                                                      .updateDestinationLat([
+                                                    ...locationState
+                                                        .destinationLat,
+                                                    pointLatLng
+                                                  ]);
 
-                                                mapSuggestGetApiController
-                                                    .mapApiModel?.results
-                                                    ?.clear();
-                                                if (pickupcontroller
-                                                        .text.isNotEmpty &&
-                                                    dropcontroller
-                                                        .text.isNotEmpty) {
-                                                  driveridloader = false;
-                                                  socket.close();
-                                                  print(
-                                                      "++++++++++++++++latitudepick++++++++++++++++ $latitudepick");
-                                                  print(
-                                                      "++++++++++++++++longitudepick++++++++++++++++ $longitudepick");
-                                                  print(
-                                                      "++++++++++++++++latitudedrop++++++++++++++++ $latitudedrop");
-                                                  print(
-                                                      "++++++++++++++++longitudedrop++++++++++++++++ $longitudedrop");
-                                                  widget.bidding == "1"
-                                                      ? Get.offAll(
-                                                          const ModernMapScreen(
-                                                          selectVehicle: false,
-                                                        ))
-                                                      : Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder: (context) => HomeScreen(
-                                                                  latpic:
-                                                                      latitudepick,
-                                                                  longpic:
-                                                                      longitudepick,
-                                                                  latdrop:
-                                                                      latitudedrop,
-                                                                  longdrop:
-                                                                      longitudedrop,
-                                                                  destinationlat:
-                                                                      destinationlat)),
-                                                        );
-                                                  widget.bidding == "1"
-                                                      ? calculateController
-                                                          .calculateApi(
-                                                              context: context,
-                                                              uid: userid
-                                                                  .toString(),
-                                                              mid: mid,
-                                                              mrole: mroal,
-                                                              pickup_lat_lon:
-                                                                  "${latitudepick},${longitudepick}",
-                                                              drop_lat_lon:
-                                                                  "${latitudedrop},${longitudedrop}",
-                                                              drop_lat_lon_list:
-                                                                  onlypass // This will automatically handle string/object conversion
+                                                  locationState.onlyPass.add({
+                                                    "lat":
+                                                        mapSuggestGetApiController
+                                                            .mapApiModel!
+                                                            .results![index]
+                                                            .geometry!
+                                                            .location!
+                                                            .lat!,
+                                                    "long":
+                                                        mapSuggestGetApiController
+                                                            .mapApiModel!
+                                                            .results![index]
+                                                            .geometry!
+                                                            .location!
+                                                            .lng!
+                                                  });
 
-                                                              )
-                                                          .then((value) {
-                                                          if (value != null &&
-                                                              value["Result"] ==
-                                                                  true) {
-                                                            // Success - update your variables
+                                                  locationState
+                                                      .addDropLocation({
+                                                    "title":
+                                                        mapSuggestGetApiController
+                                                            .mapApiModel!
+                                                            .results![index]
+                                                            .name,
+                                                    "subt":
+                                                        mapSuggestGetApiController
+                                                            .mapApiModel!
+                                                            .results![index]
+                                                            .formattedAddress
+                                                  });
+                                                  mapSuggestGetApiController
+                                                      .mapApiModel?.results
+                                                      ?.clear();
+                                                  if (locationState
+                                                          .pickupController
+                                                          .text
+                                                          .isNotEmpty &&
+                                                      locationState
+                                                          .dropController
+                                                          .text
+                                                          .isNotEmpty) {
+                                                    SocketService.instance
+                                                        .disconnect();
+                                                    print(
+                                                        "++++++++++++++++latitudepick++++++++++++++++ ${locationState.latitudePick}");
+                                                    print(
+                                                        "++++++++++++++++longitudepick++++++++++++++++ ${locationState.longitudePick}");
+                                                    print(
+                                                        "++++++++++++++++latitudedrop++++++++++++++++ ${locationState.latitudeDrop}");
+                                                    print(
+                                                        "++++++++++++++++longitudedrop++++++++++++++++ ${locationState.longitudeDrop}");
 
-                                                            dropprice = value[
-                                                                "drop_price"];
+                                                    widget.bidding == "1"
+                                                        ? Get.offAll(
+                                                            const ModernMapScreen(
+                                                            selectVehicle:
+                                                                false,
+                                                          ))
+                                                        : Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                                builder: (context) =>
+                                                                    HomeScreen(
+                                                                        latpic: locationState
+                                                                            .latitudePick, // ✅ PROVIDER
+                                                                        longpic:
+                                                                            locationState
+                                                                                .longitudePick, // ✅ PROVIDER
+                                                                        latdrop:
+                                                                            locationState
+                                                                                .latitudeDrop, // ✅ PROVIDER
+                                                                        longdrop:
+                                                                            locationState
+                                                                                .longitudeDrop, // ✅ PROVIDER
+                                                                        destinationlat:
+                                                                            locationState.destinationLat // ✅ PROVIDER
+                                                                        )),
+                                                          );
+                                                    widget.bidding == "1"
+                                                        ? calculateController
+                                                            .calculateApi(
+                                                                context:
+                                                                    context,
+                                                                uid: userid
+                                                                    .toString(),
+                                                                mid: mid,
+                                                                mrole: mroal,
+                                                                pickup_lat_lon:
+                                                                    "${locationState.latitudePick},${locationState.longitudePick}",
+                                                                drop_lat_lon:
+                                                                    "${locationState.latitudeDrop},${locationState.longitudeDrop}",
+                                                                drop_lat_lon_list:
+                                                                    locationState
+                                                                        .onlyPass
+// This will automatically handle string/object conversion
 
-                                                            minimumfare = value[
-                                                                    "vehicle"][
-                                                                "minimum_fare"];
-
-                                                            maximumfare = value[
-                                                                    "vehicle"][
-                                                                "maximum_fare"];
-
-                                                            responsemessage =
-                                                                value[
-                                                                    "message"];
-
-                                                            tot_hour = value[
-                                                                    "tot_hour"]
-                                                                .toString();
-
-                                                            tot_time = value[
-                                                                    "tot_minute"]
-                                                                .toString();
-
-                                                            vehicle_id =
-                                                                value["vehicle"]
-                                                                        ["id"]
-                                                                    .toString();
-
-                                                            vihicalrice =
-                                                                safeParseDouble(
-                                                                    value[
-                                                                        "drop_price"]);
-
-                                                            totalkm =
-                                                                safeParseDouble(
-                                                                    value[
-                                                                        "tot_km"]);
-                                                            tot_secound = "0";
-
-                                                            vihicalimage =
-                                                                value["vehicle"]
-                                                                        [
-                                                                        "map_img"]
-                                                                    .toString();
-
-                                                            vihicalname =
-                                                                value["vehicle"]
-                                                                        ["name"]
-                                                                    .toString();
-
-                                                            setState(() {
-                                                              amountresponse =
-                                                                  "true";
-                                                            });
-
-                                                            print(
-                                                                "********** Success **********");
-
-                                                            print(
-                                                                "Drop price: $dropprice YER");
-
-                                                            print(
-                                                                "Distance: $totalkm km");
-
-                                                            print(
-                                                                "Time: ${tot_hour}h ${tot_time}m");
-                                                          } else {
-                                                            // Handle different error types
-
-                                                            setState(() {
-                                                              amountresponse =
-                                                                  "false";
-                                                            });
-
+                                                                )
+                                                            .then((value) {
                                                             if (value != null &&
-                                                                value["message"] !=
-                                                                    null) {
-                                                              String message =
+                                                                value["Result"] ==
+                                                                    true) {
+                                                              // Success - update your variables
+
+                                                              dropprice = value[
+                                                                  "drop_price"];
+
+                                                              minimumfare = value[
+                                                                      "vehicle"]
+                                                                  [
+                                                                  "minimum_fare"];
+
+                                                              maximumfare = value[
+                                                                      "vehicle"]
+                                                                  [
+                                                                  "maximum_fare"];
+
+                                                              responsemessage =
                                                                   value[
                                                                       "message"];
 
-                                                              if (message
-                                                                  .contains(
-                                                                      "zone")) {
-                                                                // Zone error - suggest using test coordinates
+                                                              tot_hour = value[
+                                                                      "tot_hour"]
+                                                                  .toString();
 
-                                                                print(
-                                                                    "Zone error - coordinates outside service area");
-                                                              } else if (message
-                                                                  .contains(
-                                                                      "Vehicle Not Found")) {
-                                                                print(
-                                                                    "Vehicle error - check vehicle ID");
+                                                              tot_time = value[
+                                                                      "tot_minute"]
+                                                                  .toString();
+
+                                                              vehicle_id =
+                                                                  value["vehicle"]
+                                                                          ["id"]
+                                                                      .toString();
+
+                                                              vihicalrice =
+                                                                  safeParseDouble(
+                                                                      value[
+                                                                          "drop_price"]);
+
+                                                              totalkm =
+                                                                  safeParseDouble(
+                                                                      value[
+                                                                          "tot_km"]);
+                                                              tot_secound = "0";
+
+                                                              vihicalimage = value[
+                                                                          "vehicle"]
+                                                                      [
+                                                                      "map_img"]
+                                                                  .toString();
+
+                                                              vihicalname =
+                                                                  value["vehicle"]
+                                                                          [
+                                                                          "name"]
+                                                                      .toString();
+
+                                                              setState(() {
+                                                                amountresponse =
+                                                                    "true";
+                                                              });
+
+                                                              print(
+                                                                  "********** Success **********");
+
+                                                              print(
+                                                                  "Drop price: $dropprice YER");
+
+                                                              print(
+                                                                  "Distance: $totalkm km");
+
+                                                              print(
+                                                                  "Time: ${tot_hour}h ${tot_time}m");
+                                                            } else {
+                                                              // Handle different error types
+
+                                                              setState(() {
+                                                                amountresponse =
+                                                                    "false";
+                                                              });
+
+                                                              if (value !=
+                                                                      null &&
+                                                                  value["message"] !=
+                                                                      null) {
+                                                                String message =
+                                                                    value[
+                                                                        "message"];
+
+                                                                if (message
+                                                                    .contains(
+                                                                        "zone")) {
+                                                                  // Zone error - suggest using test coordinates
+
+                                                                  print(
+                                                                      "Zone error - coordinates outside service area");
+                                                                } else if (message
+                                                                    .contains(
+                                                                        "Vehicle Not Found")) {
+                                                                  print(
+                                                                      "Vehicle error - check vehicle ID");
+                                                                }
                                                               }
                                                             }
-                                                          }
-                                                        })
-                                                      : modual_calculateController
-                                                          .modualcalculateApi(
-                                                              context: context,
-                                                              uid: userid
-                                                                  .toString(),
-                                                              mid: mid,
-                                                              mrole: mroal,
-                                                              pickup_lat_lon:
-                                                                  "${latitudepick},${longitudepick}",
-                                                              drop_lat_lon:
-                                                                  "${latitudedrop},${longitudedrop}",
-                                                              drop_lat_lon_list:
-                                                                  onlypass)
-                                                          .then(
-                                                          (value) {
-                                                            totalkm = double.parse(
-                                                                modual_calculateController
-                                                                    .modualCalculateApiModel!
-                                                                    .caldriver![
-                                                                        0]
-                                                                    .dropKm!
-                                                                    .toString());
-                                                            tot_time =
-                                                                modual_calculateController
-                                                                    .modualCalculateApiModel!
-                                                                    .caldriver![
-                                                                        0]
-                                                                    .dropTime!
-                                                                    .toString();
-                                                            tot_hour =
-                                                                modual_calculateController
-                                                                    .modualCalculateApiModel!
-                                                                    .caldriver![
-                                                                        0]
-                                                                    .dropHour!
-                                                                    .toString();
-                                                            tot_secound = "0";
-                                                            vihicalname =
-                                                                modual_calculateController
-                                                                    .modualCalculateApiModel!
-                                                                    .caldriver![
-                                                                        0]
-                                                                    .name!
-                                                                    .toString();
-                                                            vihicalimage =
-                                                                modual_calculateController
-                                                                    .modualCalculateApiModel!
-                                                                    .caldriver![
-                                                                        0]
-                                                                    .image!
-                                                                    .toString();
-                                                            vehicle_id =
-                                                                modual_calculateController
-                                                                    .modualCalculateApiModel!
-                                                                    .caldriver![
-                                                                        0]
-                                                                    .id!
-                                                                    .toString();
-                                                          },
-                                                        );
-                                                }
-                                              });
-                                            },
-                                            child: Container(
-                                              width: Get.width,
-                                              margin: EdgeInsets.only(top: 10),
-                                              decoration: BoxDecoration(
-                                                color: notifier.containercolore,
-                                                border: Border.all(
-                                                    color: Colors.grey
-                                                        .withOpacity(0.4)),
-                                                borderRadius:
-                                                    BorderRadius.circular(15),
-                                              ),
-                                              child: Column(
-                                                children: [
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            left: 10,
-                                                            right: 10,
-                                                            top: 10,
-                                                            bottom: 10),
-                                                    child: ListTile(
-                                                      contentPadding:
-                                                          EdgeInsets.zero,
-                                                      leading: Image(
-                                                        image: AssetImage(
-                                                            "assets/location-pin.png"),
-                                                        height: 25,
-                                                        color:
-                                                            notifier.textColor,
+                                                          })
+                                                        : modual_calculateController
+                                                            .modualcalculateApi(
+                                                                context:
+                                                                    context,
+                                                                uid: userid
+                                                                    .toString(),
+                                                                mid: mid,
+                                                                mrole: mroal,
+                                                                pickup_lat_lon:
+                                                                    "${locationState.latitudePick},${locationState.longitudePick}",
+                                                                drop_lat_lon:
+                                                                    "${locationState.latitudeDrop},${locationState.longitudeDrop}",
+                                                                drop_lat_lon_list:
+                                                                    locationState
+                                                                        .onlyPass)
+                                                            .then(
+                                                            (value) {
+                                                              totalkm = double.parse(
+                                                                  modual_calculateController
+                                                                      .modualCalculateApiModel!
+                                                                      .caldriver![
+                                                                          0]
+                                                                      .dropKm!
+                                                                      .toString());
+                                                              tot_time = modual_calculateController
+                                                                  .modualCalculateApiModel!
+                                                                  .caldriver![0]
+                                                                  .dropTime!
+                                                                  .toString();
+                                                              tot_hour = modual_calculateController
+                                                                  .modualCalculateApiModel!
+                                                                  .caldriver![0]
+                                                                  .dropHour!
+                                                                  .toString();
+                                                              tot_secound = "0";
+                                                              vihicalname =
+                                                                  modual_calculateController
+                                                                      .modualCalculateApiModel!
+                                                                      .caldriver![
+                                                                          0]
+                                                                      .name!
+                                                                      .toString();
+                                                              vihicalimage =
+                                                                  modual_calculateController
+                                                                      .modualCalculateApiModel!
+                                                                      .caldriver![
+                                                                          0]
+                                                                      .image!
+                                                                      .toString();
+                                                              vehicle_id =
+                                                                  modual_calculateController
+                                                                      .modualCalculateApiModel!
+                                                                      .caldriver![
+                                                                          0]
+                                                                      .id!
+                                                                      .toString();
+                                                            },
+                                                          );
+                                                  }
+                                                });
+                                              },
+                                              child: Container(
+                                                width: Get.width,
+                                                margin:
+                                                    EdgeInsets.only(top: 10),
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      notifier.containercolore,
+                                                  border: Border.all(
+                                                      color: Colors.grey
+                                                          .withOpacity(0.4)),
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                ),
+                                                child: Column(
+                                                  children: [
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              left: 10,
+                                                              right: 10,
+                                                              top: 10,
+                                                              bottom: 10),
+                                                      child: ListTile(
+                                                        contentPadding:
+                                                            EdgeInsets.zero,
+                                                        leading: Image(
+                                                          image: AssetImage(
+                                                              "assets/location-pin.png"),
+                                                          height: 25,
+                                                          color: notifier
+                                                              .textColor,
+                                                        ),
+                                                        title:
+                                                            Transform.translate(
+                                                                offset:
+                                                                    const Offset(
+                                                                        -10, 0),
+                                                                child: Text(
+                                                                  "${mapSuggestGetApiController.mapApiModel!.results?[index].name}",
+                                                                  style: TextStyle(
+                                                                      fontSize:
+                                                                          15,
+                                                                      color: notifier
+                                                                          .textColor),
+                                                                )),
+                                                        subtitle:
+                                                            Transform.translate(
+                                                                offset:
+                                                                    const Offset(
+                                                                        -10, 5),
+                                                                child: Text(
+                                                                  "${mapSuggestGetApiController.mapApiModel!.results?[index].formattedAddress}",
+                                                                  style: const TextStyle(
+                                                                      color: Colors
+                                                                          .grey,
+                                                                      fontSize:
+                                                                          12),
+                                                                  maxLines: 2,
+                                                                )),
                                                       ),
-                                                      title:
-                                                          Transform.translate(
-                                                              offset:
-                                                                  const Offset(
-                                                                      -10, 0),
-                                                              child: Text(
-                                                                "${mapSuggestGetApiController.mapApiModel!.results?[index].name}",
-                                                                style: TextStyle(
-                                                                    fontSize:
-                                                                        15,
-                                                                    color: notifier
-                                                                        .textColor),
-                                                              )),
-                                                      subtitle:
-                                                          Transform.translate(
-                                                              offset:
-                                                                  const Offset(
-                                                                      -10, 5),
-                                                              child: Text(
-                                                                "${mapSuggestGetApiController.mapApiModel!.results?[index].formattedAddress}",
-                                                                style: const TextStyle(
-                                                                    color: Colors
-                                                                        .grey,
-                                                                    fontSize:
-                                                                        12),
-                                                                maxLines: 2,
-                                                              )),
-                                                    ),
-                                                  )
-                                                ],
+                                                    )
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                              }),
-                      ],
+                                            );
+                                          },
+                                        );
+                                }),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
 
