@@ -336,7 +336,6 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
 
       if (Vehicle_D_IAmHere["c_id"] == useridgloable.toString()) {
         print("Done Done");
-        driveridloader == false;
         globalDriverAcceptClass.driverdetailfunction(
             lat: widget.lat,
             long: widget.long,

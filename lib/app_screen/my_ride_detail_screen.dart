@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/my_ride_detail_api.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
@@ -246,10 +247,7 @@ class _MyRideDetailScreenState extends State<MyRideDetailScreen> {
     return GetBuilder<MyRideDetailApiController>(
       builder: (myRideDetailApiController) {
         return myRideDetailApiController.isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                color: theamcolore,
-              ))
+            ? modernCircularProgress()
             : Scaffold(
                 backgroundColor: notifier.languagecontainercolore,
                 appBar: AppBar(

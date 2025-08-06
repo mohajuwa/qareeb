@@ -27,7 +27,6 @@ import 'home_screen.dart';
 String appstatus = "";
 String appstatusid = "";
 String runtimestatusid = "";
-bool driveridloader = false;
 
 String plusetimer = "";
 
@@ -304,8 +303,14 @@ class _MyRideScreenState extends State<MyRideScreen>
 
                                                     if (appstatus == "1") {
                                                       print("IF CONDITION");
-                                                      driveridloader = true;
-                                                      loadertimer = true;
+                                                      LoadingService
+                                                          .showLoadingDialog(
+                                                        context: context,
+                                                        message:
+                                                            "جاري البحث عن السائقين...",
+                                                        customAnimation:
+                                                            'assets/lottie/search_loading.json',
+                                                      );
 
                                                       // driveridloader == true ? drive_id_list = allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].driverIdList! : [];
                                                       // print("Status 1 Status:-- $drive_id_list");
@@ -470,8 +475,14 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                           context: context);
                                                     } else if (appstatus ==
                                                         "2") {
-                                                      driveridloader = true;
-                                                      loadertimer = true;
+                                                      LoadingService
+                                                          .showLoadingDialog(
+                                                        context: context,
+                                                        message:
+                                                            "جاري تحميل بيانات الرحلة...",
+                                                        customAnimation:
+                                                            'assets/lottie/api_loading.json',
+                                                      );
 
                                                       plusetimer =
                                                           allRequestDataApiController
@@ -644,8 +655,14 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                       print(
                                                           "Status 3 Status:--");
 
-                                                      driveridloader = true;
-                                                      loadertimer = true;
+                                                      LoadingService
+                                                          .showLoadingDialog(
+                                                        context: context,
+                                                        message:
+                                                            "جاري تحميل بيانات الرحلة الجارية...",
+                                                        customAnimation:
+                                                            'assets/lottie/loading_.json',
+                                                      );
                                                       otpstatus = true;
 
                                                       // timerstop = allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].runTime!.status.toString();
@@ -809,7 +826,14 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                         "5") {
                                                       print(
                                                           "Status 5 Status:--");
-                                                      loadertimer = true;
+                                                      LoadingService
+                                                          .showLoadingDialog(
+                                                        context: context,
+                                                        message:
+                                                            "جاري تحميل بيانات الرحلة...",
+                                                        customAnimation:
+                                                            'assets/lottie/api_loading.json',
+                                                      );
                                                       timervarable = true;
                                                       vihicalname =
                                                           allRequestDataApiController
@@ -1019,7 +1043,14 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                         "6") {
                                                       print(
                                                           "Status 6 Status:--");
-                                                      loadertimer = true;
+                                                      LoadingService
+                                                          .showLoadingDialog(
+                                                        context: context,
+                                                        message:
+                                                            "جاري تحميل بيانات الرحلة...",
+                                                        customAnimation:
+                                                            'assets/lottie/api_loading.json',
+                                                      );
                                                       timervarable = false;
                                                       vihicalname =
                                                           allRequestDataApiController

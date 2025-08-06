@@ -14,6 +14,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/common_button.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:qareeb/common_code/type_utils.dart';
 import 'dart:ui' as ui;
 import '../api_code/calculate_api_controller.dart';
@@ -182,8 +183,9 @@ class _CustomLocationSelectScreenState
         ),
       ),
       body: lat == null || long == null
-          ? const Center(
-              child: CircularProgressIndicator(),
+          ? modernCircularProgress(
+              size: 50,
+              customAnimation: 'assets/lottie/loading.json',
             )
           : Stack(
               children: [
@@ -377,12 +379,10 @@ class _CustomLocationSelectScreenState
     try {
       // Show loading indicator (store reference for cleanup)
       if (mounted) {
-        showDialog(
+        LoadingService.showLoadingDialog(
           context: context,
-          barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          message: "جاري التحميل...",
+          customAnimation: 'assets/lottie/loading_.json',
         );
       }
 

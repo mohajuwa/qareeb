@@ -20,6 +20,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:qareeb/common_code/socket_service.dart';
 import 'package:qareeb/common_code/toastification.dart';
 import 'package:qareeb/providers/location_state.dart';
@@ -2746,18 +2747,14 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
       body: GetBuilder<HomeApiController>(
         builder: (homeApiController) {
           return homeApiController.isLoading
-              ? Center(
-                  child: CircularProgressIndicator(
-                  color: theamcolore,
-                ))
+              ? modernCircularProgress(
+                  size: 50,
+                  customAnimation: 'assets/lottie/loading.json',
+                )
               : Stack(
                   children: [
-                    // pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty ? lathome == null ? Center(child: CircularProgressIndicator(color: theamcolore,)) :
                     lathome == null
-                        ? Center(
-                            child: CircularProgressIndicator(
-                            color: theamcolore,
-                          ))
+                        ? Center(child: modernCircularProgress())
                         : GoogleMap(
                             onMapCreated:
                                 (GoogleMapController controller) async {
@@ -3986,10 +3983,7 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
                   ],
                 ),
                 homeApiController.isLoading
-                    ? Center(
-                        child: CircularProgressIndicator(
-                        color: theamcolore,
-                      ))
+                    ? Center(child: modernCircularProgress())
                     : InkWell(
                         onTap: () {
                           Navigator.of(context).push(MaterialPageRoute(
@@ -5752,11 +5746,7 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
                           StatefulBuilder(
                             builder: (context, setState) {
                               return cancelloader
-                                  ? Center(
-                                      child: CircularProgressIndicator(
-                                        color: theamcolore,
-                                      ),
-                                    )
+                                  ? Center(child: modernCircularProgress())
                                   : CommonOutLineButton(
                                       bordercolore: theamcolore,
                                       onPressed1: () {

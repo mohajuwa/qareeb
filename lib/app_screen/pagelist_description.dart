@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 
 class Page_List_description extends StatefulWidget {
   final String title;
@@ -51,8 +52,7 @@ class _Page_List_descriptionState extends State<Page_List_description> {
                   return SizedBox(
                     height: MediaQuery.of(context).size.height,
                     width: MediaQuery.of(context).size.width,
-                    child: Center(
-                        child: CircularProgressIndicator(color: theamcolore)),
+                    child: Center(child: modernCircularProgress()),
                   );
                 },
                 widget.description,

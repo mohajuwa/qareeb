@@ -828,12 +828,18 @@ class _PickupDropPointState extends State<PickupDropPoint> {
 
                                                           // Show loading before navigation
 
-                                                          showModernLoading(
+                                                          LoadingService
+                                                              .showLoadingDialog(
                                                             context: context,
                                                             message:
                                                                 "جاري تحضير الخريطة...",
+                                                            customAnimation:
+                                                                'assets/lottie/loading.json',
                                                             dismissible: false,
                                                           );
+
+                                                          LoadingService.hide(
+                                                              context);
 
                                                           // Add small delay to ensure loading shows
 

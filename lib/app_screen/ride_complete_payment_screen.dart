@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:qareeb/common_code/socket_service.dart';
 import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get.dart';
@@ -1030,8 +1031,10 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                         topRight: Radius.circular(15)),
                   ),
                   child: paymentGetApiController.isLoading
-                      ? Center(
-                          child: CircularProgressIndicator(color: theamcolore))
+                      ? modernCircularProgress(
+                          size: 50,
+                          customAnimation: 'assets/lottie/loading.json',
+                        )
                       : Padding(
                           padding: const EdgeInsets.only(
                               left: 10, right: 10, bottom: 10),

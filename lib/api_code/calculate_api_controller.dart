@@ -39,11 +39,13 @@ class CalculateController extends GetxController implements GetxService {
       // Show loading overlay
 
       if (context != null) {
-        showModernLoading(
+        LoadingService.showLoadingDialog(
           context: context,
-          message: "جاري حساب المسافة والأجرة...",
+          message: "جاري التحضير ...",
+          customAnimation: 'assets/lottie/loading.json',
           dismissible: false,
         );
+        LoadingService.hide(context);
       }
 
       // Enhanced coordinate validation
