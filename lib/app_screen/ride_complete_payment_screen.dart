@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:qareeb/common_code/socket_service.dart';
 import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -105,7 +106,9 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
   }
 
   socateempt() {
-    socket.emit('Vehicle_P_Change', {
+    final socketService = SocketService.instance;
+
+    socketService.emit('Vehicle_P_Change', {
       'userid': userid,
       'd_id': driver_id,
       'payment_id': payment,

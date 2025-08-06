@@ -1,10 +1,9 @@
 // lib/common_code/global_variables.dart
-// Create this new file to hold all shared global variables
+// ignore_for_file: prefer_typing_uninitialized_variables
 
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 // ===========================================
 // MAP RELATED GLOBALS
@@ -52,37 +51,19 @@ String amountresponse = "";
 String responsemessage = "";
 
 // ===========================================
-// REQUEST RELATED GLOBALS
-// ===========================================
-String request_id = "";
-
-// ===========================================
-// SOCKET RELATED GLOBALS
-// ===========================================
-bool socketInitialized = false;
-late IO.Socket socket;
-
-// ===========================================
 // APP STATE GLOBALS
 // ===========================================
 bool buttontimer = false;
 bool darkMode = false;
 num priceyourfare = 0;
-bool isControllerDisposed = false;
-bool isanimation = false;
 String mid = "";
 String mroal = "";
 int select1 = 0;
 String globalcurrency = "";
-List vehicle_bidding_driver = [];
-List vehicle_bidding_secounde = [];
 num walleteamount = 0.00;
 
 var lathomecurrent;
 var longhomecurrent;
-AnimationController? controller;
-late Animation<Color?> colorAnimation;
-int durationInSeconds = 0;
 
 // ===========================================
 // REFRESH DATA CLASS

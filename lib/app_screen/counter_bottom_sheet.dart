@@ -10,7 +10,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/socket_service.dart';
+import 'package:qareeb/providers/ride_request_state.dart';
+import 'package:qareeb/providers/timer_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
 
@@ -44,15 +48,16 @@ class CounterBottomSheet extends StatefulWidget {
 class _CounterBottomSheetState extends State<CounterBottomSheet> {
   @override
   void initState() {
-    // TODO: implement initState
-    getdata();
-    socketConnect();
-    // socket.connect();
-    for (int i = 0; i < 4; i++) {
-      percentValue.add(0);
-    }
-    _watchStories();
     super.initState();
+    getdata(); // Keep this for user data
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Initialize progress tracking
+      for (int i = 0; i < 4; i++) {
+        percentValue.add(0);
+      }
+      _watchStories();
+    });
   }
 
   var decodeUid;
@@ -81,47 +86,6 @@ class _CounterBottomSheetState extends State<CounterBottomSheet> {
     print("****CounterBottomSheet*****:--- ($userid)");
     print("****CounterBottomSheet*****:--- ($currencyy)");
   }
-
-  late IO.Socket socket;
-
-  socketConnect() async {
-    setState(() {});
-
-    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
-      'autoConnect': false,
-      'transports': ['websocket'],
-      'extraHeaders': {'Accept': '*/*'},
-      'timeout': 30000,
-      'forceNew': true,
-    });
-
-    socket.connect();
-
-    socket.onConnect((_) {
-      print('Connected');
-
-      socket.emit('message', 'Hello from Flutter');
-    });
-
-    _connectSocket();
-  }
-
-  _connectSocket() async {
-    setState(() {
-      // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
-    });
-
-    socket.onConnect((data) => print('Connection established Connected'));
-    socket.onConnectError((data) => print('Connect Error: $data'));
-    socket.onDisconnect((data) => print('Socket.IO server disconnected'));
-  }
-
-  // socateempt() {
-  //   socket.emit('vehiclerequest',{
-  //     'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
-  //     'driverid' : vihicalCalculateController.vihicalCalculateModel!.driverId,
-  //   });
-  // }
 
   void _watchStories() {
     setState(() {});
@@ -172,7 +136,8 @@ class _CounterBottomSheetState extends State<CounterBottomSheet> {
                 print("*****value data******:--- $value");
                 print("*****value data******:--- ${value["driverid"]}");
 
-                socket.emit('RequestTimeOut', {
+                final socketService = SocketService.instance;
+                socketService.emit('RequestTimeOut', {
                   'requestid': addVihicalCalculateController
                       .addVihicalCalculateModel!.id,
                   'driverid': value["driverid"],
@@ -516,7 +481,9 @@ class _CounterBottomSheetState extends State<CounterBottomSheet> {
                                       print(
                                           "+++ resendrequestApi +++ :- ${value["driver_list"]}");
                                       Get.back();
-                                      socket.emit('vehiclerequest', {
+                                      final socketService =
+                                          SocketService.instance;
+                                      socketService.emit('vehiclerequest', {
                                         'requestid':
                                             addVihicalCalculateController
                                                 .addVihicalCalculateModel!.id,

@@ -9,6 +9,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/socket_service.dart';
+import 'package:qareeb/providers/ride_request_state.dart';
+import 'package:qareeb/providers/timer_state.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:qareeb/app_screen/driver_detail_screen.dart';
 import 'package:qareeb/app_screen/home_screen.dart';
@@ -35,15 +38,13 @@ class _DriverListScreenState extends State<DriverListScreen>
   GlobalDriverAcceptClass globalDriverAcceptClass =
       Get.put(GlobalDriverAcceptClass());
   CalculateController calculateController = Get.put(CalculateController());
-  AnimationController? controller; // ✅ Changed to nullable
+  AnimationController? controller;
 
   List<double> progressList = [];
 
   List<AnimationController> controllers = [];
 
   socketConnect() async {
-    // ✅ Safe to use now. Ensure it's connected.
-
     if (socket?.connected == false) {
       socket?.connect();
     }
@@ -53,27 +54,23 @@ class _DriverListScreenState extends State<DriverListScreen>
   _connectSocket() async {
     print("DATADATADATADATADATADATDATADTADLOADLOAD");
 
-    // Listen for accept confirmation from backend
     socket.on("accept_bidding_success$useridgloable", (data) {
       print("Accept bidding success: $data");
       if (data != null && data["success"] == true) {
-        // Now call the API with the cart ID from socket response
         globalDriverAcceptClass.driverdetailfunction(
           context: context,
           lat: latitudepick,
           long: longitudepick,
           d_id: d_id.toString(),
-          request_id:
-              data["cart_id"]?.toString() ?? "", // Use cart ID from socket
+          request_id: data["cart_id"]?.toString() ?? "",
         );
       }
     });
 
-    // Listen for accept errors
     socket.on("accept_bidding_error$useridgloable", (data) {
       print("Accept bidding error: $data");
       setState(() {
-        buttontimer = true; // Re-enable timer
+        buttontimer = true;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("${data["message"]}")),
@@ -82,21 +79,18 @@ class _DriverListScreenState extends State<DriverListScreen>
   }
 
   acceptsocate() {
-    socket.emit('Accept_Bidding', {
+    final socketService = SocketService.instance;
+    socketService.emit('Accept_Bidding', {
       'uid': useridgloable,
       'd_id': d_id,
-      // 'request_id' : addVihicalCalculateController.addVihicalCalculateModel!.id,
-      'request_id': request_id,
+      'request_id': context.read<RideRequestState>().requestId,
       'price': price,
-      // 'driverid' : [29,14],
     });
   }
 
   int d_id = 0;
 
   num price = 0;
-
-  // Timer code
 
   Timer? countdownTimer;
 
@@ -107,74 +101,28 @@ class _DriverListScreenState extends State<DriverListScreen>
           for (int i = 0; i < vehicle_bidding_secounde.length; i++) {
             if (vehicle_bidding_secounde[i] > 0) {
               vehicle_bidding_secounde[i]--;
-              // print("secounde:- ${vehicle_bidding_secounde}");
-              // print("++++++:----- vfghsv  ${timeout}");
             }
           }
         });
       } else {
-        // Cancel the timer if the widget is not mounted to avoid memory leaks
         countdownTimer?.cancel();
       }
-
-      // if(timeoutsecound == 0){
-      //   print("fffffffffssvdsgdf ${timeoutsecound}");
-      //   Get.back();
-      // }
     });
   }
 
   String formatTime(int seconds) {
-    // Convert seconds to mm:ss format
     int minutes = seconds ~/ 60;
     int remainingSeconds = seconds % 60;
     return '${minutes}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   // print("ghjkbgjkhbfkb  ${timeoutsecound}");
-  //   socketConnect();
-  //   startTimer();
-  //   print("aaaaaaaadfssf (${durationInSeconds})");
-  //
-  //   controller = AnimationController(
-  //     vsync: this,
-  //     duration: Duration(
-  //       seconds: durationInSeconds,
-  //     ),
-  //   );
-  //
-  //   controller.addStatusListener((status) {
-  //     print("Timer finished! ddddddd");
-  //     if (status == AnimationStatus.completed) {
-  //       print("Timer finished! dgdg");
-  //
-  //       // Use post-frame callback to safely access the context
-  //       WidgetsBinding.instance.addPostFrameCallback((_) {
-  //         if (mounted) {
-  //           // Open bottom sheet when animation is completed
-  //           Get.back();
-  //         }
-  //       });
-  //     }
-  //   });
-  //
-  //   controller.forward();
-  //
-  // }
-
   @override
   void initState() {
     super.initState();
 
-    // Initialize controller FIRST
-    controller = AnimationController(
-      vsync: this,
-      duration: Duration(seconds: durationInSeconds),
-    );
-
+    final timerState = context.read<TimerState>();
+    timerState.initializeController(durationInSeconds);
+    timerState.startAnimation();
     socketConnect();
     startTimer();
     print("Initializing with duration ($durationInSeconds)");
@@ -202,10 +150,8 @@ class _DriverListScreenState extends State<DriverListScreen>
     super.dispose();
   }
 
-  // bool acceptloader = false;
-
 //   onWillPop:  () async {
-//   // Navigator.pop(context, RefreshData(true));
+//
 //   Get.offAll(const ModernMapScreen());
 //   return false;
 // },
@@ -215,7 +161,6 @@ class _DriverListScreenState extends State<DriverListScreen>
     notifier = Provider.of<ColorNotifier>(context, listen: true);
     return Scaffold(
       backgroundColor: notifier.driverlistcolore,
-      // backgroundColor: notifier.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(120),
         child: Column(
@@ -234,9 +179,6 @@ class _DriverListScreenState extends State<DriverListScreen>
                   child: SvgPicture.asset("assets/svgpicture/BackIcon.svg"),
                 ),
               ),
-              // iconTheme: IconThemeData(
-              //   color: notifier.textColor,
-              // ),
               backgroundColor: notifier.containercolore,
               centerTitle: true,
               title: Text(
@@ -274,9 +216,7 @@ class _DriverListScreenState extends State<DriverListScreen>
           ],
         ),
       ),
-      body:
-          // acceptloader == true ? Center(child: CircularProgressIndicator(color: theamcolore,),) :
-          Padding(
+      body: Padding(
         padding: const EdgeInsets.all(15),
         child: Column(
           children: [
@@ -374,7 +314,6 @@ class _DriverListScreenState extends State<DriverListScreen>
                                         mainAxisAlignment:
                                             MainAxisAlignment.start,
                                         children: [
-                                          // const Icon(Icons.star,color: Colors.amber,),
                                           SvgPicture.asset(
                                             "assets/svgpicture/star-fill.svg",
                                           ),
@@ -405,8 +344,6 @@ class _DriverListScreenState extends State<DriverListScreen>
                                             fontSize: 18,
                                             color: notifier.textColor),
                                       ),
-                                      // const SizedBox(height: 3,),
-                                      // Text("${vehicle_bidding_driver[index]["tot_min"]}",style: const TextStyle(fontSize: 12),),
                                       const SizedBox(
                                         height: 5,
                                       ),
@@ -434,13 +371,12 @@ class _DriverListScreenState extends State<DriverListScreen>
                                             print("www:-- ${useridgloable}");
                                             print(
                                                 "www:-- ${vehicle_bidding_driver[index]["id"]}");
-                                            // print("www:-- ${addVihicalCalculateController.addVihicalCalculateModel!.id}");
+
                                             socket.emit('Bidding_decline', {
                                               'uid': useridgloable,
                                               'id':
                                                   vehicle_bidding_driver[index]
                                                       ["id"],
-                                              // 'request_id' : addVihicalCalculateController.addVihicalCalculateModel!.id,
                                               'request_id': request_id,
                                             });
                                           },
@@ -482,51 +418,17 @@ class _DriverListScreenState extends State<DriverListScreen>
                                               print(
                                                   "**driver_id**:-- ${driver_id}");
 
-                                              // Only emit socket event, wait for confirmation
                                               acceptsocate();
-
-                                              // DON'T call driverdetailfunction here anymore
-                                              // It will be called in the socket success handler
                                             });
                                           },
                                           context: context,
                                           txt1: "Accept".tr))
                                 ],
                               ),
-                              // const SizedBox(height: 10,),
-                              // Row(
-                              //   children: [
-                              //     Spacer(),
-                              //     Text("${formatTime(vehicle_bidding_secounde[index])}",style: TextStyle(fontSize: 16),),
-                              //   ],
-                              // ),
                             ],
                           ),
                         ),
                       ),
-                      // Padding(
-                      //   padding: const EdgeInsets.only(left: 7,right: 7),
-                      //   child: LinearProgressIndicator(
-                      //     minHeight: 4,
-                      //     backgroundColor: Colors.white,
-                      //     color: Colors.green,
-                      //     value: 1.0 - controller.value,
-                      //     semanticsLabel: 'Linear progress indicator',
-                      //   ),
-                      // ),
-
-                      // Padding(
-                      //   padding: const EdgeInsets.only(left: 7,right: 7),
-                      //   child: LinearProgressIndicator(
-                      //     value: progressList[index],
-                      //     minHeight: 4,
-                      //     backgroundColor: Colors.white,
-                      //     color: Colors.green,
-                      //     // valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                      //     semanticsLabel: 'Linear progress indicator',
-                      //   ),
-                      // ),
-
                       Positioned(
                         right: 0,
                         top: -15,
@@ -548,36 +450,11 @@ class _DriverListScreenState extends State<DriverListScreen>
                           ),
                         ),
                       ),
-                      // Padding(
-                      //   padding: const EdgeInsets.only(left: 7,right: 7),
-                      //   child: LinearProgressIndicator(
-                      //     value: index < progressList.length ? progressList[index] : 0.0,
-                      //     minHeight: 4,
-                      //     backgroundColor: Colors.white,
-                      //     color: Colors.green,
-                      //     semanticsLabel: 'Linear progress indicator',
-                      //   ),
-                      // ),
                     ],
                   );
                 },
               ),
             ),
-
-            // Expanded(
-            //   child: ListView.builder(
-            //     itemCount: 20,
-            //     itemBuilder: (context, index) {
-            //       return Padding(
-            //         padding: const EdgeInsets.all(10),
-            //         child: Container(
-            //           height: 100,
-            //           color: Colors.red,
-            //         ),
-            //       );
-            //     },
-            //   ),
-            // )
           ],
         ),
       ),

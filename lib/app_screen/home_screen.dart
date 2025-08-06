@@ -14,7 +14,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/common_code/global_variables.dart';
 import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:qareeb/common_code/type_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -297,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print("3333/////3333:---  $onlypass");
     print("4444/////4444:---  $_dropOffPoints");
 
-    print("()()()()() :---  ${picktitle == "" ? addresspickup : picktitle}");
+    print("()()()()() :---  ${pickTitle == "" ? addresspickup : pickTitle}");
     print("()()()()() :---  $picksubtitle");
     print("()()()()() :---  $droptitle");
     print("()()()()() :---  $dropsubtitle");
@@ -359,7 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "${picktitle == "" ? "${pickupcontroller.text}" : picktitle}",
+                          "${pickTitle == "" ? "${pickupcontroller.text}" : pickTitle}",
                           maxLines: 1,
                           style: const TextStyle(
                             color: Colors.black,
@@ -1634,7 +1633,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       );
 
                                       print(
-                                          "pickupadd title:- ${picktitle == "" ? addresspickup : picktitle}");
+                                          "pickupadd title:- ${pickTitle == "" ? addresspickup : pickTitle}");
                                       print("pickupadd sub :- $picksubtitle");
                                       print("dropadd title :- $droptitle");
                                       print("dropadd sub :- $dropsubtitle");
@@ -1656,10 +1655,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                       addVihicalCalculateController
                                           .addvihicalcalculateApi(
+                                              context: context, // ✅ Add this line
+
                                               bidd_auto_status: "false",
                                               pickupadd: {
                                                 "title":
-                                                    "${picktitle == "" ? addresspickup : picktitle}",
+                                                    "${pickTitle == "" ? addresspickup : pickTitle}",
                                                 "subt": picksubtitle
                                               },
                                               dropadd: {
@@ -1667,7 +1668,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 "subt": dropsubtitle
                                               },
                                               droplistadd: droptitlelist,
-                                              context: context,
                                               uid: useridgloable.toString(),
                                               tot_km: "$totalkm",
                                               vehicle_id: vehicle_id,

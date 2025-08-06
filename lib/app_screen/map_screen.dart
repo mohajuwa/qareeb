@@ -20,7 +20,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/socket_service.dart';
 import 'package:qareeb/common_code/toastification.dart';
+import 'package:qareeb/providers/location_state.dart';
+import 'package:qareeb/providers/map_state.dart';
+import 'package:qareeb/providers/pricing_state.dart';
+import 'package:qareeb/providers/ride_request_state.dart';
+import 'package:qareeb/providers/timer_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:http/http.dart' as http;
@@ -340,68 +346,12 @@ class _MapScreenState extends State<ModernMapScreen>
   // 🗑️ Clear global state variables
 
   void _clearGlobalState() {
-    // Clear pickup/drop data
-
-    pickupcontroller.clear();
-
-    dropcontroller.clear();
-
-    latitudepick = 0.0;
-
-    longitudepick = 0.0;
-
-    latitudedrop = 0.0;
-
-    longitudedrop = 0.0;
-
-    // Clear titles and lists
-
-    picktitle = "";
-
-    picksubtitle = "";
-
-    droptitle = "";
-
-    dropsubtitle = "";
-
-    droptitlelist.clear();
-
-    textfieldlist.clear();
-
-    destinationlat.clear();
-
-    // Clear markers and map data
-
-    markers.clear();
-
-    markers11.clear();
-
-    polylines11.clear();
-
-    // Clear pricing data
-
-    dropprice = 0.0;
-
-    minimumfare = 0.0;
-
-    maximumfare = 0.0;
-
-    vihicalrice = 0.0;
-
-    // Clear driver data
-
-    vehicle_bidding_driver.clear();
-
-    vehicle_bidding_secounde.clear();
-// COMPLETE socketConnect method:
-
-    // Reset flags
-
-    isanimation = false;
-
-    loadertimer = false;
-
-    driveridloader = false;
+    if (mounted) {
+      context.read<LocationState>().clearLocationData();
+      context.read<PricingState>().clearPricingData();
+      context.read<RideRequestState>().clearRideRequest();
+      context.read<MapState>().clearMapData();
+    }
 
     if (kDebugMode) print("🗑️ Global state cleared");
   }
@@ -548,10 +498,6 @@ class _MapScreenState extends State<ModernMapScreen>
   // 🚀 Initialize app with proper error handling
 
   Future<void> _initializeApp() async {
-    // ✅ STEP 1: Clear the state right at the beginning.
-
-    // This handles the "refresh" or first-time load scenario.
-
     _clearGlobalState();
 
     try {
@@ -563,6 +509,7 @@ class _MapScreenState extends State<ModernMapScreen>
       }
 
       await _initializeLocation();
+      // ✅ CHANGE THIS LINE:
       await _initializeSocket();
       makeInitialAPICalls();
     } catch (e) {
@@ -626,14 +573,12 @@ class _MapScreenState extends State<ModernMapScreen>
     if (_disposed) return;
 
     try {
-      // ✅ Use the new global initializer
+      // ✅ CHANGE THIS LINE:
+      final socketService = SocketService.instance;
+      socketService.initSocket(); // Use your existing method name
 
-      _initializeSocket();
-
-      // Just connect if not already connected
-
-      if (socket?.connected == false) {
-        socket?.connect();
+      if (!socketService.isConnected) {
+        socketService.connect();
       }
 
       await Future.delayed(const Duration(milliseconds: 500));
@@ -1084,24 +1029,28 @@ class _MapScreenState extends State<ModernMapScreen>
     if (_disposed || !mounted) return;
 
     try {
-      if (kDebugMode) print("++++++ Vehicle_Bidding ++++ :---  $data");
-
       if (data != null && data["bidding_list"] != null) {
-        vehicle_bidding_driver = List.from(data["bidding_list"]);
-        vehicle_bidding_secounde = [];
+        // Update through provider instead of direct global assignment
+        context
+            .read<RideRequestState>()
+            .updateVehicleBiddingDriver(List.from(data["bidding_list"]));
 
-        for (int i = 0; i < vehicle_bidding_driver.length; i++) {
-          if (vehicle_bidding_driver[i]["diff_second"] != null) {
-            vehicle_bidding_secounde
-                .add(vehicle_bidding_driver[i]["diff_second"]);
+        List<dynamic> secounds = [];
+        var drivers = context.read<RideRequestState>().vehicleBiddingDriver;
+
+        for (int i = 0; i < drivers.length; i++) {
+          if (drivers[i]["diff_second"] != null) {
+            secounds.add(drivers[i]["diff_second"]);
           }
         }
+
+        context.read<RideRequestState>().updateVehicleBiddingSecounds(secounds);
 
         Get.back();
         Navigator.push(context,
             MaterialPageRoute(builder: (context) => const DriverListScreen()));
 
-        if (vehicle_bidding_driver.isEmpty) {
+        if (drivers.isEmpty) {
           Get.back();
           Buttonpresebottomshhet();
         }
@@ -1392,30 +1341,19 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
   // }
 
   requesttime() {
-    // timeout = false;
-    // timeoutsecound = int.parse(calculateController.calCulateModel!.offerExpireTime.toString());
-
-    // calculateController.calCulateModel!.offerExpireTime = 2;
-    // print("DATA TIME:- ${calculateController.calCulateModel!.offerExpireTime}");
-    durationInSeconds = int.parse(
+    int duration = int.parse(
         calculateController.calCulateModel!.offerExpireTime.toString());
-    print("DURATION IN SECOUNDE : - ${durationInSeconds}");
 
-    controller = AnimationController(
-      vsync: this,
-      duration: Duration(
-        seconds: int.parse(
-          calculateController.calCulateModel!.offerExpireTime.toString(),
-        ),
-      ),
-    );
+    final timerState = context.read<TimerState>();
+    timerState.initializeController(duration);
+    timerState.startAnimation();
 
     colorAnimation = ColorTween(
       begin: Colors.blue,
       end: Colors.green,
     ).animate(controller!);
 
-    print('Animation Duration: ${durationInSeconds} seconds');
+    print("DURATION IN SECONDS: $duration");
 
     controller!.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -2020,13 +1958,12 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
 
                 if (value?["Result"] == true) {
                   amountresponse = "true";
-                  dropprice = safeParseDouble(value["drop_price"]); // ✅ Safe
-
-                  minimumfare = safeParseDouble(
-                      value["vehicle"]["minimum_fare"]); // ✅ Safe
-
-                  maximumfare = safeParseDouble(
-                      value["vehicle"]["maximum_fare"]); // ✅ Safe
+                  final pricingState = context.read<PricingState>();
+                  pricingState
+                      .setDropPrice(safeParseDouble(value["drop_price"]));
+                  pricingState.setFareRange(
+                      safeParseDouble(value["vehicle"]["minimum_fare"]),
+                      safeParseDouble(value["vehicle"]["maximum_fare"]));
                   responsemessage = value["message"];
 
                   tot_hour = value["tot_hour"]?.toString() ?? "0";

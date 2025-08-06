@@ -1,0 +1,69 @@
+import 'package:flutter/foundation.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+
+class MapState extends ChangeNotifier {
+  GoogleMapController? _mapController;
+  Map<MarkerId, Marker> _markers = {};
+  Map<MarkerId, Marker> _markers11 = {};
+  Map<PolylineId, Polyline> _polylines = {};
+  Map<PolylineId, Polyline> _polylines11 = {};
+  List<LatLng> _polylineCoordinates = [];
+  PolylinePoints _polylinePoints = PolylinePoints();
+  PolylinePoints _polylinePoints11 = PolylinePoints();
+
+  // Getters
+  GoogleMapController? get mapController => _mapController;
+  Map<MarkerId, Marker> get markers => _markers;
+  Map<MarkerId, Marker> get markers11 => _markers11;
+  Map<PolylineId, Polyline> get polylines => _polylines;
+  Map<PolylineId, Polyline> get polylines11 => _polylines11;
+  List<LatLng> get polylineCoordinates => _polylineCoordinates;
+  PolylinePoints get polylinePoints => _polylinePoints;
+  PolylinePoints get polylinePoints11 => _polylinePoints11;
+
+  void setMapController(GoogleMapController controller) {
+    _mapController = controller;
+    notifyListeners();
+  }
+
+  void updateMarkers(Map<MarkerId, Marker> newMarkers) {
+    _markers = newMarkers;
+    notifyListeners();
+  }
+
+  void updateMarkers11(Map<MarkerId, Marker> newMarkers) {
+    _markers11 = newMarkers;
+    notifyListeners();
+  }
+
+  void updatePolylines(Map<PolylineId, Polyline> newPolylines) {
+    _polylines = newPolylines;
+    notifyListeners();
+  }
+
+  void updatePolylines11(Map<PolylineId, Polyline> newPolylines) {
+    _polylines11 = newPolylines;
+    notifyListeners();
+  }
+
+  void updatePolylineCoordinates(List<LatLng> coordinates) {
+    _polylineCoordinates = coordinates;
+    notifyListeners();
+  }
+
+  void clearMapData() {
+    _markers.clear();
+    _markers11.clear();
+    _polylines.clear();
+    _polylines11.clear();
+    _polylineCoordinates.clear();
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
+}

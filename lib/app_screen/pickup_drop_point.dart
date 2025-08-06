@@ -14,6 +14,8 @@ import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
 import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:qareeb/common_code/type_utils.dart';
+import 'package:qareeb/providers/dynamic_fields_state.dart';
+import 'package:qareeb/providers/location_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/map_api_get.dart';
 import 'package:qareeb/app_screen/custom_location_select_screen.dart'
@@ -95,13 +97,20 @@ class _PickupDropPointState extends State<PickupDropPoint> {
   }
 
   getCurrentLatAndLong(double latitude, double longitude) async {
-    latitudepick = latitude;
-    longitudepick = longitude;
-
+    if (mounted) {
+      context
+          .read<LocationState>()
+          .setPickupLocation(latitude, longitude, "Current Location", "");
+    }
     await placemarkFromCoordinates(latitude, longitude)
         .then((List<Placemark> placemarks) {
-      addresspickup =
+      String address =
           '${placemarks.first.name}, ${placemarks.first.locality}, ${placemarks.first.country}';
+
+      // Update address in provider too
+      if (mounted) {
+        context.read<LocationState>().setAddressPickup(address);
+      }
     });
   }
 
@@ -492,140 +501,142 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                         ),
                         textfieldlist.isEmpty
                             ? const SizedBox()
-                            : ListView.builder(
-                                physics: const NeverScrollableScrollPhysics(),
-                                padding: EdgeInsets.zero,
-                                shrinkWrap: true,
-                                itemCount: textfieldlist.length,
-                                itemBuilder: (context, index) {
-                                  return Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: ListView.builder(
-                                          padding: EdgeInsets.zero,
-                                          clipBehavior: Clip.none,
-                                          shrinkWrap: true,
-                                          itemCount: 1,
-                                          itemBuilder: (context, index) {
-                                            return Transform.translate(
-                                              offset: const Offset(-5, -15),
-                                              child: Column(
-                                                children: [
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
-                                                  Container(
-                                                    height: 10,
-                                                    width: 3,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
+                            : Consumer<DynamicFieldsState>(
+                                builder: (context, dynamicFields, child) {
+                                return ListView.builder(
+                                  itemCount: dynamicFields.textFieldList.length,
+                                  itemBuilder: (context, index) {
+                                    return Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 1,
+                                          child: ListView.builder(
+                                            padding: EdgeInsets.zero,
+                                            clipBehavior: Clip.none,
+                                            shrinkWrap: true,
+                                            itemCount: 1,
+                                            itemBuilder: (context, index) {
+                                              return Transform.translate(
+                                                offset: const Offset(-5, -15),
+                                                child: Column(
+                                                  children: [
+                                                    const SizedBox(
+                                                      height: 4,
                                                     ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
-                                                  Container(
-                                                    height: 10,
-                                                    width: 3,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
-                                                  Container(
-                                                    height: 15,
-                                                    width: 15,
-                                                    decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        shape: BoxShape.circle,
-                                                        border: Border.all(
-                                                            color: Colors.red,
-                                                            width: 4)),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
-                                                  Container(
-                                                    height: 10,
-                                                    width: 3,
-                                                    decoration: BoxDecoration(
+                                                    Container(
+                                                      height: 10,
+                                                      width: 3,
+                                                      decoration: BoxDecoration(
                                                         color: Colors.grey
                                                             .withOpacity(0.4),
                                                         borderRadius:
                                                             BorderRadius
-                                                                .circular(10)),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 8,
-                                        child: Transform.translate(
-                                          offset: const Offset(0, -7),
-                                          child: textfieldlist[index],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            selectedIndex = index;
-                                          });
-
-                                          setState(() {
-                                            textfieldlist.removeAt(index);
-                                            destinationlat.removeAt(index);
-                                            onlypass.removeAt(index);
-                                            droptitlelist.removeAt(index);
-
-                                            print(
-                                                ">>>>>>>>>>>>>>>>textfieldlist<<<<<<<<<<<<<<<< ${textfieldlist}");
-                                            print(
-                                                ">>>>>>>>>>>>>>>>onlypass<<<<<<<<<<<<<<<< ${onlypass}");
-                                            print(
-                                                ">>>>>>>>>>>>>>>>destinationlat<<<<<<<<<<<<<<<< ${destinationlat}");
-                                            print(
-                                                ">>>>>>>>>>>>>>>>droptitlelist<<<<<<<<<<<<<<<< ${droptitlelist}");
-                                          });
-                                        },
-                                        child: Transform.translate(
-                                          offset: const Offset(0, -9),
-                                          child: Container(
-                                              height: 25,
-                                              width: 25,
-                                              decoration: BoxDecoration(
-                                                  color: Colors.grey
-                                                      .withOpacity(0.2),
-                                                  shape: BoxShape.circle),
-                                              child: Padding(
-                                                padding: EdgeInsets.all(4.0),
-                                                child: Image(
-                                                  image: AssetImage(
-                                                      "assets/close.png"),
-                                                  height: 15,
-                                                  color: notifier.textColor,
+                                                                .circular(10),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(
+                                                      height: 4,
+                                                    ),
+                                                    Container(
+                                                      height: 10,
+                                                      width: 3,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey
+                                                            .withOpacity(0.4),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(
+                                                      height: 4,
+                                                    ),
+                                                    Container(
+                                                      height: 15,
+                                                      width: 15,
+                                                      decoration: BoxDecoration(
+                                                          color: Colors.white,
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          border: Border.all(
+                                                              color: Colors.red,
+                                                              width: 4)),
+                                                    ),
+                                                    const SizedBox(
+                                                      height: 4,
+                                                    ),
+                                                    Container(
+                                                      height: 10,
+                                                      width: 3,
+                                                      decoration: BoxDecoration(
+                                                          color: Colors.grey
+                                                              .withOpacity(0.4),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      10)),
+                                                    ),
+                                                  ],
                                                 ),
-                                              )),
+                                              );
+                                            },
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
+                                        Expanded(
+                                          flex: 8,
+                                          child: Transform.translate(
+                                            offset: const Offset(0, -7),
+                                            child: textfieldlist[index],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              selectedIndex = index;
+                                            });
+
+                                            setState(() {
+                                              textfieldlist.removeAt(index);
+                                              destinationlat.removeAt(index);
+                                              onlypass.removeAt(index);
+                                              droptitlelist.removeAt(index);
+
+                                              print(
+                                                  ">>>>>>>>>>>>>>>>textfieldlist<<<<<<<<<<<<<<<< ${textfieldlist}");
+                                              print(
+                                                  ">>>>>>>>>>>>>>>>onlypass<<<<<<<<<<<<<<<< ${onlypass}");
+                                              print(
+                                                  ">>>>>>>>>>>>>>>>destinationlat<<<<<<<<<<<<<<<< ${destinationlat}");
+                                              print(
+                                                  ">>>>>>>>>>>>>>>>droptitlelist<<<<<<<<<<<<<<<< ${droptitlelist}");
+                                            });
+                                          },
+                                          child: Transform.translate(
+                                            offset: const Offset(0, -9),
+                                            child: Container(
+                                                height: 25,
+                                                width: 25,
+                                                decoration: BoxDecoration(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.2),
+                                                    shape: BoxShape.circle),
+                                                child: Padding(
+                                                  padding: EdgeInsets.all(4.0),
+                                                  child: Image(
+                                                    image: AssetImage(
+                                                        "assets/close.png"),
+                                                    height: 15,
+                                                    color: notifier.textColor,
+                                                  ),
+                                                )),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              }),
                         const SizedBox(height: 20),
                         Row(
                           children: [
@@ -675,8 +686,10 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                 ? const SizedBox()
                                 : InkWell(
                                     onTap: () {
+                                      context
+                                          .read<DynamicFieldsState>()
+                                          .addTextField();
                                       setState(() {
-                                        textfieldlist.add(DynamicWidget());
                                         uthertextfilde = true;
                                       });
                                     },
