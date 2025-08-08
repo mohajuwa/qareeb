@@ -1,7 +1,4 @@
-// ignore_for_file: avoid_print, unnecessary_cast
-// ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
-// ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
-// ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
+// CORRECTED IMPORTS - REPLACE THE IMPORT SECTION IN YOUR map_screen.dart
 
 import 'dart:async';
 import 'dart:convert';
@@ -20,40 +17,26 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/api_code/calculate_api_controller.dart';
+import 'package:qareeb/api_code/global_driver_access_api_controller.dart';
+import 'package:qareeb/app_screen/driver_detail_screen.dart';
+import 'package:qareeb/common_code/common_flow_screen.dart';
 import 'package:qareeb/common_code/modern_loading_widget.dart';
-import 'package:qareeb/common_code/socket_service.dart';
 import 'package:qareeb/common_code/toastification.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// ✅ PROVIDER IMPORTS - ADDED
 import 'package:qareeb/providers/location_state.dart';
 import 'package:qareeb/providers/map_state.dart';
 import 'package:qareeb/providers/pricing_state.dart';
 import 'package:qareeb/providers/ride_request_state.dart';
+import 'package:qareeb/providers/socket_service.dart';
 import 'package:qareeb/providers/timer_state.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:http/http.dart' as http;
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:lottie/lottie.dart' as lottie;
-import 'package:provider/provider.dart';
-import 'package:qareeb/common_code/global_variables.dart';
-import 'package:qareeb/common_code/type_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:socket_io_client/socket_io_client.dart';
-import 'package:qareeb/api_code/coupon_payment_api_contoller.dart';
-import 'package:qareeb/api_code/home_controller.dart';
-import 'package:qareeb/app_screen/home_screen.dart';
-import 'package:qareeb/app_screen/pagelist_description.dart';
-import 'package:qareeb/app_screen/pickup_drop_point.dart';
-import 'package:qareeb/app_screen/profile_screen.dart';
-import 'package:qareeb/app_screen/refer_and_earn.dart';
-import 'package:qareeb/app_screen/top_up_screen.dart';
-import 'dart:ui' as ui;
-import 'package:qareeb/common_code/colore_screen.dart';
-import 'package:qareeb/common_code/common_button.dart';
-import 'package:qareeb/common_code/common_flow_screen.dart';
-import 'package:qareeb/common_code/config.dart';
+
 import '../api_code/add_vehical_api_controller.dart';
-import '../api_code/calculate_api_controller.dart' hide ToastService;
-import '../api_code/delete_api_controller.dart';
+import '../api_code/coupon_payment_api_contoller.dart';
+// REMOVED: import '../api_code/global_driver_accept_class_controller.dart';
+import '../api_code/home_controller.dart'; // FIXED: Changed from home_api_controller.dart
 import '../api_code/home_map_api_controller.dart';
 import '../api_code/home_wallet_api_controller.dart';
 import '../api_code/login_controller.dart';
@@ -66,16 +49,22 @@ import '../api_code/vihical_calculate_api_controller.dart';
 import '../api_code/vihical_information.dart';
 import '../auth_screen/onbording_screen.dart';
 import 'package:http/http.dart' as http;
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 
+import '../common_code/colore_screen.dart';
+import '../common_code/common_button.dart';
+import '../common_code/config.dart';
+import '../common_code/global_variables.dart';
 import '../common_code/push_notification.dart';
 import 'counter_bottom_sheet.dart';
 import 'driver_list_screen.dart';
 import 'driver_startride_screen.dart';
 import 'faq_screen.dart';
+import 'home_screen.dart';
 import 'language_screen.dart';
 import 'my_ride_screen.dart';
 import 'notification_screen.dart';
+import 'pickup_drop_point.dart';
+import 'profile_screen.dart';
 
 class ModernMapScreen extends StatefulWidget {
   final bool selectVehicle;
@@ -87,6 +76,10 @@ class ModernMapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<ModernMapScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
+  // ✅ SCAFFOLD KEY FOR DRAWER
+  final GlobalKey<ScaffoldState> _key = GlobalKey<ScaffoldState>();
+
+  // Local state variables (non-provider managed)
   final List<LatLng> vihicallocations = [];
   final List<String> _iconPaths = [];
   final List<String> _iconPathsbiddingon = [];
@@ -95,53 +88,18 @@ class _MapScreenState extends State<ModernMapScreen>
   List<bool> couponadd = [];
 
   // Socket management variables
-
   bool socketInitialized = false;
-
   bool _disposed = false;
-
   Timer? _socketReconnectTimer;
-
   Timer? _requestTimer;
-
   StreamSubscription? _appStateSubscription;
 
+  // UI state
   String themeForMap = "";
-
-  mapThemeStyle({required context}) {
-    if (darkMode == true) {
-      setState(() {
-        DefaultAssetBundle.of(context)
-            .loadString("assets/map_styles/dark_style.json")
-            .then(
-          (value) {
-            setState(() {
-              themeForMap = value;
-            });
-          },
-        );
-      });
-    } else {
-      setState(() {
-        DefaultAssetBundle.of(context)
-            .loadString("assets/map_styles/light_style.json")
-            .then(
-          (value) {
-            setState(() {
-              themeForMap = value;
-            });
-          },
-        );
-      });
-    }
-  }
-
   bool isLoad = false;
-
   bool light = false;
   String biddautostatus = "false";
   bool switchValue = false;
-  // int pricecounr = 0;
   int toast = 0;
   int payment = 0;
   String paymentname = "";
@@ -152,1943 +110,792 @@ class _MapScreenState extends State<ModernMapScreen>
   String couponname = "";
   String mainamount = "";
 
+  // Location variables (still global for compatibility)
   var lathome;
   var longhome;
   var addresshome;
   var decodeUid;
   var userid;
+  var username;
   var currencyy;
-  String username = "";
 
-  final DraggableScrollableController sheetController =
-      DraggableScrollableController();
-  ResendRequestApiController resendRequestApiController =
-      Get.put(ResendRequestApiController());
-  RemoveRequest removeRequest = Get.put(RemoveRequest());
-  TimeoutRequestApiController timeoutRequestApiController =
-      Get.put(TimeoutRequestApiController());
+  // ✅ DRAWER MENU ITEMS
+  List<String> drowertitle = [
+    "My Ride",
+    "Wallet",
+    "Notifications",
+    "Language",
+    "FAQ",
+    "Settings",
+    "Logout"
+  ];
 
+  List<String> drowerimage = [
+    "assets/drower/car.png",
+    "assets/drower/wallet.png",
+    "assets/drower/notification.png",
+    "assets/drower/language.png",
+    "assets/drower/faq.png",
+    "assets/drower/setting.png",
+    "assets/drower/logout.png"
+  ];
+
+  // Controllers and focus nodes
+  late AnimationController controller;
+  final FocusNode _focusNode = FocusNode();
+  final TextEditingController amountcontroller = TextEditingController();
+
+  // API Controllers
   HomeApiController homeApiController = Get.put(HomeApiController());
-  DeleteAccount deleteAccount = Get.put(DeleteAccount());
-  PaymentGetApiController paymentGetApiController =
-      Get.put(PaymentGetApiController());
   HomeMapController homeMapController = Get.put(HomeMapController());
-  CalculateController calculateController = Get.put(CalculateController());
-  Modual_CalculateController modual_calculateController =
-      Get.put(Modual_CalculateController());
-  HomeWalletApiController homeWalletApiController =
-      Get.put(HomeWalletApiController());
   AddVihicalCalculateController addVihicalCalculateController =
       Get.put(AddVihicalCalculateController());
-  VihicalInformationApiController vihicalInformationApiController =
-      Get.put(VihicalInformationApiController());
-  VihicalCalculateController vihicalCalculateController =
-      Get.put(VihicalCalculateController());
+  CalculateController calculateController = Get.put(CalculateController());
   GlobalDriverAcceptClass globalDriverAcceptClass =
       Get.put(GlobalDriverAcceptClass());
-  TextEditingController amountcontroller = TextEditingController();
-  // CRITICAL: Lifecycle management
+  RemoveRequest removeRequest = Get.put(RemoveRequest());
+  HomeWalletApiController homeWalletApiController =
+      Get.put(HomeWalletApiController());
+  PagelistApiController pagelistApiController =
+      Get.put(PagelistApiController()); // FIXED
+
+  // Color notifier
+  ColorNotifier notifier = ColorNotifier();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeApp(); // This will now handle the initial reset
+
+    controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _initializeApp();
+    mapThemeStyle(context: context);
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-
-    switch (state) {
-      case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
-        if (kDebugMode) print("🔄 App paused - disconnecting socket");
-        _cleanupSocket();
-        break;
-
-      case AppLifecycleState.resumed:
-        if (kDebugMode)
-          print("🔄 App resumed - reconnecting socket and clearing state");
-
-        // ✅ STEP 2: Clear the state when the user returns to the app.
-        _clearGlobalState();
-
-        // We also need to re-initialize the data after clearing it.
-        // Calling _initializeApp will handle this perfectly.
-        _initializeApp();
-
-        // The original socket reconnect logic is now handled inside _initializeApp
-        // if (!_disposed) {
-        //   _delayedSocketReconnect();
-        // }
-        break;
-
-      case AppLifecycleState.detached:
-        if (kDebugMode) print("🔄 App detached - full cleanup");
-        _fullCleanup();
-        break;
-      default:
-        break;
-    }
-  }
-  // 🚨 CRITICAL: Complete disposal to prevent memory leaks
-
-  @override
-  void dispose() {
-    if (kDebugMode) print("🧹 Starting map screen disposal");
-    _disposed = true;
-
-    // Remove lifecycle observer
-
-    WidgetsBinding.instance.removeObserver(this);
-
-    // Cancel all timers
-
-    _requestTimer?.cancel();
-    _socketReconnectTimer?.cancel();
-
-    // ✅ CORRECT LIFECYCLE MANAGEMENT:
-
-    // Dispose of all controllers here to prevent memory leaks.
-
-    controller?.dispose();
-    pickupcontroller.dispose();
-    dropcontroller.dispose();
-    amountcontroller.dispose();
-    _focusNode.dispose();
-
-    // Cancel subscription
-
-    _appStateSubscription?.cancel();
-
-    // Clean up socket completely
-
-    _fullCleanup();
-
-    // ❌ REMOVED: Do NOT clear global state here.
-
-    // This was causing the reset during normal navigation.
-
-    // _clearGlobalState();
-
-    super.dispose();
-    if (kDebugMode) print("✅ Map screen disposal complete");
-  }
-// 🧹 Complete socket cleanup - MODIFIED
-
-  void _fullCleanup() {
-    try {
-      // ❌ DO NOT dispose or nullify the global socket here.
-
-      // We only want to disconnect it when the app is paused or this screen is disposed.
-
-      if (socket?.connected == true) {
-        if (kDebugMode)
-          print("🔌 Disconnecting socket, but keeping instance alive.");
-        socket?.disconnect();
-      }
-    } catch (e) {
-      if (kDebugMode) print("⚠️ Error during socket cleanup: $e");
-    }
-    // ❌ REMOVED:
-
-    // finally {
-
-    //   socket = null;
-
-    //   socketInitialized = false;
-
-    // }
-  }
-
-// 🧹 Soft socket cleanup (for app lifecycle changes)
-
-  void _cleanupSocket() {
-    try {
-      if (socket?.connected == true) {
-        socket?.disconnect();
-        if (kDebugMode) print("🔌 Socket disconnected on app pause");
-      }
-    } catch (e) {
-      if (kDebugMode) print("⚠️ Error during socket disconnect: $e");
-    }
-  }
-  // 🔄 Delayed socket reconnection
-
-  void _delayedSocketReconnect() {
-    _socketReconnectTimer?.cancel();
-
-    _socketReconnectTimer = Timer(const Duration(seconds: 2), () {
-      if (!_disposed && mounted) {
-        _reconnectSocket();
-      }
-    });
-  }
-
-  // 🔄 Socket reconnection logic
-
-  void _reconnectSocket() {
-    if (_disposed || !mounted) return;
-
-    try {
-      if (socket?.connected != true) {
-        socket?.connect();
-
-        if (kDebugMode) print("🔄 Socket reconnected");
-      }
-    } catch (e) {
-      if (kDebugMode) print("⚠️ Socket reconnection failed: $e");
-    }
-  }
-
-  // 🗑️ Clear global state variables
-
-  void _clearGlobalState() {
-    if (mounted) {
-      context.read<LocationState>().clearLocationData();
-      context.read<PricingState>().clearPricingData();
-      context.read<RideRequestState>().clearRideRequest();
-      context.read<MapState>().clearMapData();
-    }
-
-    if (kDebugMode) print("🗑️ Global state cleared");
-  }
-
-  socketConnect() async {
-    try {
-      SharedPreferences preferences = await SharedPreferences.getInstance();
-      var uid = preferences.getString("userLogin");
-      var currency = preferences.getString("currenci");
-
-      // Check if data exists before using null check operator
-      if (uid == null) {
-        if (kDebugMode) {
-          print("Error: User login data not found in SharedPreferences");
-          print("uid: $uid");
-        }
-        Get.offAll(() => const OnboardingScreen());
-        return;
-      }
-
-      // Currency can be null, we'll handle it gracefully
-      if (currency == null) {
-        if (kDebugMode) {
-          print("Warning: Currency data not found, using default");
-        }
-        // Set a default currency or empty object
-        currencyy = {};
-      }
-
-      // Now safe to decode JSON
-      try {
-        decodeUid = jsonDecode(uid);
-        if (currency != null) {
-          currencyy = jsonDecode(currency);
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print("Error decoding JSON: $e");
-          print("uid content: $uid");
-          print("currency content: $currency");
-        }
-        // Don't redirect to login for currency decode errors, only for uid errors
-        if (uid.isEmpty) {
-          await preferences.remove("userLogin");
-          await preferences.remove("currenci");
-          Get.offAll(() => const OnboardingScreen());
-          return;
-        }
-        // If only currency failed, continue with empty currency
-        currencyy = {};
-      }
-
-      // Check if decoded data has required fields
-      if (decodeUid == null || decodeUid['id'] == null) {
-        if (kDebugMode) {
-          print("Error: Decoded user data is invalid");
-          print("decodeUid: $decodeUid");
-        }
-        await preferences.remove("userLogin");
-        Get.offAll(() => const OnboardingScreen());
-        return;
-      }
-
-      userid = decodeUid['id'];
-      username = decodeUid["name"] ?? "";
-      useridgloable = decodeUid['id'];
-
-      if (kDebugMode) {
-        print("++++:---  $userid");
-        print("++ currencyy ++:---  $currencyy");
-        print("++ username ++:---  $username");
-      }
-
-      setState(() {});
-
-      // INITIALIZE SOCKET HERE FIRST - This is critical!
-      socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
-        'autoConnect': false,
-        'transports': ['websocket'],
-        'extraHeaders': {'Accept': '*/*'},
-        'timeout': 30000,
-        'forceNew': true,
-      });
-
-      // Mark socket as initialized IMMEDIATELY after creation
-      socketInitialized = true;
-
-      // Set up basic socket events
-      socket!.onConnect((_) {
-        if (kDebugMode) {
-          print('Socket Connected successfully');
-        }
-        socket!.emit('message', 'Hello from Flutter');
-      });
-
-      socket!.onDisconnect((_) {
-        if (kDebugMode) {
-          print('Socket Disconnected');
-        }
-      });
-
-      socket!.onConnectError((error) {
-        if (kDebugMode) {
-          print('Socket Connection Error: $error');
-        }
-      });
-
-      // Connect the socket
-      socket!.connect();
-
-      // Wait a moment for socket to initialize properly, then call _connectSocket
-      await Future.delayed(Duration(milliseconds: 200));
-
-      // Now it's safe to call _connectSocket
-      _connectSocket();
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error in socketConnect: $e");
-      }
-
-      // Only redirect to login if it's a critical error
-      // Don't redirect for minor issues like socket connection problems
-      if (e.toString().contains('userLogin') || userid == null) {
-        try {
-          SharedPreferences preferences = await SharedPreferences.getInstance();
-          await preferences.remove("userLogin");
-          await preferences.remove("currenci");
-        } catch (prefError) {
-          if (kDebugMode) {
-            print("Error clearing preferences: $prefError");
-          }
-        }
-        Get.offAll(() => const OnboardingScreen());
-      } else {
-        // For socket connection errors, just log and continue
-        if (kDebugMode) {
-          print(
-              "Socket connection failed, but user is logged in. Continuing...");
-        }
-      }
-    }
-  }
-
-  // 🚀 Initialize app with proper error handling
-
-  Future<void> _initializeApp() async {
-    _clearGlobalState();
-
-    try {
-      await _loadUserData();
-
-      if (useridgloable == null) {
-        Get.offAll(() => const OnboardingScreen());
-        return;
-      }
-
-      await _initializeLocation();
-      // ✅ CHANGE THIS LINE:
-      await _initializeSocket();
-      makeInitialAPICalls();
-    } catch (e) {
-      if (kDebugMode) print("❌ App initialization error: $e");
-      if (e.toString().contains('userLogin')) {
-        Get.offAll(() => const OnboardingScreen());
-      }
-    }
-  }
-  // 📱 Load user data safely
-
-  Future<void> _loadUserData() async {
-    try {
-      SharedPreferences preferences = await SharedPreferences.getInstance();
-
-      var uid = preferences.getString("userLogin");
-
-      var currencyy = preferences.getString("currenci");
-
-      if (uid == null) throw Exception("No user data");
-
-      decodeUid = jsonDecode(uid);
-
-      if (currencyy != null) {
-        currencyy = jsonDecode(currencyy);
-      } else {
-        currencyy = {} as String?;
-      }
-
-      useridgloable = decodeUid['id'];
-
-      username = decodeUid["name"] ?? "";
-
-      useridgloable = decodeUid['id'];
-
-      if (kDebugMode) print("✅ User data loaded: $useridgloable");
-    } catch (e) {
-      if (kDebugMode) print("❌ User data loading failed: $e");
-
-      rethrow;
-    }
-  }
-
-  // 🗺️ Initialize location
-
-  Future<void> _initializeLocation() async {
-    try {
-      await fun();
-
-      if (mounted) setState(() {});
-
-      getCurrentLatAndLong(lathome, longhome);
-    } catch (e) {
-      if (kDebugMode) print("❌ Location initialization failed: $e");
-    }
-  }
-
-  // 🔌 Initialize socket with proper error handling
-
-  Future<void> _initializeSocket() async {
-    if (_disposed) return;
-
-    try {
-      // ✅ CHANGE THIS LINE:
-      final socketService = SocketService.instance;
-      socketService.initSocket(); // Use your existing method name
-
-      if (!socketService.isConnected) {
-        socketService.connect();
-      }
-
-      await Future.delayed(const Duration(milliseconds: 500));
-      _connectSocket();
-      if (kDebugMode) print("✅ Socket connected from MapScreen");
-    } catch (e) {
-      if (kDebugMode) print("❌ Socket initialization failed: $e");
-    }
-  }
-  // 👂 Setup socket event listeners
-
-  void _setupSocketListeners() {
-    if (socket == null) return;
-
-    socket!.onConnect((_) {
-      if (kDebugMode) print('🔌 Socket connected');
-
-      socket!.emit('message', 'Hello from Flutter');
-    });
-
-    socket!.onDisconnect((_) {
-      if (kDebugMode) print('🔌 Socket disconnected');
-    });
-
-    socket!.onConnectError((error) {
-      if (kDebugMode) print('❌ Socket connection error: $error');
-    });
-  }
-
-  // 🔄 Socket connection logic
-
-  void _connectSocket() {
-    if (!socketInitialized || socket == null || _disposed) return;
-
-    try {
-      // Wallet API
-
-      homeWalletApiController
-          .homwwalleteApi(uid: useridgloable.toString(), context: context)
-          .then(_handleWalletResponse)
-          .catchError(_handleError);
-
-      // Home API
-
-      homeApiController
-          .homeApi(
-              uid: useridgloable.toString(),
-              lat: lathome.toString(),
-              lon: longhome.toString())
-          .then(_handleHomeResponse)
-          .catchError(_handleError);
-
-      // Setup socket event listeners for real-time updates
-
-      _setupRealTimeListeners();
-    } catch (e) {
-      if (kDebugMode) print("❌ Socket connection error: $e");
-    }
-  }
-
-  // 👂 Setup real-time listeners
-
-  void _setupRealTimeListeners() {
-    if (socket == null || _disposed) return;
-
-    // Driver location updates
-
-    socket!.on("Driver_location_On", _handleDriverLocationOn);
-
-    socket!.on("Drive_location_Off", _handleDriverLocationOff);
-
-    socket!.on("Driver_location_Update", _handleDriverLocationUpdate);
-
-    // Bidding updates
-
-    socket!.on("Vehicle_Bidding$useridgloable", _handleVehicleBidding);
-
-    // Request acceptance
-
-    socket!.on('acceptvehrequest$useridgloable', _handleRequestAccepted);
-  }
-
-  // 📊 Handle wallet response
-
-  void _handleWalletResponse(dynamic value) {
-    try {
-      if (value != null && value["wallet_amount"] != null) {
-        walleteamount = double.parse(value["wallet_amount"].toString());
-
-        if (kDebugMode) print("💰 Wallet amount: $walleteamount");
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Wallet response error: $e");
-    }
-  }
-
-  // 🏠 Handle home response
-
-  void _handleHomeResponse(dynamic value) {
-    try {
-      if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
-        mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
-
-        mroal =
-            homeApiController.homeapimodel!.categoryList![0].role.toString();
-
-        // Load map data based on current state
-
-        _loadMapData();
-
-        // Handle running rides
-
-        _handleRunningRides();
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Home response error: $e");
-    }
-  }
-
-  // 🗺️ Load map data
-
-  void _loadMapData() {
-    if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
-      _loadNormalVehicles();
-    } else {
-      _loadBiddingVehicles();
-    }
-  }
-
-  // 🚗 Load normal vehicles
-
-  void _loadNormalVehicles() {
-    homeMapController
-        .homemapApi(mid: mid, lat: lathome.toString(), lon: longhome.toString())
-        .then(_handleNormalVehiclesResponse)
-        .catchError(_handleError);
-  }
-
-  // 🚗 Load bidding vehicles
-
-  void _loadBiddingVehicles() {
-    homeMapController
-        .homemapApi(mid: mid, lat: lathome.toString(), lon: longhome.toString())
-        .then(_handleBiddingVehiclesResponse)
-        .catchError(_handleError);
-  }
-
-  // Handle responses for normal vehicles
-
-  void _handleNormalVehiclesResponse(dynamic value) {
-    if (!mounted || _disposed) return;
-
-    try {
-      if (value?["Result"] == false) {
-        setState(() {
-          vihicallocations.clear();
-
-          markers.clear();
-
-          _addMarkers();
-        });
-      } else {
-        setState(() {
-          vihicallocations.clear();
-
-          _iconPaths.clear();
-
-          if (homeMapController.homeMapApiModel?.list != null) {
-            for (int i = 0;
-                i < homeMapController.homeMapApiModel!.list!.length;
-                i++) {
-              try {
-                double lat = double.parse(homeMapController
-                    .homeMapApiModel!.list![i].latitude
-                    .toString());
-
-                double lng = double.parse(homeMapController
-                    .homeMapApiModel!.list![i].longitude
-                    .toString());
-
-                vihicallocations.add(LatLng(lat, lng));
-
-                _iconPaths.add(
-                    "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-              } catch (e) {
-                if (kDebugMode) print("❌ Vehicle parsing error: $e");
-              }
-            }
-
-            _addMarkers();
-          }
-        });
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Normal vehicles response error: $e");
-    }
-  }
-
-  // Handle responses for bidding vehicles
-
-  void _handleBiddingVehiclesResponse(dynamic value) {
-    if (!mounted || _disposed) return;
-
-    try {
-      if (value?["Result"] == false) {
-        setState(() {
-          vihicallocationsbiddingon.clear();
-
-          markers.clear();
-
-          _addMarkers2();
-        });
-      } else {
-        setState(() {
-          vihicallocationsbiddingon.clear();
-
-          _iconPathsbiddingon.clear();
-
-          if (homeMapController.homeMapApiModel?.list != null) {
-            for (int i = 0;
-                i < homeMapController.homeMapApiModel!.list!.length;
-                i++) {
-              try {
-                double lat = double.parse(homeMapController
-                    .homeMapApiModel!.list![i].latitude
-                    .toString());
-
-                double lng = double.parse(homeMapController
-                    .homeMapApiModel!.list![i].longitude
-                    .toString());
-
-                vihicallocationsbiddingon.add(LatLng(lat, lng));
-
-                _iconPathsbiddingon.add(
-                    "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-              } catch (e) {
-                if (kDebugMode) print("❌ Bidding vehicle parsing error: $e");
-              }
-            }
-
-            _addMarkers2();
-          }
-        });
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Bidding vehicles response error: $e");
-    }
-  }
-
-// 🚙 Handle running rides - FIXED VERSION
-  void _handleRunningRides() {
-    if (!mounted || _disposed) return;
-
-    try {
-      if (homeApiController.homeapimodel?.runnigRide?.isEmpty != false) {
-        // No running rides
-        if (kDebugMode) print("No running rides found");
-      } else if (homeApiController.homeapimodel!.runnigRide!.isNotEmpty) {
-        // Handle existing running ride
-        var runningRide = homeApiController.homeapimodel!.runnigRide![0];
-
-        pickupcontroller.text = runningRide.pickAdd?.title?.toString() ?? "";
-        dropcontroller.text = runningRide.dropAdd?.title?.toString() ?? "";
-
-        // ✅ FIXED: Safe coordinate parsing
-        if (runningRide.pickLatlon?.latitude != null) {
-          latitudepick =
-              (runningRide.pickLatlon?.latitude as num?)?.toDouble() ?? 0.0;
-        }
-        if (runningRide.pickLatlon?.longitude != null) {
-          longitudepick =
-              (runningRide.pickLatlon?.longitude as num?)?.toDouble() ?? 0.0;
-        }
-        if (runningRide.dropLatlon?.latitude != null) {
-          latitudedrop =
-              (runningRide.dropLatlon?.latitude as num?)?.toDouble() ?? 0.0;
-        }
-        if (runningRide.dropLatlon?.longitude != null) {
-          longitudedrop =
-              (runningRide.dropLatlon?.longitude as num?)?.toDouble() ?? 0.0;
-        }
-
-        // ✅ FIXED: Safe fare parsing - avoid converting to string then casting to double
-        maximumfare =
-            double.tryParse(runningRide.maximumFare?.toString() ?? "0") ?? 0.0;
-        minimumfare =
-            double.tryParse(runningRide.minimumFare?.toString() ?? "0") ?? 0.0;
-        dropprice = (runningRide.price as num?)?.toDouble() ?? 0.0;
-        priceyourfare = (runningRide.price as num?)?.toDouble() ?? 0.0;
-
-        request_id = runningRide.id?.toString() ?? "";
-
-        picktitle = runningRide.pickAdd?.title?.toString() ?? "";
-        picksubtitle = runningRide.pickAdd?.subtitle?.toString() ?? "";
-        droptitle = runningRide.dropAdd?.title?.toString() ?? "";
-        dropsubtitle = runningRide.dropAdd?.subtitle?.toString() ?? "";
-
-        tot_hour = runningRide.totHour?.toString() ?? "0";
-        tot_time = runningRide.totMinute?.toString() ?? "0";
-        tot_secound = "0";
-
-        // Calculate API call for running ride
-        calculateController
-            .calculateApi(
-                context: context,
-                uid: useridgloable.toString(),
-                mid: mid,
-                mrole: mroal,
-                pickup_lat_lon: "$latitudepick,$longitudepick",
-                drop_lat_lon: "$latitudedrop,$longitudedrop",
-                drop_lat_lon_list: onlypass)
+  // Theme setup
+  mapThemeStyle({required context}) {
+    if (darkMode == true) {
+      setState(() {
+        DefaultAssetBundle.of(context)
+            .loadString("assets/map_styles/dark_style.json")
             .then((value) {
-          try {
-            if (runningRide.increasedTime != null) {
-              calculateController.calCulateModel!.offerExpireTime =
-                  (runningRide.increasedTime as num?)?.toInt() ?? 0;
-            }
-            calculateController.calCulateModel!.driverId = runningRide.dId;
-
-            isanimation = true;
-            loadertimer = true;
-            offerpluse = false;
-
-            requesttime();
-            Buttonpresebottomshhet();
-          } catch (e) {
-            if (kDebugMode) print("❌ Error in running ride calculate API: $e");
-          }
-        }).catchError((error) {
-          if (kDebugMode)
-            print("❌ Error in running ride calculate API call: $error");
+          setState(() {
+            themeForMap = value;
+          });
         });
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Error processing running ride: $e");
+      });
+    } else {
+      setState(() {
+        DefaultAssetBundle.of(context)
+            .loadString("assets/map_styles/light_style.json")
+            .then((value) {
+          setState(() {
+            themeForMap = value;
+          });
+        });
+      });
     }
   }
 
-  void _handleError(dynamic error) {
-    if (kDebugMode) print("❌ API Error: $error");
-  }
-
-// Event handlers for real-time updates
-  void _handleDriverLocationOn(dynamic data) {
-    if (_disposed || !mounted) return;
-
-    try {
-      if (kDebugMode) print("++++++ Driver_location_On ++++ :---  $data");
-
-      if (data != null && data["zone_list"] != null) {
-        List zonelist = List.from(data["zone_list"]);
-
-        if (homeMapController.homeMapApiModel?.zoneId != null &&
-            zonelist.contains(homeMapController.homeMapApiModel!.zoneId)) {
-          if (data["latitude"] != null &&
-              data["longitude"] != null &&
-              data["id"] != null) {
-            try {
-              LatLng position = LatLng(
-                  double.parse(data["latitude"].toString()),
-                  double.parse(data["longitude"].toString()));
-
-              if (data["image"] != null) {
-                getNetworkImage("${Config.imageurl}${data["image"]}")
-                    .then((markIcon) {
-                  if (!_disposed && mounted) {
-                    MarkerId markerId = MarkerId(data["id"].toString());
-                    Marker marker = Marker(
-                      markerId: markerId,
-                      icon: BitmapDescriptor.fromBytes(markIcon),
-                      position: position,
-                    );
-                    markers[markerId] = marker;
-                    markers11[markerId] = marker;
-                    setState(() {});
-                  }
-                });
-              }
-            } catch (e) {
-              if (kDebugMode) print("❌ Error processing driver location: $e");
-            }
-          }
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Error in Driver_location_On: $e");
-    }
-  }
-
-  void _handleDriverLocationOff(dynamic data) {
-    if (_disposed || !mounted) return;
-
-    try {
-      if (kDebugMode) print("++++++ Drive_location_Off ++++ :---  $data");
-
-      if (data != null && data["id"] != null) {
-        MarkerId markerId = MarkerId(data["id"].toString());
-        markers.remove(markerId);
-        markers11.remove(markerId);
-        if (mounted) setState(() {});
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Error in Drive_location_Off: $e");
-    }
-  }
-
-  void _handleDriverLocationUpdate(dynamic data) {
-    if (_disposed || !mounted) return;
-
-    try {
-      if (kDebugMode) print("++++++ Driver_location_Update ++++ :---  $data");
-
-      if (data != null &&
-          data["latitude"] != null &&
-          data["longitude"] != null &&
-          data["id"] != null) {
-        try {
-          LatLng position = LatLng(double.parse(data["latitude"].toString()),
-              double.parse(data["longitude"].toString()));
-
-          if (data["image"] != null) {
-            getNetworkImage("${Config.imageurl}${data["image"]}")
-                .then((markIcon) {
-              if (!_disposed && mounted) {
-                MarkerId markerId = MarkerId(data["id"].toString());
-                Marker marker = Marker(
-                  markerId: markerId,
-                  icon: BitmapDescriptor.fromBytes(markIcon),
-                  position: position,
-                );
-
-                markers[markerId] = marker;
-                markers11[markerId] = marker;
-                setState(() {});
-              }
-            });
-          }
-        } catch (e) {
-          if (kDebugMode) print("❌ Error updating driver location: $e");
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Error in Driver_location_Update: $e");
-    }
-  }
-
-  void _handleVehicleBidding(dynamic data) {
-    if (_disposed || !mounted) return;
-
-    try {
-      if (data != null && data["bidding_list"] != null) {
-        // Update through provider instead of direct global assignment
-        context
-            .read<RideRequestState>()
-            .updateVehicleBiddingDriver(List.from(data["bidding_list"]));
-
-        List<dynamic> secounds = [];
-        var drivers = context.read<RideRequestState>().vehicleBiddingDriver;
-
-        for (int i = 0; i < drivers.length; i++) {
-          if (drivers[i]["diff_second"] != null) {
-            secounds.add(drivers[i]["diff_second"]);
-          }
-        }
-
-        context.read<RideRequestState>().updateVehicleBiddingSecounds(secounds);
-
-        Get.back();
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const DriverListScreen()));
-
-        if (drivers.isEmpty) {
-          Get.back();
-          Buttonpresebottomshhet();
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Error in Vehicle_Bidding: $e");
-    }
-  }
-
-  void _handleRequestAccepted(dynamic data) {
-    if (_disposed || !mounted) return;
-
-    try {
-      if (kDebugMode) print("++++++ acceptvehrequest map ++++ :---  $data");
-
-      if (socket != null) {
-        socket!.close();
-      }
-
-      isanimation = false;
-      isControllerDisposed = true;
-
-      if (controller != null && controller!.isAnimating) {
-        controller!.dispose();
-      }
-
-      loadertimer = true;
-
-      // Handle amount controller
-      if (amountcontroller.text.isNotEmpty) {
-        try {
-          vihicalrice = double.parse(amountcontroller.text);
-        } catch (e) {
-          if (kDebugMode) print("❌ Error parsing amount: $e");
-        }
-      }
-
-      if (data != null &&
-          data["c_id"] != null &&
-          data["c_id"].toString().contains(useridgloable.toString())) {
-        driveridloader = false;
-
-        if (data["uid"] != null && data["request_id"] != null) {
-          globalDriverAcceptClass.driverdetailfunction(
-              context: context,
-              lat: latitudepick,
-              long: longitudepick,
-              d_id: data["uid"].toString(),
-              request_id: data["request_id"].toString());
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Error in acceptvehrequest: $e");
-    }
-  }
-
-// Add this helper method for getting network images
-  Future<Uint8List> getNetworkImage(String path) async {
-    try {
-      final http.Response response = await http.get(Uri.parse(path));
-      if (response.statusCode == 200) {
-        final Uint8List bytes = response.bodyBytes;
-        final ui.Codec codec = await ui.instantiateImageCodec(bytes,
-            targetWidth: 50, targetHeight: 50);
-        final ui.FrameInfo frameInfo = await codec.getNextFrame();
-        final ByteData? byteData =
-            await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-        return byteData!.buffer.asUint8List();
-      } else {
-        throw Exception('Failed to load image from $path');
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Error loading network image: $e");
-      // Return a default marker icon
-      final ByteData data = await rootBundle.load("assets/pickup_marker.png");
-      return data.buffer.asUint8List();
-    }
-  }
-
-  // 💳 Handle payment response
-
-  void _handlePaymentResponse(dynamic value) {
-    try {
-      if (paymentGetApiController.paymentgetwayapi?.paymentList != null) {
-        for (int i = 1;
-            i < paymentGetApiController.paymentgetwayapi!.paymentList!.length;
-            i++) {
-          if (int.parse(paymentGetApiController.paymentgetwayapi!.defaultPayment
-                  .toString()) ==
-              paymentGetApiController.paymentgetwayapi!.paymentList![i].id) {
-            if (mounted) {
-              setState(() {
-                payment = paymentGetApiController
-                    .paymentgetwayapi!.paymentList![i].id!;
-
-                paymentname = paymentGetApiController
-                    .paymentgetwayapi!.paymentList![i].name!;
-              });
-            }
-          }
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Payment response error: $e");
-    }
-  }
-
-  // 🚗 Handle vehicle selection
-
-  void _handleVehicleSelection() {
-    // Your existing vehicle selection logic
-  }
-
-  // 🗺️ Setup map markers
-
-  void _setupMapMarkers() {
-    try {
-      if (latitudepick != 0.0 && longitudepick != 0.0) {
-        _addMarker11(LatLng(latitudepick, longitudepick), "origin",
-            BitmapDescriptor.defaultMarker);
-      }
-
-      if (latitudedrop != 0.0 && longitudedrop != 0.0) {
-        _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
-            BitmapDescriptor.defaultMarkerWithHue(90));
-      }
-
-      for (int a = 0; a < _dropOffPoints.length; a++) {
-        _addMarker3("destination");
-      }
-
-      if (latitudepick != 0.0 &&
-          longitudepick != 0.0 &&
-          latitudedrop != 0.0 &&
-          longitudedrop != 0.0) {
-        getDirections11(
-            lat1: PointLatLng(latitudepick, longitudepick),
-            lat2: PointLatLng(latitudedrop, longitudedrop),
-            dropOffPoints: _dropOffPoints);
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Map markers setup error: $e");
-    }
-  }
-
-  // 📡 Safe socket emit method
-
-  void emitSocketEvent(String event, dynamic data) {
-    if (_disposed || !socketInitialized || socket?.connected != true) {
-      if (kDebugMode) print("⚠️ Cannot emit socket event: $event");
-
-      return;
-    }
-
-    try {
-      socket!.emit(event, data);
-
-      if (kDebugMode) print("📡 Socket event emitted: $event");
-    } catch (e) {
-      if (kDebugMode) print("❌ Socket emit error: $e");
-    }
-  }
-
-// Methods that other files are using - keep them working:
-  void socateempt() {
-    emitSocketEvent('vehiclerequest', {
-      'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
-      'driverid': calculateController.calCulateModel!.driverId!,
-    });
-  }
-
-  void socateemptrequesttimeout() {
-    emitSocketEvent('Vehicle_Ride_Cancel', {
-      'uid': "$useridgloable",
-      'driverid': calculateController.calCulateModel!.driverId!,
-    });
-  }
-
-  void emitVehicleRideCancel(String uid, List driverid) {
-    emitSocketEvent('Vehicle_Ride_Cancel', {
-      'uid': uid,
-      'driverid': driverid,
-    });
-  }
-
-  void emitVehiclePaymentChange(
-      String useridgloable, String dId, int paymentId) {
-    emitSocketEvent('Vehicle_P_Change', {
-      'useridgloable': useridgloable,
-      'd_id': dId,
-      'payment_id': paymentId,
-    });
-  }
-
-  void emitVehicleRideComplete(String dId, String requestId) {
-    emitSocketEvent('Vehicle_Ride_Complete', {
-      'd_id': dId,
-      'request_id': requestId,
-    });
-  }
-
-  void emitSendChat(
-      String senderId, String receiverId, String message, String status) {
-    emitSocketEvent('Send_Chat', {
-      'sender_id': senderId,
-      'recevier_id': receiverId,
-      'message': message,
-      'status': status,
-    });
-  }
-
-  void emitAcceptBidding(
-      String uid, String dId, String requestId, String price) {
-    emitSocketEvent('Accept_Bidding', {
-      'uid': uid,
-      'd_id': dId,
-      'request_id': requestId,
-      'price': price,
-    });
-  }
-
-  void emitVehicleRequest(String requestId, List driverId, String cId) {
-    emitSocketEvent('vehiclerequest', {
-      'requestid': requestId,
-      'driverid': driverId,
-      'c_id': cId,
-    });
-  }
-
-  void emitVehicleTimeRequest(String uid, String dId) {
-    emitSocketEvent('Vehicle_Time_Request', {
-      'uid': uid,
-      'd_id': dId,
-    });
-  }
-
-// IMPORTANT: Usage instructions for other files
-/*
-TO USE SOCKET IN OTHER FILES:
-
-1. Get reference to ModernMapScreen (where socket is initialized)
-2. Use the helper methods instead of direct socket access
-
-Example in other files:
-
-// In ride_complete_payment_screen.dart:
-// Instead of: socket!.emit('Vehicle_P_Change', {...});
-// Use: mapScreenInstance.emitVehiclePaymentChange(useridgloable, driver_id, payment);
-
-// In chat_screen.dart:
-// Instead of: socket!.emit('Send_Chat', {...});
-// Use: mapScreenInstance.emitSendChat(senderId, receiverId, message, status);
-
-// In driver_list_screen.dart:
-// Instead of: socket!.emit('Accept_Bidding', {...});
-// Use: mapScreenInstance.emitAcceptBidding(uid, dId, requestId, price);
-
-ALTERNATIVE APPROACH:
-Create a global variable for ModernMapScreen reference:
-
-// At the top of your app (main.dart or globals):
-MapScreenState? globalMapScreen;
-
-// In ModernMapScreen initState():
-globalMapScreen = this;
-
-// In other files:
-globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
-*/
-  // late Timer timer;
-
-  // bool isTimerRunning = false;
-
-  // void startTimer() {
-  //   if (isTimerRunning) return; // Prevent multiple timers from starting
-
-  //   isTimerRunning = true;
-  // }
-
-  // void cancelTimer() {
-  //   print("object hjhjhjhjjhjhhjhjhj");
-  //   // cancelloader = false;
-  //   if (isTimerRunning) {
-  //     timer.cancel();
-  //     isTimerRunning = false; // Mark timer as not running
-  //     print("Timer canceled");
-  //   }
-  // }
-
-  requesttime() {
-    int duration = int.parse(
-        calculateController.calCulateModel!.offerExpireTime.toString());
-
-    final timerState = context.read<TimerState>();
-    timerState.initializeController(duration);
-    timerState.startAnimation();
-
-    colorAnimation = ColorTween(
-      begin: Colors.blue,
-      end: Colors.green,
-    ).animate(controller!);
-
-    print("DURATION IN SECONDS: $duration");
-
-    controller!.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        print("Timer finished!");
-        if (!mounted) return;
-
-        if (isControllerDisposed) {
-          print(
-              "Controller has already been disposed. Skipping further actions.");
-          return; // Avoid executing further actions if the controller is disposed
-        }
-        // Use post-frame callback to safely access the context
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-
-          if (mounted) {
-            // Open bottom sheet when animation is completed
-            print("Timer finished 111 !");
-            isanimation = false;
-            // bottomshhetopen = false;
-
-            setState(() {
-              // timeout = true;
-              // print("****dsbkbsb:-  ${timeout}");
-            });
-            Get.back();
-            timeoutRequestApiController
-                .timeoutrequestApi(
-                    uid: useridgloable.toString(),
-                    request_id: request_id.toString())
-                .then(
-              (value) {
-                print("*****value data******:--- $value");
-                print("*****value data******:--- ${value["driverid"]}");
-                if (!mounted) return;
-
-                // socateemptrequesttimeout();
-                Get.bottomSheet(isDismissible: false, enableDrag: false,
-                    StatefulBuilder(
-                  builder: (context, setState) {
-                    return Container(
-                      // height: 400,
-                      // width: Get.width,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(15),
-                            topRight: Radius.circular(15)),
+  // ✅ COMPLETE BUILD METHOD WITH ALL UI COMPONENTS
+  @override
+  Widget build(BuildContext context) {
+    notifier = Provider.of<ColorNotifier>(context, listen: true);
+
+    return Consumer4<LocationState, MapState, PricingState, RideRequestState>(
+      builder:
+          (context, locationState, mapState, pricingState, rideState, child) {
+        return WillPopScope(
+          onWillPop: () async {
+            _clearGlobalState();
+            Get.offAll(const OnboardingScreen());
+            return false;
+          },
+          child: Scaffold(
+            key: _key,
+            backgroundColor: notifier.background,
+
+            // ✅ COMPLETE DRAWER
+            drawer: Drawer(
+              backgroundColor: notifier.containercolore,
+              child: Column(
+                children: [
+                  Container(
+                    height: 250,
+                    decoration: BoxDecoration(
+                      color: theamcolore,
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(20),
+                        bottomRight: Radius.circular(20),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 15, right: 15),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(
-                              height: 20,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 50),
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.white,
+                          child: Icon(
+                            Icons.person,
+                            size: 50,
+                            color: theamcolore,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        GetBuilder<HomeApiController>(
+                          builder: (homeApiController) {
+                            return homeApiController
+                                        .homeapimodel?.cusRating?.avgStar !=
+                                    null
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(15),
+                                      border: Border.all(color: Colors.white),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          "${homeApiController.homeapimodel!.cusRating!.avgStar}",
+                                          style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.white),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        SvgPicture.asset(
+                                          "assets/svgpicture/star-fill.svg",
+                                          height: 12,
+                                          colorFilter: const ColorFilter.mode(
+                                              Colors.white, BlendMode.srcIn),
+                                        )
+                                      ],
+                                    ),
+                                  )
+                                : const SizedBox();
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          username ?? "User",
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20),
+                        ),
+                        const SizedBox(height: 5),
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => const ProfileScreen(),
+                            ));
+                          },
+                          child: const Text(
+                            "View profile",
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: drowertitle.length,
+                      itemBuilder: (context, index) {
+                        return InkWell(
+                          onTap: () {
+                            Navigator.pop(context); // Close drawer first
+                            _handleDrawerNavigation(index, locationState);
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 5),
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            Row(
+                            child: Row(
                               children: [
-                                SvgPicture.asset(
-                                  "assets/svgpicture/exclamation-circle.svg",
-                                  height: 25,
+                                Image.asset(
+                                  drowerimage[index],
+                                  height: 20,
+                                  width: 20,
+                                  color: notifier.textColor,
                                 ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
+                                const SizedBox(width: 15),
                                 Text(
-                                  "Captains are busy".tr,
-                                  style: const TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18),
+                                  drowertitle[index].tr,
+                                  style: TextStyle(
+                                    color: notifier.textColor,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(
-                              height: 30,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            body: Stack(
+              children: [
+                // ✅ GOOGLE MAP WITH PROVIDER DATA
+                GoogleMap(
+                  onMapCreated: (GoogleMapController controller) async {
+                    context.read<MapState>().setMapController(controller);
+                    if (themeForMap.isNotEmpty) {
+                      await controller.setMapStyle(themeForMap);
+                    }
+                    mapReady();
+                  },
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<OneSequenceGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                    ),
+                  },
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(
+                      locationState.latitudePick != 0.0
+                          ? locationState.latitudePick
+                          : lathome ?? 13.9667,
+                      locationState.longitudePick != 0.0
+                          ? locationState.longitudePick
+                          : longhome ?? 77.5667,
+                    ),
+                    zoom: 14.0,
+                  ),
+                  markers:
+                      homeMapController.homeMapApiModel?.list?.isNotEmpty ==
+                              true
+                          ? Set<Marker>.from(mapState.markers11.values)
+                          : Set<Marker>.from(mapState.markers.values),
+                  polylines: Set<Polyline>.from(mapState.polylines11.values),
+                  onTap: (argument) {
+                    setState(() {
+                      _onAddMarkerButtonPressed(
+                          argument.latitude, argument.longitude);
+                      lathome = argument.latitude;
+                      longhome = argument.longitude;
+                      getCurrentLatAndLong(lathome, longhome);
+
+                      homeMapController
+                          .homemapApi(
+                              mid: mid,
+                              lat: lathome.toString(),
+                              lon: longhome.toString())
+                          .then((value) {
+                        setState(() {});
+                        if (value["Result"] == false) {
+                          setState(() {
+                            vihicallocations.clear();
+                            context.read<MapState>().clearMapData();
+                            _addMarkers();
+                          });
+                        } else {
+                          _updateVehicleMarkers();
+                        }
+                      });
+                    });
+                  },
+                ),
+
+                // ✅ TOP SEARCH BAR WITH MENU BUTTON
+                Positioned(
+                  top: 50,
+                  left: 15,
+                  right: 15,
+                  child: Row(
+                    children: [
+                      // Menu button
+                      Expanded(
+                        flex: 1,
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _key.currentState!.openDrawer();
+                            });
+                          },
+                          child: Container(
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: notifier.containercolore,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  spreadRadius: 1,
+                                  blurRadius: 3,
+                                ),
+                              ],
                             ),
-                            Padding(
-                              padding: const EdgeInsets.all(0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Center(
+                              child: Image(
+                                image: const AssetImage("assets/menu.png"),
+                                height: 20,
+                                color: notifier.textColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 15),
+
+                      // Search bar
+                      Expanded(
+                        flex: 5,
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: notifier.containercolore,
+                            borderRadius: BorderRadius.circular(25),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.3),
+                                spreadRadius: 1,
+                                blurRadius: 3,
+                              ),
+                            ],
+                          ),
+                          child: TextField(
+                            onTap: () {
+                              _showPickupDropSheet();
+                            },
+                            readOnly: true,
+                            decoration: InputDecoration(
+                              hintText: "Where to?".tr,
+                              hintStyle: TextStyle(color: Colors.grey),
+                              prefixIcon:
+                                  Icon(Icons.search, color: theamcolore),
+                              border: InputBorder.none,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 15),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ✅ LOCATION SELECTION PANEL (SHOWN WHEN LOCATIONS ARE SET)
+                Consumer<LocationState>(
+                  builder: (context, locationState, child) {
+                    return locationState.pickupController.text.isNotEmpty ||
+                            locationState.dropController.text.isNotEmpty
+                        ? Positioned(
+                            top: 120,
+                            left: 15,
+                            right: 15,
+                            child: Container(
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: notifier.containercolore,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
                                 children: [
-                                  Expanded(
-                                    flex: 1,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                          top: 16, bottom: 20, left: 0),
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            height: 15,
-                                            width: 15,
+                                  // Pickup location row
+                                  Row(
+                                    children: [
+                                      Container(
+                                        height: 15,
+                                        width: 15,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                              color: Colors.green, width: 4),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 15),
+                                      Expanded(
+                                        child: InkWell(
+                                          onTap: () {
+                                            context
+                                                .read<LocationState>()
+                                                .setPicAndDrop(false);
+                                            _showPickupDropSheet();
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(10),
                                             decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                  color: Colors.green,
-                                                  width: 4),
+                                              color:
+                                                  Colors.grey.withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              locationState.pickupController
+                                                      .text.isNotEmpty
+                                                  ? locationState
+                                                      .pickupController.text
+                                                  : "اختر نقطة الانطلاق",
+                                              style: TextStyle(
+                                                color: notifier.textColor,
+                                                fontSize: 14,
+                                              ),
                                             ),
                                           ),
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
-                                          Container(
-                                            height: 10,
-                                            width: 3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 10),
+
+                                  // Drop location row
+                                  Row(
+                                    children: [
+                                      Container(
+                                        height: 15,
+                                        width: 15,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                              color: Colors.red, width: 4),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 15),
+                                      Expanded(
+                                        child: InkWell(
+                                          onTap: () {
+                                            context
+                                                .read<LocationState>()
+                                                .setPicAndDrop(true);
+                                            _showPickupDropSheet();
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(10),
                                             decoration: BoxDecoration(
-                                                color: Colors.grey
-                                                    .withOpacity(0.4),
-                                                borderRadius:
-                                                    BorderRadius.circular(10)),
+                                              color:
+                                                  Colors.grey.withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              locationState.dropController.text
+                                                      .isNotEmpty
+                                                  ? locationState
+                                                      .dropController.text
+                                                  : "اختر نقطة الوصول",
+                                              style: TextStyle(
+                                                color: notifier.textColor,
+                                                fontSize: 14,
+                                              ),
+                                            ),
                                           ),
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
-                                          Container(
-                                            height: 10,
-                                            width: 3,
-                                            decoration: BoxDecoration(
-                                                color: Colors.grey
-                                                    .withOpacity(0.4),
-                                                borderRadius:
-                                                    BorderRadius.circular(10)),
-                                          ),
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
-                                          textfieldlist.isNotEmpty
-                                              ? const SizedBox()
-                                              : Container(
-                                                  height: 10,
-                                                  width: 3,
-                                                  decoration: BoxDecoration(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10)),
-                                                ),
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
-                                          Container(
-                                            height: 15,
-                                            width: 15,
-                                            decoration: BoxDecoration(
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Show additional drop locations
+                                  if (locationState.dropTitleList.isNotEmpty)
+                                    ...locationState.dropTitleList
+                                        .asMap()
+                                        .entries
+                                        .map((entry) {
+                                      int index = entry.key;
+                                      var dropItem = entry.value;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 10),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              height: 15,
+                                              width: 15,
+                                              decoration: BoxDecoration(
                                                 color: Colors.white,
                                                 shape: BoxShape.circle,
                                                 border: Border.all(
-                                                    color: Colors.red,
-                                                    width: 4)),
-                                          ),
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
-                                          textfieldlist.isEmpty
-                                              ? const SizedBox()
-                                              : Container(
-                                                  height: 10,
-                                                  width: 3,
-                                                  decoration: BoxDecoration(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10)),
+                                                    color: Colors.orange,
+                                                    width: 4),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 15),
+                                            Expanded(
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.all(10),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.grey
+                                                      .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
                                                 ),
-                                        ],
-                                      ),
-                                    ),
+                                                child: Text(
+                                                  dropItem["title"] ?? "",
+                                                  style: TextStyle(
+                                                    color: notifier.textColor,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: Icon(Icons.close,
+                                                  size: 20, color: Colors.red),
+                                              onPressed: () {
+                                                locationState
+                                                    .removeDropLocation(index);
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                ],
+                              ),
+                            ),
+                          )
+                        : const SizedBox();
+                  },
+                ),
+
+                // ✅ CURRENT LOCATION BUTTON
+                Positioned(
+                  bottom: 150,
+                  right: 15,
+                  child: FloatingActionButton(
+                    mini: true,
+                    backgroundColor: notifier.containercolore,
+                    onPressed: () {
+                      _getCurrentLocation();
+                    },
+                    child: Icon(
+                      Icons.my_location,
+                      color: theamcolore,
+                    ),
+                  ),
+                ),
+
+                // ✅ BOOKING BUTTON
+                Consumer2<LocationState, PricingState>(
+                  builder: (context, locationState, pricingState, child) {
+                    return locationState.pickupController.text.isNotEmpty &&
+                            locationState.dropController.text.isNotEmpty
+                        ? Positioned(
+                            bottom: 20,
+                            left: 15,
+                            right: 15,
+                            child: Container(
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: notifier.containercolore,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
                                   ),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                  Expanded(
-                                    flex: 12,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(right: 10),
-                                      child: Column(
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Show pricing if available
+                                  if (pricingState.dropPrice > 0)
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 15),
+                                      child: Row(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Transform.translate(
-                                            offset: picktitle == ""
-                                                ? const Offset(0, 0)
-                                                : const Offset(0, -10),
-                                            child: ListTile(
-                                              // isThreeLine: true,
-                                              contentPadding: EdgeInsets.zero,
-                                              title: Text(
-                                                  "${picktitle == "" ? addresspickup : picktitle}"),
-                                              subtitle: Text(
-                                                picksubtitle,
-                                                style: const TextStyle(
-                                                    color: Colors.grey),
-                                                maxLines: 1,
-                                              ),
+                                          Text(
+                                            "Estimated Fare:",
+                                            style: TextStyle(
+                                              color: notifier.textColor,
+                                              fontSize: 16,
                                             ),
                                           ),
-                                          const SizedBox(
-                                            height: 5,
-                                          ),
-                                          Transform.translate(
-                                            offset: const Offset(0, -30),
-                                            child: ListTile(
-                                              // isThreeLine: true,
-                                              contentPadding: EdgeInsets.zero,
-                                              title: Text(droptitle),
-                                              subtitle: Text(
-                                                dropsubtitle,
-                                                style: const TextStyle(
-                                                    color: Colors.grey),
-                                                maxLines: 1,
-                                              ),
+                                          Text(
+                                            "$globalcurrency${pricingState.dropPrice.toStringAsFixed(2)}",
+                                            style: TextStyle(
+                                              color: theamcolore,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
+
+                                  CommonButton(
+                                    containcolore: theamcolore,
+                                    onPressed1: () {
+                                      _showPickupDropSheet(bidding: "1");
+                                    },
+                                    txt1: "احجز الرحلة",
                                   ),
                                 ],
                               ),
                             ),
-                            textfieldlist.isEmpty
-                                ? const SizedBox()
-                                : Transform.translate(
-                                    offset: const Offset(0, -30),
-                                    child: ListView.builder(
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      padding: EdgeInsets.zero,
-                                      shrinkWrap: true,
-                                      itemCount: textfieldlist.length,
-                                      itemBuilder: (context, index) {
-                                        return Row(
-                                          children: [
-                                            Expanded(
-                                              flex: 1,
-                                              child: ListView.builder(
-                                                padding: EdgeInsets.zero,
-                                                clipBehavior: Clip.none,
-                                                shrinkWrap: true,
-                                                itemCount: 1,
-                                                itemBuilder: (context, index) {
-                                                  return Transform.translate(
-                                                    offset:
-                                                        const Offset(-5, -25),
-                                                    child: Column(
-                                                      children: [
-                                                        // const SizedBox(height: 4,),
-                                                        Container(
-                                                          height: 10,
-                                                          width: 3,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Colors.grey
-                                                                .withOpacity(
-                                                                    0.4),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        10),
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 4,
-                                                        ),
-                                                        Container(
-                                                          height: 10,
-                                                          width: 3,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Colors.grey
-                                                                .withOpacity(
-                                                                    0.4),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        10),
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 4,
-                                                        ),
-                                                        Container(
-                                                          height: 15,
-                                                          width: 15,
-                                                          decoration: BoxDecoration(
-                                                              color:
-                                                                  Colors.white,
-                                                              shape: BoxShape
-                                                                  .circle,
-                                                              border: Border.all(
-                                                                  color: Colors
-                                                                      .red,
-                                                                  width: 4)),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 4,
-                                                        ),
-                                                        Container(
-                                                          height: 10,
-                                                          width: 3,
-                                                          decoration: BoxDecoration(
-                                                              color: Colors.grey
-                                                                  .withOpacity(
-                                                                      0.4),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10)),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 9,
-                                              child: Transform.translate(
-                                                offset: const Offset(0, -15),
-                                                child: Column(
-                                                  children: [
-                                                    // Transform.translate(
-                                                    //   offset: const Offset(0, -7),
-                                                    //   child: Text("${droptitlelist[index]["title"]}"),
-                                                    // ),
-                                                    // const SizedBox(height: 5,),
-                                                    ListTile(
-                                                      // isThreeLine: true,
-                                                      contentPadding:
-                                                          EdgeInsets.zero,
-                                                      title: Text(
-                                                          "${droptitlelist[index]["title"]}"),
-                                                      subtitle: Text(
-                                                        "${droptitlelist[index]["subt"]}",
-                                                        style: const TextStyle(
-                                                            color: Colors.grey),
-                                                        maxLines: 1,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  ),
-                            // SizedBox(height: 30,),
-                            CommonButton(
-                                containcolore: theamcolore,
-                                onPressed1: () {
-                                  Get.back();
-
-                                  // removeRequest.removeApi(uid: useridgloable.toString()).then((value) {
-                                  //   Get.back();
-                                  //   print("+++ removeApi +++:- ${value["driver_list"]}");
-                                  //   socket!.emit('Vehicle_Ride_Cancel',{
-                                  //     'uid': "$useridgloable",
-                                  //     'driverid' : value["driver_list"],
-                                  //   });
-                                  // },);
-
-                                  // isanimation = true;
-                                  // resendRequestApiController.resendrequestApi(uid: useridgloable.toString(), driverid: calculateController.calCulateModel!.driverId!).then((value) {
-                                  //   print("+++ resendrequestApi +++ :- ${value["driver_list"]}");
-                                  //   Get.back();
-                                  //   socket!.emit('vehiclerequest',{
-                                  //     'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
-                                  //     'driverid' : value["driver_list"],
-                                  //   });
-                                  //   if (controller != null && controller.isAnimating) {
-                                  //     controller.dispose();
-                                  //   }
-                                  //   requesttime();
-                                  // },);
-                                },
-                                txt1: "Try Again".tr,
-                                context: context),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            CommonOutLineButton(
-                                bordercolore: theamcolore,
-                                onPressed1: () {
-                                  removeRequest
-                                      .removeApi(
-                                          uid: useridgloable.toString(),
-                                          context: context)
-                                      .then(
-                                    (value) {
-                                      Get.back();
-                                      print(
-                                          "+++ removeApi +++:- ${value["driver_list"]}");
-
-                                      socket!.emit('Vehicle_Ride_Cancel', {
-                                        'uid': "$useridgloable",
-                                        'driverid': value["driver_list"],
-                                      });
-                                    },
-                                  );
-                                },
-                                txt1: "Cancel".tr,
-                                context: context),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                          )
+                        : const SizedBox();
                   },
-                ));
-              },
-            );
-          }
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ✅ HANDLE DRAWER NAVIGATION
+  void _handleDrawerNavigation(int index, LocationState locationState) {
+    switch (index) {
+      case 0: // My Ride
+        locationState.clearLocationData();
+        context.read<MapState>().clearMapData();
+        Get.to(() => const MyRideScreen());
+        break;
+      case 1: // Wallet
+        homeWalletApiController.homwwalleteApi(
+            uid: useridgloable.toString(), context: context);
+        // Navigate to wallet screen
+        break;
+      case 2: // Notifications
+        Get.to(() => const NotificationScreen());
+        break;
+      case 3: // Language
+        Get.to(() => const LanguageScreen());
+        break;
+      case 4: // FAQ
+        pagelistApiController.pagelistttApi(context).then((value) {
+          Get.to(() => const FaqScreen());
         });
-      } else {
-        print("jhvjhjhjhjjhavsjhaks");
-      }
-    });
-
-    controller!.forward();
+        break;
+      case 5: // Settings
+        // Navigate to settings
+        break;
+      case 6: // Logout
+        _showLogoutDialog();
+        break;
+    }
   }
 
-  pagelistApiController pagelistcontroller = Get.put(pagelistApiController());
+  // ✅ LOGOUT DIALOG
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: notifier.containercolore,
+          title: Text(
+            "Logout".tr,
+            style: TextStyle(color: notifier.textColor),
+          ),
+          content: Text(
+            "Are you sure you want to logout?".tr,
+            style: TextStyle(color: notifier.textColor),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel".tr),
+            ),
+            TextButton(
+              onPressed: () async {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+                Get.offAll(() => const OnboardingScreen());
+              },
+              child: Text("Logout".tr, style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-// New method to handle proper initialization order:
-  Future<void> initializeApp() async {
+  // ✅ SHOW PICKUP DROP SHEET
+  void _showPickupDropSheet({String bidding = "0"}) {
+    showModalBottomSheet(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(15),
+          topRight: Radius.circular(15),
+        ),
+      ),
+      context: context,
+      builder: (context) {
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.9,
+          child: PickupDropPoint(
+            pagestate: false, // FIXED: Added required parameter
+
+            bidding: bidding,
+          ),
+        );
+      },
+    );
+  }
+
+  // ✅ GET CURRENT LOCATION
+  void _getCurrentLocation() async {
     try {
-      // Step 1: Load user data first
-      await loadUserData();
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
 
-      if (useridgloable == null) {
-        if (kDebugMode) {
-          print("User not logged in, redirecting to login");
-        }
-        Get.offAll(() => const OnboardingScreen());
-        return;
+      lathome = position.latitude;
+      longhome = position.longitude;
+
+      final mapController = context.read<MapState>().mapController;
+      if (mapController != null) {
+        mapController.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(position.latitude, position.longitude),
+              zoom: 16.0,
+            ),
+          ),
+        );
       }
 
-      // Step 2: Initialize location and socket
-      await fun();
-      setState(() {});
-      getCurrentLatAndLong(lathome, longhome);
-
-      // Step 3: Initialize socket with user data
-      await socketConnect();
-
-      // Step 4: Now make API calls that need user data
-      makeInitialAPICalls();
+      getCurrentLatAndLong(position.latitude, position.longitude);
+      _onAddMarkerButtonPressed(position.latitude, position.longitude);
     } catch (e) {
-      if (kDebugMode) {
-        print("Error in initializeApp: $e");
-      }
-      // Don't force logout for initialization errors
+      if (kDebugMode) print("❌ Error getting current location: $e");
+      showToastForDuration("Unable to get current location", 2);
     }
   }
 
-// Load user data without socket
-  Future<void> loadUserData() async {
-    try {
-      SharedPreferences preferences = await SharedPreferences.getInstance();
-      var uid = preferences.getString("userLogin");
-      var currencyy = preferences.getString("currenci");
-
-      if (uid == null) {
-        if (kDebugMode) {
-          print("No user login data found");
-        }
-        throw Exception("No user data");
-      }
-
-      // Decode user data
-      decodeUid = jsonDecode(uid);
-      if (currencyy != null) {
-        currencyy = jsonDecode(currencyy);
-      } else {
-        currencyy = {} as String?;
-        if (kDebugMode) {
-          print("Warning: Currency data not found, using default");
-        }
-      }
-
-      // Set user variables
-      useridgloable = decodeUid['id'];
-      username = decodeUid["name"] ?? "";
-      useridgloable = decodeUid['id'];
-
-      if (kDebugMode) {
-        print("User data loaded successfully:");
-        print("useridgloable: $useridgloable");
-        print("username: $username");
-        print("useridgloable: $useridgloable");
-      }
-
-      setState(() {});
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error loading user data: $e");
-      }
-      rethrow;
-    }
-  }
-
-// Make API calls that need user data - ONLY after user data is loaded
-  void makeInitialAPICalls() {
-    if (useridgloable == null) {
-      if (kDebugMode) {
-        print("Cannot make API calls - useridgloable is null");
-      }
-      return;
-    }
-
-    if (kDebugMode) {
-      print("Making initial API calls with useridgloable: $useridgloable");
-    }
-
-    // Payment API call
-    paymentGetApiController.paymentlistApi(context).then((value) {
-      try {
-        if (paymentGetApiController.paymentgetwayapi?.paymentList != null) {
-          for (int i = 1;
-              i < paymentGetApiController.paymentgetwayapi!.paymentList!.length;
-              i++) {
-            if (int.parse(paymentGetApiController
-                    .paymentgetwayapi!.defaultPayment
-                    .toString()) ==
-                paymentGetApiController.paymentgetwayapi!.paymentList![i].id) {
-              setState(() {
-                payment = paymentGetApiController
-                    .paymentgetwayapi!.paymentList![i].id!;
-                paymentname = paymentGetApiController
-                    .paymentgetwayapi!.paymentList![i].name!;
-                if (kDebugMode) {
-                  print("+++++payment: $payment");
-                  print("+++++index: $i");
-                }
-              });
-            }
-          }
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print("Error processing payment data: $e");
-        }
-      }
-    }).catchError((error) {
-      if (kDebugMode) {
-        print("Error in payment API: $error");
-      }
-    });
-
-    // Page list API call
-    pagelistcontroller.pagelistttApi(context);
-
-    // Handle widget.selectVehicle case
-    if (widget.selectVehicle == true) {
-      if (kDebugMode) {
-        print("selectVehicle is true - calling homeApi and calculateApi");
-      }
-      select1 = 0;
-
-      homeApiController
-          .homeApi(
-              uid: useridgloable.toString(),
-              lat: lathome.toString(),
-              lon: longhome.toString())
-          .then((value) {
-        try {
-          if (homeApiController.homeapimodel?.categoryList?.isNotEmpty ==
-              true) {
-            mid =
-                homeApiController.homeapimodel!.categoryList![0].id.toString();
-            mroal = homeApiController.homeapimodel!.categoryList![0].role
-                .toString();
-
-            // Now call calculateApi with proper user data
-            calculateController
-                .calculateApi(
-                    context: context,
-                    uid:
-                        useridgloable.toString(), // Now this has a proper value
-                    mid: mid,
-                    mrole: mroal,
-                    pickup_lat_lon: "$latitudepick,$longitudepick",
-                    drop_lat_lon: "$latitudedrop,$longitudedrop",
-                    drop_lat_lon_list: onlypass)
-                .then((value) {
-              try {
-                dropprice = 0;
-                minimumfare = 0;
-                maximumfare = 0;
-
-                if (value?["Result"] == true) {
-                  amountresponse = "true";
-                  final pricingState = context.read<PricingState>();
-                  pricingState
-                      .setDropPrice(safeParseDouble(value["drop_price"]));
-                  pricingState.setFareRange(
-                      safeParseDouble(value["vehicle"]["minimum_fare"]),
-                      safeParseDouble(value["vehicle"]["maximum_fare"]));
-                  responsemessage = value["message"];
-
-                  tot_hour = value["tot_hour"]?.toString() ?? "0";
-                  tot_time = value["tot_minute"]?.toString() ?? "0";
-                  vehicle_id = value["vehicle"]["id"]?.toString() ?? "";
-                  vihicalrice = safeParseDouble(value["drop_price"]);
-
-                  totalkm = safeParseDouble(value["tot_km"]);
-                  tot_secound = "0";
-
-                  vihicalimage = value["vehicle"]["map_img"]?.toString() ?? "";
-                  vihicalname = value["vehicle"]["name"]?.toString() ?? "";
-
-                  setState(() {});
-                } else {
-                  amountresponse = "false";
-                  if (kDebugMode) {
-                    print("Calculate API returned false result");
-                  }
-                  setState(() {});
-                }
-
-                if (kDebugMode) {
-                  print("********** dropprice **********:----- $dropprice");
-                  print("********** minimumfare **********:----- $minimumfare");
-                  print("********** maximumfare **********:----- $maximumfare");
-                }
-              } catch (e) {
-                if (kDebugMode) {
-                  print("Error processing calculate API response: $e");
-                }
-              }
-            }).catchError((error) {
-              if (kDebugMode) {
-                print("Error in calculate API call: $error");
-              }
-            });
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print("Error processing home API response: $e");
-          }
-        }
-      }).catchError((error) {
-        if (kDebugMode) {
-          print("Error in home API call: $error");
-        }
-      });
-    }
-
-    // Setup map markers after location is loaded
-    setupMapMarkers();
-  }
-
-// Setup map markers
-  void setupMapMarkers() {
-    try {
-      // Add markers only if coordinates are valid
-      if (latitudepick != 0.0 && longitudepick != 0.0) {
-        /// origin marker
-        _addMarker11(LatLng(latitudepick, longitudepick), "origin",
-            BitmapDescriptor.defaultMarker);
-      }
-
-      if (latitudedrop != 0.0 && longitudedrop != 0.0) {
-        /// destination marker
-        _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
-            BitmapDescriptor.defaultMarkerWithHue(90));
-      }
-
-      // Add drop-off point markers
-      for (int a = 0; a < _dropOffPoints.length; a++) {
-        _addMarker3("destination");
-      }
-
-      // Get directions if we have valid coordinates
-      if (latitudepick != 0.0 &&
-          longitudepick != 0.0 &&
-          latitudedrop != 0.0 &&
-          longitudedrop != 0.0) {
-        getDirections11(
-            lat1: PointLatLng(latitudepick, longitudepick),
-            lat2: PointLatLng(latitudedrop, longitudedrop),
-            dropOffPoints: _dropOffPoints);
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error setting up map markers: $e");
-      }
-    }
-  }
-
-  // Poliline Map Code
-
-  //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-  late GoogleMapController mapController11;
-
-  Map<MarkerId, Marker> markers11 = {};
-  Map<PolylineId, Polyline> polylines11 = {};
-  List<LatLng> polylineCoordinates11 = [];
-  PolylinePoints polylinePoints11 = PolylinePoints();
-
-  void _onMapCreated11(GoogleMapController controller) async {
-    mapController11 = controller;
-  }
-
-  Future<Uint8List> getImages11(String path, int width) async {
-    ByteData data = await rootBundle.load(path);
-    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
-        targetHeight: width);
-    ui.FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
-        .buffer
-        .asUint8List();
-  }
-
-  // Multiple pin function
-
-  _addMarker11(LatLng position, String id, BitmapDescriptor descriptor) async {
+  // ✅ MIGRATED MARKER FUNCTIONS
+  Future<void> _onAddMarkerButtonPressed(double? lat, long) async {
     final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
-    MarkerId markerId = MarkerId(id);
+
+    MarkerId markerId = const MarkerId("my_1");
     Marker marker = Marker(
       markerId: markerId,
       icon: BitmapDescriptor.fromBytes(markIcon),
-      position: position,
+      position:
+          LatLng(double.parse(lat.toString()), double.parse(long.toString())),
       onTap: () {
         showDialog(
           barrierColor: Colors.transparent,
@@ -2097,13 +904,12 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
             return StatefulBuilder(
               builder: (context, setState) {
                 return Dialog(
-                  alignment: const Alignment(0, -0.25),
+                  alignment: const Alignment(0, -0.22),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
                   elevation: 0,
                   child: Container(
-                    width: 50,
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(15),
@@ -2111,28 +917,39 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          picktitle == "" ? pickupcontroller.text : picktitle,
-                          maxLines: 1,
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        picksubtitle == ""
-                            ? const SizedBox()
-                            : Text(
-                                picksubtitle,
-                                maxLines: 3,
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                        Consumer<LocationState>(
+                          builder: (context, locationState, child) {
+                            return Text(
+                              locationState.pickupController.text.isNotEmpty
+                                  ? locationState.pickupController.text
+                                  : locationState.pickTitle.isNotEmpty
+                                      ? locationState.pickTitle
+                                      : addresshome ?? "Current Location",
+                              maxLines: 1,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                overflow: TextOverflow.ellipsis,
                               ),
+                            );
+                          },
+                        ),
+                        Consumer<LocationState>(
+                          builder: (context, locationState, child) {
+                            return locationState.pickSubtitle == ""
+                                ? const SizedBox()
+                                : Text(
+                                    locationState.pickSubtitle,
+                                    maxLines: 3,
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -2143,7 +960,10 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
         );
       },
     );
-    markers11[markerId] = marker;
+
+    if (mounted) {
+      context.read<MapState>().addMarker11(markerId, marker);
+    }
   }
 
   Future _addMarker2(
@@ -2178,23 +998,35 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          droptitle,
-                          maxLines: 1,
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        Consumer<LocationState>(
+                          builder: (context, locationState, child) {
+                            return Text(
+                              locationState.dropTitle.isNotEmpty
+                                  ? locationState.dropTitle
+                                  : "Destination",
+                              maxLines: 1,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          },
                         ),
-                        Text(
-                          dropsubtitle,
-                          maxLines: 3,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        Consumer<LocationState>(
+                          builder: (context, locationState, child) {
+                            return locationState.dropSubtitle == ""
+                                ? const SizedBox()
+                                : Text(
+                                    locationState.dropSubtitle,
+                                    maxLines: 3,
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                          },
                         ),
                       ],
                     ),
@@ -2206,22 +1038,25 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
         );
       },
     );
-    markers11[markerId] = marker;
+
+    if (mounted) {
+      context.read<MapState>().addMarker(markerId, marker);
+    }
   }
 
-  _addMarker3(String id) async {
-    for (int a = 0; a < _dropOffPoints.length; a++) {
-      final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
-      MarkerId markerId = MarkerId(id[a]);
+  Future _addMarker3(String id) async {
+    final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
 
-      // Assuming _dropOffPoints[a] is of type PointLatLng, convert it to LatLng
-      LatLng position =
-          LatLng(_dropOffPoints[a].latitude, _dropOffPoints[a].longitude);
-
-      Marker marker = Marker(
+    final locationState = context.read<LocationState>();
+    for (int a = 0; a < locationState.destinationLat.length; a++) {
+      MarkerId markerId = MarkerId("drop_$a");
+      final marker = Marker(
         markerId: markerId,
+        position: LatLng(
+          locationState.destinationLat[a].latitude,
+          locationState.destinationLat[a].longitude,
+        ),
         icon: BitmapDescriptor.fromBytes(markIcon),
-        position: position,
         onTap: () {
           showDialog(
             barrierColor: Colors.transparent,
@@ -2236,7 +1071,6 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
                     ),
                     elevation: 0,
                     child: Container(
-                      width: 50,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(15),
@@ -2247,7 +1081,7 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "${droptitlelist[a]["title"]}",
+                            "${locationState.dropTitleList[a]["title"]}",
                             maxLines: 1,
                             style: const TextStyle(
                               color: Colors.black,
@@ -2256,7 +1090,7 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
                             ),
                           ),
                           Text(
-                            "${droptitlelist[a]["subt"]}",
+                            "${locationState.dropTitleList[a]["subt"]}",
                             maxLines: 3,
                             style: const TextStyle(
                               color: Colors.grey,
@@ -2275,354 +1109,20 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
         },
       );
 
-      markers11[markerId] = marker;
-    }
-  }
-
-  Future getDirections11(
-      {required PointLatLng lat1,
-      required PointLatLng lat2,
-      required List<PointLatLng> dropOffPoints}) async {
-    markers.remove(const MarkerId("my_1"));
-
-    // polylines11.clear();
-
-    // pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty ?  polylines11.clear() : "";
-
-    List<LatLng> polylineCoordinates = [];
-    List<PointLatLng> allPoints = [lat1, lat2, ...dropOffPoints];
-
-    for (int i = 0; i < allPoints.length - 1; i++) {
-      PointLatLng point1 = allPoints[i];
-      PointLatLng point2 = allPoints[i + 1];
-
-      PolylineResult result = await polylinePoints11.getRouteBetweenCoordinates(
-        Config.mapkey,
-        point1,
-        point2,
-        travelMode: TravelMode.driving,
-      );
-
-      if (result.points.isNotEmpty) {
-        for (var point in result.points) {
-          polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-        }
-      } else {
-        // Handle the case where no route is found
+      if (mounted) {
+        context.read<MapState>().addMarker(markerId, marker);
       }
     }
-
-    addPolyLine11(polylineCoordinates);
   }
 
-  addPolyLine11(List<LatLng> polylineCoordinates) {
-    PolylineId id = const PolylineId("poly");
-    Polyline polyline = Polyline(
-      polylineId: id,
-      color: theamcolore,
-      // points: [...polylineCoordinates,..._dropOffPoints],
-      points: polylineCoordinates,
-      width: 3,
-    );
-    polylines11[id] = polyline;
-    setState(() {});
-  }
-
-  void _addMarkers() async {
-    // Future<BitmapDescriptor> _loadIcon(String url) async {
-    //   try {
-    //     if (url.isEmpty || url.contains("undefined")) {
-    //       // Fallback to a default icon if the URL is invalid
-    //       return BitmapDescriptor.defaultMarker;
-    //     }
-    //
-    //     final http.Response response = await http.get(Uri.parse(url));
-    //     if (response.statusCode == 200) {
-    //       final Uint8List bytes = response.bodyBytes;
-    //
-    //       // Decode image and resize it
-    //       final ui.Codec codec = await ui.instantiateImageCodec(bytes, targetWidth: 30,targetHeight: 50);
-    //       final ui.FrameInfo frameInfo = await codec.getNextFrame();
-    //       final ByteData? byteData = await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-    //
-    //       return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-    //     } else {
-    //       throw Exception('Failed to load image from $url');
-    //     }
-    //   } catch (e) {
-    //     // Log the error and return a default icon
-    //     print("Error loading icon from $url: $e");
-    //     return BitmapDescriptor.defaultMarker;
-    //   }
-    // }
-
-    Future<BitmapDescriptor> loadIcon(String url,
-        {int targetWidth = 30, int targetHeight = 50}) async {
-      try {
-        if (url.isEmpty || url.contains("undefined")) {
-          // Fallback to a default icon if the URL is invalid
-          return BitmapDescriptor.defaultMarker;
-        }
-
-        final http.Response response = await http.get(Uri.parse(url));
-        if (response.statusCode == 200) {
-          final Uint8List bytes = response.bodyBytes;
-
-          // Decode image and resize it
-          final ui.Codec codec = await ui.instantiateImageCodec(bytes,
-              targetWidth: targetWidth, targetHeight: targetHeight);
-          final ui.FrameInfo frameInfo = await codec.getNextFrame();
-          final ByteData? byteData =
-              await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-
-          return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-        } else {
-          throw Exception('Failed to load image from $url');
-        }
-      } catch (e) {
-        // Log the error and return a default icon
-        print("Error loading icon from $url: $e");
-        return BitmapDescriptor.defaultMarker;
-      }
-    }
-
-    // Load all icons
-    final List<BitmapDescriptor> icons = await Future.wait(
-      _iconPaths.map((path) => loadIcon(path)),
-    );
-
-    setState(() {
-      pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
-          ? setState(() {
-              polylines11.clear();
-            })
-          : "";
-
-      // vihicallocations = [];
-      for (var i = 0; i < vihicallocations.length; i++) {
-        print("qqqqqqqqq:-- ${homeMapController.homeMapApiModel!.list![i].id}");
-        print("aaaaaaaaa:-- ${vihicallocations.length}");
-        MarkerId markerId =
-            MarkerId("${homeMapController.homeMapApiModel!.list![i].id}");
-        Marker marker = Marker(
-          markerId: markerId,
-          icon: icons[i],
-          position: LatLng(
-              double.parse(homeMapController.homeMapApiModel!.list![i].latitude
-                  .toString()),
-              double.parse(homeMapController.homeMapApiModel!.list![i].longitude
-                  .toString())),
-        );
-        markers[markerId] = marker;
-        setState(() {});
-      }
-    });
-  }
-
-  void _addMarkers2() async {
-    Future<BitmapDescriptor> loadIcon(String url) async {
-      try {
-        if (url.isEmpty || url.contains("undefined")) {
-          // Fallback to a default icon if the URL is invalid
-          return BitmapDescriptor.defaultMarker;
-        }
-
-        final http.Response response = await http.get(Uri.parse(url));
-        if (response.statusCode == 200) {
-          final Uint8List bytes = response.bodyBytes;
-
-          // Decode image and resize it
-          final ui.Codec codec = await ui.instantiateImageCodec(bytes,
-              targetWidth: 30, targetHeight: 50);
-          final ui.FrameInfo frameInfo = await codec.getNextFrame();
-          final ByteData? byteData =
-              await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-
-          return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-        } else {
-          throw Exception('Failed to load image from $url');
-        }
-      } catch (e) {
-        // Log the error and return a default icon
-        print("Error loading icon from $url: $e");
-        return BitmapDescriptor.defaultMarker;
-      }
-    }
-
-    // Load all icons
-    final List<BitmapDescriptor> icons = await Future.wait(
-      _iconPathsbiddingon.map((path) => loadIcon(path)),
-    );
-
-    setState(() {
-      markers11.clear();
-
-      _addMarker11(LatLng(latitudepick, longitudepick), "origin",
-          BitmapDescriptor.defaultMarker);
-
-      /// destination marker
-      _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
-          BitmapDescriptor.defaultMarkerWithHue(90));
-
-      for (int a = 0; a < _dropOffPoints.length; a++) {
-        _addMarker3("destination");
-      }
-
-      getDirections11(
-          lat1: PointLatLng(latitudepick, longitudepick),
-          lat2: PointLatLng(latitudedrop, longitudedrop),
-          dropOffPoints: _dropOffPoints);
-
-      for (var i = 0; i < vihicallocationsbiddingon.length; i++) {
-        // final markerId = MarkerId('marker_$i');
-        final markerId =
-            MarkerId('${homeMapController.homeMapApiModel!.list![i].id}');
-        final marker = Marker(
-          markerId: markerId,
-          // position: vihicallocationsbiddingon[i],
-          position: LatLng(
-              double.parse(homeMapController.homeMapApiModel!.list![i].latitude
-                  .toString()),
-              double.parse(homeMapController.homeMapApiModel!.list![i].longitude
-                  .toString())),
-          icon: icons[i],
-        );
-        markers11[markerId] = marker; // Add marker to the map
-      }
-    });
-  }
-
-  bool isMapReady = false;
-
-  Future fun() async {
-    LocationPermission permission;
-    permission = await Geolocator.checkPermission();
-    permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {}
-    var currentLocation = await locateUser();
-    debugPrint('location: ${currentLocation.latitude}');
-    _onAddMarkerButtonPressed(
-        currentLocation.latitude, currentLocation.longitude);
-    getCurrentLatAndLong(
-      currentLocation.latitude,
-      currentLocation.longitude,
-    );
-    print("????????????${currentLocation.longitude}");
-    // print("SECOND USER CURRENT LOCATION : --  ${addresshome}");
-  }
-
-  Future<Position> locateUser() async {
-    return Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-  }
-
-  Future getCurrentLatAndLong(double latitude, double longitude) async {
-    lathome = latitude;
-    longhome = longitude;
-    lathomecurrent = latitude;
-    longhomecurrent = longitude;
-
-    try {
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(lathome, longhome)
-              .timeout(const Duration(seconds: 10));
-
-      addresshome =
-          '${placemarks.first.name}, ${placemarks.first.locality}, ${placemarks.first.country}';
-
-      if (pickupcontroller.text.isEmpty) {
-        pickupcontroller.text = addresshome.toString();
-      }
-
-      if (kDebugMode) {
-        print("FIRST USER CURRENT LOCATION :-- $addresshome");
-        print("FIRST USER CURRENT LOCATION :-- $lathome");
-        print("FIRST USER CURRENT LOCATION :-- $longhome");
-      }
-    } catch (e) {
-      addresshome = 'Location: $latitude, $longitude';
-      if (pickupcontroller.text.isEmpty) {
-        pickupcontroller.text = addresshome;
-      }
-      if (kDebugMode) print("Geocoding error: $e");
-    }
-
-    setState(() {});
-  }
-
-// Simple network check without external plugin
-  Future<bool> _hasNetworkConnection() async {
-    try {
-      final result = await InternetAddress.lookup('google.com')
-          .timeout(Duration(seconds: 3));
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<Uint8List> getImages(String path, int width) async {
-    ByteData data = await rootBundle.load(path);
-    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
-        targetHeight: width);
-    ui.FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
-        .buffer
-        .asUint8List();
-  }
-
-  Future<void> _onAddMarkerButtonPressed(double? lat, long) async {
+  Future _addMarker11(
+      LatLng position, String id, BitmapDescriptor descriptor) async {
     final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
-    // markers.add(Marker(
-    //   markerId: const MarkerId("1"),
-    //   position: LatLng(double.parse(lat.toString()),double.parse(long.toString())),
-    //   onTap: () {
-    //     showDialog(
-    //       barrierColor: Colors.transparent,
-    //       context: context,
-    //       builder: (context) {
-    //         return StatefulBuilder(builder: (context, setState) {
-    //           return Dialog(
-    //             alignment: const Alignment(0,-0.22),
-    //             shape: RoundedRectangleBorder(
-    //               borderRadius: BorderRadius.circular(15),
-    //             ),
-    //             elevation: 0,
-    //             child: Container(
-    //               padding: const EdgeInsets.all(10),
-    //               decoration: BoxDecoration(
-    //                 borderRadius: BorderRadius.circular(15),
-    //                 color: Colors.white,
-    //               ),
-    //               child: Column(
-    //                 mainAxisSize: MainAxisSize.min,
-    //                 children: [
-    //                   Text(
-    //                     "$addresshome",
-    //                     maxLines: 1,
-    //                     style: const TextStyle(
-    //                       color: Colors.black,
-    //                       fontSize: 14,
-    //                       overflow: TextOverflow.ellipsis,
-    //                     ),
-    //                   ),
-    //                 ],
-    //               ),
-    //             ),
-    //           );
-    //         },);
-    //       },
-    //     );
-    //   },
-    //   // icon: BitmapDescriptor.defaultMarker,
-    //   icon: BitmapDescriptor.fromBytes(markIcon),
-    // ));
-
+    MarkerId markerId = MarkerId(id);
     Marker marker = Marker(
-      markerId: const MarkerId("my_1"),
+      markerId: markerId,
       icon: BitmapDescriptor.fromBytes(markIcon),
-      position:
-          LatLng(double.parse(lat.toString()), double.parse(long.toString())),
+      position: position,
       onTap: () {
         showDialog(
           barrierColor: Colors.transparent,
@@ -2645,14 +1145,35 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          "$addresshome",
-                          maxLines: 1,
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 14,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        Consumer<LocationState>(
+                          builder: (context, locationState, child) {
+                            return Text(
+                              locationState.pickupController.text.isNotEmpty
+                                  ? locationState.pickupController.text
+                                  : locationState.pickTitle,
+                              maxLines: 1,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          },
+                        ),
+                        Consumer<LocationState>(
+                          builder: (context, locationState, child) {
+                            return locationState.pickSubtitle == ""
+                                ? const SizedBox()
+                                : Text(
+                                    locationState.pickSubtitle,
+                                    maxLines: 3,
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                          },
                         ),
                       ],
                     ),
@@ -2664,3253 +1185,1221 @@ globalMapScreen?.emitVehiclePaymentChange(useridgloable, driver_id, payment);
         );
       },
     );
-    markers[const MarkerId("my_1")] = marker;
 
-    setState(() {});
-  }
-
-  final GlobalKey<ScaffoldState> _key = GlobalKey<ScaffoldState>();
-
-  void _navigateAndRefresh() async {
-    final result = await Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => PickupDropPoint(
-                  pagestate: false,
-                  bidding: homeApiController
-                      .homeapimodel!.categoryList![select1].bidding
-                      .toString(),
-                )));
-    if (result != null && result.shouldRefresh) {
-      _refreshPage();
+    if (mounted) {
+      context.read<MapState>().addMarker11(markerId, marker);
     }
   }
 
-  void _refreshPage() {
-    setState(() {});
+  // ✅ MIGRATED POLYLINE FUNCTIONS
+  Future getDirections11(
+      {required PointLatLng lat1,
+      required PointLatLng lat2,
+      required List<PointLatLng> dropOffPoints}) async {
+    final mapState = context.read<MapState>();
+
+    mapState.clearPolylines11();
+
+    List<LatLng> polylineCoordinates = [];
+    List<PointLatLng> allPoints = [lat1, lat2, ...dropOffPoints];
+
+    for (int i = 0; i < allPoints.length - 1; i++) {
+      PointLatLng point1 = allPoints[i];
+      PointLatLng point2 = allPoints[i + 1];
+
+      PolylineResult result =
+          await mapState.polylinePoints11.getRouteBetweenCoordinates(
+        Config.mapkey,
+        point1,
+        point2,
+        travelMode: TravelMode.driving,
+      );
+
+      if (result.points.isNotEmpty) {
+        for (var point in result.points) {
+          polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+        }
+      }
+    }
+
+    addPolyLine11(polylineCoordinates);
   }
 
-  socatloadbidinfdata() {
-    socket!.emit('load_bidding_data', {
-      'uid': useridgloable,
-      'request_id': request_id,
-      'd_id': calculateController.calCulateModel!.driverId
+  addPolyLine11(List<LatLng> polylineCoordinates) {
+    PolylineId id = const PolylineId("poly");
+    Polyline polyline = Polyline(
+      polylineId: id,
+      color: theamcolore,
+      points: polylineCoordinates,
+      width: 3,
+    );
+
+    if (mounted) {
+      context.read<MapState>().addPolyline11(id, polyline);
+      setState(() {});
+    }
+  }
+
+  // ✅ MIGRATED SOCKET FUNCTIONS
+  socketConnect() async {
+    try {
+      SocketService.instance.connect();
+      _connectSocket();
+    } catch (e) {
+      if (kDebugMode) print("❌ Socket connection error: $e");
+    }
+  }
+
+  _connectSocket() async {
+    final socketService = SocketService.instance;
+
+    socketService.on('Vehicle_Bidding$useridgloable', (Vehicle_Bidding) {
+      _handleVehicleBidding(Vehicle_Bidding);
+    });
+
+    socketService.on('V_Driver_Location$useridgloable', (V_Driver_Location) {
+      _handleDriverLocation(V_Driver_Location);
+    });
+
+    socketService.on('Calculate_Result$useridgloable', (Calculate_Result) {
+      _handleCalculateResult(Calculate_Result);
+    });
+
+    socketService.on('RequestTimeOut$useridgloable', (RequestTimeOut) {
+      _handleRequestTimeout(RequestTimeOut);
+    });
+
+    socketService.on('Accept_Driver$useridgloable', (Accept_Driver) {
+      _handleAcceptDriver(Accept_Driver);
     });
   }
 
-  void refreshAnimation() {
-    controller!.reset();
-    controller!.repeat(reverse: false);
+  // ✅ NEW EVENT HANDLERS
+  void _handleVehicleBidding(dynamic Vehicle_Bidding) {
+    if (!mounted) return;
+
+    try {
+      if (Vehicle_Bidding != null) {
+        context
+            .read<RideRequestState>()
+            .updateFromVehicleBidding(Vehicle_Bidding);
+        setState(() {});
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Vehicle bidding handler error: $e");
+    }
   }
 
-  bool offerpluse = false;
+  void _handleDriverLocation(dynamic V_Driver_Location) {
+    if (!mounted) return;
 
-  bool cancelloader = false;
+    try {
+      if (V_Driver_Location != null &&
+          V_Driver_Location['latitude'] != null &&
+          V_Driver_Location['longitude'] != null) {
+        double lat = double.parse(V_Driver_Location['latitude'].toString());
+        double lng = double.parse(V_Driver_Location['longitude'].toString());
+        String driverId = V_Driver_Location['driver_id'].toString();
 
-  List drowertitle = [
-    "Home".tr,
-    "My Ride".tr,
-    "Wallet".tr,
-    "Profile".tr,
-    "Language".tr,
-    "Refer and earn".tr,
-    "Faq".tr,
-    "Notifications".tr,
-    "Dark Mode".tr,
-    // "Invite friends",
-  ];
-
-  List drowerimage = [
-    "assets/svgpicture/myride.svg",
-    "assets/svgpicture/routing-2.svg",
-    "assets/svgpicture/wallet.svg",
-    "assets/svgpicture/profile.svg",
-    "assets/svgpicture/languge.svg",
-    "assets/svgpicture/share.svg",
-    "assets/svgpicture/faq.svg",
-    "assets/svgpicture/notification.svg",
-    "assets/svgpicture/moon_regulare.svg",
-  ];
-
-  ColorNotifier notifier = ColorNotifier();
-  @override
-  Widget build(BuildContext context) {
-    notifier = Provider.of<ColorNotifier>(context, listen: true);
-    return Scaffold(
-      key: _key,
-      drawer: draweropen(context),
-      body: GetBuilder<HomeApiController>(
-        builder: (homeApiController) {
-          return homeApiController.isLoading
-              ? modernCircularProgress(
-                  size: 50,
-                  customAnimation: 'assets/lottie/loading.json',
-                )
-              : Stack(
-                  children: [
-                    lathome == null
-                        ? Center(child: modernCircularProgress())
-                        : GoogleMap(
-                            onMapCreated:
-                                (GoogleMapController controller) async {
-                              try {
-                                mapController = controller;
-                                // Apply theme only if it loaded successfully
-                                if (themeForMap.isNotEmpty) {
-                                  await controller.setMapStyle(themeForMap);
-                                }
-                                isMapReady = true;
-                                if (mounted) {
-                                  setState(() {});
-                                }
-                              } catch (e) {
-                                if (kDebugMode) {
-                                  print("❌ Map initialization error: $e");
-                                }
-                                // Map will use default style if theme fails to load
-                                isMapReady = true;
-                                if (mounted) {
-                                  setState(() {});
-                                }
-                              }
-                            },
-                            gestureRecognizers: {
-                              Factory<OneSequenceGestureRecognizer>(
-                                  () => EagerGestureRecognizer())
-                            },
-                            initialCameraPosition: pickupcontroller
-                                        .text.isEmpty ||
-                                    dropcontroller.text.isEmpty
-                                ? CameraPosition(
-                                    target: LatLng(lathome, longhome), zoom: 13)
-                                : CameraPosition(
-                                    target: LatLng(latitudepick, longitudepick),
-                                    zoom: 13),
-                            // initialCameraPosition:  CameraPosition(target: LatLng(21.2408,72.8806), zoom: 13),
-                            mapType: MapType.normal,
-
-                            // markers: markers.,
-                            markers: pickupcontroller.text.isEmpty ||
-                                    dropcontroller.text.isEmpty
-                                ? Set<Marker>.of(markers.values)
-                                : Set<Marker>.of(markers11.values),
-                            // markers: Set<Marker>.of(markers.values),
-                            onTap: (argument) {
-                              setState(() {
-                                _onAddMarkerButtonPressed(
-                                    argument.latitude, argument.longitude);
-                                lathome = argument.latitude;
-                                longhome = argument.longitude;
-                                getCurrentLatAndLong(
-                                  lathome,
-                                  longhome,
-                                );
-                                homeMapController
-                                    .homemapApi(
-                                        mid: mid,
-                                        lat: lathome.toString(),
-                                        lon: longhome.toString())
-                                    .then((value) {
-                                  setState(() {});
-                                  print("///:---  ${value["Result"]}");
-
-                                  if (value["Result"] == false) {
-                                    setState(() {
-                                      vihicallocations.clear();
-                                      markers.clear();
-                                      _addMarkers();
-                                      print(
-                                          "***if condition+++:---  $vihicallocations");
-                                    });
-                                  } else {
-                                    setState(() {});
-                                    vihicallocations.clear();
-                                    for (int i = 0;
-                                        i <
-                                            homeMapController
-                                                .homeMapApiModel!.list!.length;
-                                        i++) {
-                                      vihicallocations.add(LatLng(
-                                          double.parse(homeMapController
-                                              .homeMapApiModel!
-                                              .list![i]
-                                              .latitude
-                                              .toString()),
-                                          double.parse(homeMapController
-                                              .homeMapApiModel!
-                                              .list![i]
-                                              .longitude
-                                              .toString())));
-                                      _iconPaths.add(
-                                          "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                                    }
-                                    _addMarkers();
-                                  }
-
-                                  print(
-                                      "******-**:::::------$vihicallocations");
-                                });
-                              });
-
-                              // print("***lato****:--- $lathome");
-                              // print("+++longo+++:--- $longhome");
-                              // print("--------------------------------------");
-                              // print("hfgjhvhjwfvhjuyfvf:-=---  $addresshome");
-                            },
-                            myLocationEnabled: false,
-                            zoomGesturesEnabled: true,
-                            tiltGesturesEnabled: true,
-                            zoomControlsEnabled: true,
-
-                            polylines: Set<Polyline>.of(polylines11.values),
-                          ),
-                    //   : GoogleMap(
-                    //   initialCameraPosition: CameraPosition(
-                    //     target: LatLng(latitudepick, longitudepick),
-                    //     zoom: 15,
-                    //   ),
-                    //   myLocationEnabled: true,
-                    //   tiltGesturesEnabled: true,
-                    //   compassEnabled: true,
-                    //   scrollGesturesEnabled: true,
-                    //   zoomGesturesEnabled: true,
-                    //   onMapCreated: _onMapCreated11,
-                    //   markers: Set<Marker>.of(markers11.values),
-                    //   polylines: Set<Polyline>.of(polylines11.values),
-                    // ),
-
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(top: 60, left: 10, right: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _key.currentState!.openDrawer();
-                                });
-                              },
-                              child: Container(
-                                height: 50,
-                                // width: 50,
-                                decoration: BoxDecoration(
-                                    color: notifier.containercolore,
-                                    shape: BoxShape.circle),
-                                child: Center(
-                                    child: Image(
-                                  image: const AssetImage("assets/menu.png"),
-                                  height: 20,
-                                  color: notifier.textColor,
-                                )),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 5,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  color: notifier.containercolore,
-                                  borderRadius: BorderRadius.circular(25)),
-                              child: TextField(
-                                onTap: () {
-                                  _addMarkers();
-                                  fun().then((value) {
-                                    setState(() {});
-                                    getCurrentLatAndLong(lathome, longhome)
-                                        .then(
-                                      (value) {
-                                        mapController1.animateCamera(
-                                          CameraUpdate.newCameraPosition(
-                                            CameraPosition(
-                                              target: LatLng(lathome, longhome),
-                                              zoom: 14.0,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                    // socketConnect();
-                                  });
-                                  // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
-                                },
-                                // controller: controller,
-                                readOnly: true,
-                                style: const TextStyle(color: Colors.black),
-                                decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        vertical: 15, horizontal: 15),
-                                    border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(25)),
-                                        borderSide: BorderSide(
-                                            color: notifier.background)),
-                                    enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(25)),
-                                        borderSide: BorderSide(
-                                            color: notifier.background)),
-                                    hintText: "Your Current Location".tr,
-                                    hintStyle: const TextStyle(
-                                        color: Colors.grey,
-                                        fontFamily: "SofiaProBold",
-                                        fontSize: 14),
-                                    focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(25)),
-                                        borderSide: BorderSide(
-                                            color: notifier.containercolore)),
-                                    prefixIcon: Padding(
-                                      padding: const EdgeInsets.all(15),
-                                      child: Container(
-                                        height: 20,
-                                        width: 20,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                              color: Colors.green, width: 6),
-                                        ),
-                                      ),
-                                    ),
-                                    suffixIcon: InkWell(
-                                        onTap: () {
-                                          // fun().then((value) {
-                                          //   setState(() {
-                                          //   });
-                                          //   getCurrentLatAndLong(lathome, longhome);
-                                          //   mapController1.animateCamera(
-                                          //     CameraUpdate.newCameraPosition(
-                                          //       CameraPosition(
-                                          //         target: LatLng(lathome, longhome),
-                                          //         zoom: 14.0,
-                                          //       ),
-                                          //     ),
-                                          //   );
-                                          // });
-
-                                          _addMarkers();
-                                          fun().then((value) {
-                                            setState(() {});
-                                            getCurrentLatAndLong(
-                                                    lathome, longhome)
-                                                .then(
-                                              (value) {
-                                                mapController1.animateCamera(
-                                                  CameraUpdate
-                                                      .newCameraPosition(
-                                                    CameraPosition(
-                                                      target: LatLng(
-                                                          lathome, longhome),
-                                                      zoom: 14.0,
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            );
-                                            // socketConnect();
-                                          });
-                                        },
-                                        child: SvgPicture.asset(
-                                          "assets/svgpicture/gpsicon.svg",
-                                        ))),
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    DraggableScrollableSheet(
-                      // initialChildSize:  homeApiController.homeapimodel!.categoryList![select1].bidding == "1" ? 0.37 : 0.30, // Set the default height to 50% of the screen
-                      initialChildSize:
-                          0.45, // Set the default height to 50% of the screen
-                      minChildSize: 0.2, // Minimum height
-                      maxChildSize: 1.0,
-                      controller: sheetController,
-                      builder: (BuildContext context, scrollController) {
-                        return Container(
-                          // height: 100,
-                          clipBehavior: Clip.hardEdge,
-                          decoration: BoxDecoration(
-                            // color: Colors.white,
-                            color: notifier.containercolore,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(25),
-                              topRight: Radius.circular(25),
-                            ),
-                          ),
-                          child: CustomScrollView(
-                            controller: scrollController,
-                            slivers: [
-                              SliverToBoxAdapter(
-                                child: Center(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: notifier.textColor,
-                                      borderRadius: const BorderRadius.all(
-                                          Radius.circular(10)),
-                                    ),
-                                    height: 4,
-                                    width: 40,
-                                    margin: const EdgeInsets.symmetric(
-                                        vertical: 10),
-                                  ),
-                                ),
-                              ),
-                              SliverList.list(children: [
-                                const SizedBox(height: 10),
-
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: 10, right: 10),
-                                  child: SizedBox(
-                                    height: 90,
-                                    child: ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      clipBehavior: Clip.none,
-                                      itemCount: homeApiController
-                                          .homeapimodel!.categoryList!.length,
-                                      shrinkWrap: true,
-                                      itemBuilder: (context, index) {
-                                        return InkWell(
-                                            onTap: () {
-                                              setState(() {
-                                                select1 = index;
-                                                // dropcontroller.clear();
-                                                mid = homeApiController
-                                                    .homeapimodel!
-                                                    .categoryList![index]
-                                                    .id
-                                                    .toString();
-                                                mroal = homeApiController
-                                                    .homeapimodel!
-                                                    .categoryList![index]
-                                                    .role
-                                                    .toString();
-                                                print(
-                                                    "*****mid*-**:::::------$mid");
-                                                _iconPaths.clear();
-                                                vihicallocations.clear();
-                                                _iconPathsbiddingon.clear();
-                                                vihicallocationsbiddingon
-                                                    .clear();
-
-                                                pickupcontroller.text.isEmpty ||
-                                                        dropcontroller
-                                                            .text.isEmpty
-                                                    ? markers.clear()
-                                                    : "";
-                                                pickupcontroller.text.isEmpty ||
-                                                        dropcontroller
-                                                            .text.isEmpty
-                                                    ? fun().then((value) {
-                                                        setState(() {});
-                                                        getCurrentLatAndLong(
-                                                            lathome, longhome);
-                                                        // _loadMapStyles();
-                                                        // socketConnect();
-                                                      })
-                                                    : "";
-
-                                                // vihicallocations.clear();
-                                                // markers.clear();
-                                                // _addMarkers();
-
-                                                pickupcontroller.text.isEmpty ||
-                                                        dropcontroller
-                                                            .text.isEmpty
-                                                    ? homeMapController
-                                                        .homemapApi(
-                                                            mid: mid,
-                                                            lat: lathome
-                                                                .toString(),
-                                                            lon: longhome
-                                                                .toString())
-                                                        .then(
-                                                        (value) {
-                                                          setState(() {});
-                                                          print(
-                                                              "///:---  ${value["Result"]}");
-
-                                                          if (value["Result"] ==
-                                                              false) {
-                                                            setState(() {
-                                                              vihicallocations
-                                                                  .clear();
-                                                              markers.clear();
-                                                              _addMarkers();
-                                                              fun().then(
-                                                                  (value) {
-                                                                setState(() {});
-                                                                getCurrentLatAndLong(
-                                                                    lathome,
-                                                                    longhome);
-                                                                // socketConnect();
-                                                              });
-                                                              print(
-                                                                  "***if condition+++:---  $vihicallocations");
-                                                            });
-                                                          } else {
-                                                            setState(() {});
-                                                            for (int i = 0;
-                                                                i <
-                                                                    homeMapController
-                                                                        .homeMapApiModel!
-                                                                        .list!
-                                                                        .length;
-                                                                i++) {
-                                                              vihicallocations.add(LatLng(
-                                                                  double.parse(homeMapController
-                                                                      .homeMapApiModel!
-                                                                      .list![i]
-                                                                      .latitude
-                                                                      .toString()),
-                                                                  double.parse(homeMapController
-                                                                      .homeMapApiModel!
-                                                                      .list![i]
-                                                                      .longitude
-                                                                      .toString())));
-                                                              _iconPaths.add(
-                                                                  "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                                                            }
-                                                            _addMarkers();
-                                                          }
-
-                                                          print(
-                                                              "******-**:::::------$vihicallocations");
-                                                        },
-                                                      )
-                                                    : homeMapController
-                                                        .homemapApi(
-                                                            mid: mid,
-                                                            lat: lathome
-                                                                .toString(),
-                                                            lon: longhome
-                                                                .toString())
-                                                        .then(
-                                                        (value) {
-                                                          setState(() {});
-                                                          print(
-                                                              "///:---  ${value["Result"]}");
-
-                                                          if (value["Result"] ==
-                                                              false) {
-                                                            setState(() {
-                                                              vihicallocationsbiddingon
-                                                                  .clear();
-                                                              markers.clear();
-                                                              _addMarkers2();
-                                                              print(
-                                                                  "***if condition+++:---  $vihicallocationsbiddingon");
-                                                            });
-                                                          } else {
-                                                            setState(() {});
-                                                            for (int i = 0;
-                                                                i <
-                                                                    homeMapController
-                                                                        .homeMapApiModel!
-                                                                        .list!
-                                                                        .length;
-                                                                i++) {
-                                                              vihicallocationsbiddingon.add(LatLng(
-                                                                  double.parse(homeMapController
-                                                                      .homeMapApiModel!
-                                                                      .list![i]
-                                                                      .latitude
-                                                                      .toString()),
-                                                                  double.parse(homeMapController
-                                                                      .homeMapApiModel!
-                                                                      .list![i]
-                                                                      .longitude
-                                                                      .toString())));
-                                                              _iconPathsbiddingon
-                                                                  .add(
-                                                                      "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                                                            }
-                                                            _addMarkers2();
-                                                          }
-
-                                                          print(
-                                                              "******-**:::::------$vihicallocationsbiddingon");
-                                                        },
-                                                      );
-
-                                                calculateController
-                                                    .calculateApi(
-                                                        context: context,
-                                                        uid: useridgloable
-                                                            .toString(),
-                                                        mid: mid,
-                                                        mrole: mroal,
-                                                        pickup_lat_lon:
-                                                            "$latitudepick,$longitudepick",
-                                                        drop_lat_lon:
-                                                            "$latitudedrop,$longitudedrop",
-                                                        drop_lat_lon_list:
-                                                            onlypass)
-                                                    .then(
-                                                  (value) {
-                                                    dropprice = 0;
-                                                    minimumfare = 0;
-                                                    maximumfare = 0;
-
-                                                    if (value["Result"] ==
-                                                        true) {
-                                                      amountresponse = "true";
-                                                      dropprice =
-                                                          safeParseDouble(value[
-                                                              "drop_price"]);
-
-                                                      minimumfare =
-                                                          safeParseDouble(value[
-                                                                  "vehicle"]
-                                                              ["minimum_fare"]);
-                                                      maximumfare =
-                                                          safeParseDouble(value[
-                                                                  "vehicle"]
-                                                              ["maximum_fare"]);
-                                                      responsemessage =
-                                                          value["message"];
-
-                                                      tot_hour =
-                                                          value["tot_hour"]
-                                                              .toString();
-                                                      tot_time =
-                                                          value["tot_minute"]
-                                                              .toString();
-                                                      vehicle_id =
-                                                          value["vehicle"]["id"]
-                                                              .toString();
-                                                      vihicalrice =
-                                                          safeParseDouble(value[
-                                                              "drop_price"]);
-
-                                                      totalkm = safeParseDouble(
-                                                          value["tot_km"]);
-                                                      tot_secound = "0";
-
-                                                      vihicalimage =
-                                                          value["vehicle"]
-                                                                  ["map_img"]
-                                                              .toString();
-                                                      vihicalname =
-                                                          value["vehicle"]
-                                                                  ["name"]
-                                                              .toString();
-
-                                                      setState(() {});
-                                                    } else {
-                                                      amountresponse = "false";
-                                                      print(
-                                                          "jojojojojojojojojojojojojojojojojojojojojojojojo");
-                                                      setState(() {});
-                                                    }
-
-                                                    print(
-                                                        "********** dropprice **********:----- $dropprice");
-                                                    print(
-                                                        "********** minimumfare **********:----- $minimumfare");
-                                                    print(
-                                                        "********** maximumfare **********:----- $maximumfare");
-                                                  },
-                                                );
-                                                // Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen()));
-                                              });
-                                            },
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(4),
-                                              child: Container(
-                                                constraints: BoxConstraints(
-                                                  minWidth: 80,
-                                                  maxWidth: 120,
-                                                  minHeight: 80,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: select1 == index
-                                                      ? theamcolore
-                                                          .withOpacity(0.08)
-                                                      : notifier
-                                                          .containercolore,
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: Column(
-                                                    mainAxisSize: MainAxisSize
-                                                        .min, // Important: prevents overflow
-                                                    crossAxisAlignment:
-                                                        select1 == index
-                                                            ? CrossAxisAlignment
-                                                                .start
-                                                            : CrossAxisAlignment
-                                                                .center,
-                                                    children: [
-                                                      Flexible(
-                                                        // Wrap the Row with Flexible
-                                                        child: Row(
-                                                          mainAxisSize: MainAxisSize
-                                                              .min, // Important: prevents overflow
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            Flexible(
-                                                              // Make image flexible
-                                                              child: SizedBox(
-                                                                height:
-                                                                    30, // Reduced from 40
-                                                                width:
-                                                                    30, // Reduced from 40
-                                                                child: Image(
-                                                                  image: NetworkImage(
-                                                                      "${Config.imageurl}${homeApiController.homeapimodel!.categoryList![index].image}"),
-                                                                  height: 30,
-                                                                  fit: BoxFit
-                                                                      .contain, // Ensure proper scaling
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            if (select1 ==
-                                                                index) ...[
-                                                              const SizedBox(
-                                                                  width: 5),
-                                                              Flexible(
-                                                                // Make info icon flexible
-                                                                child: InkWell(
-                                                                  onTap: () {
-                                                                    // Vehicle info logic here
-                                                                  },
-                                                                  child: Image(
-                                                                    image: const AssetImage(
-                                                                        "assets/info-circle.png"),
-                                                                    height:
-                                                                        16, // Reduced from 20
-                                                                    color:
-                                                                        theamcolore,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      const SizedBox(
-                                                          height:
-                                                              8), // Reduced spacing
-                                                      Flexible(
-                                                        // Make text flexible
-                                                        child: Text(
-                                                          "${homeApiController.homeapimodel!.categoryList![index].name}",
-                                                          style: TextStyle(
-                                                            color: notifier
-                                                                .textColor,
-                                                            fontSize:
-                                                                12, // Smaller font
-                                                          ),
-                                                          maxLines: 2,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ));
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                InkWell(
-                                  onTap: () {
-                                    // _navigateAndRefresh();
-                                    showModalBottomSheet(
-                                      isScrollControlled: true,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.only(
-                                            topRight: Radius.circular(15),
-                                            topLeft: Radius.circular(15)),
-                                      ),
-                                      context: context,
-                                      builder: (context) {
-                                        return Container(
-                                          height: 750,
-                                          decoration: const BoxDecoration(
-                                              color: Colors.pinkAccent,
-                                              borderRadius: BorderRadius.only(
-                                                topRight: Radius.circular(15),
-                                                topLeft: Radius.circular(15),
-                                              )),
-                                          child: Column(
-                                            children: [
-                                              // _navigateAndRefresh();
-                                              Expanded(
-                                                  child: PickupDropPoint(
-                                                pagestate: false,
-                                                bidding: homeApiController
-                                                    .homeapimodel!
-                                                    .categoryList![select1]
-                                                    .bidding
-                                                    .toString(),
-                                              )),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 20, right: 20),
-                                    child: Container(
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.withOpacity(0.05),
-                                        // color: Colors.red,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: ListTile(
-                                        // contentPadding: EdgeInsets.zero,
-                                        contentPadding:
-                                            const EdgeInsets.only(left: 10),
-                                        leading: Container(
-                                          height: 20,
-                                          width: 20,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                                color: Colors.green, width: 4),
-                                          ),
-                                        ),
-                                        title: pickupcontroller.text.isEmpty
-                                            ? Transform.translate(
-                                                offset: const Offset(-20, 0),
-                                                child: Text(
-                                                  "${addresshome ?? "Searching for you on the map...".tr}",
-                                                  style: TextStyle(
-                                                      color:
-                                                          notifier.textColor),
-                                                ))
-                                            : Transform.translate(
-                                                offset: const Offset(-20, 0),
-                                                child: Text(
-                                                  pickupcontroller.text,
-                                                  style: TextStyle(
-                                                      color:
-                                                          notifier.textColor),
-                                                )),
-                                        // trailing: InkWell(
-                                        //   onTap: () {
-                                        //     // Navigator.push(context, MaterialPageRoute(builder: (context) => DriverListScreen(),));
-                                        //   },
-                                        //   child: Container(
-                                        //     padding: const EdgeInsets.all(10),
-                                        //     decoration: BoxDecoration(
-                                        //       color: theamcolore.withOpacity(0.05),
-                                        //       borderRadius: BorderRadius.circular(35),
-                                        //     ),
-                                        //     child: Text("Entrance",style: TextStyle(color: theamcolore)),
-                                        //   ),
-                                        // ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                textfieldlist.isNotEmpty
-                                    ? const SizedBox(height: 0)
-                                    : const SizedBox(height: 10),
-                                textfieldlist.isNotEmpty
-                                    ? InkWell(
-                                        onTap: () {
-                                          // _navigateAndRefresh();
-                                          showModalBottomSheet(
-                                            isScrollControlled: true,
-                                            shape: const RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.only(
-                                                  topRight: Radius.circular(15),
-                                                  topLeft: Radius.circular(15)),
-                                            ),
-                                            context: context,
-                                            builder: (context) {
-                                              return SizedBox(
-                                                height: 750,
-                                                child: Column(
-                                                  children: [
-                                                    // _navigateAndRefresh();
-                                                    Expanded(
-                                                        child: PickupDropPoint(
-                                                      pagestate: false,
-                                                      bidding: homeApiController
-                                                          .homeapimodel!
-                                                          .categoryList![
-                                                              select1]
-                                                          .bidding
-                                                          .toString(),
-                                                    )),
-                                                  ],
-                                                ),
-                                              );
-                                            },
-                                          );
-                                          // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
-                                        },
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                              left: 20, right: 20, top: 10),
-                                          child: Container(
-                                            height: 50,
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  Colors.grey.withOpacity(0.05),
-                                              // color: Colors.red,
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: ListTile(
-                                              contentPadding:
-                                                  const EdgeInsets.only(
-                                                      left: 10, right: 10),
-                                              leading: Container(
-                                                height: 20,
-                                                width: 20,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  shape: BoxShape.circle,
-                                                  border: Border.all(
-                                                      color: Colors.red,
-                                                      width: 4),
-                                                ),
-                                              ),
-                                              title: Transform.translate(
-                                                  offset: const Offset(-20, 0),
-                                                  child: Text(
-                                                    "${textfieldlist.length + 1} route stops",
-                                                    style: TextStyle(
-                                                        color:
-                                                            notifier.textColor),
-                                                  )),
-                                              trailing: Icon(
-                                                Icons.add,
-                                                color: notifier.textColor,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    : Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 20, right: 20),
-                                        child: InkWell(
-                                          onTap: () {
-                                            // _navigateAndRefresh();
-                                            showModalBottomSheet(
-                                              isScrollControlled: true,
-                                              shape:
-                                                  const RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.only(
-                                                    topRight:
-                                                        Radius.circular(15),
-                                                    topLeft:
-                                                        Radius.circular(15)),
-                                              ),
-                                              context: context,
-                                              builder: (context) {
-                                                return SizedBox(
-                                                  height: 750,
-                                                  // color: Colors.red,
-                                                  child: Column(
-                                                    children: [
-                                                      // _navigateAndRefresh();
-                                                      Expanded(
-                                                          child:
-                                                              PickupDropPoint(
-                                                        pagestate: false,
-                                                        bidding:
-                                                            homeApiController
-                                                                .homeapimodel!
-                                                                .categoryList![
-                                                                    select1]
-                                                                .bidding
-                                                                .toString(),
-                                                      )),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
-                                            );
-                                            // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
-                                          },
-                                          child: Container(
-                                            height: 50,
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  Colors.grey.withOpacity(0.05),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 10, right: 10),
-                                              child: Row(
-                                                // crossAxisAlignment: CrossAxisAlignment.start,
-                                                // mainAxisAlignment: MainAxisAlignment.start,
-                                                children: [
-                                                  Image(
-                                                    image: const AssetImage(
-                                                        "assets/search.png"),
-                                                    height: 20,
-                                                    color: notifier.textColor,
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 15,
-                                                  ),
-                                                  Flexible(
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              top: 2),
-                                                      child: dropcontroller
-                                                              .text.isEmpty
-                                                          ? Text(
-                                                              "To",
-                                                              style: TextStyle(
-                                                                  color: notifier
-                                                                      .textColor,
-                                                                  fontSize: 16),
-                                                            )
-                                                          : Text(
-                                                              dropcontroller
-                                                                  .text,
-                                                              style: TextStyle(
-                                                                  color: notifier
-                                                                      .textColor,
-                                                                  fontSize: 16),
-                                                              maxLines: 2,
-                                                            ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                (homeApiController.homeapimodel?.categoryList
-                                                ?.isNotEmpty ==
-                                            true &&
-                                        select1 <
-                                            homeApiController.homeapimodel!
-                                                .categoryList!.length &&
-                                        homeApiController
-                                                .homeapimodel!
-                                                .categoryList![select1]
-                                                .bidding ==
-                                            "1")
-                                    ? const SizedBox(height: 10)
-                                    : const SizedBox(),
-                                (homeApiController.homeapimodel?.categoryList
-                                                ?.isNotEmpty ==
-                                            true &&
-                                        select1 <
-                                            homeApiController.homeapimodel!
-                                                .categoryList!.length &&
-                                        homeApiController
-                                                .homeapimodel!
-                                                .categoryList![select1]
-                                                .bidding ==
-                                            "1")
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 20, right: 20),
-                                        child: InkWell(
-                                          onTap: () {
-                                            // bottomshhetopen = true;
-                                            // if(isLoad){
-                                            //   return;
-                                            // }else{
-                                            //   isLoad = true;
-                                            // }
-                                            // homeApiController.homeApi(uid: useridgloable.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
-                                            //   if(value["Result"] == true){
-                                            //     setState(() {
-                                            //       Buttonpresebottomshhet();
-                                            //       isLoad = false;
-                                            //     });
-                                            //   }else{
-                                            //
-                                            //   }
-                                            // },);
-                                            Buttonpresebottomshhet();
-                                          },
-                                          child: Container(
-                                            height: 50,
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  Colors.grey.withOpacity(0.05),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 10, right: 10),
-                                              child: Row(
-                                                children: [
-                                                  (pickupcontroller
-                                                              .text.isEmpty ||
-                                                          dropcontroller
-                                                              .text.isEmpty)
-                                                      ? Text(
-                                                          "${currencyy ?? globalcurrency}",
-                                                          style: TextStyle(
-                                                              color: notifier
-                                                                  .textColor,
-                                                              fontSize: 16),
-                                                        )
-                                                      : Text(
-                                                          "${currencyy ?? globalcurrency} ${dropprice ?? ""}",
-                                                          style: TextStyle(
-                                                              color: notifier
-                                                                  .textColor,
-                                                              fontSize: 16),
-                                                        ),
-                                                  const SizedBox(
-                                                    width: 8,
-                                                  ),
-                                                  Text(
-                                                    "Offer your fare".tr,
-                                                    style: TextStyle(
-                                                        color:
-                                                            notifier.textColor,
-                                                        fontSize: 16),
-                                                  ),
-                                                  const Spacer(),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    : const SizedBox(),
-                                // const SizedBox(height: 20,),
-                                pickupcontroller.text.isEmpty ||
-                                        dropcontroller.text.isEmpty
-                                    ? Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: CommonButton(
-                                            containcolore:
-                                                theamcolore.withOpacity(0.2),
-                                            onPressed1: () {
-                                              // rateBottomSheet();
-                                              // rateBottomSheet();
-                                              // Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen()));
-                                            },
-                                            context: context,
-                                            txt1: "Find a driver".tr),
-                                      )
-                                    : Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: CommonButton(
-                                            containcolore: theamcolore,
-                                            onPressed1: homeApiController
-                                                        .homeapimodel!
-                                                        .categoryList![select1]
-                                                        .bidding ==
-                                                    "1"
-                                                ? () {
-                                                    // if(isLoad){
-                                                    //   return;
-                                                    // }else{
-                                                    //   isLoad = true;
-                                                    // }
-                                                    // homeApiController.homeApi(uid: useridgloable.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
-                                                    //   if(value["Result"] == true){
-                                                    //    setState(() {
-                                                    //      Buttonpresebottomshhet();
-                                                    //      isLoad = false;
-                                                    //    });
-                                                    //   }else{
-                                                    //
-                                                    //   }
-                                                    // },);
-
-                                                    Buttonpresebottomshhet();
-                                                  }
-                                                : () {
-                                                    print("222222222222");
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) => HomeScreen(
-                                                              latpic:
-                                                                  latitudepick,
-                                                              longpic:
-                                                                  longitudepick,
-                                                              latdrop:
-                                                                  latitudedrop,
-                                                              longdrop:
-                                                                  longitudedrop,
-                                                              destinationlat:
-                                                                  destinationlat)),
-                                                    );
-                                                    modual_calculateController
-                                                        .modualcalculateApi(
-                                                            context: context,
-                                                            uid: useridgloable
-                                                                .toString(),
-                                                            mid: mid,
-                                                            mrole: mroal,
-                                                            pickup_lat_lon:
-                                                                "$latitudepick,$longitudepick",
-                                                            drop_lat_lon:
-                                                                "$latitudedrop,$longitudedrop",
-                                                            drop_lat_lon_list:
-                                                                onlypass)
-                                                        .then(
-                                                      (value) {
-                                                        midseconde =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .id!;
-                                                        vihicalrice = safeParseDouble(
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropPrice);
-                                                        totalkm = safeParseDouble(
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropKm);
-
-                                                        tot_time =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropTime!
-                                                                .toString();
-                                                        tot_hour =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropHour!
-                                                                .toString();
-                                                        vihicalname =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .name!
-                                                                .toString();
-                                                        vihicalimage =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .image!
-                                                                .toString();
-                                                        vehicle_id =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .id!
-                                                                .toString();
-
-                                                        print(
-                                                            "GOGOGOGOGOGOGOGOGOGOGOGOG:- $midseconde");
-                                                        print(
-                                                            "GOGOGOGOGOGOGOGOGOGOGOGOG:- $vihicalrice");
-                                                        // setState((){});
-                                                      },
-                                                    );
-                                                  },
-                                            context: context,
-                                            txt1: "Find a driver".tr),
-                                      ),
-                              ])
-                            ],
-                          ),
-                        );
-                      },
-                    )
-                  ],
-                );
-        },
-      ),
-    );
+        _updateDriverMarker(LatLng(lat, lng), driverId);
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Driver location handler error: $e");
+    }
   }
 
-  Widget draweropen(context) {
-    return Drawer(
-      width: 280,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
-      ),
-      backgroundColor: notifier.containercolore,
-      child: GetBuilder<HomeApiController>(
-        builder: (homeApiController) {
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 60,
-                ),
-                Row(
-                  children: [
-                    Spacer(),
-                    Text(
-                      "V 1.3",
-                      style: TextStyle(
-                          color: Colors.grey.withOpacity(0.8),
-                          fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(width: 10),
-                  ],
-                ),
-                homeApiController.isLoading
-                    ? Center(child: modernCircularProgress())
-                    : InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const ProfileScreen(),
-                          ));
-                        },
-                        child: Stack(
-                          children: [
-                            Container(
-                              height: 80,
-                              width: 80,
-                              decoration: BoxDecoration(
-                                  color: greaycolore, shape: BoxShape.circle),
-                              child: decodeUid["profile_image"] == ""
-                                  ? Center(
-                                      child: Text("${decodeUid["name"][0]}",
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 25)))
-                                  : ClipRRect(
-                                      borderRadius: BorderRadius.circular(65),
-                                      child: Image.network(
-                                        "${Config.imageurl}${decodeUid["profile_image"]}",
-                                        fit: BoxFit.cover,
-                                      )),
-                            ),
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                height: 25,
-                                width: 25,
-                                decoration: BoxDecoration(
-                                    color: theamcolore,
-                                    border: Border.all(color: Colors.white),
-                                    shape: BoxShape.circle),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.add,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Center(
-                  child: Container(
-                    height: 25,
-                    // width: 50,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: theamcolore)),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.only(top: 2),
-                          child: Text(
-                            "${homeApiController.homeapimodel!.cusRating!.avgStar}",
-                            style: TextStyle(
-                                fontSize: 14, color: notifier.textColor),
-                          ),
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        SvgPicture.asset(
-                          "assets/svgpicture/star-fill.svg",
-                          height: 12,
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Text(
-                  username == "" ? "" : username,
-                  style: TextStyle(
-                      color: notifier.textColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20),
-                ),
-                const SizedBox(
-                  height: 5,
-                ),
-                InkWell(
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const ProfileScreen(),
-                      ));
-                    },
-                    child: Text(
-                      "View profile",
-                      style: TextStyle(color: theamcolore),
-                    )),
-                const SizedBox(
-                  height: 5,
-                ),
-                Divider(
-                  color: Colors.grey.withOpacity(0.4),
-                ),
-                // const SizedBox(height: 5,),
-                ListView.builder(
-                  padding: EdgeInsets.zero,
-                  shrinkWrap: true,
-                  itemCount: drowertitle.length,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    return InkWell(
-                      onTap: () {
-                        switch (index) {
-                          case 0:
-                            // Get.back();
-                            pickupcontroller.text = "";
-                            dropcontroller.text = "";
-                            latitudepick = 0.00;
-                            longitudepick = 0.00;
-                            latitudedrop = 0.00;
-                            longitudedrop = 0.00;
-                            picktitle = "";
-                            picksubtitle = "";
-                            droptitle = "";
-                            dropsubtitle = "";
-                            droptitlelist = [];
-                            Get.offAll(const ModernMapScreen(
-                              selectVehicle: false,
-                            ));
-                          case 1:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const MyRideScreen(),
-                            ));
-                          case 2:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const TopUpScreen(),
-                            ));
-                          case 3:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const ProfileScreen(),
-                            ));
-                          case 4:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const LanguageScreen(),
-                            ));
-                          case 5:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const ReferAndEarn(),
-                            ));
-                          case 6:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const FaqScreen(),
-                            ));
-                          case 7:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const NotificationScreen(),
-                            ));
-                          case 8:
-                            return;
-                          case 9:
-                            return;
-                        }
-                      },
-                      child: Padding(
-                        padding:
-                            const EdgeInsets.only(left: 10, right: 10, top: 20),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                SvgPicture.asset(
-                                  "${drowerimage[index]}",
-                                  height: 25,
-                                  color: notifier.textColor,
-                                ),
-                                // const Image(image: AssetImage("assets/info-circle.png"),height: 25,),
-                                const SizedBox(
-                                  width: 15,
-                                ),
-                                Text(
-                                  "${drowertitle[index]}".tr,
-                                  style: TextStyle(
-                                      fontSize: 16, color: notifier.textColor),
-                                ),
-                                const Spacer(),
-                                index == 8
-                                    ? SizedBox(
-                                        height: 20,
-                                        width: 30,
-                                        child: Transform.scale(
-                                          scale: 0.8,
-                                          child: CupertinoSwitch(
-                                            // This bool value toggles the switch.
-                                            value: notifier.isDark,
-                                            activeColor: theamcolore,
-                                            onChanged: (bool value) async {
-                                              // Make the onChanged callback async
-                                              // 1. Perform all asynchronous work first
-                                              SharedPreferences prefs =
-                                                  await SharedPreferences
-                                                      .getInstance();
-                                              await prefs.setBool(
-                                                  "isDark", value);
+  void _handleCalculateResult(dynamic Calculate_Result) {
+    if (!mounted) return;
 
-                                              // 2. Update the state synchronously
-                                              if (mounted) {
-                                                // Safety check
-                                                setState(() {
-                                                  darkMode = value;
-                                                  // The notifier is also a state change, so it can go here too
-                                                  notifier.isAvailable(value);
-                                                });
-                                              }
-
-                                              // 3. Navigate after the state has been updated
-                                              Get.offAll(const ModernMapScreen(
-                                                selectVehicle: false,
-                                              ));
-                                            },
-                                          ),
-                                        ),
-                                      )
-                                    : const SizedBox(),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                GetBuilder<pagelistApiController>(
-                  builder: (pagelistcontroller) {
-                    return pagelistcontroller.isLoading
-                        ? const SizedBox()
-                        : ListView.separated(
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: EdgeInsets.zero,
-                            separatorBuilder: (context, index) {
-                              return const SizedBox(width: 5);
-                            },
-                            shrinkWrap: true,
-                            scrollDirection: Axis.vertical,
-                            itemCount: pagelistcontroller
-                                .pageListApiiimodel!.pagesList!.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            Page_List_description(
-                                                title:
-                                                    pagelistcontroller
-                                                        .pageListApiiimodel!
-                                                        .pagesList![index]
-                                                        .title
-                                                        .toString(),
-                                                description: pagelistcontroller
-                                                    .pageListApiiimodel!
-                                                    .pagesList![index]
-                                                    .description
-                                                    .toString()),
-                                      ));
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: 10, right: 10, top: 20),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          SvgPicture.asset(
-                                            "assets/svgpicture/pagelist.svg",
-                                            height: 25,
-                                            color: notifier.textColor,
-                                          ),
-                                          // const Image(image: AssetImage("assets/svgpicture/pagelist.svg"),height: 25,),
-                                          const SizedBox(
-                                            width: 15,
-                                          ),
-                                          Text(
-                                            "${pagelistcontroller.pageListApiiimodel!.pagesList![index].title}",
-                                            style: TextStyle(
-                                                fontSize: 16,
-                                                color: notifier.textColor),
-                                          ),
-                                          const Spacer(),
-                                          // index == 3 ? Container(
-                                          //    height: 8,
-                                          //    width: 8,
-                                          //    decoration: const BoxDecoration(
-                                          //      color: Colors.red,
-                                          //      shape: BoxShape.circle
-                                          //    ),
-                                          //  ) : const SizedBox()
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            });
-                  },
-                ),
-                // Padding(
-                //   padding: const EdgeInsets.only(left: 10,top: 15,right: 10),
-                //   child: CommonOutLineButton(bordercolore: theamcolore, onPressed1: () {
-                //     loginSharedPreferencesSet(true);
-                //     Get.offAll(const OnboardingScreen());
-                //   },context: context,txt1: "Log Out"),
-                // ),
-                InkWell(
-                  onTap: () {
-                    loginSharedPreferencesSet(true);
-                    Get.offAll(const OnboardingScreen());
-                  },
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.only(left: 10, right: 10, top: 20),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            SvgPicture.asset(
-                              "assets/svgpicture/logout.svg",
-                              height: 25,
-                              color: Colors.red,
-                            ),
-                            const SizedBox(
-                              width: 15,
-                            ),
-                            Text(
-                              "Log Out".tr,
-                              style: const TextStyle(
-                                  fontSize: 16, color: Colors.red),
-                            ),
-                            const Spacer(),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                InkWell(
-                  onTap: () {
-                    Get.back();
-                    showModalBottomSheet<void>(
-                      shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(15),
-                              topLeft: Radius.circular(15))),
-                      context: context,
-                      builder: (BuildContext context) {
-                        return Container(
-                          height: 200,
-                          decoration: BoxDecoration(
-                              color: notifier.containercolore,
-                              borderRadius: const BorderRadius.only(
-                                  topRight: Radius.circular(15),
-                                  topLeft: Radius.circular(15))),
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 15, right: 15),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                const SizedBox(
-                                  height: 25,
-                                ),
-                                Text('Delete Account'.tr,
-                                    style: TextStyle(
-                                        color: theamcolore,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20)),
-                                const SizedBox(height: 12.5),
-                                const Divider(
-                                  color: Colors.grey,
-                                ),
-                                const SizedBox(
-                                  height: 12.5,
-                                ),
-                                Text(
-                                    'Are you sure you want to delete account?'
-                                        .tr,
-                                    style: TextStyle(
-                                        color: notifier.textColor,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold)),
-                                const SizedBox(
-                                  height: 25,
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    ElevatedButton(
-                                      style: ButtonStyle(
-                                          fixedSize:
-                                              const WidgetStatePropertyAll(
-                                                  Size(130, 40)),
-                                          elevation:
-                                              const WidgetStatePropertyAll(0),
-                                          shape: WidgetStatePropertyAll(
-                                              RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10))),
-                                          backgroundColor:
-                                              const WidgetStatePropertyAll(
-                                                  Colors.white)),
-                                      onPressed: () => Navigator.pop(context),
-                                      child: Text('Cancel'.tr,
-                                          style: const TextStyle(
-                                              color: Colors.black)),
-                                    ),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
-                                    ElevatedButton(
-                                      style: ButtonStyle(
-                                          fixedSize:
-                                              const WidgetStatePropertyAll(
-                                                  Size(130, 40)),
-                                          elevation:
-                                              const WidgetStatePropertyAll(0),
-                                          shape: WidgetStatePropertyAll(
-                                              RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10))),
-                                          backgroundColor:
-                                              WidgetStatePropertyAll(
-                                                  theamcolore)),
-                                      onPressed: () => {
-                                        // resetNew(),
-                                        loginSharedPreferencesSet(true),
-                                        deleteAccount
-                                            .deleteaccountApi(
-                                                id: useridgloable.toString())
-                                            .then(
-                                          (value) {
-                                            Get.offAll(OnboardingScreen());
-                                          },
-                                        ),
-                                        // Delete_Api_Class(uid: userData["id"]).then((value) {
-                                        //   ScaffoldMessenger.of(context).showSnackBar(
-                                        //     SnackBar(content: Text(value["ResponseMsg"]),behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),),
-                                        //   );
-                                        // }),
-                                        // Navigator.push(context, MaterialPageRoute(builder: (context) => const Login_Screen(),))
-                                      },
-                                      child: Text('Yes,Remove'.tr,
-                                          style: const TextStyle(
-                                              color: Colors.white)),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10, right: 10),
-                    child: Container(
-                      height: 40,
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.red),
-                          borderRadius: BorderRadius.circular(15)),
-                      child: Center(
-                        child: Text(
-                          "Delete account",
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 30,
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+    try {
+      if (Calculate_Result != null && Calculate_Result['Result'] == true) {
+        context
+            .read<PricingState>()
+            .updateFromCalculateResult(Calculate_Result);
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Calculate result handler error: $e");
+    }
   }
 
-  final FocusNode _focusNode = FocusNode();
+  void _handleRequestTimeout(dynamic RequestTimeOut) {
+    if (!mounted) return;
 
-  int? couponindex;
+    try {
+      if (RequestTimeOut != null) {
+        context.read<RideRequestState>().handleTimeout(RequestTimeOut);
+        _clearGlobalState();
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Request timeout handler error: $e");
+    }
+  }
 
-  Buttonpresebottomshhet() {
-    if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
-      ToastService.showToast(context: context, "Select Pickup and Drop");
-    } else if (amountresponse == "false") {
-      ToastService.showToast(
-          context: context, "Address is not in the zone! map screen");
-    } else if (dropprice == 0) {
-      ToastService.showToast(context: context, responsemessage);
+  void _handleAcceptDriver(dynamic Accept_Driver) {
+    if (!mounted) return;
+
+    try {
+      if (Accept_Driver != null) {
+        context.read<RideRequestState>().updateAcceptedDriver(Accept_Driver);
+
+        // Navigate to driver detail screen
+        Get.to(() => DriverDetailScreen(
+              // Pass required parameters using provider data
+              lat: context.read<LocationState>().latitudePick,
+              long: context.read<LocationState>().longitudePick,
+            ));
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Accept driver handler error: $e");
+    }
+  }
+
+  void _updateDriverMarker(LatLng position, String driverId) {
+    MarkerId markerId = MarkerId("driver_$driverId");
+
+    if (context.read<MapState>().markers.containsKey(markerId)) {
+      context.read<MapState>().updateMarkerPosition(markerId, position);
     } else {
-      toast = 0;
-      amountcontroller.text = dropprice.toString();
-      int maxprice = safeParseInt(maximumfare);
+      // Add new driver marker
+      Marker marker = Marker(
+        markerId: markerId,
+        position: position,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+      );
+      context.read<MapState>().addMarker(markerId, marker);
+    }
+  }
 
-      int minprice = safeParseInt(minimumfare);
-      print("**maxprice**:-- $maxprice");
-      print("**maxprice**:-- $minprice");
-      // controller.reset();
-      // controller.dispose();
+  // ✅ MIGRATED SOCKET EMIT FUNCTIONS
+  void socateempt() {
+    SocketService.instance.emit('vehiclerequest', {
+      'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
+      'driverid': calculateController.calCulateModel!.driverId!,
+    });
+  }
 
-      Get.bottomSheet(
-        enableDrag: false,
-        isDismissible: false,
-        isScrollControlled: true,
-        StatefulBuilder(
+  void socateemptrequesttimeout() {
+    SocketService.instance.emit('Vehicle_Ride_Cancel', {
+      'uid': "$useridgloable",
+      'driverid': calculateController.calCulateModel!.driverId!,
+    });
+  }
+
+  // ✅ ADDITIONAL SOCKET EMIT METHODS
+  void emitVehicleRideCancel(String uid, List driverid) {
+    SocketService.instance.emit('Vehicle_Ride_Cancel', {
+      'uid': uid,
+      'driverid': driverid,
+    });
+  }
+
+  void emitVehiclePaymentChange(
+      String useridgloable, String dId, int paymentId) {
+    SocketService.instance.emit('Vehicle_P_Change', {
+      'useridgloable': useridgloable,
+      'd_id': dId,
+      'payment_id': paymentId,
+    });
+  }
+
+  void emitAcceptBidding(
+      String uid, String dId, String requestId, String price) {
+    SocketService.instance.emit('Accept_Bidding', {
+      'uid': uid,
+      'd_id': dId,
+      'request_id': requestId,
+      'price': price,
+    });
+  }
+
+  // ✅ MIGRATED CLEAR STATE FUNCTION
+  void _clearGlobalState() {
+    if (mounted) {
+      try {
+        context.read<LocationState>().clearLocationData();
+        context.read<PricingState>().clearPricingData();
+        context.read<RideRequestState>().clearRideRequest();
+        context.read<MapState>().clearMapData();
+
+        // Clear local variables
+        vihicallocations.clear();
+        _iconPaths.clear();
+        _iconPathsbiddingon.clear();
+        vihicallocationsbiddingon.clear();
+        _dropOffPoints.clear();
+        couponadd.clear();
+
+        // Reset UI state
+        isLoad = false;
+        toast = 0;
+        payment = 0;
+        paymentname = "";
+        selectedOption = "";
+        selectBoring = "";
+        couponAmt = 0;
+        couponId = "";
+        couponname = "";
+        mainamount = "";
+
+        setState(() {});
+      } catch (e) {
+        if (kDebugMode) print("❌ Clear state error: $e");
+      }
+    }
+  }
+
+  // ✅ BOTTOM SHEET FOR BOOKING
+  void Buttonpresebottomshhet() {
+    final locationState = context.read<LocationState>();
+    final pricingState = context.read<PricingState>();
+
+    showModalBottomSheet(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(15),
+          topRight: Radius.circular(15),
+        ),
+      ),
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
           builder: (context, setState) {
             return Container(
-              // height: 460,
-              width: Get.width,
+              height: 450,
               decoration: BoxDecoration(
                 color: notifier.containercolore,
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(15),
-                    topRight: Radius.circular(15)),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                  topRight: Radius.circular(15),
+                ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 15, right: 15),
-                    child: Column(
-                      children: [
-                        isanimation == false
-                            ? const SizedBox()
-                            : lottie.Lottie.asset("assets/lottie/loading.json",
-                                height: 30),
-
-                        const SizedBox(
-                          height: 20,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10, right: 10, bottom: 50),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    Center(
+                      child: Container(
+                        height: 5,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        Row(
-                          children: [
-                            // Spacer(),
-                            // homeApiController.homeapimodel!.runnigRide!.isEmpty ? SizedBox() :
-                            // InkWell(
-                            //   onTap: () {
-                            //     setState((){
-                            //       socatloadbidinfdata();
-                            //     });
-                            //   },
-                            //   child: Container(
-                            //     padding: EdgeInsets.all(10),
-                            //     decoration: BoxDecoration(
-                            //       borderRadius: BorderRadius.all(Radius.circular(10)),
-                            //       border: Border.all(color: theamcolore),
-                            //     ),
-                            //     child: Center(child: Text("Driver Bid",style: TextStyle(color: theamcolore,fontSize: 12),),),
-                            //   ),
-                            // ),
-                            Spacer(),
-                            SizedBox(
-                              width: 40,
-                            ),
-                            Text(
-                              "Set your price".tr,
-                              style: TextStyle(
-                                  color: notifier.textColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 22),
-                            ),
-                            Spacer(),
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  if (controller != null &&
-                                      controller!.isAnimating) {
-                                    ToastService.showToast(
-                                        context: context,
-                                        "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.");
-                                  } else {
-                                    Get.back();
-                                  }
-                                });
-                              },
-                              child: Container(
-                                height: 40,
-                                width: 40,
-                                decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(0.1),
-                                    shape: BoxShape.circle),
-                                child: Center(
-                                  child: Image(
-                                    image: AssetImage("assets/close.png"),
-                                    color: notifier.textColor,
-                                    height: 20,
-                                  ),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Text("💡Raise the fare, increase your chances.".tr,
-                            style: const TextStyle(color: Colors.grey)),
-                        // const SizedBox(height: 2,),
-                        // const Text("amount goes to the captain",style: TextStyle(color: Colors.grey)),
-                        // SizedBox(height: 30,),
-                        Row(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  if (controller != null &&
-                                      controller!.isAnimating) {
-                                    ToastService.showToast(
-                                        context: context,
-                                        "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.");
-                                  } else {
-                                    if (double.parse(dropprice.toString()) >
-                                        minprice) {
-                                      dropprice -= 1;
-                                      amountcontroller.text =
-                                          dropprice.toString();
-                                      mainamount = dropprice.toString();
-                                      offerpluse = true;
-
-                                      if (couponindex != null) {
-                                        if (couponadd[couponindex!] == true) {
-                                          couponadd[couponindex!] = false;
-                                        }
-                                      }
-
-                                      // couponadd[couponindex!] = false;
-                                      couponname = "";
-                                      couponId = "";
-                                      // if (controller != null && controller.isAnimating) {
-                                      //   controller.dispose();
-                                      // }
-                                      // controller.reset();
-                                      // controller.dispose();
-                                    }
-                                  }
-                                });
-                              },
-                              child: Container(
-                                height: 40,
-                                width: 40,
-                                decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(0.1),
-                                    shape: BoxShape.circle),
-                                child: Center(
-                                  child: Image(
-                                    image: AssetImage("assets/minus.png"),
-                                    color: notifier.textColor,
-                                    height: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const Spacer(),
-                            Center(
-                              child: SizedBox(
-                                width: 150,
-                                child: TextField(
-                                  // focusNode: _focusNode,
-                                  keyboardType: TextInputType.number,
-                                  controller: amountcontroller,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontSize: 30, color: notifier.textColor),
-                                  readOnly: controller != null &&
-                                          controller!.isAnimating
-                                      ? true
-                                      : false,
-                                  onTap: () {
-                                    controller != null &&
-                                            controller!.isAnimating
-                                        ? ToastService.showToast(
-                                            context: context,
-                                            "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                          )
-                                        : "";
-                                  },
-                                  onSubmitted: (value) {
-                                    setState(() {
-                                      if (int.parse(amountcontroller.text) >
-                                          maxprice) {
-                                        amountcontroller.clear();
-                                        toast = 1;
-                                        print("fffff");
-                                      } else if (int.parse(
-                                              amountcontroller.text) <
-                                          minprice) {
-                                        amountcontroller.clear();
-                                        toast = 2;
-                                        print("hhhhh");
-                                      } else {
-                                        toast = 0;
-                                        dropprice =
-                                            int.parse(amountcontroller.text)
-                                                as double;
-                                        mainamount = amountcontroller.text;
-                                        // dropprice = amountcontroller.text;
-                                      }
-                                    });
-                                  },
-                                ),
-                              ),
-                            ),
-                            const Spacer(),
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  if (controller != null &&
-                                      controller!.isAnimating) {
-                                    ToastService.showToast(
-                                      context: context,
-                                      "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                    );
-                                  } else {
-                                    if (double.parse(dropprice.toString()) <
-                                        maxprice) {
-                                      // dropprice = amountcontroller.text;
-                                      dropprice += 1;
-                                      amountcontroller.text =
-                                          dropprice.toString();
-                                      mainamount = dropprice.toString();
-                                      offerpluse = true;
-                                      if (couponindex != null) {
-                                        if (couponadd[couponindex!] == true) {
-                                          couponadd[couponindex!] = false;
-                                        }
-                                      }
-
-                                      couponname = "";
-                                      couponId = "";
-                                      // if (controller != null && controller.isAnimating) {
-                                      //   controller.dispose();
-                                      // }
-                                      // controller.reset();
-                                      // controller.dispose();
-                                    }
-                                  }
-
-                                  print("////:--- $dropprice");
-                                });
-                              },
-                              child: Container(
-                                height: 40,
-                                width: 40,
-                                decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(0.1),
-                                    shape: BoxShape.circle),
-                                child: Center(
-                                  child: Image(
-                                    image: AssetImage("assets/plus.png"),
-                                    color: notifier.textColor,
-                                    height: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        toast == 1
-                            ? Text(
-                                "Maximum fare is $currencyy$maxprice",
-                                style: const TextStyle(color: Colors.red),
-                              )
-                            : toast == 2
-                                ? Text(
-                                    "Minimum fare is $currencyy$minprice",
-                                    style: const TextStyle(color: Colors.red),
-                                  )
-                                : const SizedBox(),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          // leading: const Padding(
-                          //   padding: EdgeInsets.only(left: 10),
-                          //   child: Icon(Icons.telegram,size: 30,),
-                          // ),
-                          leading: const Image(
-                            image: AssetImage("assets/automatically.png"),
-                            height: 30,
-                            width: 30,
-                          ),
-                          title: Text(
-                            "Automatically book the nearest driver for (${globalcurrency}${amountcontroller.text})"
-                                .tr,
-                            style: TextStyle(
-                                color: notifier.textColor, fontSize: 16),
-                          ),
-                          trailing: SizedBox(
-                            height: 30,
-                            width: 40,
-                            child: Transform.scale(
-                              scale: 0.9,
-                              child: CupertinoSwitch(
-                                // This bool value toggles the switch.
-                                value: light,
-                                activeColor: theamcolore,
-                                onChanged: controller != null &&
-                                        controller!.isAnimating
-                                    ? (bool value) {
-                                        ToastService.showToast(
-                                            context: context,
-                                            "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.");
-                                      }
-                                    : (bool value) {
-                                        setState(() {
-                                          light = value;
-                                          offerpluse = true;
-                                          biddautostatus = value.toString();
-                                          print("****:-- (${biddautostatus})");
-                                        });
-                                      },
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Spacer(),
-
-                  Container(
-                    // height: 190,
-                    decoration: BoxDecoration(
-                        color: notifier.containercolore,
-                        // border: Border.all(color: Colors.grey.withOpacity(0.4))
-                        boxShadow: const [
-                          BoxShadow(
-                              color: Colors.grey,
-                              offset: Offset(0, -0.4),
-                              blurRadius: 5),
-                        ]),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    // for(int i=1; i<paymentGetApiController.paymentgetwayapi!.paymentList!.length; i++){
-                                    //   if(int.parse(paymentGetApiController.paymentgetwayapi!.defaultPayment.toString()) == paymentGetApiController.paymentgetwayapi!.paymentList![i].id){
-                                    //     setState((){
-                                    //       payment = paymentGetApiController.paymentgetwayapi!.paymentList![i].id!;
-                                    //       print("+++++$payment");
-                                    //       print("+++++$i");
-                                    //     });
-                                    //   }
-                                    // }
-
-                                    showModalBottomSheet(
-                                      // isDismissible: false,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(15),
-                                            topRight: Radius.circular(15)),
-                                      ),
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return StatefulBuilder(
-                                            builder: (context, setState) {
-                                          return ClipRRect(
-                                            borderRadius:
-                                                const BorderRadius.only(
-                                                    topLeft:
-                                                        Radius.circular(15),
-                                                    topRight:
-                                                        Radius.circular(15)),
-                                            child: Scaffold(
-                                              backgroundColor:
-                                                  notifier.containercolore,
-                                              floatingActionButtonLocation:
-                                                  FloatingActionButtonLocation
-                                                      .centerDocked,
-                                              floatingActionButton: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    bottom: 10,
-                                                    left: 10,
-                                                    right: 10),
-                                                child: CommonButton(
-                                                    containcolore: theamcolore,
-                                                    onPressed1: () {
-                                                      Get.back();
-                                                      Get.back();
-                                                      Buttonpresebottomshhet();
-                                                      // Get.back();
-                                                    },
-                                                    txt1: "CONTINUE".tr,
-                                                    context: context),
-                                              ),
-                                              body: Container(
-                                                // height: 450,
-                                                decoration: BoxDecoration(
-                                                  color:
-                                                      notifier.containercolore,
-                                                  borderRadius:
-                                                      BorderRadius.only(
-                                                          topLeft:
-                                                              Radius.circular(
-                                                                  15),
-                                                          topRight:
-                                                              Radius.circular(
-                                                                  15)),
-                                                ),
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          left: 10,
-                                                          right: 10,
-                                                          bottom: 50),
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.start,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: <Widget>[
-                                                      const SizedBox(
-                                                        height: 13,
-                                                      ),
-                                                      Text(
-                                                          'Payment Getway Method'
-                                                              .tr,
-                                                          style: TextStyle(
-                                                              fontFamily:
-                                                                  "SofiaProBold",
-                                                              fontSize: 18,
-                                                              color: notifier
-                                                                  .textColor)),
-                                                      const SizedBox(
-                                                        height: 10,
-                                                      ),
-                                                      walleteamount == 0
-                                                          ? const SizedBox()
-                                                          : Row(
-                                                              children: [
-                                                                SvgPicture
-                                                                    .asset(
-                                                                  "assets/svgpicture/wallet.svg",
-                                                                  height: 30,
-                                                                  color:
-                                                                      theamcolore,
-                                                                ),
-                                                                const SizedBox(
-                                                                  width: 10,
-                                                                ),
-                                                                Text(
-                                                                  "My Wallet (${globalcurrency}${walleteamount})",
-                                                                  style: TextStyle(
-                                                                      color: notifier
-                                                                          .textColor),
-                                                                ),
-                                                                const Spacer(),
-                                                                Transform.scale(
-                                                                  scale: 0.8,
-                                                                  child:
-                                                                      CupertinoSwitch(
-                                                                    value:
-                                                                        switchValue,
-                                                                    activeColor:
-                                                                        theamcolore,
-                                                                    onChanged: (bool
-                                                                        value) {
-                                                                      setState(
-                                                                          () {
-                                                                        switchValue =
-                                                                            value;
-                                                                      });
-                                                                    },
-                                                                  ),
-                                                                )
-                                                              ],
-                                                            ),
-                                                      const SizedBox(
-                                                        height: 10,
-                                                      ),
-                                                      Expanded(
-                                                        child:
-                                                            ListView.separated(
-                                                                separatorBuilder:
-                                                                    (context,
-                                                                        index) {
-                                                                  return const SizedBox(
-                                                                      width: 0);
-                                                                },
-                                                                shrinkWrap:
-                                                                    true,
-                                                                scrollDirection:
-                                                                    Axis
-                                                                        .vertical,
-                                                                itemCount: paymentGetApiController
-                                                                    .paymentgetwayapi!
-                                                                    .paymentList!
-                                                                    .length,
-                                                                itemBuilder:
-                                                                    (BuildContext
-                                                                            context,
-                                                                        int index) {
-                                                                  return InkWell(
-                                                                    onTap: () {
-                                                                      setState(
-                                                                          () {
-                                                                        // payment = index;
-                                                                        payment = paymentGetApiController
-                                                                            .paymentgetwayapi!
-                                                                            .paymentList![index]
-                                                                            .id!;
-                                                                        paymentname = paymentGetApiController
-                                                                            .paymentgetwayapi!
-                                                                            .paymentList![index]
-                                                                            .name!;
-                                                                        // paymentmethodId = paymentGetApiController.paymentgetwayapi!.paymentdata[index].id;
-                                                                      });
-                                                                    },
-                                                                    child: paymentGetApiController.paymentgetwayapi!.paymentList![index].status ==
-                                                                            "0"
-                                                                        ? const SizedBox()
-                                                                        : Container(
-                                                                            height:
-                                                                                90,
-                                                                            margin: const EdgeInsets.only(
-                                                                                left: 10,
-                                                                                right: 10,
-                                                                                top: 6,
-                                                                                bottom: 6),
-                                                                            padding:
-                                                                                const EdgeInsets.all(5),
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              // color: Colors.yellowAccent,
-                                                                              border: Border.all(color: payment == paymentGetApiController.paymentgetwayapi!.paymentList![index].id! ? theamcolore : Colors.grey.withOpacity(0.4)),
-                                                                              borderRadius: BorderRadius.circular(15),
-                                                                            ),
-                                                                            child:
-                                                                                Center(
-                                                                              child: ListTile(
-                                                                                leading: Transform.translate(
-                                                                                  offset: const Offset(-5, 0),
-                                                                                  child: Container(
-                                                                                    height: 100,
-                                                                                    width: 60,
-                                                                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withOpacity(0.4)), image: DecorationImage(image: NetworkImage('${Config.imageurl}${paymentGetApiController.paymentgetwayapi!.paymentList![index].image}'))),
-                                                                                  ),
-                                                                                ),
-                                                                                title: Padding(
-                                                                                  padding: const EdgeInsets.only(bottom: 4),
-                                                                                  child: Text(
-                                                                                    paymentGetApiController.paymentgetwayapi!.paymentList![index].name.toString(),
-                                                                                    style: TextStyle(fontSize: 16, fontFamily: "SofiaProBold", color: notifier.textColor),
-                                                                                    maxLines: 2,
-                                                                                  ),
-                                                                                ),
-                                                                                subtitle: Padding(
-                                                                                  padding: const EdgeInsets.only(bottom: 4),
-                                                                                  child: Text(
-                                                                                    paymentGetApiController.paymentgetwayapi!.paymentList![index].subTitle.toString(),
-                                                                                    style: TextStyle(fontSize: 12, fontFamily: "SofiaProBold", color: notifier.textColor),
-                                                                                    maxLines: 2,
-                                                                                  ),
-                                                                                ),
-                                                                                trailing: Radio(
-                                                                                  value: payment == paymentGetApiController.paymentgetwayapi!.paymentList![index].id! ? true : false,
-                                                                                  fillColor: MaterialStatePropertyAll(theamcolore),
-                                                                                  groupValue: true,
-                                                                                  onChanged: (value) {
-                                                                                    print(value);
-                                                                                    setState(() {
-                                                                                      selectedOption = value.toString();
-                                                                                      selectBoring = paymentGetApiController.paymentgetwayapi!.paymentList![index].image.toString();
-                                                                                    });
-                                                                                  },
-                                                                                ),
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                  );
-                                                                }),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        });
-                                      },
-                                    );
-                                  },
-                                  child: ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    // leading: const Icon(Icons.card_giftcard_sharp),
-                                    leading: const Image(
-                                      image: AssetImage("assets/payment.png"),
-                                      height: 30,
-                                      width: 30,
-                                    ),
-                                    title: Transform.translate(
-                                        offset: const Offset(-15, 0),
-                                        child: Text(
-                                          paymentname,
-                                          style: TextStyle(
-                                              color: notifier.textColor),
-                                        )),
-                                    trailing: Image(
-                                      image: AssetImage(
-                                          "assets/angle-right-small.png"),
-                                      height: 30,
-                                      color: notifier.textColor,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 3,
-                              ),
-                              Container(
-                                height: 40,
-                                width: 1,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.withOpacity(0.4),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    {
-                                      setState(() {
-                                        mainamount = dropprice.toString();
-                                        if (couponadd.isEmpty) {
-                                          for (int i = 0;
-                                              i <
-                                                  paymentGetApiController
-                                                      .paymentgetwayapi!
-                                                      .couponList!
-                                                      .length;
-                                              i++) {
-                                            couponadd.add(false);
-                                          }
-                                        }
-                                      });
-
-                                      showModalBottomSheet(
-                                        isScrollControlled: true,
-                                        // isDismissible: true,
-                                        shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.only(
-                                              topLeft: Radius.circular(15),
-                                              topRight: Radius.circular(15)),
-                                        ),
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return StatefulBuilder(
-                                              builder: (context, setState) {
-                                            return Scaffold(
-                                              backgroundColor:
-                                                  notifier.containercolore,
-                                              appBar: AppBar(
-                                                elevation: 0,
-                                                toolbarHeight: 90,
-                                                backgroundColor:
-                                                    notifier.containercolore,
-                                                automaticallyImplyLeading:
-                                                    false,
-                                                leading: Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 40,
-                                                          left: 18,
-                                                          right: 18),
-                                                  child: InkWell(
-                                                      onTap: () {
-                                                        Get.back();
-                                                      },
-                                                      child: Image(
-                                                        image: AssetImage(
-                                                            "assets/arrow-left.png"),
-                                                        color:
-                                                            notifier.textColor,
-                                                      )),
-                                                ),
-                                                title: Transform.translate(
-                                                    offset:
-                                                        const Offset(-10, 0),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              top: 40),
-                                                      child: Text(
-                                                        "All coupons".tr,
-                                                        style: TextStyle(
-                                                            color: notifier
-                                                                .textColor,
-                                                            fontSize: 18),
-                                                      ),
-                                                    )),
-                                              ),
-                                              body: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(15),
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.start,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  children: [
-                                                    Text(
-                                                      "Best Coupon".tr,
-                                                      style: TextStyle(
-                                                          color: notifier
-                                                              .textColor,
-                                                          fontSize: 20),
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 20,
-                                                    ),
-                                                    Expanded(
-                                                      child: ListView.builder(
-                                                        shrinkWrap: true,
-                                                        itemCount:
-                                                            paymentGetApiController
-                                                                .paymentgetwayapi!
-                                                                .couponList!
-                                                                .length,
-                                                        itemBuilder:
-                                                            (context, index) {
-                                                          return Container(
-                                                            // height: 230,
-                                                            margin:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    bottom: 10),
-                                                            decoration: BoxDecoration(
-                                                                color: notifier
-                                                                    .containercolore,
-                                                                borderRadius: BorderRadius
-                                                                    .all(Radius
-                                                                        .circular(
-                                                                            15)),
-                                                                border: Border.all(
-                                                                    color: Colors
-                                                                        .grey
-                                                                        .withOpacity(
-                                                                            0.4))),
-                                                            child: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(15),
-                                                              child: Row(
-                                                                children: [
-                                                                  Column(
-                                                                    crossAxisAlignment:
-                                                                        CrossAxisAlignment
-                                                                            .start,
-                                                                    children: [
-                                                                      Text(
-                                                                        "${paymentGetApiController.paymentgetwayapi!.couponList![index].title}",
-                                                                        style: TextStyle(
-                                                                            color:
-                                                                                notifier.textColor,
-                                                                            fontWeight: FontWeight.bold,
-                                                                            fontSize: 18),
-                                                                      ),
-                                                                      const SizedBox(
-                                                                        height:
-                                                                            5,
-                                                                      ),
-                                                                      Text(
-                                                                        "${paymentGetApiController.paymentgetwayapi!.couponList![index].subTitle}",
-                                                                        style: const TextStyle(
-                                                                            color:
-                                                                                Colors.grey),
-                                                                      ),
-                                                                      const SizedBox(
-                                                                        height:
-                                                                            10,
-                                                                      ),
-                                                                      Row(
-                                                                        children: [
-                                                                          Text(
-                                                                            "Coupon Code: ".tr,
-                                                                            style:
-                                                                                TextStyle(color: notifier.textColor),
-                                                                          ),
-                                                                          Text(
-                                                                            "${paymentGetApiController.paymentgetwayapi!.couponList![index].code}",
-                                                                            style:
-                                                                                TextStyle(color: theamcolore, fontWeight: FontWeight.bold),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                      const SizedBox(
-                                                                        height:
-                                                                            5,
-                                                                      ),
-                                                                      Row(
-                                                                        children: [
-                                                                          Text(
-                                                                            "Coupon Amount: ".tr,
-                                                                            style:
-                                                                                TextStyle(color: notifier.textColor),
-                                                                          ),
-                                                                          Text(
-                                                                            "${globalcurrency}${paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount}",
-                                                                            style:
-                                                                                TextStyle(fontWeight: FontWeight.bold, color: notifier.textColor),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                      const SizedBox(
-                                                                        height:
-                                                                            5,
-                                                                      ),
-                                                                      Row(
-                                                                        children: [
-                                                                          Text(
-                                                                            "Minimum Amount: ".tr,
-                                                                            style:
-                                                                                TextStyle(color: notifier.textColor),
-                                                                          ),
-                                                                          Text(
-                                                                            "${globalcurrency}${paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount}",
-                                                                            style:
-                                                                                TextStyle(fontWeight: FontWeight.bold, color: notifier.textColor),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                      const SizedBox(
-                                                                        height:
-                                                                            5,
-                                                                      ),
-                                                                      Row(
-                                                                        children: [
-                                                                          Text(
-                                                                            "Ex Date: ".tr,
-                                                                            style:
-                                                                                TextStyle(color: notifier.textColor),
-                                                                          ),
-                                                                          Text(
-                                                                            paymentGetApiController.paymentgetwayapi!.couponList![index].endDate.toString().split(" ").first,
-                                                                            style:
-                                                                                TextStyle(fontWeight: FontWeight.bold, color: notifier.textColor),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                      const SizedBox(
-                                                                          height:
-                                                                              15),
-                                                                      couponadd[index] ==
-                                                                              true
-                                                                          ? InkWell(
-                                                                              onTap: () {
-                                                                                setState(() {
-                                                                                  // couponindex = index;
-                                                                                  couponadd[index] = false;
-                                                                                  dropprice = mainamount as double;
-                                                                                  amountcontroller.text = mainamount;
-                                                                                  couponname = "";
-                                                                                  couponId = "";
-                                                                                  Get.back(result: {
-                                                                                    "coupAdded": "",
-                                                                                    "couponid": "",
-                                                                                  });
-                                                                                  Get.back(result: {
-                                                                                    "coupAdded": "",
-                                                                                    "couponid": "",
-                                                                                  });
-                                                                                  Buttonpresebottomshhet();
-                                                                                });
-                                                                              },
-                                                                              child: Container(
-                                                                                  height: 45,
-                                                                                  width: 130,
-                                                                                  decoration: BoxDecoration(
-                                                                                    border: Border.all(color: Colors.red),
-                                                                                    borderRadius: BorderRadius.circular(30),
-                                                                                  ),
-                                                                                  child: const Center(
-                                                                                      child: Text(
-                                                                                    "Remove",
-                                                                                    style: TextStyle(color: Colors.red),
-                                                                                  ))))
-                                                                          : InkWell(
-                                                                              onTap: () {
-                                                                                if (double.parse(amountcontroller.text.toString()) >= double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount.toString())) {
-                                                                                  // cartController.checkCouponDataApi(cid: cartController.cartDataInfo?.couponList[index].id);
-
-                                                                                  setState(() {
-                                                                                    couponAmt = int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString());
-                                                                                    // couponadd[index] = true;
-                                                                                    couponindex = index;
-                                                                                    if (couponadd[index] == false) {
-                                                                                      for (int i = 0; i < couponadd.length; i++) {
-                                                                                        if (couponadd.contains(true)) {
-                                                                                          couponadd[i] = false;
-                                                                                        }
-                                                                                      }
-                                                                                      couponadd[index] = true;
-                                                                                    } else {
-                                                                                      couponadd[index] = false;
-                                                                                    }
-                                                                                  });
-
-                                                                                  // amountcontroller.text = "${double.parse(amountcontroller.text) - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString())}";
-                                                                                  // amountcontroller.text = "${double.parse(amountcontroller.text) - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString())}";
-
-                                                                                  print("----------------------------------------${double.parse(amountcontroller.text.toString())}");
-                                                                                  couponname = paymentGetApiController.paymentgetwayapi!.couponList![index].title.toString();
-                                                                                  couponId = paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString();
-
-                                                                                  print("xjsbchjscvsgchsvcscsc  $couponId");
-
-                                                                                  // Get.back(result: paymentGetApiController.paymentgetwayapi!.couponList![index].code);
-                                                                                  Get.back(result: {
-                                                                                    "coupAdded": paymentGetApiController.paymentgetwayapi!.couponList![index].title,
-                                                                                    "couponid": paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString(),
-                                                                                  });
-                                                                                  Get.back(result: {
-                                                                                    "coupAdded": paymentGetApiController.paymentgetwayapi!.couponList![index].title,
-                                                                                    "couponid": paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString(),
-                                                                                  });
-                                                                                  Buttonpresebottomshhet();
-                                                                                }
-                                                                              },
-                                                                              child: Container(
-                                                                                  height: 45,
-                                                                                  width: 130,
-                                                                                  decoration: BoxDecoration(
-                                                                                    border: Border.all(color: int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount!) < int.parse(mainamount) ? theamcolore : Colors.grey.withOpacity(0.2)),
-                                                                                    borderRadius: BorderRadius.circular(30),
-                                                                                  ),
-                                                                                  child: Center(
-                                                                                      child: Text(
-                                                                                    "Apply coupons".tr,
-                                                                                    style: TextStyle(color: int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount!) < int.parse(mainamount) ? theamcolore : Colors.grey),
-                                                                                  ))),
-                                                                            ),
-                                                                    ],
-                                                                  ),
-                                                                  const Spacer(),
-                                                                  Column(
-                                                                    crossAxisAlignment:
-                                                                        CrossAxisAlignment
-                                                                            .center,
-                                                                    mainAxisAlignment:
-                                                                        MainAxisAlignment
-                                                                            .center,
-                                                                    children: [
-                                                                      SvgPicture
-                                                                          .asset(
-                                                                        "assets/svgpicture/offerIcon.svg",
-                                                                        height:
-                                                                            50,
-                                                                      )
-                                                                    ],
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                          );
-                                                        },
-                                                      ),
-                                                    )
-                                                    // Listview
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-                                          });
-                                        },
-                                      );
-                                    }
-                                  },
-                                  child: ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    // leading: const Padding(
-                                    //   padding: EdgeInsets.only(top: 8),
-                                    //   child: Icon(Icons.circle_notifications_sharp),
-                                    // ),
-                                    leading: const Padding(
-                                      padding: EdgeInsets.only(top: 6),
-                                      child: Image(
-                                        image: AssetImage("assets/coupon.png"),
-                                        height: 30,
-                                        width: 30,
-                                      ),
-                                    ),
-
-                                    title: couponname == ""
-                                        ? Transform.translate(
-                                            offset: const Offset(-15, 10),
-                                            child: Text(
-                                              "Coupon".tr,
-                                              style: TextStyle(
-                                                  color: notifier.textColor),
-                                            ))
-                                        : Transform.translate(
-                                            offset: const Offset(-15, 0),
-                                            child: Text(
-                                              couponname,
-                                              style: TextStyle(
-                                                  color: notifier.textColor),
-                                            )),
-                                    subtitle: couponname == ""
-                                        ? const Text("")
-                                        : Transform.translate(
-                                            offset: const Offset(-15, 0),
-                                            child: Text(
-                                              "Coupon applied".tr,
-                                              style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: notifier.textColor),
-                                            )),
-                                    trailing: Image(
-                                      image: AssetImage(
-                                          "assets/angle-right-small.png"),
-                                      height: 30,
-                                      color: notifier.textColor,
-                                    ),
-
-                                    // title: Transform.translate(offset: const Offset(-15, 0),child: const Text("BIKE50")),
-                                    // subtitle: Transform.translate(offset: const Offset(-15, 0),child: const Text("Coupon applied",style: TextStyle(fontSize: 12),)),
-                                    // trailing: const Image(image: AssetImage("assets/angle-right-small.png"),height: 30,),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          isanimation == false
-                              ? CommonButton(
-                                  containcolore: theamcolore,
-                                  onPressed1: () {
-                                    setState(() {
-                                      if (double.parse(amountcontroller.text) >
-                                          maxprice) {
-                                        amountcontroller.clear();
-                                        toast = 1;
-                                        print("fffff");
-                                      } else if (double.parse(
-                                              amountcontroller.text) <
-                                          minprice) {
-                                        amountcontroller.clear();
-                                        toast = 2;
-                                        print("hhhhh");
-                                      } else {
-                                        isanimation = true;
-                                        loadertimer = true;
-                                        offerpluse = false;
-                                        requesttime();
-                                        orderfunction();
-                                        // dropprice = amountcontroller.text;
-                                      }
-                                    });
-                                  },
-                                  context: context,
-                                  txt1:
-                                      "Book for ${currencyy ?? globalcurrency}${amountcontroller.text}")
-                              : AnimatedBuilder(
-                                  animation: controller!,
-                                  builder: (context, child) {
-                                    return SizedBox(
-                                      height: 49,
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        style: ButtonStyle(
-                                          padding: const WidgetStatePropertyAll(
-                                              EdgeInsets.zero),
-                                          elevation:
-                                              const WidgetStatePropertyAll(0),
-                                          overlayColor:
-                                              const WidgetStatePropertyAll(
-                                                  Colors.transparent),
-                                          backgroundColor:
-                                              WidgetStatePropertyAll(
-                                                  theamcolore.withOpacity(0.4)),
-                                          shape: WidgetStatePropertyAll(
-                                            RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            setState(() {
-                                              if (double.parse(
-                                                      amountcontroller.text) >
-                                                  maxprice) {
-                                                amountcontroller.clear();
-                                                toast = 1;
-                                                print("fffff");
-                                              } else if (double.parse(
-                                                      amountcontroller.text) <
-                                                  minprice) {
-                                                amountcontroller.clear();
-                                                toast = 2;
-                                                print("hhhhh");
-                                              } else {
-                                                if (offerpluse == true) {
-                                                  // refreshAnimation();
-                                                  if (controller != null &&
-                                                      controller!.isAnimating) {
-                                                    controller!.dispose();
-                                                  }
-                                                  print(
-                                                      "fgvjgfsvjhsgfvjhbfgvjhafgbvhjkafgv");
-                                                  requesttime();
-                                                  orderfunction();
-
-                                                  offerpluse = false;
-                                                } else {}
-                                                // dropprice = amountcontroller.text;
-                                              }
-
-                                              // refreshAnimation();
-
-                                              if (double.parse(
-                                                      amountcontroller.text) >
-                                                  maxprice) {
-                                                amountcontroller.clear();
-                                                amountcontroller.text =
-                                                    maxprice.toString();
-                                                toast = 1;
-                                                print("fffff");
-                                              } else if (double.parse(
-                                                      amountcontroller.text) <
-                                                  minprice) {
-                                                amountcontroller.clear();
-                                                amountcontroller.text =
-                                                    minprice.toString();
-                                                toast = 2;
-                                                print("hhhhh");
-                                              } else {
-                                                toast = 0;
-                                                // dropprice =
-                                                dropprice = double.parse(
-                                                    amountcontroller.text);
-                                                mainamount =
-                                                    amountcontroller.text;
-                                              }
-                                            });
-                                          });
-                                        },
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          clipBehavior: Clip.none,
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                              child: LinearProgressIndicator(
-                                                minHeight: 49,
-                                                value: 1.0 - controller!.value,
-                                                backgroundColor: theamcolore
-                                                    .withOpacity(0.1),
-                                                color: theamcolore,
-                                              ),
-                                            ),
-                                            offerpluse == true
-                                                ? Text(
-                                                    "Raise fare to $currencyy${amountcontroller.text}",
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: Colors.white,
-                                                      letterSpacing: 0.4,
-                                                    ),
-                                                  )
-                                                : Text(
-                                                    "Book for $currencyy${amountcontroller.text}",
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: Colors.white,
-                                                      letterSpacing: 0.4,
-                                                    ),
-                                                  ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                          homeApiController.homeapimodel!.runnigRide!.isEmpty
-                              ? SizedBox()
-                              : homeApiController.homeapimodel!.runnigRide![0]
-                                          .biddingRunStatus ==
-                                      0
-                                  ? SizedBox()
-                                  : const SizedBox(
-                                      height: 10,
-                                    ),
-                          homeApiController.homeapimodel!.runnigRide!.isEmpty
-                              ? SizedBox()
-                              : homeApiController.homeapimodel!.runnigRide![0]
-                                          .biddingRunStatus ==
-                                      0
-                                  ? SizedBox()
-                                  : CommonOutLineButton(
-                                      bordercolore: theamcolore,
-                                      onPressed1: () {
-                                        setState(() {
-                                          // socket!.connect();
-                                          homeApiController
-                                              .homeapimodel!
-                                              .runnigRide![0]
-                                              .biddingRunStatus = 0;
-                                          print(
-                                              "+++++ biddingRunStatus +++++ :- ${homeApiController.homeapimodel!.runnigRide![0].biddingRunStatus}");
-                                          socatloadbidinfdata();
-                                        });
-                                      },
-                                      context: context,
-                                      txt1: "Driver Offers"),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          StatefulBuilder(
-                            builder: (context, setState) {
-                              return cancelloader
-                                  ? Center(child: modernCircularProgress())
-                                  : CommonOutLineButton(
-                                      bordercolore: theamcolore,
-                                      onPressed1: () {
-                                        setState(() {
-                                          isanimation = false;
-                                          cancelloader = true;
-                                          print(
-                                              "++CANCEL LOADER++:- ${cancelloader}");
-                                          removeRequest
-                                              .removeApi(
-                                                  uid: useridgloable.toString(),
-                                                  context: context)
-                                              .then(
-                                            (value) {
-                                              socket!.emit('AcceRemoveOther', {
-                                                'requestid': request_id,
-                                                'driverid': calculateController
-                                                    .calCulateModel!.driverId!,
-                                              });
-                                              // socket!.emit('Vehicle_Ride_Cancel',{
-                                              //   'uid': "$useridgloable",
-                                              //   'driverid' : value["driver_list"],
-                                              // });
-                                              Future.delayed(
-                                                  Duration(microseconds: 500),
-                                                  () {
-                                                setState(() {
-                                                  setState(() {});
-                                                });
-                                              });
-                                              Get.back();
-                                              cancelloader = false;
-                                            },
-                                          );
-                                          if (controller != null &&
-                                              controller!.isAnimating) {
-                                            print("vgvgvgvgvgvgvgvgvgvgv");
-                                            controller!.dispose();
-                                          }
-                                        });
-                                      },
-                                      context: context,
-                                      txt1: "Cancel Request".tr);
-                            },
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                        ],
                       ),
                     ),
+                    const SizedBox(height: 20),
+
+                    // Vehicle selection would go here
+                    GetBuilder<HomeApiController>(
+                      builder: (homeApiController) {
+                        return homeApiController
+                                    .homeapimodel?.categoryList?.isNotEmpty ==
+                                true
+                            ? Column(
+                                children: [
+                                  Text(
+                                    "Select Vehicle",
+                                    style: TextStyle(
+                                      color: notifier.textColor,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 15),
+
+                                  // Vehicle list would be built here
+                                  Container(
+                                    height: 200,
+                                    child: ListView.builder(
+                                      itemCount: homeApiController
+                                          .homeapimodel!.categoryList!.length,
+                                      itemBuilder: (context, index) {
+                                        return Card(
+                                          color: notifier.containercolore,
+                                          child: ListTile(
+                                            leading: CircleAvatar(
+                                              backgroundImage: NetworkImage(
+                                                "${Config.imageurl}${homeApiController.homeapimodel!.categoryList![index].image}",
+                                              ),
+                                            ),
+                                            title: Text(
+                                              homeApiController
+                                                      .homeapimodel!
+                                                      .categoryList![index]
+                                                      .name ??
+                                                  "",
+                                              style: TextStyle(
+                                                  color: notifier.textColor),
+                                            ),
+                                            subtitle: pricingState.dropPrice > 0
+                                                ? Text(
+                                                    "$globalcurrency${pricingState.dropPrice}",
+                                                    style: TextStyle(
+                                                        color: theamcolore),
+                                                  )
+                                                : null,
+                                            onTap: () {
+                                              // Handle vehicle selection
+                                              setState(() {
+                                                select1 = index;
+                                              });
+                                            },
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  CommonButton(
+                                    containcolore: theamcolore,
+                                    onPressed1: () {
+                                      Get.back();
+                                      _showPickupDropSheet(bidding: "1");
+                                    },
+                                    txt1: "CONTINUE".tr,
+                                  ),
+                                ],
+                              )
+                            : const Center(child: CircularProgressIndicator());
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Helper functions (keep existing implementations)
+  Future<Uint8List> getImages(String path, int width) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(
+      data.buffer.asUint8List(),
+      targetHeight: width,
+    );
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
+        .buffer
+        .asUint8List();
+  }
+
+  Future fun() async {
+    LocationPermission permission;
+    permission = await Geolocator.checkPermission();
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      if (kDebugMode) print("Location permission denied");
+      return;
+    }
+    var currentLocation = await locateUser();
+    debugPrint('location: ${currentLocation.latitude}');
+    lathome = currentLocation.latitude;
+    longhome = currentLocation.longitude;
+    _onAddMarkerButtonPressed(
+        currentLocation.latitude, currentLocation.longitude);
+    getCurrentLatAndLong(currentLocation.latitude, currentLocation.longitude);
+  }
+
+  Future<Position> locateUser() async {
+    return Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+  }
+
+  void getCurrentLatAndLong(lat, long) async {
+    try {
+      List<Placemark> placemark = await placemarkFromCoordinates(lat, long);
+      if (placemark.isNotEmpty) {
+        addresshome = "${placemark[0].street}, ${placemark[0].locality}";
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Geocoding error: $e");
+      addresshome = "$lat, $long";
+    }
+  }
+
+  void mapReady() {
+    setState(() {});
+  }
+
+  void _addMarkers() async {
+    final mapState = context.read<MapState>();
+    final locationState = context.read<LocationState>();
+
+    // Clear existing markers
+    mapState.clearMapData();
+
+    // Add pickup marker
+    if (locationState.latitudePick != 0.0 &&
+        locationState.longitudePick != 0.0) {
+      _addMarker11(
+        LatLng(locationState.latitudePick, locationState.longitudePick),
+        "origin",
+        BitmapDescriptor.defaultMarker,
+      );
+    }
+
+    // Add drop marker
+    if (locationState.latitudeDrop != 0.0 &&
+        locationState.longitudeDrop != 0.0) {
+      _addMarker2(
+        LatLng(locationState.latitudeDrop, locationState.longitudeDrop),
+        "destination",
+        BitmapDescriptor.defaultMarkerWithHue(90),
+      );
+    }
+
+    // Add multiple drop markers
+    if (locationState.destinationLat.isNotEmpty) {
+      _addMarker3("destination");
+    }
+
+    // Generate route if both pickup and drop exist
+    if (locationState.latitudePick != 0.0 &&
+        locationState.longitudePick != 0.0 &&
+        locationState.latitudeDrop != 0.0 &&
+        locationState.longitudeDrop != 0.0) {
+      getDirections11(
+        lat1: PointLatLng(
+            locationState.latitudePick, locationState.longitudePick),
+        lat2: PointLatLng(
+            locationState.latitudeDrop, locationState.longitudeDrop),
+        dropOffPoints: locationState.destinationLat,
+      );
+    }
+  }
+
+  void _updateVehicleMarkers() {
+    setState(() {});
+    vihicallocations.clear();
+    _iconPaths.clear();
+
+    if (homeMapController.homeMapApiModel?.list?.isNotEmpty == true) {
+      for (int i = 0;
+          i < homeMapController.homeMapApiModel!.list!.length;
+          i++) {
+        vihicallocations.add(LatLng(
+            double.parse(homeMapController.homeMapApiModel!.list![i].latitude
+                .toString()),
+            double.parse(homeMapController.homeMapApiModel!.list![i].longitude
+                .toString())));
+
+        _iconPaths.add(
+            "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+      }
+      _loadMarkerIcons();
+    }
+  }
+
+  void _loadMarkerIcons() async {
+    List<BitmapDescriptor> icons = [];
+    for (String path in _iconPaths) {
+      BitmapDescriptor icon = await _loadIcon(path);
+      icons.add(icon);
+    }
+
+    setState(() {
+      for (int i = 0; i < vihicallocations.length; i++) {
+        MarkerId markerId = MarkerId(
+            'vehicle_${homeMapController.homeMapApiModel!.list![i].id}');
+        final marker = Marker(
+          markerId: markerId,
+          position: vihicallocations[i],
+          icon: icons[i],
+        );
+        context.read<MapState>().addMarker11(markerId, marker);
+      }
+    });
+  }
+
+  Future<BitmapDescriptor> _loadIcon(String url) async {
+    try {
+      if (url.isEmpty || url.contains("undefined")) {
+        return BitmapDescriptor.defaultMarker;
+      }
+
+      final http.Response response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final Uint8List bytes = response.bodyBytes;
+        final ui.Codec codec = await ui.instantiateImageCodec(bytes,
+            targetWidth: 30, targetHeight: 50);
+        final ui.FrameInfo frameInfo = await codec.getNextFrame();
+        final ByteData? byteData =
+            await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+        final Uint8List resizedBytes = byteData!.buffer.asUint8List();
+        return BitmapDescriptor.fromBytes(resizedBytes);
+      } else {
+        return BitmapDescriptor.defaultMarker;
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error loading marker icon: $e");
+      return BitmapDescriptor.defaultMarker;
+    }
+  }
+
+  // Initialize app
+  Future<void> _initializeApp() async {
+    _clearGlobalState();
+
+    try {
+      await _loadUserData();
+
+      if (useridgloable == null) {
+        Get.offAll(() => const OnboardingScreen());
+        return;
+      }
+
+      await _initializeLocation();
+      await _initializeSocket();
+      makeInitialAPICalls();
+    } catch (e) {
+      if (kDebugMode) print("❌ App initialization error: $e");
+      if (e.toString().contains('userLogin')) {
+        Get.offAll(() => const OnboardingScreen());
+      }
+    }
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      var uid = preferences.getString("userLogin");
+      var currencyy = preferences.getString("currenci");
+
+      if (uid == null) throw Exception("No user data");
+
+      decodeUid = jsonDecode(uid);
+      if (currencyy != null) {
+        currencyy = jsonDecode(currencyy);
+      }
+
+      useridgloable = decodeUid['id'];
+      username = decodeUid["name"] ?? "";
+
+      if (kDebugMode) print("✅ User data loaded: $useridgloable");
+    } catch (e) {
+      if (kDebugMode) print("❌ User data loading failed: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> _initializeLocation() async {
+    try {
+      await fun();
+      if (mounted) setState(() {});
+      getCurrentLatAndLong(lathome, longhome);
+    } catch (e) {
+      if (kDebugMode) print("❌ Location initialization failed: $e");
+    }
+  }
+
+  Future<void> _initializeSocket() async {
+    if (_disposed) return;
+
+    try {
+      final socketService = SocketService.instance;
+      socketService.initSocket();
+
+      if (!socketService.isConnected) {
+        socketService.connect();
+      }
+
+      await Future.delayed(const Duration(milliseconds: 500));
+      _connectSocket();
+      if (kDebugMode) print("✅ Socket connected from MapScreen");
+    } catch (e) {
+      if (kDebugMode) print("❌ Socket initialization failed: $e");
+    }
+  }
+
+  void makeInitialAPICalls() {
+    // Make necessary API calls
+    homeApiController.homeApi(
+      uid: useridgloable.toString(),
+      lat: lathome?.toString() ?? "0", // FIXED: Added required lat parameter
+      lon: longhome?.toString() ?? "0", // FIXED: Added required lon parameter
+    );
+    // Load map data
+    if (lathome != null && longhome != null) {
+      homeMapController
+          .homemapApi(
+              mid: mid, lat: lathome.toString(), lon: longhome.toString())
+          .then((value) {
+        if (value["Result"] != false) {
+          _updateVehicleMarkers();
+        }
+      });
+    }
+  }
+
+  // ✅ APP LIFECYCLE MANAGEMENT
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        if (kDebugMode) print("🔄 App resumed - reinitializing");
+        if (!_disposed) {
+          _initializeApp();
+        }
+        break;
+
+      case AppLifecycleState.paused:
+        if (kDebugMode) print("⏸️ App paused - cleaning up");
+        _fullCleanup();
+        break;
+
+      case AppLifecycleState.detached:
+        if (kDebugMode) print("🔄 App detached - full cleanup");
+        _fullCleanup();
+        break;
+      default:
+        break;
+    }
+  }
+
+  void _fullCleanup() {
+    try {
+      if (SocketService.instance.isConnected) {
+        if (kDebugMode)
+          print("🔌 Disconnecting socket, but keeping instance alive.");
+        SocketService.instance.disconnect();
+      }
+
+      _socketReconnectTimer?.cancel();
+      _requestTimer?.cancel();
+    } catch (e) {
+      if (kDebugMode) print("❌ Cleanup error: $e");
+    }
+  }
+
+  // Navigation helper with provider data
+  void _navigateToHomeScreen() {
+    final locationState = context.read<LocationState>();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomeScreen(
+          latpic: locationState.latitudePick,
+          longpic: locationState.longitudePick,
+          latdrop: locationState.latitudeDrop,
+          longdrop: locationState.longitudeDrop,
+          destinationlat: locationState.destinationLat,
+        ),
+      ),
+    );
+  }
+
+  // ✅ ADDITIONAL HELPER METHODS
+  void socatloadbidinfdata() {
+    if (homeApiController.homeapimodel?.runnigRide?.isNotEmpty == true) {
+      setState(() {
+        isLoad = true;
+      });
+
+      // Navigate to driver list or counter bottom sheet
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: false,
+        builder: (context) => CounterBottomSheet(),
+      );
+    }
+  }
+
+  // Handle vehicle selection and pricing
+  void handleVehicleSelection(int index) {
+    setState(() {
+      select1 = index;
+    });
+
+    final locationState = context.read<LocationState>();
+
+    if (locationState.pickupController.text.isNotEmpty &&
+        locationState.dropController.text.isNotEmpty) {
+      // Call pricing API
+      calculateController
+          .calculateApi(
+        context: context,
+        uid: useridgloable.toString(),
+        mid: mid,
+        mrole: mroal,
+        pickup_lat_lon:
+            "${locationState.latitudePick},${locationState.longitudePick}",
+        drop_lat_lon:
+            "${locationState.latitudeDrop},${locationState.longitudeDrop}",
+        drop_lat_lon_list: locationState.onlyPass,
+      )
+          .then((value) {
+        if (value != null && value["Result"] == true) {
+          context.read<PricingState>().updatePricing(
+                dropPrice:
+                    double.tryParse(value["drop_price"].toString()) ?? 0.0,
+                minimumFare:
+                    double.tryParse(value["minimum_fare"].toString()) ?? 0.0,
+                maximumFare:
+                    double.tryParse(value["maximum_fare"].toString()) ?? 0.0,
+                amountResponse: value["amount_response"]?.toString() ?? "",
+                responseMessage: value["response_message"]?.toString() ?? "",
+              );
+        }
+      });
+    }
+  }
+
+  // Handle payment method selection
+  void handlePaymentSelection(int paymentId, String paymentName) {
+    setState(() {
+      payment = paymentId;
+      paymentname = paymentName;
+    });
+  }
+
+  // Handle coupon application
+  void applyCoupon(String couponCode) {
+    setState(() {
+      couponname = couponCode;
+    });
+  }
+
+  // ✅ FLOATING ACTION BUTTONS (if needed)
+  Widget _buildFloatingActionButtons() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        FloatingActionButton(
+          mini: true,
+          backgroundColor: notifier.containercolore,
+          heroTag: "current_location",
+          onPressed: _getCurrentLocation,
+          child: Icon(Icons.my_location, color: theamcolore),
+        ),
+        const SizedBox(height: 10),
+      ],
+    );
+  }
+
+  // ✅ HANDLE BACK BUTTON
+  Future<bool> _onWillPop() async {
+    final locationState = context.read<LocationState>();
+
+    if (locationState.pickupController.text.isNotEmpty ||
+        locationState.dropController.text.isNotEmpty) {
+      bool? shouldPop = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: notifier.containercolore,
+          title:
+              Text("Clear Route?", style: TextStyle(color: notifier.textColor)),
+          content: Text(
+            "Are you sure you want to clear the current route?",
+            style: TextStyle(color: notifier.textColor),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                _clearGlobalState();
+                Navigator.pop(context, true);
+              },
+              child: Text("Clear", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      );
+
+      return shouldPop ?? false;
+    }
+
+    _clearGlobalState();
+    Get.offAll(const OnboardingScreen());
+    return false;
+  }
+
+  // ✅ ERROR HANDLING METHODS
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: notifier.containercolore,
+        title: Text("Error", style: TextStyle(color: notifier.textColor)),
+        content: Text(message, style: TextStyle(color: notifier.textColor)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleApiError(String error) {
+    if (kDebugMode) print("❌ API Error: $error");
+    showToastForDuration("Something went wrong. Please try again.", 3);
+  }
+
+  // ✅ ADDITIONAL BOTTOM SHEET METHODS
+  void _showCouponBottomSheet() {
+    showModalBottomSheet(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(15),
+          topRight: Radius.circular(15),
+        ),
+      ),
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              height: 500,
+              decoration: BoxDecoration(
+                color: notifier.containercolore,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                  topRight: Radius.circular(15),
+                ),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Container(
+                    height: 5,
+                    width: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  // CommonButton(containcolore: theamcolore, onPressed1: () {
-                  //   Get.back();
-                  // },txt1: "Book Auto for \$45",context: context),
-                  // const SizedBox(height: 10,),
+                  const SizedBox(height: 20),
+                  Text(
+                    "Apply Coupon",
+                    style: TextStyle(
+                      color: notifier.textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Coupon input field
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: "Enter coupon code",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          couponname = value;
+                        });
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: CommonButton(
+                      containcolore: theamcolore,
+                      onPressed1: () {
+                        if (couponname.isNotEmpty) {
+                          applyCoupon(couponname);
+                          Navigator.pop(context);
+                        }
+                      },
+                      txt1: "Apply Coupon",
+                    ),
+                  ),
                 ],
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  void _showPaymentMethodBottomSheet() {
+    showModalBottomSheet(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(15),
+          topRight: Radius.circular(15),
+        ),
+      ),
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 400,
+          decoration: BoxDecoration(
+            color: notifier.containercolore,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(15),
+              topRight: Radius.circular(15),
+            ),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              Container(
+                height: 5,
+                width: 50,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                "Select Payment Method",
+                style: TextStyle(
+                  color: notifier.textColor,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              // Payment methods list would go here
+              Expanded(
+                child: ListView(
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.money, color: theamcolore),
+                      title: Text("Cash",
+                          style: TextStyle(color: notifier.textColor)),
+                      trailing: payment == 1
+                          ? Icon(Icons.check, color: theamcolore)
+                          : null,
+                      onTap: () {
+                        handlePaymentSelection(1, "Cash");
+                        Navigator.pop(context);
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.credit_card, color: theamcolore),
+                      title: Text("Card",
+                          style: TextStyle(color: notifier.textColor)),
+                      trailing: payment == 2
+                          ? Icon(Icons.check, color: theamcolore)
+                          : null,
+                      onTap: () {
+                        handlePaymentSelection(2, "Card");
+                        Navigator.pop(context);
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.account_balance_wallet,
+                          color: theamcolore),
+                      title: Text("Wallet",
+                          style: TextStyle(color: notifier.textColor)),
+                      trailing: payment == 3
+                          ? Icon(Icons.check, color: theamcolore)
+                          : null,
+                      onTap: () {
+                        handlePaymentSelection(3, "Wallet");
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ✅ SEARCH FUNCTIONALITY
+  void _performSearch(String query) {
+    // Implement search functionality here
+    if (query.isNotEmpty) {
+      // Call places API or search API
+      print("Searching for: $query");
+    }
+  }
+
+  // ✅ CAMERA ANIMATION HELPERS
+  void _animateToLocation(LatLng location) {
+    final mapController = context.read<MapState>().mapController;
+    if (mapController != null) {
+      mapController.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: location,
+            zoom: 16.0,
+          ),
         ),
       );
     }
   }
 
-  orderfunction() {
-    print("DRIVER ID:- ${calculateController.calCulateModel!.driverId!}");
-    print("PICK LOCATION:- ${pickupcontroller.text}");
-    print("DROP LOCATION:- ${dropcontroller.text}");
-    socket!.connect();
+  void _fitToRoute() {
+    final locationState = context.read<LocationState>();
+    final mapController = context.read<MapState>().mapController;
 
-    homeWalletApiController
-        .homwwalleteApi(uid: useridgloable.toString(), context: context)
-        .then(
-      (value) {
-        print("{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
-        walleteamount = double.parse(value["wallet_amount"]);
-        print("[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
-      },
-    );
-    // refreshAnimation();
+    if (mapController != null &&
+        locationState.latitudePick != 0.0 &&
+        locationState.latitudeDrop != 0.0) {
+      List<LatLng> points = [
+        LatLng(locationState.latitudePick, locationState.longitudePick),
+        LatLng(locationState.latitudeDrop, locationState.longitudeDrop),
+      ];
 
-    // print("111111111dd111111111 ${calculateController.calCulateModel!.driverId}");
-    print("111111111 amountcontroller.text 111111111 ${amountcontroller.text}");
+      // Add additional drop points
+      for (var point in locationState.destinationLat) {
+        points.add(LatLng(point.latitude, point.longitude));
+      }
 
-    percentValue.clear();
-    percentValue = [];
-    for (int i = 0; i < 4; i++) {
-      percentValue.add(0);
+      // Calculate bounds
+      double minLat =
+          points.map((p) => p.latitude).reduce((a, b) => a < b ? a : b);
+      double maxLat =
+          points.map((p) => p.latitude).reduce((a, b) => a > b ? a : b);
+      double minLng =
+          points.map((p) => p.longitude).reduce((a, b) => a < b ? a : b);
+      double maxLng =
+          points.map((p) => p.longitude).reduce((a, b) => a > b ? a : b);
+
+      mapController.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(minLat, minLng),
+            northeast: LatLng(maxLat, maxLng),
+          ),
+          100.0, // padding
+        ),
+      );
     }
-    setState(() {
-      currentStoryIndex = 0;
-      // loadertimer = false;
-    });
+  }
 
-    priceyourfare = double.parse(amountcontroller.text);
-    print("***price***::-(${priceyourfare})");
-
-    addVihicalCalculateController.addvihicalcalculateApi(
-      pickupadd: {
-        "title": "${picktitle == "" ? addresspickup : picktitle}",
-        "subt": picksubtitle
-      },
-      dropadd: {"title": droptitle, "subt": dropsubtitle},
-      droplistadd: droptitlelist,
+  // ✅ LOADING STATES
+  void _showLoadingDialog(String message) {
+    showDialog(
       context: context,
-      uid: useridgloable.toString(),
-      tot_km: "$totalkm",
-      vehicle_id: vehicle_id,
-      tot_minute: tot_time,
-      tot_hour: tot_hour,
-      m_role: mroal,
-      coupon_id: couponId,
-      payment_id: "$payment",
-      driverid: calculateController.calCulateModel!.driverId!,
-      // driverid: [29,14],
-      price: amountcontroller.text,
-      pickup: "$latitudepick,$longitudepick",
-      drop: "$latitudedrop,$longitudedrop",
-      droplist: onlypass,
-      bidd_auto_status: biddautostatus,
-    ).then(
-      (value) {
-        print("+++++${value["id"]}");
-        setState(() {});
-        request_id = value["id"].toString();
-        socateempt();
-      },
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: notifier.containercolore,
+        content: Row(
+          children: [
+            CircularProgressIndicator(color: theamcolore),
+            const SizedBox(width: 20),
+            Text(message, style: TextStyle(color: notifier.textColor)),
+          ],
+        ),
+      ),
     );
+  }
 
-    calculateController
-        .calculateApi(
-            context: context,
-            uid: useridgloable.toString(),
-            mid: mid,
-            mrole: mroal,
-            pickup_lat_lon: "$latitudepick,$longitudepick",
-            drop_lat_lon: "$latitudedrop,$longitudedrop",
-            drop_lat_lon_list: onlypass)
-        .then(
-      (value) {
-        // print("********** value **********:----- ${value}");
-        // print("********** value **********:----- ${value["drop_price"]}");
-        // print("********** value **********:----- ${value["vehicle"]["minimum_fare"]}");
-        // print("********** value **********:----- ${value["vehicle"]["maximum_fare"]}");
+  void _hideLoadingDialog() {
+    Navigator.of(context, rootNavigator: true).pop();
+  }
 
-        dropprice = 0;
-        minimumfare = 0;
-        maximumfare = 0;
+  // ✅ ADDITIONAL VEHICLE FUNCTIONS
+  void _handleVehicleMarkerTap(String vehicleId) {
+    // Handle vehicle marker tap
+    print("Vehicle tapped: $vehicleId");
 
-        if (value["Result"] == true) {
-          amountresponse = "true";
-          dropprice = safeParseDouble(value["drop_price"]); // ✅ Safe
+    // Show vehicle info bottom sheet or navigate to details
+    _showVehicleDetailsBottomSheet(vehicleId);
+  }
 
-          minimumfare =
-              safeParseDouble(value["vehicle"]["minimum_fare"]); // ✅ Safe
-
-          maximumfare =
-              safeParseDouble(value["vehicle"]["maximum_fare"]); // ✅ Safe
-          responsemessage = value["message"];
-        } else {
-          amountresponse = "false";
-          print("jojojojojojojojojojojojojojojojojojojojojojojojo");
-        }
-
-        print("********** dropprice **********:----- $dropprice");
-        print("********** minimumfare **********:----- $minimumfare");
-        print("********** maximumfare **********:----- $maximumfare");
-      },
+  void _showVehicleDetailsBottomSheet(String vehicleId) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        height: 300,
+        decoration: BoxDecoration(
+          color: notifier.containercolore,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(15),
+            topRight: Radius.circular(15),
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Container(
+              height: 5,
+              width: 50,
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              "Vehicle Details",
+              style: TextStyle(
+                color: notifier.textColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            // Vehicle details would be displayed here
+          ],
+        ),
+      ),
     );
+  }
+
+  // ✅ FINAL DISPOSE METHOD
+  @override
+  void dispose() {
+    if (kDebugMode) print("🧹 Starting map screen disposal");
+    _disposed = true;
+
+    // Remove lifecycle observer
+    WidgetsBinding.instance.removeObserver(this);
+
+    // Cancel all timers
+    _requestTimer?.cancel();
+    _socketReconnectTimer?.cancel();
+
+    // Dispose controllers
+    controller.dispose();
+    amountcontroller.dispose();
+    _focusNode.dispose();
+
+    // Cancel subscription
+    _appStateSubscription?.cancel();
+
+    // Clean up socket listeners
+    try {
+      SocketService.instance.off('Vehicle_Bidding$useridgloable');
+      SocketService.instance.off('V_Driver_Location$useridgloable');
+      SocketService.instance.off('Calculate_Result$useridgloable');
+      SocketService.instance.off('RequestTimeOut$useridgloable');
+      SocketService.instance.off('Accept_Driver$useridgloable');
+    } catch (e) {
+      if (kDebugMode) print("❌ Socket cleanup error: $e");
+    }
+
+    // Full cleanup
+    _fullCleanup();
+
+    super.dispose();
+    if (kDebugMode) print("✅ Map screen disposal complete");
   }
 }

@@ -40,6 +40,7 @@ List<LatLng> destinationlong = [];
 
 bool picanddrop = true;
 var addresspickup;
+var useridgloable;
 
 // ===========================================
 // PRICING RELATED GLOBALS

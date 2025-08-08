@@ -38,6 +38,44 @@ class MapState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addMarker11(MarkerId markerId, Marker marker) {
+    _markers11[markerId] = marker;
+
+    notifyListeners();
+  }
+
+  void addPolyline11(PolylineId polylineId, Polyline polyline) {
+    _polylines11[polylineId] = polyline;
+
+    notifyListeners();
+  }
+
+  void clearPolylines11() {
+    _polylines11.clear();
+
+    notifyListeners();
+  }
+
+  void updateMarkerPosition(MarkerId markerId, LatLng newPosition) {
+    if (_markers.containsKey(markerId)) {
+      final Marker oldMarker = _markers[markerId]!;
+
+      final Marker updatedMarker = oldMarker.copyWith(
+        positionParam: newPosition,
+      );
+
+      _markers[markerId] = updatedMarker;
+
+      notifyListeners();
+    }
+  }
+
+  void addPolyline(PolylineId polylineId, Polyline polyline) {
+    _polylines[polylineId] = polyline;
+
+    notifyListeners();
+  }
+
   void clearMapData() {
     _markers.clear();
     _markers11.clear();
@@ -47,4 +85,3 @@ class MapState extends ChangeNotifier {
     notifyListeners();
   }
 }
-

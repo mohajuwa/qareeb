@@ -1,0 +1,1136 @@
+{
+  "summary": {
+    "total_files": 134,
+    "modified_files": 19,
+    "skipped_files": 115,
+    "error_files": 0,
+    "total_changes": 199
+  },
+  "details": [
+    {
+      "file": "lib\\firebase_options.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\hourli_ride_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\main.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\timer_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\add_vehical_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\all_request_data_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\calculate_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\cancel_rason_request_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\chat_list_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\coupon_payment_api_contoller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\delete_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\driver_detail_api.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\faq_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\forgot_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\home_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\home_map_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\home_wallet_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\login_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\map_api_get.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\mobile_check_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\modual_calculate_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\msg91_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\my_ride_detail_api.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\notification_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\pagelist_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\profile_edit_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\refer_and_earn_api.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\remove_request.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\resend_request_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\review_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\review_data_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\signup_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\sms_type_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\timeout_request_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\twilyo_api_controoler.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\vihical_calculate_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\vihical_driver_detail_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\vihical_information.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\vihical_ride_cancel.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\vihical_ride_complete_order_api_controller.dart",
+      "status": "modified",
+      "providers_needed": [
+        "LocationState"
+      ],
+      "changes": [
+        "\\blatitudepick\\b \u2192 locationState.latitudePick",
+        "\\blongitudepick\\b \u2192 locationState.longitudePick",
+        "\\blatitudedrop\\b \u2192 locationState.latitudeDrop",
+        "\\blongitudedrop\\b \u2192 locationState.longitudeDrop",
+        "\\bpickupcontroller\\b \u2192 locationState.pickupController",
+        "\\bdropcontroller\\b \u2192 locationState.dropController",
+        "\\bpicktitle\\b \u2192 locationState.pickTitle",
+        "\\bpicksubtitle\\b \u2192 locationState.pickSubtitle",
+        "\\bdroptitle\\b \u2192 locationState.dropTitle",
+        "\\bdropsubtitle\\b \u2192 locationState.dropSubtitle",
+        "\\bdroptitlelist\\b \u2192 locationState.dropTitleList",
+        "\\bdestinationlat\\b \u2192 locationState.destinationLat",
+        "\\bdestinationlong\\b \u2192 locationState.destinationLong"
+      ],
+      "lines_changed": 2
+    },
+    {
+      "file": "lib\\api_code\\wallete_api_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_code\\wallet_report_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\account_delete_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\add_vihical_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\all_request_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\calculate_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\cancel_reason_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\chat_list_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\driver_detail_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\faq_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\forgot_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\home_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\home_map_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\home_wallete_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\login_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\mag91_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\map_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\mobile_check_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\modual_calculate_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\my_ride_detail_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\notification_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\pagelist_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\payment_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\refer_and_earn_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\remove_request_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\resend_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\review_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\review_data_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\sign_up_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\sms_type_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\timeout_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\twilyo_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\vihical_calculte_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\vihical_cancel_ride_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\vihical_driver_detail_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\vihical_information_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\vihical_ride_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\wallete_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\api_model\\wallet_api_model.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\app_screen\\counter_bottom_sheet.dart",
+      "status": "modified",
+      "providers_needed": [
+        "LocationState"
+      ],
+      "changes": [
+        "\\bpicktitle\\b \u2192 locationState.pickTitle",
+        "\\bpicksubtitle\\b \u2192 locationState.pickSubtitle",
+        "\\bdroptitle\\b \u2192 locationState.dropTitle",
+        "\\bdropsubtitle\\b \u2192 locationState.dropSubtitle",
+        "\\bdroptitlelist\\b \u2192 locationState.dropTitleList",
+        "\\baddresspickup\\b \u2192 locationState.addressPickup"
+      ],
+      "lines_changed": 9
+    },
+    {
+      "file": "lib\\app_screen\\custom_location_select_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "PricingState",
+        "RideRequestState",
+        "LocationState",
+        "MapState"
+      ],
+      "changes": [
+        "\\blatitudepick\\b \u2192 locationState.latitudePick",
+        "\\blongitudepick\\b \u2192 locationState.longitudePick",
+        "\\blatitudedrop\\b \u2192 locationState.latitudeDrop",
+        "\\blongitudedrop\\b \u2192 locationState.longitudeDrop",
+        "\\bpickupcontroller\\b \u2192 locationState.pickupController",
+        "\\bdropcontroller\\b \u2192 locationState.dropController",
+        "\\bpicktitle\\b \u2192 locationState.pickTitle",
+        "\\bpicksubtitle\\b \u2192 locationState.pickSubtitle",
+        "\\bdroptitle\\b \u2192 locationState.dropTitle",
+        "\\bdropsubtitle\\b \u2192 locationState.dropSubtitle",
+        "\\bdestinationlat\\b \u2192 locationState.destinationLat",
+        "\\bonlypass\\b \u2192 locationState.onlyPass",
+        "\\bpicanddrop\\b \u2192 locationState.picAndDrop",
+        "\\bmapController\\b \u2192 mapState.mapController",
+        "\\bmarkers\\b(?!\\s*\\[) \u2192 mapState.markers",
+        "\\bdropprice\\b \u2192 pricingState.dropprice",
+        "\\bminimumfare\\b \u2192 pricingState.minimumfare",
+        "\\bmaximumfare\\b \u2192 pricingState.maximumfare",
+        "\\bamountresponse\\b \u2192 pricingState.amountresponse",
+        "\\bresponsemessage\\b \u2192 pricingState.responsemessage",
+        "\\bmroal\\b \u2192 rideRequestState.mroal"
+      ],
+      "lines_changed": 13
+    },
+    {
+      "file": "lib\\app_screen\\details_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "PricingState",
+        "RideRequestState",
+        "LocationState"
+      ],
+      "changes": [
+        "\\bpickupcontroller\\b \u2192 locationState.pickupController",
+        "\\bdropcontroller\\b \u2192 locationState.dropController",
+        "\\bglobalcurrency\\b \u2192 pricingState.globalcurrency",
+        "\\bselect1\\b \u2192 rideRequestState.select1"
+      ],
+      "lines_changed": 19
+    },
+    {
+      "file": "lib\\app_screen\\driver_detail_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "LocationState",
+        "MapState"
+      ],
+      "changes": [
+        "\\bpicktitle\\b \u2192 locationState.pickTitle",
+        "\\baddresspickup\\b \u2192 locationState.addressPickup",
+        "\\bmarkers\\b(?!\\s*\\[) \u2192 mapState.markers",
+        "\\bpolylines\\b(?!\\s*\\[) \u2192 mapState.polylines",
+        "\\bpolylineCoordinates\\b \u2192 mapState.polylineCoordinates",
+        "\\bpolylinePoints\\b(?!\\s*=) \u2192 mapState.polylinePoints"
+      ],
+      "lines_changed": 2
+    },
+    {
+      "file": "lib\\app_screen\\driver_list_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "PricingState",
+        "RideRequestState",
+        "LocationState",
+        "SocketService"
+      ],
+      "changes": [
+        "\\blatitudepick\\b \u2192 locationState.latitudePick",
+        "\\blongitudepick\\b \u2192 locationState.longitudePick",
+        "\\bpriceyourfare\\b \u2192 pricingState.priceyourfare",
+        "\\bglobalcurrency\\b \u2192 pricingState.globalcurrency",
+        "\\bbuttontimer\\b \u2192 rideRequestState.buttonTimer",
+        "\\bsocket\\s*\\?\\s*\\.connected \u2192 SocketService.instance.isConnected"
+      ],
+      "lines_changed": 4
+    },
+    {
+      "file": "lib\\app_screen\\driver_startride_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "LocationState",
+        "MapState"
+      ],
+      "changes": [
+        "\\bmarkers\\b(?!\\s*\\[) \u2192 mapState.markers",
+        "\\bpolylines\\b(?!\\s*\\[) \u2192 mapState.polylines",
+        "\\bpolylineCoordinates\\b \u2192 mapState.polylineCoordinates",
+        "\\bpolylinePoints\\b(?!\\s*=) \u2192 mapState.polylinePoints"
+      ],
+      "lines_changed": 2
+    },
+    {
+      "file": "lib\\app_screen\\faq_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\app_screen\\home_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "PricingState",
+        "RideRequestState",
+        "LocationState",
+        "MapState"
+      ],
+      "changes": [
+        "\\blatitudepick\\b \u2192 locationState.latitudePick",
+        "\\blongitudepick\\b \u2192 locationState.longitudePick",
+        "\\blatitudedrop\\b \u2192 locationState.latitudeDrop",
+        "\\blongitudedrop\\b \u2192 locationState.longitudeDrop",
+        "\\bpickupcontroller\\b \u2192 locationState.pickupController",
+        "\\bpicksubtitle\\b \u2192 locationState.pickSubtitle",
+        "\\bdroptitle\\b \u2192 locationState.dropTitle",
+        "\\bdropsubtitle\\b \u2192 locationState.dropSubtitle",
+        "\\bdroptitlelist\\b \u2192 locationState.dropTitleList",
+        "\\bdestinationlat\\b \u2192 locationState.destinationLat",
+        "\\bonlypass\\b \u2192 locationState.onlyPass",
+        "\\baddresspickup\\b \u2192 locationState.addressPickup",
+        "\\bmapController\\b \u2192 mapState.mapController",
+        "\\bmarkers\\b(?!\\s*\\[) \u2192 mapState.markers",
+        "\\bpolylines\\b(?!\\s*\\[) \u2192 mapState.polylines",
+        "\\bpolylineCoordinates\\b \u2192 mapState.polylineCoordinates",
+        "\\bpolylinePoints\\b(?!\\s*=) \u2192 mapState.polylinePoints",
+        "\\bdropprice\\b \u2192 pricingState.dropprice",
+        "\\bwalleteamount\\b \u2192 pricingState.walleteamount",
+        "\\bmroal\\b \u2192 rideRequestState.mroal"
+      ],
+      "lines_changed": 4
+    },
+    {
+      "file": "lib\\app_screen\\language_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\app_screen\\map_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "PricingState",
+        "RideRequestState",
+        "MapState",
+        "SocketService",
+        "LocationState"
+      ],
+      "changes": [
+        "\\blatitudepick\\b \u2192 locationState.latitudePick",
+        "\\blongitudepick\\b \u2192 locationState.longitudePick",
+        "\\blatitudedrop\\b \u2192 locationState.latitudeDrop",
+        "\\blongitudedrop\\b \u2192 locationState.longitudeDrop",
+        "\\bpickupcontroller\\b \u2192 locationState.pickupController",
+        "\\bdropcontroller\\b \u2192 locationState.dropController",
+        "\\bpicktitle\\b \u2192 locationState.pickTitle",
+        "\\bpicksubtitle\\b \u2192 locationState.pickSubtitle",
+        "\\bdroptitle\\b \u2192 locationState.dropTitle",
+        "\\bdropsubtitle\\b \u2192 locationState.dropSubtitle",
+        "\\bdroptitlelist\\b \u2192 locationState.dropTitleList",
+        "\\bdestinationlat\\b \u2192 locationState.destinationLat",
+        "\\bonlypass\\b \u2192 locationState.onlyPass",
+        "\\baddresspickup\\b \u2192 locationState.addressPickup",
+        "\\blathomecurrent\\b \u2192 locationState.latHomeCurrent",
+        "\\blonghomecurrent\\b \u2192 locationState.longHomeCurrent",
+        "\\bmapController\\b \u2192 mapState.mapController",
+        "\\bmarkers\\b(?!\\s*\\[) \u2192 mapState.markers",
+        "\\bmarkers11\\b \u2192 mapState.markers11",
+        "\\bpolylines\\b(?!\\s*\\[) \u2192 mapState.polylines",
+        "\\bpolylines11\\b \u2192 mapState.polylines11",
+        "\\bpolylineCoordinates\\b \u2192 mapState.polylineCoordinates",
+        "\\bpolylinePoints11\\b \u2192 mapState.polylinePoints11",
+        "\\bdropprice\\b \u2192 pricingState.dropprice",
+        "\\bminimumfare\\b \u2192 pricingState.minimumfare",
+        "\\bmaximumfare\\b \u2192 pricingState.maximumfare",
+        "\\bamountresponse\\b \u2192 pricingState.amountresponse",
+        "\\bresponsemessage\\b \u2192 pricingState.responsemessage",
+        "\\bpriceyourfare\\b \u2192 pricingState.priceyourfare",
+        "\\bglobalcurrency\\b \u2192 pricingState.globalcurrency",
+        "\\bwalleteamount\\b \u2192 pricingState.walleteamount",
+        "\\bmid\\b(?=\\s*[=;]) \u2192 rideRequestState.mid",
+        "\\bmroal\\b \u2192 rideRequestState.mroal",
+        "\\bselect1\\b \u2192 rideRequestState.select1",
+        "\\bsocket\\s*!\\s*\\.connect\\(\\) \u2192 SocketService.instance.connect()",
+        "\\bsocket\\s*!\\s*\\.emit\\( \u2192 SocketService.instance.emit(",
+        "\\bsocket\\s*!\\s*\\.on\\( \u2192 SocketService.instance.on(",
+        "\\bsocket\\s*\\?\\s*\\.connected \u2192 SocketService.instance.isConnected"
+      ],
+      "lines_changed": 2
+    },
+    {
+      "file": "lib\\app_screen\\my_ride_detail_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "MapState"
+      ],
+      "changes": [
+        "\\bmapController\\b \u2192 mapState.mapController",
+        "\\bmarkers\\b(?!\\s*\\[) \u2192 mapState.markers",
+        "\\bpolylines\\b(?!\\s*\\[) \u2192 mapState.polylines",
+        "\\bpolylineCoordinates\\b \u2192 mapState.polylineCoordinates",
+        "\\bpolylinePoints\\b(?!\\s*=) \u2192 mapState.polylinePoints"
+      ],
+      "lines_changed": 1
+    },
+    {
+      "file": "lib\\app_screen\\my_ride_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "LocationState"
+      ],
+      "changes": [
+        "\\bpicktitle\\b \u2192 locationState.pickTitle",
+        "\\bpicksubtitle\\b \u2192 locationState.pickSubtitle",
+        "\\bdroptitle\\b \u2192 locationState.dropTitle",
+        "\\bdropsubtitle\\b \u2192 locationState.dropSubtitle",
+        "\\bdroptitlelist\\b \u2192 locationState.dropTitleList"
+      ],
+      "lines_changed": 1
+    },
+    {
+      "file": "lib\\app_screen\\notification_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\app_screen\\pagelist_description.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\app_screen\\permisiion_scren.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\app_screen\\pickup_drop_point.dart",
+      "status": "modified",
+      "providers_needed": [
+        "PricingState",
+        "RideRequestState",
+        "LocationState"
+      ],
+      "changes": [
+        "\\blatitudepick\\b \u2192 locationState.latitudePick",
+        "\\blongitudepick\\b \u2192 locationState.longitudePick",
+        "\\blatitudedrop\\b \u2192 locationState.latitudeDrop",
+        "\\blongitudedrop\\b \u2192 locationState.longitudeDrop",
+        "\\bdestinationlat\\b \u2192 locationState.destinationLat",
+        "\\bonlypass\\b \u2192 locationState.onlyPass",
+        "\\bdropprice\\b \u2192 pricingState.dropprice",
+        "\\bminimumfare\\b \u2192 pricingState.minimumfare",
+        "\\bmaximumfare\\b \u2192 pricingState.maximumfare",
+        "\\bamountresponse\\b \u2192 pricingState.amountresponse",
+        "\\bresponsemessage\\b \u2192 pricingState.responsemessage",
+        "\\bmroal\\b \u2192 rideRequestState.mroal"
+      ],
+      "lines_changed": -5
+    },
+    {
+      "file": "lib\\app_screen\\profile_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\app_screen\\refer_and_earn.dart",
+      "status": "modified",
+      "providers_needed": [
+        "PricingState"
+      ],
+      "changes": [
+        "\\bglobalcurrency\\b \u2192 pricingState.globalcurrency"
+      ],
+      "lines_changed": 1
+    },
+    {
+      "file": "lib\\app_screen\\ride_complete_payment_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "PricingState"
+      ],
+      "changes": [
+        "\\bwalleteamount\\b \u2192 pricingState.walleteamount"
+      ],
+      "lines_changed": 1
+    },
+    {
+      "file": "lib\\app_screen\\top_up_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\auth_screen\\onbording_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\auth_screen\\onmobile1_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\auth_screen\\onmobile2_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\auth_screen\\onmobile3_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\auth_screen\\splase_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\chat_code\\chat_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\button_timer_class.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\colore_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\common_button.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\common_flow_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "PricingState",
+        "RideRequestState",
+        "LocationState"
+      ],
+      "changes": [
+        "\\bpicktitle\\b \u2192 locationState.pickTitle",
+        "\\bpicksubtitle\\b \u2192 locationState.pickSubtitle",
+        "\\bdroptitle\\b \u2192 locationState.dropTitle",
+        "\\bdropsubtitle\\b \u2192 locationState.dropSubtitle",
+        "\\bdroptitlelist\\b \u2192 locationState.dropTitleList",
+        "\\baddresspickup\\b \u2192 locationState.addressPickup",
+        "\\blathomecurrent\\b \u2192 locationState.latHomeCurrent",
+        "\\blonghomecurrent\\b \u2192 locationState.longHomeCurrent",
+        "\\bglobalcurrency\\b \u2192 pricingState.globalcurrency"
+      ],
+      "lines_changed": 10
+    },
+    {
+      "file": "lib\\common_code\\config.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\global_variables.dart",
+      "status": "modified",
+      "providers_needed": [
+        "PricingState",
+        "RideRequestState",
+        "LocationState",
+        "MapState"
+      ],
+      "changes": [
+        "\\blatitudepick\\b \u2192 locationState.latitudePick",
+        "\\blongitudepick\\b \u2192 locationState.longitudePick",
+        "\\blatitudedrop\\b \u2192 locationState.latitudeDrop",
+        "\\blongitudedrop\\b \u2192 locationState.longitudeDrop",
+        "\\bpickupcontroller\\b \u2192 locationState.pickupController",
+        "\\bdropcontroller\\b \u2192 locationState.dropController",
+        "\\bpicktitle\\b \u2192 locationState.pickTitle",
+        "\\bpicksubtitle\\b \u2192 locationState.pickSubtitle",
+        "\\bdroptitle\\b \u2192 locationState.dropTitle",
+        "\\bdropsubtitle\\b \u2192 locationState.dropSubtitle",
+        "\\bdroptitlelist\\b \u2192 locationState.dropTitleList",
+        "\\bdestinationlat\\b \u2192 locationState.destinationLat",
+        "\\bonlypass\\b \u2192 locationState.onlyPass",
+        "\\bdestinationlong\\b \u2192 locationState.destinationLong",
+        "\\bpicanddrop\\b \u2192 locationState.picAndDrop",
+        "\\baddresspickup\\b \u2192 locationState.addressPickup",
+        "\\blathomecurrent\\b \u2192 locationState.latHomeCurrent",
+        "\\blonghomecurrent\\b \u2192 locationState.longHomeCurrent",
+        "\\bmapController\\b \u2192 mapState.mapController",
+        "\\bmarkers\\b(?!\\s*\\[) \u2192 mapState.markers",
+        "\\bmarkers11\\b \u2192 mapState.markers11",
+        "\\bpolylines\\b(?!\\s*\\[) \u2192 mapState.polylines",
+        "\\bpolylines11\\b \u2192 mapState.polylines11",
+        "\\bpolylineCoordinates\\b \u2192 mapState.polylineCoordinates",
+        "\\bpolylinePoints11\\b \u2192 mapState.polylinePoints11",
+        "\\bdropprice\\b \u2192 pricingState.dropprice",
+        "\\bminimumfare\\b \u2192 pricingState.minimumfare",
+        "\\bmaximumfare\\b \u2192 pricingState.maximumfare",
+        "\\bamountresponse\\b \u2192 pricingState.amountresponse",
+        "\\bresponsemessage\\b \u2192 pricingState.responsemessage",
+        "\\bpriceyourfare\\b \u2192 pricingState.priceyourfare",
+        "\\bglobalcurrency\\b \u2192 pricingState.globalcurrency",
+        "\\bwalleteamount\\b \u2192 pricingState.walleteamount",
+        "\\bbuttontimer\\b \u2192 rideRequestState.buttonTimer",
+        "\\bmid\\b(?=\\s*[=;]) \u2192 rideRequestState.mid",
+        "\\bmroal\\b \u2192 rideRequestState.mroal",
+        "\\bselect1\\b \u2192 rideRequestState.select1"
+      ],
+      "lines_changed": 5
+    },
+    {
+      "file": "lib\\common_code\\http_helper.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\language_toggle_button.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\language_translate.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\languge_controller.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\modern_loading_widget.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\push_notification.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\simple_animated_icons.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\socket_mixin.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\socket_service.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\temptime.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\toastification.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\common_code\\type_utils.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\payment_screen\\razorpay.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\payment_screen\\webview.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\pdf\\makepdf_screen.dart",
+      "status": "modified",
+      "providers_needed": [
+        "PricingState"
+      ],
+      "changes": [
+        "\\bglobalcurrency\\b \u2192 pricingState.globalcurrency"
+      ],
+      "lines_changed": 2
+    },
+    {
+      "file": "lib\\pdf\\pdfpreview_screen.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\providers\\dynamic_fields_state.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\providers\\location_state.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\providers\\map_state.dart",
+      "status": "modified",
+      "providers_needed": [
+        "MapState"
+      ],
+      "changes": [
+        "\\bmapController\\b \u2192 mapState.mapController",
+        "\\bmarkers\\b(?!\\s*\\[) \u2192 mapState.markers",
+        "\\bmarkers11\\b \u2192 mapState.markers11",
+        "\\bpolylines\\b(?!\\s*\\[) \u2192 mapState.polylines",
+        "\\bpolylines11\\b \u2192 mapState.polylines11",
+        "\\bpolylineCoordinates\\b \u2192 mapState.polylineCoordinates",
+        "\\bpolylinePoints11\\b \u2192 mapState.polylinePoints11"
+      ],
+      "lines_changed": 2
+    },
+    {
+      "file": "lib\\providers\\pricing_state.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\providers\\ride_request_state.dart",
+      "status": "modified",
+      "providers_needed": [
+        "RideRequestState"
+      ],
+      "changes": [
+        "\\bmid\\b(?=\\s*[=;]) \u2192 rideRequestState.mid",
+        "\\bmroal\\b \u2192 rideRequestState.mroal",
+        "\\bselect1\\b \u2192 rideRequestState.select1"
+      ],
+      "lines_changed": 2
+    },
+    {
+      "file": "lib\\providers\\socket_service.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    },
+    {
+      "file": "lib\\providers\\timer_state.dart",
+      "status": "skipped",
+      "reason": "No global variables found",
+      "changes": []
+    }
+  ],
+  "migration_rules_applied": 43,
+  "files_modified": [
+    "lib\\app_screen\\counter_bottom_sheet.dart",
+    "lib\\app_screen\\my_ride_screen.dart",
+    "lib\\common_code\\global_variables.dart",
+    "lib\\app_screen\\map_screen.dart",
+    "lib\\providers\\map_state.dart",
+    "lib\\app_screen\\my_ride_detail_screen.dart",
+    "lib\\common_code\\common_flow_screen.dart",
+    "lib\\api_code\\vihical_ride_complete_order_api_controller.dart",
+    "lib\\app_screen\\ride_complete_payment_screen.dart",
+    "lib\\app_screen\\driver_list_screen.dart",
+    "lib\\pdf\\makepdf_screen.dart",
+    "lib\\app_screen\\driver_detail_screen.dart",
+    "lib\\app_screen\\home_screen.dart",
+    "lib\\app_screen\\custom_location_select_screen.dart",
+    "lib\\app_screen\\pickup_drop_point.dart",
+    "lib\\app_screen\\refer_and_earn.dart",
+    "lib\\app_screen\\driver_startride_screen.dart",
+    "lib\\providers\\ride_request_state.dart",
+    "lib\\app_screen\\details_screen.dart"
+  ]
+}

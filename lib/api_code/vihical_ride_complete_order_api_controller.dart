@@ -83,7 +83,7 @@ class VihicalRideCompleteOrderApiController extends GetxController
         droptitlelist = [];
         destinationlat = [];
         destinationlong = [];
-        textfieldlist = [];
+        // textfieldlist = [];
 
         print("++hahaha++:- (${pickupcontroller.text})");
         print("++hahaha++:- (${dropcontroller.text})");

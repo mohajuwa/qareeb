@@ -8,11 +8,11 @@ import '../api_model/pagelist_api_model.dart';
 import '../common_code/config.dart';
 
 // ignore: camel_case_types
-class pagelistApiController extends GetxController implements GetxService {
+class PagelistApiController extends GetxController implements GetxService {
   PageListApiiimodel? pageListApiiimodel;
   bool isLoading = true;
 
-  Future pagelistttApi(context) async {
+  Future pagelistttApi(BuildContext context) async {
     try {
       Map<String, String> userHeader = {
         "Content-type": "application/json",

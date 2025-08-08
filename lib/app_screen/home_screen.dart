@@ -14,6 +14,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/api_code/global_driver_access_api_controller.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:qareeb/common_code/type_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,6 +38,14 @@ import 'package:http/http.dart' as http;
 import 'counter_bottom_sheet.dart';
 import 'my_ride_screen.dart';
 
+import 'package:provider/provider.dart';
+import 'package:qareeb/providers/location_state.dart';
+import 'package:qareeb/providers/map_state.dart';
+import 'package:qareeb/providers/pricing_state.dart';
+import 'package:qareeb/providers/ride_request_state.dart';
+import 'package:qareeb/providers/socket_service.dart';
+import 'package:qareeb/providers/timer_state.dart';
+
 int midseconde = 0;
 // int select = 0;
 int select = -1;
@@ -52,7 +62,6 @@ String extratime = "";
 
 String timeincressstatus = "";
 String driver_id = "";
-var useridgloable;
 
 bool loadertimer = false;
 
@@ -1655,7 +1664,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                       addVihicalCalculateController
                                           .addvihicalcalculateApi(
-                                              context: context, // ✅ Add this line
+                                              context:
+                                                  context, // ✅ Add this line
 
                                               bidd_auto_status: "false",
                                               pickupadd: {

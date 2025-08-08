@@ -119,6 +119,22 @@ class LocationState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void removeDropLocation(int index) {
+    if (index < _dropTitleList.length) {
+      _dropTitleList.removeAt(index);
+
+      if (index < _destinationLat.length) {
+        _destinationLat.removeAt(index);
+      }
+
+      if (index < _onlyPass.length) {
+        _onlyPass.removeAt(index);
+      }
+
+      notifyListeners();
+    }
+  }
+
   @override
   void dispose() {
     _pickupController.dispose();
