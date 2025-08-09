@@ -10,7 +10,6 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/profile_edit_api_controller.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
@@ -118,9 +117,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   getlocledata().then(
                     (value) async {
                       // await Future.delayed(Duration(seconds: 10),() {
-                      //   Navigator.push(context, MaterialPageRoute(builder: (context) => const ModernMapScreen(),));
-                      Get.offAll(const ModernMapScreen(
-                        selectVehicle: false,
+                      //   Navigator.push(context, MaterialPageRoute(builder: (context) => const MapScreen(),));
+                      Get.offAll(const MapScreen(
+                        selectvihical: false,
                       ));
                       // },);
                     },
@@ -157,11 +156,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
       body: loading == true
-          ? const Center(
-              child: ModernLoadingWidget(
-                message: "جaري تحميل الملف الشخصي...",
-              ),
-            )
+          ? Center(
+              child: CircularProgressIndicator(
+              color: theamcolore,
+            ))
           : Padding(
               padding: const EdgeInsets.all(15),
               child: Column(

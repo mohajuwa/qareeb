@@ -10,7 +10,6 @@ import 'package:qareeb/app_screen/home_screen.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:get/get.dart';
 import 'package:qareeb/common_code/global_variables.dart';
-import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:qareeb/common_code/config.dart';
 import '../app_screen/map_screen.dart';
@@ -30,62 +29,74 @@ class _ChatScreenState extends State<ChatScreen> {
 
   List messaj = [];
 
-  // socketConnect() async {
-  //   setState(() {});
+socketConnect() async {
 
-  //   // Use HTTPS with proper configuration
+  setState(() {});
 
-  //   socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
-  //     'autoConnect': false,
-  //     'transports': ['websocket'],
-  //     'extraHeaders': {'Accept': '*/*'},
-  //     'timeout': 30000,
-  //     'forceNew': true,
-  //   });
+  
 
-  //   socket.connect();
+  // Use HTTPS with proper configuration
 
-  //   _connectSocket();
-  // }
+  socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
 
-  // _connectSocket() async {
-  //   setState(() {});
-  //   socket.onConnect(
-  //       (data) => print('Connection established Connected driverdetail'));
-  //   socket.onConnectError((data) => print('Connect Error driverdetail: $data'));
-  //   socket.onDisconnect(
-  //       (data) => print('Socket.IO server disconnected driverdetail'));
+    'autoConnect': false,
 
-  //   print("999999:-- $useridgloable");
+    'transports': ['websocket'],
 
-  //   socket.on('New_Chat$useridgloable', (New_Chat) {
-  //     print("???????:-- ($New_Chat)");
+    'extraHeaders': {'Accept': '*/*'},
 
-  //     // messaj.add(New_Chat["message"]);
-  //     // print("////:--- ${messaj}");
+    'timeout': 30000,
 
-  //     chatListApiController.chatlistApi(
-  //         uid: useridgloable.toString(),
-  //         sender_id: useridgloable.toString(),
-  //         recevier_id: driver_id.toString(),
-  //         status: "customer");
-  //   });
-  // }
+    'forceNew': true,
 
-  // sendmessaj() {
-  //   socket.emit('Send_Chat', {
-  //     'sender_id': useridgloable,
-  //     'recevier_id': driver_id,
-  //     'message': messageController.text.trim(),
-  //     'status': "customer",
-  //   });
-  //   messageController.clear();
-  // }
+  });
+
+  
+
+  socket.connect();
+
+  _connectSocket();
+
+}
+
+  _connectSocket() async {
+    setState(() {});
+    socket.onConnect(
+        (data) => print('Connection established Connected driverdetail'));
+    socket.onConnectError((data) => print('Connect Error driverdetail: $data'));
+    socket.onDisconnect(
+        (data) => print('Socket.IO server disconnected driverdetail'));
+
+    print("999999:-- $useridgloable");
+
+    socket.on('New_Chat$useridgloable', (New_Chat) {
+      print("???????:-- ($New_Chat)");
+
+      // messaj.add(New_Chat["message"]);
+      // print("////:--- ${messaj}");
+
+      chatListApiController.chatlistApi(
+          uid: useridgloable.toString(),
+          sender_id: useridgloable.toString(),
+          recevier_id: driver_id.toString(),
+          status: "customer");
+    });
+  }
+
+  sendmessaj() {
+    socket.emit('Send_Chat', {
+      'sender_id': useridgloable,
+      'recevier_id': driver_id,
+      'message': messageController.text.trim(),
+      'status': "customer",
+    });
+    messageController.clear();
+  }
 
   @override
   void initState() {
     _controller = ScrollController();
-    // socketConnect();
+    socketConnect();
     chatListApiController.chatlistApi(
         uid: useridgloable.toString(),
         sender_id: useridgloable.toString(),
@@ -153,10 +164,10 @@ class _ChatScreenState extends State<ChatScreen> {
       body: GetBuilder<ChatListApiController>(
         builder: (chatListApiController) {
           return chatListApiController.isLoading
-              ? modernCircularProgress(
-                  size: 50,
-                  customAnimation: 'assets/lottie/loading.json',
-                )
+              ? Center(
+                  child: CircularProgressIndicator(
+                  color: theamcolore,
+                ))
               : chatListApiController.chatListApiModel!.chatList!.isEmpty
                   ? Center(
                       child: Column(
@@ -399,7 +410,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           if (messageController.text.trim().isNotEmpty) {
                             print(
                                 "mesjmesjmesj:--- (${messageController.text.trim()})");
-                            // sendmessaj();
+                            sendmessaj();
                             chatListApiController.chatlistApi(
                                 uid: useridgloable.toString(),
                                 sender_id: useridgloable.toString(),

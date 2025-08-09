@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:qareeb/common_code/toastification.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:qareeb/common_code/config.dart';
@@ -29,7 +29,7 @@ class ResendRequestApiController extends GetxController implements GetxService {
 
       var response = await HttpHelper.post(url,
               body: jsonEncode(body), headers: userHeader)
-          .timeout(const Duration(seconds: 30));
+          .timeout(Duration(seconds: 30));
 
       if (kDebugMode) {
         print('Resend Request Response Status: ${response.statusCode}');
@@ -43,18 +43,19 @@ class ResendRequestApiController extends GetxController implements GetxService {
           resendRequest = resendRequestFromJson(response.body);
           if (resendRequest!.result == true) {
             isLoading = false;
-            ToastService.showToast("${resendRequest!.message}");
+            Fluttertoast.showToast(msg: "${resendRequest!.message}");
             update();
             return data;
           } else {
-            ToastService.showToast("${resendRequest!.message}");
+            Fluttertoast.showToast(msg: "${resendRequest!.message}");
           }
         } else {
-          ToastService.showToast("${data["ResponseMsg"]}");
+          Fluttertoast.showToast(msg: "${data["ResponseMsg"]}");
         }
       } else {
-        ToastService.showToast(
-            "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
+        Fluttertoast.showToast(
+            msg:
+                "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
       }
     } catch (e) {
       if (kDebugMode) {
@@ -76,7 +77,7 @@ class ResendRequestApiController extends GetxController implements GetxService {
             "حدث خطأ ما. حاول مرة أخرى."; // "Something went wrong. Please try again."
       }
 
-      ToastService.showToast(errorMessage);
+      Fluttertoast.showToast(msg: errorMessage);
     }
   }
 }

@@ -5,36 +5,39 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui' as ui;
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
+import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/api_code/global_driver_access_api_controller.dart';
-import 'package:qareeb/api_code/vihical_calculate_api_controller.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/common_code/global_variables.dart';
-import 'package:qareeb/common_code/socket_service.dart';
-import 'package:qareeb/providers/location_state.dart';
-import 'package:qareeb/providers/map_state.dart';
-import 'package:qareeb/providers/pricing_state.dart';
-import 'package:qareeb/providers/ride_request_state.dart';
-import 'package:qareeb/app_screen/driver_list_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:qareeb/api_code/vihical_calculate_api_controller.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
+import 'package:qareeb/app_screen/pickup_drop_point.dart';
 import 'package:qareeb/common_code/common_button.dart';
-import 'package:qareeb/common_code/config.dart';
+import 'dart:ui' as ui;
 import '../api_code/add_vehical_api_controller.dart';
-import '../api_code/calculate_api_controller.dart';
+import '../api_code/cancel_rason_request_api_controller.dart';
+import '../api_code/coupon_payment_api_contoller.dart';
+import '../api_code/home_wallet_api_controller.dart';
 import '../api_code/modual_calculate_api_controller.dart';
+import '../api_code/vihical_driver_detail_api_controller.dart';
 import '../common_code/colore_screen.dart';
 import '../common_code/common_flow_screen.dart';
+import '../common_code/config.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:http/http.dart' as http;
+import 'counter_bottom_sheet.dart';
+import 'my_ride_screen.dart';
 
-// Global variables for this screen
 int midseconde = 0;
+// int select = 0;
 int select = -1;
 double vihicalrice = 0.00;
 double totalkm = 0.00;
@@ -44,9 +47,15 @@ String tot_secound = "";
 String vihicalname = "";
 String vihicalimage = "";
 String vehicle_id = "";
+
 String extratime = "";
+
 String timeincressstatus = "";
+String driver_id = "";
+var useridgloable;
+
 bool loadertimer = false;
+
 bool otpstatus = false;
 
 class HomeScreen extends StatefulWidget {
@@ -56,40 +65,588 @@ class HomeScreen extends StatefulWidget {
   final double longdrop;
   final List<PointLatLng> destinationlat;
 
-  const HomeScreen({
-    super.key,
-    required this.latpic,
-    required this.longpic,
-    required this.latdrop,
-    required this.longdrop,
-    required this.destinationlat,
-  });
+  const HomeScreen(
+      {super.key,
+      required this.latpic,
+      required this.longpic,
+      required this.latdrop,
+      required this.longdrop,
+      required this.destinationlat});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  GoogleMapController? mapController;
-  ColorNotifier notifier = ColorNotifier();
+class _HomeScreenState extends State<HomeScreen> {
+  List<PointLatLng> _dropOffPoints = [];
 
-  // API Controllers
-  VihicalCalculateController vihicalCalculateController =
-      Get.put(VihicalCalculateController());
-  GlobalDriverAcceptClass globalDriverAcceptClass =
-      Get.put(GlobalDriverAcceptClass());
+  var decodeUid;
+
+  var currencyy;
+  socketConnect() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    var uid = preferences.getString("userLogin");
+    var currency = preferences.getString("currenci");
+    decodeUid = jsonDecode(uid!);
+    currencyy = jsonDecode(currency!);
+
+    useridgloable = decodeUid['id'];
+    print("****home screen*****:--- ($useridgloable)");
+    print("*********:--- ($currencyy)");
+
+    setState(() {});
+
+    socket.connect();
+
+    _connectSocket();
+  }
+
+  @override
+  void dispose() {
+    socket.dispose(); // or _socket?.close() if it's a socket
+
+    super.dispose();
+  }
+
+  _connectSocket() async {
+    setState(() {});
+
+    socket.onConnect(
+        (data) => print('Connection established Connected home screen'));
+    socket.onConnectError((data) => print('Connect Error home screen: $data'));
+    socket.onDisconnect(
+        (data) => print('Socket.IO server disconnected home screen'));
+
+    print("*********midsecounde*********:--  ($midseconde)");
+    print("*********midsecounde*********:--  ($vihicalrice)");
+    vihicalCalculateController
+        .vihicalcalculateApi(
+            uid: useridgloable.toString(),
+            mid: "$midseconde",
+            pickup_lat_lon: "$latitudepick,$longitudepick",
+            drop_lat_lon: "$latitudedrop,$longitudedrop",
+            drop_lat_lon_list: onlypass)
+        .then(
+      (value) {
+        print("-----------------:--- $value");
+
+        for (int i = 0;
+            i <
+                vihicalCalculateController
+                    .vihicalCalculateModel!.caldriver!.length;
+            i++) {
+          vihicallocationsbiddingoff.add(LatLng(
+              double.parse(vihicalCalculateController
+                  .vihicalCalculateModel!.caldriver![i].latitude!),
+              double.parse(vihicalCalculateController
+                  .vihicalCalculateModel!.caldriver![i].longitude!)));
+          _iconPathsbiddingoff.add(
+              "${Config.imageurl}${vihicalCalculateController.vihicalCalculateModel!.caldriver![i].image}");
+        }
+        _addMarkers();
+      },
+    );
+
+    socket.on('homemap', (homemap) {
+      print("++++++ // ++++ :---  $homemap");
+      print("Vehicle is of type: ${homemap.runtimeType}");
+      print("Vehicle keys: ${homemap.keys}");
+      print("++++stutus+++:-- : ${homemap.keys}");
+
+      vihicallocationsbiddingoff.clear();
+      _iconPathsbiddingoff.clear();
+      vihicalCalculateController
+          .vihicalcalculateApi(
+              uid: useridgloable.toString(),
+              mid: "$midseconde",
+              pickup_lat_lon: "$latitudepick,$longitudepick",
+              drop_lat_lon: "$latitudedrop,$longitudedrop",
+              drop_lat_lon_list: onlypass)
+          .then(
+        (value) {
+          for (int i = 0;
+              i <
+                  vihicalCalculateController
+                      .vihicalCalculateModel!.caldriver!.length;
+              i++) {
+            vihicallocationsbiddingoff.add(LatLng(
+                double.parse(vihicalCalculateController
+                    .vihicalCalculateModel!.caldriver![i].latitude!),
+                double.parse(vihicalCalculateController
+                    .vihicalCalculateModel!.caldriver![i].longitude!)));
+            _iconPathsbiddingoff.add(
+                "${Config.imageurl}${vihicalCalculateController.vihicalCalculateModel!.caldriver![i].image}");
+          }
+          _addMarkers();
+        },
+      );
+    });
+
+    socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
+      socket.close();
+
+      print("++++++ /acceptvehrequest/ ++++ :---  $acceptvehrequest");
+      print("acceptvehrequest is of type: ${acceptvehrequest.runtimeType}");
+      print("acceptvehrequest keys: ${acceptvehrequest.keys}");
+      print("++++userid+++++: $useridgloable");
+      print(
+          "++++hjhhhhhhhhhhhhhhhhhh+++++: ${acceptvehrequest["uid"].toString()}");
+      print(
+          "++++hjhhhhhhhhhhhhhhhhhh+++++: ${acceptvehrequest["uid"].toString()}");
+      loadertimer = true;
+
+      request_id = acceptvehrequest["request_id"].toString();
+      driver_id = acceptvehrequest["uid"].toString();
+
+      if (acceptvehrequest["c_id"]
+          .toString()
+          .contains(useridgloable.toString())) {
+        print("condition done");
+        driveridloader == false;
+        print("condition done1");
+        print("condition done0 ${context}");
+        globalDriverAcceptClass.driverdetailfunction(
+            context: context,
+            lat: widget.latpic,
+            long: widget.longpic,
+            d_id: acceptvehrequest["uid"].toString(),
+            request_id: acceptvehrequest["request_id"].toString());
+        print("condition done2");
+      } else {
+        print("condition not done");
+      }
+    });
+  }
+
+  socateempt() {
+    socket.emit('vehiclerequest', {
+      'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
+      'driverid': vihicalCalculateController.vihicalCalculateModel!.driverId,
+      'c_id': useridgloable
+    });
+  }
+
+  String themeForMap = "";
+
+  mapThemeStyle({required context}) {
+    if (darkMode == true) {
+      setState(() {
+        DefaultAssetBundle.of(context)
+            .loadString("assets/dark_mode_style.json")
+            .then(
+          (value) {
+            setState(() {
+              themeForMap = value;
+            });
+          },
+        );
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    mapThemeStyle(context: context);
+
+    setState(() {});
+
+    socketConnect();
+
+    _dropOffPoints = [];
+
+    _dropOffPoints = widget.destinationlat;
+    print("****////***:-----  $_dropOffPoints");
+
+    _addMarker(LatLng(widget.latpic, widget.longpic), "origin",
+        BitmapDescriptor.defaultMarker);
+
+    _addMarker2(LatLng(widget.latdrop, widget.longdrop), "destination",
+        BitmapDescriptor.defaultMarkerWithHue(90));
+
+    for (int a = 0; a < _dropOffPoints.length; a++) {
+      _addMarker3("destination");
+    }
+
+    getDirections(
+        lat1: PointLatLng(widget.latpic, widget.longpic),
+        lat2: PointLatLng(widget.latdrop, widget.longdrop),
+        dropOffPoints: _dropOffPoints);
+
+    for (int i = 1;
+        i < paymentGetApiController.paymentgetwayapi!.paymentList!.length;
+        i++) {
+      if (int.parse(paymentGetApiController.paymentgetwayapi!.defaultPayment
+              .toString()) ==
+          paymentGetApiController.paymentgetwayapi!.paymentList![i].id) {
+        setState(() {
+          payment =
+              paymentGetApiController.paymentgetwayapi!.paymentList![i].id!;
+          paymentname =
+              paymentGetApiController.paymentgetwayapi!.paymentList![i].name!;
+          print("+++++$payment");
+          print("-----$i");
+        });
+      }
+    }
+
+    print("1111/////1111:---  ${widget.latpic},${widget.longpic}");
+    print("2222/////2222:---  ${widget.latdrop},${widget.longdrop}");
+    print("3333/////3333:---  $onlypass");
+    print("4444/////4444:---  $_dropOffPoints");
+
+    print("()()()()() :---  ${picktitle == "" ? addresspickup : picktitle}");
+    print("()()()()() :---  $picksubtitle");
+    print("()()()()() :---  $droptitle");
+    print("()()()()() :---  $dropsubtitle");
+    print("()()()()() :---  $droptitlelist");
+    setState(() {});
+  }
+
+  late GoogleMapController mapController;
+
+  Map<MarkerId, Marker> markers = {};
+
+  Map<PolylineId, Polyline> polylines = {};
+  List<LatLng> polylineCoordinates = [];
+  PolylinePoints polylinePoints = PolylinePoints();
+
+  void _onMapCreated(GoogleMapController controller) async {
+    mapController = controller;
+  }
+
+  Future<Uint8List> getImages(String path, int width) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
+        targetHeight: width);
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
+        .buffer
+        .asUint8List();
+  }
+
+  _addMarker(LatLng position, String id, BitmapDescriptor descriptor) async {
+    final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
+    MarkerId markerId = MarkerId(id);
+    Marker marker = Marker(
+      markerId: markerId,
+      icon: BitmapDescriptor.fromBytes(markIcon),
+      position: position,
+      onTap: () {
+        showDialog(
+          barrierColor: Colors.transparent,
+          context: context,
+          builder: (context) {
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return Dialog(
+                  alignment: const Alignment(0, -0.25),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  elevation: 0,
+                  child: Container(
+                    width: 50,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: Colors.white,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${picktitle == "" ? "${pickupcontroller.text}" : picktitle}",
+                          maxLines: 1,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        picksubtitle == ""
+                            ? const SizedBox()
+                            : Text(
+                                picksubtitle,
+                                maxLines: 3,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+    markers[markerId] = marker;
+  }
+
+  Future _addMarker2(
+      LatLng position, String id, BitmapDescriptor descriptor) async {
+    final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
+    MarkerId markerId = MarkerId(id);
+    Marker marker = Marker(
+      markerId: markerId,
+      icon: BitmapDescriptor.fromBytes(markIcon),
+      position: position,
+      onTap: () {
+        showDialog(
+          barrierColor: Colors.transparent,
+          context: context,
+          builder: (context) {
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return Dialog(
+                  alignment: const Alignment(0, -0.25),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  elevation: 0,
+                  child: Container(
+                    width: 50,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: Colors.white,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${droptitle}",
+                          maxLines: 1,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          dropsubtitle,
+                          maxLines: 3,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+    markers[markerId] = marker;
+  }
+
+  _addMarker3(String id) async {
+    for (int a = 0; a < _dropOffPoints.length; a++) {
+      final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
+      MarkerId markerId = MarkerId(id[a]);
+
+      LatLng position =
+          LatLng(_dropOffPoints[a].latitude, _dropOffPoints[a].longitude);
+
+      Marker marker = Marker(
+        markerId: markerId,
+        icon: BitmapDescriptor.fromBytes(markIcon),
+        position: position,
+        onTap: () {
+          showDialog(
+            barrierColor: Colors.transparent,
+            context: context,
+            builder: (context) {
+              return StatefulBuilder(
+                builder: (context, setState) {
+                  return Dialog(
+                    alignment: const Alignment(0, -0.25),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    elevation: 0,
+                    child: Container(
+                      width: 50,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: Colors.white,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${droptitlelist[a]["title"]}",
+                            maxLines: 1,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            "${droptitlelist[a]["subt"]}",
+                            maxLines: 3,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      );
+
+      markers[markerId] = marker;
+    }
+  }
+
+  addPolyLine(List<LatLng> polylineCoordinates) {
+    PolylineId id = const PolylineId("poly");
+    Polyline polyline = Polyline(
+      polylineId: id,
+      color: theamcolore,
+      points: polylineCoordinates,
+      width: 3,
+    );
+    polylines[id] = polyline;
+    setState(() {});
+  }
+
+  Future getDirections(
+      {required PointLatLng lat1,
+      required PointLatLng lat2,
+      required List<PointLatLng> dropOffPoints}) async {
+    List<LatLng> polylineCoordinates = [];
+    List<PointLatLng> allPoints = [lat1, lat2, ...dropOffPoints];
+
+    for (int i = 0; i < allPoints.length - 1; i++) {
+      PointLatLng point1 = allPoints[i];
+      PointLatLng point2 = allPoints[i + 1];
+
+      PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+        Config.mapkey,
+        point1,
+        point2,
+        travelMode: TravelMode.driving,
+      );
+
+      if (result.points.isNotEmpty) {
+        for (var point in result.points) {
+          polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+        }
+      } else {}
+    }
+
+    addPolyLine(polylineCoordinates);
+  }
+
+  String mainAmount = "";
+  bool light = true;
+
   Modual_CalculateController modual_calculateController =
       Get.put(Modual_CalculateController());
+  VihicalCalculateController vihicalCalculateController =
+      Get.put(VihicalCalculateController());
+  AddVihicalCalculateController addVihicalCalculateController =
+      Get.put(AddVihicalCalculateController());
+  VihicalDriverDetailApiController vihicalDriverDetailApiController =
+      Get.put(VihicalDriverDetailApiController());
+  PaymentGetApiController paymentGetApiController =
+      Get.put(PaymentGetApiController());
+  CancelRasonRequestApiController cancelRasonRequestApiController =
+      Get.put(CancelRasonRequestApiController());
+  GlobalDriverAcceptClass globalDriverAcceptClass =
+      Get.put(GlobalDriverAcceptClass());
+  HomeWalletApiController homeWalletApiController =
+      Get.put(HomeWalletApiController());
 
-  // Local state variables
-  List<PointLatLng> _dropOffPoints = [];
-  List<LatLng> vihicallocationsbiddingoff = [];
-  List<String> _iconPathsbiddingoff = [];
-  String themeForMap = "";
-  bool socketInitialized = false;
-  Timer? _locationUpdateTimer;
+  final List<String> _iconPathsbiddingoff = [];
 
-  // UI state
+  final List<LatLng> vihicallocationsbiddingoff = [];
+
+  void _addMarkers() async {
+    Future<BitmapDescriptor> loadIcon(String url) async {
+      try {
+        if (url.isEmpty || url.contains("undefined")) {
+          return BitmapDescriptor.defaultMarker;
+        }
+
+        final http.Response response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final Uint8List bytes = response.bodyBytes;
+
+          final ui.Codec codec = await ui.instantiateImageCodec(bytes,
+              targetWidth: 30, targetHeight: 50);
+          final ui.FrameInfo frameInfo = await codec.getNextFrame();
+          final ByteData? byteData =
+              await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+
+          return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+        } else {
+          throw Exception('Failed to load image from $url');
+        }
+      } catch (e) {
+        print("Error loading icon from $url: $e");
+        return BitmapDescriptor.defaultMarker;
+      }
+    }
+
+    final List<BitmapDescriptor> icons = await Future.wait(
+      _iconPathsbiddingoff.map((path) => loadIcon(path)),
+    );
+
+    setState(() {
+      markers.clear();
+
+      _addMarker(LatLng(widget.latpic, widget.longpic), "origin",
+          BitmapDescriptor.defaultMarker);
+
+      _addMarker2(LatLng(widget.latdrop, widget.longdrop), "destination",
+          BitmapDescriptor.defaultMarkerWithHue(90));
+
+      for (int a = 0; a < _dropOffPoints.length; a++) {
+        _addMarker3("destination");
+      }
+
+      getDirections(
+          lat1: PointLatLng(widget.latpic, widget.longpic),
+          lat2: PointLatLng(widget.latdrop, widget.longdrop),
+          dropOffPoints: _dropOffPoints);
+
+      for (var i = 0; i < vihicallocationsbiddingoff.length; i++) {
+        final markerId = MarkerId('marker_$i');
+        final marker = Marker(
+          markerId: markerId,
+          position: vihicallocationsbiddingoff[i],
+          icon: icons[i],
+        );
+        markers[markerId] = marker; // Add marker to the map
+      }
+    });
+  }
+
   bool switchValue = false;
   int payment = 0;
   String paymentname = "";
@@ -101,698 +658,1093 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<bool> couponadd = [];
   String couponname = "";
 
-  // User data
-  var decodeUid;
-  var userid;
-  var currencyy;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeScreen();
-    socketConnect();
-  }
-
-  @override
-  void dispose() {
-    _cleanupResources();
-    super.dispose();
-  }
-
-  void _initializeScreen() {
-    // Set drop off points from widget
-    _dropOffPoints = widget.destinationlat;
-
-    // Initialize provider data with passed parameters
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final locationState = context.read<LocationState>();
-      locationState.setPickupLocation(
-          widget.latpic, widget.longpic, "Pickup Location", "");
-      locationState.setDropLocation(
-          widget.latdrop, widget.longdrop, "Drop Location", "");
-
-      _generateRoute();
-      _addPickupDropMarkers();
-    });
-
-    mapThemeStyle();
-  }
-
-  void _cleanupResources() {
-    _locationUpdateTimer?.cancel();
-
-    // Cleanup socket listeners
-    SocketService.instance.off('Vehicle_Bidding$useridgloable');
-    SocketService.instance.off('V_Driver_Location$useridgloable');
-    SocketService.instance.off('RequestTimeOut$useridgloable');
-  }
-
-  mapThemeStyle() {
-    final theme = darkMode == true ? "dark_style.json" : "light_style.json";
-    DefaultAssetBundle.of(context)
-        .loadString("assets/map_styles/$theme")
-        .then((value) {
-      if (mounted) {
-        setState(() {
-          themeForMap = value;
-        });
-      }
-    });
-  }
-
-  socketConnect() async {
-    try {
-      SharedPreferences preferences = await SharedPreferences.getInstance();
-      var uid = preferences.getString("userLogin");
-      var currency = preferences.getString("currenci");
-
-      if (uid != null && currency != null) {
-        decodeUid = jsonDecode(uid);
-        currencyy = jsonDecode(currency);
-        useridgloable = decodeUid['id'];
-
-        if (kDebugMode) {
-          print("****home screen*****:--- ($useridgloable)");
-          print("*********:--- ($currencyy)");
-        }
-
-        if (mounted) setState(() {});
-
-        SocketService.instance.connect();
-        _connectSocket();
-        _loadVehicleData();
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Socket connection error: $e");
-    }
-  }
-
-  _connectSocket() {
-    final socketService = SocketService.instance;
-
-    // Vehicle bidding updates
-    socketService.on('Vehicle_Bidding$useridgloable', (vehicleBidding) {
-      _handleVehicleBidding(vehicleBidding);
-    });
-
-    // Driver location updates
-    socketService.on('V_Driver_Location$useridgloable', (driverLocation) {
-      _handleDriverLocation(driverLocation);
-    });
-
-    // Request timeout
-    socketService.on('RequestTimeOut$useridgloable', (requestTimeout) {
-      _handleRequestTimeout(requestTimeout);
-    });
-
-    if (kDebugMode) print("✅ Socket listeners setup complete for HomeScreen");
-  }
-
-  void _handleVehicleBidding(dynamic vehicleBidding) {
-    if (!mounted) return;
-
-    try {
-      if (vehicleBidding != null) {
-        // Update the global driver class instead of provider
-        globalDriverAcceptClass.updateFromSocketData(vehicleBidding);
-
-        // Navigate to driver list if we have bidding drivers
-        if (globalDriverAcceptClass.vehicleBiddingDriver.isNotEmpty) {
-          Get.to(() => const DriverListScreen());
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Vehicle bidding handler error: $e");
-    }
-  }
-
-  void _handleDriverLocation(dynamic driverLocation) {
-    if (!mounted) return;
-
-    try {
-      if (driverLocation != null &&
-          driverLocation['latitude'] != null &&
-          driverLocation['longitude'] != null) {
-        double lat = double.parse(driverLocation['latitude'].toString());
-        double lng = double.parse(driverLocation['longitude'].toString());
-        String driverId = driverLocation['driver_id'].toString();
-
-        context.read<MapState>().updateMarkerPosition(
-            MarkerId("driver_$driverId"), LatLng(lat, lng));
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Driver location handler error: $e");
-    }
-  }
-
-  void _handleRequestTimeout(dynamic requestTimeout) {
-    if (!mounted) return;
-
-    try {
-      if (requestTimeout != null) {
-        context.read<RideRequestState>().handleTimeout(requestTimeout);
-        _showTimeoutDialog();
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Request timeout handler error: $e");
-    }
-  }
-
-  void _showTimeoutDialog() {
-    Get.dialog(
-      AlertDialog(
-        title: Text("Request Timeout".tr),
-        content:
-            Text("No drivers responded to your request. Please try again.".tr),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Get.back();
-              Get.back(); // Go back to map screen
-            },
-            child: Text("OK".tr),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _loadVehicleData() {
-    final locationState = context.read<LocationState>();
-
-    if (kDebugMode) {
-      print("*********midsecounde*********:--  ($midseconde)");
-      print("*********vihicalrice*********:--  ($vihicalrice)");
-    }
-
-    vihicalCalculateController
-        .vihicalcalculateApi(
-      uid: useridgloable.toString(),
-      mid: "$midseconde",
-      pickup_lat_lon:
-          "${locationState.latitudePick},${locationState.longitudePick}",
-      drop_lat_lon:
-          "${locationState.latitudeDrop},${locationState.longitudeDrop}",
-      drop_lat_lon_list: locationState.onlyPass,
-    )
-        .then((value) {
-      if (value != null) {
-        if (kDebugMode) print("-----------------:--- $value");
-        _processVehicleData();
-      }
-    });
-  }
-
-  void _processVehicleData() {
-    if (vihicalCalculateController.vihicalCalculateModel?.caldriver != null) {
-      vihicallocationsbiddingoff.clear();
-      _iconPathsbiddingoff.clear();
-
-      for (int i = 0;
-          i <
-              vihicalCalculateController
-                  .vihicalCalculateModel!.caldriver!.length;
-          i++) {
-        final driver =
-            vihicalCalculateController.vihicalCalculateModel!.caldriver![i];
-
-        if (driver.latitude != null && driver.longitude != null) {
-          vihicallocationsbiddingoff.add(LatLng(
-            double.parse(driver.latitude!),
-            double.parse(driver.longitude!),
-          ));
-
-          _iconPathsbiddingoff.add(driver.image ?? "assets/default_driver.png");
-        }
-      }
-
-      _updateVehicleMarkers();
-    }
-  }
-
-  Future<void> _updateVehicleMarkers() async {
-    final mapState = context.read<MapState>();
-
-    // Load custom icons for vehicles
-    final List<BitmapDescriptor> icons = await Future.wait(
-      _iconPathsbiddingoff.map((path) => _loadIcon(path)),
-    );
-
-    // Clear existing markers and add new ones
-    mapState.clearMapData();
-
-    // Add pickup and drop markers
-    _addPickupDropMarkers();
-
-    // Add vehicle markers
-    for (var i = 0; i < vihicallocationsbiddingoff.length; i++) {
-      final markerId = MarkerId('vehicle_$i');
-      final marker = Marker(
-        markerId: markerId,
-        position: vihicallocationsbiddingoff[i],
-        icon: i < icons.length ? icons[i] : BitmapDescriptor.defaultMarker,
-        infoWindow: InfoWindow(
-          title: "Available Vehicle".tr,
-          snippet: "Tap to request".tr,
-        ),
-      );
-      mapState.addMarker(markerId, marker);
-    }
-
-    if (mounted) setState(() {});
-  }
-
-  Future<BitmapDescriptor> _loadIcon(String url) async {
-    try {
-      if (url.startsWith('http')) {
-        // Network image
-        final imageBytes = await NetworkAssetBundle(Uri.parse(url)).load('');
-        final codec = await ui.instantiateImageCodec(
-          imageBytes.buffer.asUint8List(),
-          targetWidth: 80,
-          targetHeight: 80,
-        );
-        final frameInfo = await codec.getNextFrame();
-        final byteData =
-            await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-        return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-      } else {
-        // Asset image
-        final byteData = await rootBundle.load(url);
-        final imageBytes = byteData.buffer.asUint8List();
-        return BitmapDescriptor.fromBytes(imageBytes);
-      }
-    } catch (e) {
-      if (kDebugMode) print("Error loading icon from $url: $e");
-      return BitmapDescriptor.defaultMarker;
-    }
-  }
-
-  void _generateRoute() async {
-    final locationState = context.read<LocationState>();
-    final mapState = context.read<MapState>();
-
-    try {
-      PolylinePoints polylinePoints = PolylinePoints();
-
-      PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        Config.mapkey,
-        PointLatLng(locationState.latitudePick, locationState.longitudePick),
-        PointLatLng(locationState.latitudeDrop, locationState.longitudeDrop),
-        wayPoints: _dropOffPoints
-            .map((point) => PolylineWayPoint(
-                  location: "${point.latitude},${point.longitude}",
-                ))
-            .toList(),
-      );
-
-      if (result.points.isNotEmpty) {
-        List<LatLng> polylineCoordinates = result.points
-            .map((point) => LatLng(point.latitude, point.longitude))
-            .toList();
-
-        Polyline polyline = Polyline(
-          polylineId: const PolylineId("route"),
-          color: theamcolore,
-          points: polylineCoordinates,
-          width: 4,
-        );
-
-        mapState.addPolyline(const PolylineId("route"), polyline);
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Route generation error: $e");
-    }
-  }
-
-  void _addPickupDropMarkers() {
-    final locationState = context.read<LocationState>();
-    final mapState = context.read<MapState>();
-
-    // Add pickup marker
-    Marker pickupMarker = Marker(
-      markerId: const MarkerId("pickup"),
-      position: LatLng(locationState.latitudePick, locationState.longitudePick),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-      infoWindow: InfoWindow(
-        title: "Pickup".tr,
-        snippet: locationState.pickupController.text,
-      ),
-    );
-
-    // Add drop marker
-    Marker dropMarker = Marker(
-      markerId: const MarkerId("drop"),
-      position: LatLng(locationState.latitudeDrop, locationState.longitudeDrop),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      infoWindow: InfoWindow(
-        title: "Drop".tr,
-        snippet: locationState.dropController.text,
-      ),
-    );
-
-    mapState.addMarker(const MarkerId("pickup"), pickupMarker);
-    mapState.addMarker(const MarkerId("drop"), dropMarker);
-
-    // Add waypoint markers if any
-    for (int i = 0; i < _dropOffPoints.length; i++) {
-      Marker waypointMarker = Marker(
-        markerId: MarkerId("waypoint_$i"),
-        position:
-            LatLng(_dropOffPoints[i].latitude, _dropOffPoints[i].longitude),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
-        infoWindow: InfoWindow(
-          title: "Waypoint ${i + 1}".tr,
-        ),
-      );
-      mapState.addMarker(MarkerId("waypoint_$i"), waypointMarker);
-    }
-  }
-
-  void _requestRide() {
-    final locationState = context.read<LocationState>();
-    final pricingState = context.read<PricingState>();
-
-    if (select == -1) {
-      Get.snackbar(
-        "Error".tr,
-        "Please select a vehicle type".tr,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    // Emit vehicle request through socket
-    SocketService.instance.emit('vehiclerequest', {
-      'request_id': DateTime.now().millisecondsSinceEpoch.toString(),
-      'user_id': useridgloable,
-      'pickup_lat': locationState.latitudePick,
-      'pickup_lng': locationState.longitudePick,
-      'drop_lat': locationState.latitudeDrop,
-      'drop_lng': locationState.longitudeDrop,
-      'waypoints': _dropOffPoints
-          .map((point) => {
-                'lat': point.latitude,
-                'lng': point.longitude,
-              })
-          .toList(),
-      'vehicle_type': select,
-      'estimated_fare': vihicalrice,
-    });
-
-    if (kDebugMode) print("🚗 Vehicle request sent");
-  }
-
+  ColorNotifier notifier = ColorNotifier();
   @override
   Widget build(BuildContext context) {
     notifier = Provider.of<ColorNotifier>(context, listen: true);
-
-    return Consumer4<LocationState, MapState, PricingState, RideRequestState>(
-      builder:
-          (context, locationState, mapState, pricingState, rideState, child) {
-        return WillPopScope(
-          onWillPop: () async {
-            return await Get.offAll(const ModernMapScreen(selectVehicle: true));
-          },
-          child: Scaffold(
-            extendBody: true,
-            backgroundColor: notifier.background,
-            bottomNavigationBar: GetBuilder<Modual_CalculateController>(
-              builder: (modual_calculateController) {
-                return modual_calculateController.isLoading
-                    ? Container(
-                        height: 100,
+    return WillPopScope(
+      onWillPop: () async {
+        return await Get.offAll(MapScreen(selectvihical: true));
+      },
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: notifier.background,
+        bottomNavigationBar: GetBuilder<Modual_CalculateController>(
+            builder: (modual_calculateController) {
+          return modual_calculateController.isLoading
+              ? Center(child: CircularProgressIndicator(color: theamcolore))
+              : Stack(
+                  alignment: Alignment.bottomCenter,
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      height: 430,
+                      width: Get.width,
+                      decoration: BoxDecoration(
                         color: notifier.containercolore,
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
-                    : Container(
-                        decoration: BoxDecoration(
-                          color: notifier.containercolore,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(25),
-                            topRight: Radius.circular(25),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.3),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                            ),
-                          ],
-                        ),
+                        borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20)),
+                      ),
+                      child: SingleChildScrollView(
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Vehicle selection list
-                            if (modual_calculateController
-                                    .modualCalculateApiModel?.caldriver !=
-                                null)
-                              Container(
-                                height: 200,
-                                padding: const EdgeInsets.all(15),
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: ListView.separated(
+                                  separatorBuilder: (context, index) {
+                                    return const SizedBox(height: 15);
+                                  },
+                                  shrinkWrap: true,
+                                  scrollDirection: Axis.vertical,
+                                  physics: const NeverScrollableScrollPhysics(),
                                   itemCount: modual_calculateController
                                       .modualCalculateApiModel!
                                       .caldriver!
                                       .length,
-                                  itemBuilder: (context, index) {
-                                    final vehicle = modual_calculateController
-                                        .modualCalculateApiModel!
-                                        .caldriver![index];
-                                    final isSelected = select == index;
-
-                                    return GestureDetector(
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    return InkWell(
                                       onTap: () {
                                         setState(() {
                                           select = index;
-                                          vihicalrice =
-                                              vehicle.dropPrice?.toDouble() ??
-                                                  0.0;
-                                          vihicalname = vehicle.name ?? "";
+
+                                          vihicallocationsbiddingoff.clear();
+                                          _iconPathsbiddingoff.clear();
+                                          print(
+                                              "++++vihicallocationsbiddingoff+++++:-- $vihicallocationsbiddingoff");
+                                          print(
+                                              "+++++_iconPathsbiddingoff++++++++++:-- $_iconPathsbiddingoff");
+                                          setState(() {});
+
+                                          midseconde =
+                                              modual_calculateController
+                                                  .modualCalculateApiModel!
+                                                  .caldriver![index]
+                                                  .id!;
+                                          vihicalrice = double.parse(
+                                              modual_calculateController
+                                                  .modualCalculateApiModel!
+                                                  .caldriver![index]
+                                                  .dropPrice!
+                                                  .toString());
+                                          totalkm = double.parse(
+                                              modual_calculateController
+                                                  .modualCalculateApiModel!
+                                                  .caldriver![index]
+                                                  .dropKm!
+                                                  .toString());
+                                          tot_time = modual_calculateController
+                                              .modualCalculateApiModel!
+                                              .caldriver![index]
+                                              .dropTime!
+                                              .toString();
+                                          tot_hour = modual_calculateController
+                                              .modualCalculateApiModel!
+                                              .caldriver![index]
+                                              .dropHour!
+                                              .toString();
+                                          tot_secound = "0";
+                                          vihicalname =
+                                              modual_calculateController
+                                                  .modualCalculateApiModel!
+                                                  .caldriver![index]
+                                                  .name!
+                                                  .toString();
+                                          vihicalimage =
+                                              modual_calculateController
+                                                  .modualCalculateApiModel!
+                                                  .caldriver![index]
+                                                  .image!
+                                                  .toString();
                                           vehicle_id =
-                                              vehicle.id?.toString() ?? "";
+                                              modual_calculateController
+                                                  .modualCalculateApiModel!
+                                                  .caldriver![index]
+                                                  .id!
+                                                  .toString();
+
+                                          setState(() {});
+                                          print(
+                                              "+++++dropprice++++++++++:-- $vihicalrice");
+
+                                          vihicalCalculateController
+                                              .vihicalcalculateApi(
+                                                  uid: useridgloable.toString(),
+                                                  mid: midseconde.toString(),
+                                                  pickup_lat_lon:
+                                                      "$latitudepick,$longitudepick",
+                                                  drop_lat_lon:
+                                                      "$latitudedrop,$longitudedrop",
+                                                  drop_lat_lon_list: onlypass)
+                                              .then(
+                                            (value) {
+                                              setState(() {});
+
+                                              if (value["Result"] == true) {
+                                                for (int i = 0;
+                                                    i <
+                                                        vihicalCalculateController
+                                                            .vihicalCalculateModel!
+                                                            .caldriver!
+                                                            .length;
+                                                    i++) {
+                                                  vihicallocationsbiddingoff.add(LatLng(
+                                                      double.parse(
+                                                          vihicalCalculateController
+                                                              .vihicalCalculateModel!
+                                                              .caldriver![i]
+                                                              .latitude!),
+                                                      double.parse(
+                                                          vihicalCalculateController
+                                                              .vihicalCalculateModel!
+                                                              .caldriver![i]
+                                                              .longitude!)));
+                                                  _iconPathsbiddingoff.add(
+                                                      "${Config.imageurl}${vihicalCalculateController.vihicalCalculateModel!.caldriver![i].image}");
+                                                }
+                                                _addMarkers();
+                                              } else {
+                                                markers.clear();
+                                                _addMarker(
+                                                    LatLng(widget.latpic,
+                                                        widget.longpic),
+                                                    "origin",
+                                                    BitmapDescriptor
+                                                        .defaultMarker);
+
+                                                _addMarker2(
+                                                    LatLng(widget.latdrop,
+                                                        widget.longdrop),
+                                                    "destination",
+                                                    BitmapDescriptor
+                                                        .defaultMarkerWithHue(
+                                                            90));
+
+                                                for (int a = 0;
+                                                    a < _dropOffPoints.length;
+                                                    a++) {
+                                                  _addMarker3("destination");
+                                                }
+
+                                                getDirections(
+                                                    lat1: PointLatLng(
+                                                        widget.latpic,
+                                                        widget.longpic),
+                                                    lat2: PointLatLng(
+                                                        widget.latdrop,
+                                                        widget.longdrop),
+                                                    dropOffPoints:
+                                                        _dropOffPoints);
+                                              }
+                                            },
+                                          );
                                         });
                                       },
                                       child: Container(
-                                        width: 120,
-                                        margin:
-                                            const EdgeInsets.only(right: 15),
-                                        padding: const EdgeInsets.all(10),
+                                        height: 80,
+                                        width: Get.width,
                                         decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? theamcolore.withOpacity(0.1)
-                                              : Colors.transparent,
-                                          borderRadius:
-                                              BorderRadius.circular(15),
                                           border: Border.all(
-                                            color: isSelected
-                                                ? theamcolore
-                                                : Colors.grey.withOpacity(0.3),
-                                            width: 2,
+                                              color: select == index
+                                                  ? theamcolore
+                                                  : Colors.grey
+                                                      .withOpacity(0.4),
+                                              width: 1),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Center(
+                                          child: ListTile(
+                                            leading: Container(
+                                              height: 50,
+                                              width: 50,
+                                              decoration: const BoxDecoration(
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Image.network(
+                                                  "${Config.imageurl}${modual_calculateController.modualCalculateApiModel!.caldriver![index].image}"),
+                                            ),
+                                            title: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                    '${modual_calculateController.modualCalculateApiModel!.caldriver![index].name}',
+                                                    style: TextStyle(
+                                                        color:
+                                                            notifier.textColor,
+                                                        fontFamily:
+                                                            "SofiaProBold",
+                                                        fontSize: 16)),
+                                                const SizedBox(
+                                                  width: 10,
+                                                ),
+                                                select == index
+                                                    ? SvgPicture.asset(
+                                                        "assets/svgpicture/user.svg",
+                                                        height: 15,
+                                                        color:
+                                                            notifier.textColor,
+                                                      )
+                                                    : const SizedBox(),
+                                                select == index
+                                                    ? Text(
+                                                        "${modual_calculateController.modualCalculateApiModel!.caldriver![index].passengerCapacity}",
+                                                        style: TextStyle(
+                                                            color: notifier
+                                                                .textColor),
+                                                      )
+                                                    : const SizedBox(),
+                                              ],
+                                            ),
+                                            subtitle: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 8.0),
+                                              child: Text(
+                                                  '${modual_calculateController.modualCalculateApiModel!.caldriver![index].driPicTime} min away - Drop ${modual_calculateController.modualCalculateApiModel!.caldriver![index].driPicDrop}',
+                                                  style: const TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 14)),
+                                            ),
+                                            trailing: Text(
+                                                "$currencyy${modual_calculateController.modualCalculateApiModel!.caldriver![index].dropPrice}",
+                                                style: TextStyle(
+                                                    color: notifier.textColor,
+                                                    fontSize: 16)),
                                           ),
                                         ),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            // Vehicle image
-                                            Container(
-                                              height: 60,
-                                              width: 80,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.grey[100],
-                                              ),
-                                              child: vehicle.mapImg != null
-                                                  ? Image.network(
-                                                      "${Config.imageurl}${vehicle.mapImg}",
-                                                      fit: BoxFit.contain,
-                                                      errorBuilder: (context,
-                                                          error, stackTrace) {
-                                                        return const Icon(
-                                                            Icons
-                                                                .directions_car,
-                                                            size: 40);
+                                      ),
+                                    );
+                                  }),
+                            ),
+                            const SizedBox(
+                              height: 130,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: 140,
+                      decoration: BoxDecoration(
+                          color: notifier.containercolore,
+                          boxShadow: const [
+                            BoxShadow(
+                                color: Colors.grey,
+                                offset: Offset(0, -0.4),
+                                blurRadius: 5),
+                          ]),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10, right: 10),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      showModalBottomSheet(
+                                        shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(15),
+                                              topRight: Radius.circular(15)),
+                                        ),
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return StatefulBuilder(
+                                              builder: (context, setState) {
+                                            return ClipRRect(
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                      topLeft:
+                                                          Radius.circular(15),
+                                                      topRight:
+                                                          Radius.circular(15)),
+                                              child: Scaffold(
+                                                backgroundColor:
+                                                    notifier.background,
+                                                floatingActionButtonLocation:
+                                                    FloatingActionButtonLocation
+                                                        .centerDocked,
+                                                floatingActionButton: Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          bottom: 10,
+                                                          left: 10,
+                                                          right: 10),
+                                                  child: CommonButton(
+                                                      containcolore:
+                                                          theamcolore,
+                                                      onPressed1: () {
+                                                        Get.back();
                                                       },
-                                                    )
-                                                  : const Icon(
-                                                      Icons.directions_car,
-                                                      size: 40),
-                                            ),
-
-                                            const SizedBox(height: 10),
-
-                                            // Vehicle name
-                                            Text(
-                                              vehicle.name ?? "Vehicle",
-                                              style: TextStyle(
-                                                color: notifier.textColor,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-
-                                            const SizedBox(height: 5),
-
-                                            // Price
-                                            Text(
-                                              "$currencyy${vehicle.dropPrice ?? 0}",
-                                              style: TextStyle(
-                                                color: theamcolore,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-
-                                            // Capacity
-                                            if (vehicle.passengerCapacity !=
-                                                null)
-                                              Text(
-                                                "${vehicle.passengerCapacity} seats"
-                                                    .tr,
-                                                style: const TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 10,
+                                                      txt1: "CONTINUE".tr,
+                                                      context: context),
+                                                ),
+                                                body: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: notifier
+                                                        .containercolore,
+                                                    borderRadius:
+                                                        BorderRadius.only(
+                                                            topLeft: Radius
+                                                                .circular(15),
+                                                            topRight:
+                                                                Radius.circular(
+                                                                    15)),
+                                                  ),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            left: 10,
+                                                            right: 10,
+                                                            bottom: 50),
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: <Widget>[
+                                                        const SizedBox(
+                                                          height: 13,
+                                                        ),
+                                                        Text(
+                                                            'Payment Getway Method'
+                                                                .tr,
+                                                            style: TextStyle(
+                                                                fontFamily:
+                                                                    "SofiaProBold",
+                                                                fontSize: 18,
+                                                                color: notifier
+                                                                    .textColor)),
+                                                        const SizedBox(
+                                                          height: 10,
+                                                        ),
+                                                        walleteamount == 0
+                                                            ? const SizedBox()
+                                                            : Row(
+                                                                children: [
+                                                                  SvgPicture
+                                                                      .asset(
+                                                                    "assets/svgpicture/wallet.svg",
+                                                                    height: 30,
+                                                                    color:
+                                                                        theamcolore,
+                                                                  ),
+                                                                  const SizedBox(
+                                                                    width: 10,
+                                                                  ),
+                                                                  Text(
+                                                                    "My Wallet ($currencyy$walleteamount)",
+                                                                    style: TextStyle(
+                                                                        color: notifier
+                                                                            .textColor),
+                                                                  ),
+                                                                  const Spacer(),
+                                                                  Transform
+                                                                      .scale(
+                                                                    scale: 0.8,
+                                                                    child:
+                                                                        CupertinoSwitch(
+                                                                      value:
+                                                                          switchValue,
+                                                                      activeColor:
+                                                                          theamcolore,
+                                                                      onChanged:
+                                                                          (bool
+                                                                              value) {
+                                                                        setState(
+                                                                            () {
+                                                                          switchValue =
+                                                                              value;
+                                                                        });
+                                                                      },
+                                                                    ),
+                                                                  )
+                                                                ],
+                                                              ),
+                                                        const SizedBox(
+                                                          height: 10,
+                                                        ),
+                                                        Expanded(
+                                                          child: ListView
+                                                              .separated(
+                                                                  separatorBuilder:
+                                                                      (context,
+                                                                          index) {
+                                                                    return const SizedBox(
+                                                                        width:
+                                                                            0);
+                                                                  },
+                                                                  shrinkWrap:
+                                                                      true,
+                                                                  scrollDirection:
+                                                                      Axis
+                                                                          .vertical,
+                                                                  itemCount: paymentGetApiController
+                                                                      .paymentgetwayapi!
+                                                                      .paymentList!
+                                                                      .length,
+                                                                  itemBuilder:
+                                                                      (BuildContext
+                                                                              context,
+                                                                          int index) {
+                                                                    return InkWell(
+                                                                      onTap:
+                                                                          () {
+                                                                        setState(
+                                                                            () {
+                                                                          payment = paymentGetApiController
+                                                                              .paymentgetwayapi!
+                                                                              .paymentList![index]
+                                                                              .id!;
+                                                                          paymentname = paymentGetApiController
+                                                                              .paymentgetwayapi!
+                                                                              .paymentList![index]
+                                                                              .name!;
+                                                                        });
+                                                                      },
+                                                                      child: paymentGetApiController.paymentgetwayapi!.paymentList![index].status ==
+                                                                              "0"
+                                                                          ? const SizedBox()
+                                                                          : Container(
+                                                                              height: 90,
+                                                                              margin: const EdgeInsets.only(left: 10, right: 10, top: 6, bottom: 6),
+                                                                              padding: const EdgeInsets.all(5),
+                                                                              decoration: BoxDecoration(
+                                                                                border: Border.all(color: payment == paymentGetApiController.paymentgetwayapi!.paymentList![index].id! ? theamcolore : Colors.grey.withOpacity(0.4)),
+                                                                                borderRadius: BorderRadius.circular(15),
+                                                                              ),
+                                                                              child: Center(
+                                                                                child: ListTile(
+                                                                                  leading: Transform.translate(
+                                                                                    offset: const Offset(-5, 0),
+                                                                                    child: Container(
+                                                                                      height: 100,
+                                                                                      width: 60,
+                                                                                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withOpacity(0.4)), image: DecorationImage(image: NetworkImage('${Config.imageurl}${paymentGetApiController.paymentgetwayapi!.paymentList![index].image}'))),
+                                                                                    ),
+                                                                                  ),
+                                                                                  title: Padding(
+                                                                                    padding: const EdgeInsets.only(bottom: 4),
+                                                                                    child: Text(
+                                                                                      paymentGetApiController.paymentgetwayapi!.paymentList![index].name.toString(),
+                                                                                      style: TextStyle(fontSize: 16, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                      maxLines: 2,
+                                                                                    ),
+                                                                                  ),
+                                                                                  subtitle: Padding(
+                                                                                    padding: const EdgeInsets.only(bottom: 4),
+                                                                                    child: Text(
+                                                                                      paymentGetApiController.paymentgetwayapi!.paymentList![index].subTitle.toString(),
+                                                                                      style: TextStyle(fontSize: 12, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                      maxLines: 2,
+                                                                                    ),
+                                                                                  ),
+                                                                                  trailing: Radio(
+                                                                                    value: payment == paymentGetApiController.paymentgetwayapi!.paymentList![index].id! ? true : false,
+                                                                                    fillColor: MaterialStatePropertyAll(theamcolore),
+                                                                                    groupValue: true,
+                                                                                    onChanged: (value) {
+                                                                                      print(value);
+                                                                                      setState(() {
+                                                                                        selectedOption = value.toString();
+                                                                                        selectBoring = paymentGetApiController.paymentgetwayapi!.paymentList![index].image.toString();
+                                                                                      });
+                                                                                    },
+                                                                                  ),
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                    );
+                                                                  }),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                          ],
+                                            );
+                                          });
+                                        },
+                                      );
+                                    },
+                                    child: ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      leading: const Image(
+                                        image: AssetImage("assets/payment.png"),
+                                        height: 30,
+                                        width: 30,
+                                      ),
+                                      title: Transform.translate(
+                                          offset: const Offset(-15, 0),
+                                          child: Text(
+                                            "${paymentname}",
+                                            style: TextStyle(
+                                                color: notifier.textColor),
+                                          )),
+                                      trailing: Image(
+                                        image: AssetImage(
+                                            "assets/angle-right-small.png"),
+                                        height: 30,
+                                        color: notifier.textColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 3,
+                                ),
+                                Container(
+                                  height: 40,
+                                  width: 1,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.withOpacity(0.4),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 5,
+                                ),
+                                StatefulBuilder(
+                                  builder: (context, setState) {
+                                    return Expanded(
+                                      child: InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            mainamount = vihicalrice.toString();
+                                            if (couponadd.isEmpty) {
+                                              for (int i = 0;
+                                                  i <
+                                                      paymentGetApiController
+                                                          .paymentgetwayapi!
+                                                          .couponList!
+                                                          .length;
+                                                  i++) {
+                                                couponadd.add(false);
+                                              }
+                                            }
+                                          });
+
+                                          showModalBottomSheet(
+                                            isScrollControlled: true,
+                                            shape: const RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(15),
+                                                  topRight:
+                                                      Radius.circular(15)),
+                                            ),
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return StatefulBuilder(
+                                                  builder: (context, setState) {
+                                                return Scaffold(
+                                                  backgroundColor:
+                                                      notifier.containercolore,
+                                                  appBar: AppBar(
+                                                    elevation: 0,
+                                                    toolbarHeight: 90,
+                                                    backgroundColor: notifier
+                                                        .containercolore,
+                                                    automaticallyImplyLeading:
+                                                        false,
+                                                    leading: Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 40,
+                                                              left: 18,
+                                                              right: 18),
+                                                      child: InkWell(
+                                                          onTap: () {
+                                                            Get.back();
+                                                          },
+                                                          child: Image(
+                                                            image: AssetImage(
+                                                                "assets/arrow-left.png"),
+                                                            color: notifier
+                                                                .textColor,
+                                                          )),
+                                                    ),
+                                                    title: Transform.translate(
+                                                        offset: const Offset(
+                                                            -10, 0),
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                                  top: 40),
+                                                          child: Text(
+                                                            "All coupons".tr,
+                                                            style: TextStyle(
+                                                                color: notifier
+                                                                    .textColor,
+                                                                fontSize: 18),
+                                                          ),
+                                                        )),
+                                                  ),
+                                                  body: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            15),
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        Text(
+                                                          "Best Coupon".tr,
+                                                          style: TextStyle(
+                                                              color: notifier
+                                                                  .textColor,
+                                                              fontSize: 20),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 20,
+                                                        ),
+                                                        Expanded(
+                                                          child:
+                                                              ListView.builder(
+                                                            shrinkWrap: true,
+                                                            itemCount:
+                                                                paymentGetApiController
+                                                                    .paymentgetwayapi!
+                                                                    .couponList!
+                                                                    .length,
+                                                            itemBuilder:
+                                                                (context,
+                                                                    index) {
+                                                              return Container(
+                                                                margin: EdgeInsets
+                                                                    .only(
+                                                                        bottom:
+                                                                            10),
+                                                                decoration: BoxDecoration(
+                                                                    color: notifier
+                                                                        .containercolore,
+                                                                    borderRadius:
+                                                                        BorderRadius.all(Radius.circular(
+                                                                            15)),
+                                                                    border: Border.all(
+                                                                        color: Colors
+                                                                            .grey
+                                                                            .withOpacity(0.4))),
+                                                                child: Padding(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(
+                                                                          15),
+                                                                  child: Row(
+                                                                    children: [
+                                                                      Column(
+                                                                        crossAxisAlignment:
+                                                                            CrossAxisAlignment.start,
+                                                                        children: [
+                                                                          Text(
+                                                                            "${paymentGetApiController.paymentgetwayapi!.couponList![index].title}",
+                                                                            style: TextStyle(
+                                                                                color: notifier.textColor,
+                                                                                fontWeight: FontWeight.bold,
+                                                                                fontSize: 18),
+                                                                          ),
+                                                                          const SizedBox(
+                                                                            height:
+                                                                                5,
+                                                                          ),
+                                                                          Text(
+                                                                            "${paymentGetApiController.paymentgetwayapi!.couponList![index].subTitle}",
+                                                                            style:
+                                                                                const TextStyle(color: Colors.grey),
+                                                                          ),
+                                                                          const SizedBox(
+                                                                            height:
+                                                                                10,
+                                                                          ),
+                                                                          Row(
+                                                                            children: [
+                                                                              Text(
+                                                                                "Coupon Code: ".tr,
+                                                                                style: TextStyle(color: notifier.textColor),
+                                                                              ),
+                                                                              Text(
+                                                                                "${paymentGetApiController.paymentgetwayapi!.couponList![index].code}",
+                                                                                style: TextStyle(color: theamcolore, fontWeight: FontWeight.bold),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                          const SizedBox(
+                                                                            height:
+                                                                                5,
+                                                                          ),
+                                                                          Row(
+                                                                            children: [
+                                                                              Text(
+                                                                                "Coupon Amount: ".tr,
+                                                                                style: TextStyle(color: notifier.textColor),
+                                                                              ),
+                                                                              Text(
+                                                                                "${currencyy}${paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount}",
+                                                                                style: TextStyle(fontWeight: FontWeight.bold, color: notifier.textColor),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                          const SizedBox(
+                                                                            height:
+                                                                                5,
+                                                                          ),
+                                                                          Row(
+                                                                            children: [
+                                                                              Text(
+                                                                                "Minimum Amount: ".tr,
+                                                                                style: TextStyle(color: notifier.textColor),
+                                                                              ),
+                                                                              Text(
+                                                                                "${currencyy}${paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount}",
+                                                                                style: TextStyle(fontWeight: FontWeight.bold, color: notifier.textColor),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                          const SizedBox(
+                                                                            height:
+                                                                                5,
+                                                                          ),
+                                                                          Row(
+                                                                            children: [
+                                                                              Text(
+                                                                                "Ex Date: ".tr,
+                                                                                style: TextStyle(color: notifier.textColor),
+                                                                              ),
+                                                                              Text(
+                                                                                "${paymentGetApiController.paymentgetwayapi!.couponList![index].endDate.toString().split(" ").first}",
+                                                                                style: TextStyle(fontWeight: FontWeight.bold, color: notifier.textColor),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                          const SizedBox(
+                                                                              height: 15),
+                                                                          couponadd[index] == true
+                                                                              ? InkWell(
+                                                                                  onTap: () {
+                                                                                    setState(() {
+                                                                                      couponadd[index] = false;
+                                                                                      dropprice = mainamount as double;
+                                                                                      vihicalrice = double.parse(mainamount);
+                                                                                      couponname = "";
+                                                                                      couponId = "";
+
+                                                                                      Get.back(result: {
+                                                                                        "coupAdded": "",
+                                                                                        "couponid": "",
+                                                                                      });
+                                                                                      setState(() {});
+                                                                                    });
+                                                                                    setState(() {});
+                                                                                  },
+                                                                                  child: Container(
+                                                                                      height: 45,
+                                                                                      width: 130,
+                                                                                      decoration: BoxDecoration(
+                                                                                        border: Border.all(color: Colors.red),
+                                                                                        borderRadius: BorderRadius.circular(30),
+                                                                                      ),
+                                                                                      child: Center(
+                                                                                          child: Text(
+                                                                                        "Remove".tr,
+                                                                                        style: const TextStyle(color: Colors.red),
+                                                                                      ))))
+                                                                              : InkWell(
+                                                                                  onTap: () {
+                                                                                    if (vihicalrice >= double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount.toString())) {
+                                                                                      setState(() {
+                                                                                        couponAmt = int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString());
+
+                                                                                        setState(() {
+                                                                                          couponname = paymentGetApiController.paymentgetwayapi!.couponList![index].title.toString();
+                                                                                        });
+                                                                                        if (couponadd[index] == false) {
+                                                                                          for (int i = 0; i < couponadd.length; i++) {
+                                                                                            if (couponadd.contains(true)) {
+                                                                                              couponadd[i] = false;
+                                                                                            }
+                                                                                          }
+                                                                                          couponadd[index] = true;
+                                                                                        } else {
+                                                                                          couponadd[index] = false;
+                                                                                        }
+                                                                                      });
+
+                                                                                      vihicalrice = vihicalrice - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount!);
+
+                                                                                      couponId = paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString();
+
+                                                                                      print("xjsbchjscvsgchsvcscsc  $couponId");
+                                                                                      Get.back(result: {
+                                                                                        "coupAdded": paymentGetApiController.paymentgetwayapi!.couponList![index].title,
+                                                                                        "couponid": paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString(),
+                                                                                      });
+                                                                                      setState(() {});
+                                                                                    }
+                                                                                    setState(() {});
+                                                                                  },
+                                                                                  child: Container(
+                                                                                      height: 45,
+                                                                                      width: 130,
+                                                                                      decoration: BoxDecoration(
+                                                                                        border: Border.all(color: int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount!) < double.parse(mainamount) ? theamcolore : Colors.grey.withOpacity(0.2)),
+                                                                                        borderRadius: BorderRadius.circular(30),
+                                                                                      ),
+                                                                                      child: Center(
+                                                                                          child: Text(
+                                                                                        "Apply coupons".tr,
+                                                                                        style: TextStyle(color: double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount!) < double.parse(mainamount) ? theamcolore : Colors.grey),
+                                                                                      ))),
+                                                                                ),
+                                                                        ],
+                                                                      ),
+                                                                      const Spacer(),
+                                                                      Column(
+                                                                        crossAxisAlignment:
+                                                                            CrossAxisAlignment.center,
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.center,
+                                                                        children: [
+                                                                          SvgPicture
+                                                                              .asset(
+                                                                            "assets/svgpicture/offerIcon.svg",
+                                                                            height:
+                                                                                50,
+                                                                          )
+                                                                        ],
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            },
+                                                          ),
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              });
+                                            },
+                                          ).then(
+                                            (value) {
+                                              setState(() {
+                                                couponname = value["coupAdded"];
+                                                couponId = value["couponid"];
+                                              });
+                                            },
+                                          );
+                                        },
+                                        child: ListTile(
+                                          contentPadding: EdgeInsets.zero,
+                                          leading: const Padding(
+                                            padding: EdgeInsets.only(top: 6),
+                                            child: Image(
+                                              image: AssetImage(
+                                                  "assets/coupon.png"),
+                                              height: 30,
+                                              width: 30,
+                                            ),
+                                          ),
+                                          title: couponname == ""
+                                              ? Transform.translate(
+                                                  offset: Offset(-15, 10),
+                                                  child: Text(
+                                                    "Coupon".tr,
+                                                    style: TextStyle(
+                                                        color:
+                                                            notifier.textColor),
+                                                  ))
+                                              : Transform.translate(
+                                                  offset: const Offset(-15, 0),
+                                                  child: Text(
+                                                    "$couponname",
+                                                    style: TextStyle(
+                                                        color:
+                                                            notifier.textColor),
+                                                  )),
+                                          subtitle: couponname == ""
+                                              ? const Text("")
+                                              : Transform.translate(
+                                                  offset: const Offset(-15, 0),
+                                                  child: Text(
+                                                    "Coupon applied".tr,
+                                                    style: TextStyle(
+                                                        fontSize: 12,
+                                                        color:
+                                                            notifier.textColor),
+                                                  )),
+                                          trailing: Image(
+                                            image: AssetImage(
+                                                "assets/angle-right-small.png"),
+                                            height: 30,
+                                            color: notifier.textColor,
+                                          ),
                                         ),
                                       ),
                                     );
                                   },
                                 ),
-                              ),
-
-                            // Action buttons
-                            Padding(
-                              padding: const EdgeInsets.all(15),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: CommonOutLineButton(
-                                      bordercolore: Colors.grey,
-                                      onPressed1: () {
-                                        Get.back();
-                                      },
-                                      context: context,
-                                      txt1: "Back".tr,
-                                      clore: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 15),
-                                  Expanded(
-                                    child: CommonButton(
-                                      containcolore: theamcolore,
-                                      onPressed1: () {
-                                        _requestRide();
-                                      },
-                                      context: context,
-                                      txt1: "Request Ride".tr,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-              },
-            ),
-            body: Column(
-              children: [
-                // Header with location info
-                Container(
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: theamcolore,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(25),
-                      bottomRight: Radius.circular(25),
-                    ),
-                  ),
-                  child: SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.all(15),
-                      child: Row(
-                        children: [
-                          InkWell(
-                            onTap: () => Get.back(),
-                            child: const Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Select Vehicle".tr,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  "Choose your preferred ride".tr,
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontSize: 14,
-                                  ),
-                                ),
                               ],
                             ),
-                          ),
-                        ],
+                            select == -1
+                                ? CommonButton(
+                                    containcolore: theamcolore.withOpacity(0.1),
+                                    onPressed1: () {},
+                                    context: context,
+                                    txt1: "Book $vihicalname")
+                                : CommonButton(
+                                    containcolore: theamcolore,
+                                    onPressed1: () {
+                                      homeWalletApiController
+                                          .homwwalleteApi(
+                                              uid: useridgloable.toString(),
+                                              context: context)
+                                          .then(
+                                        (value) {
+                                          print(
+                                              "{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
+                                          walleteamount = double.parse(
+                                              value["wallet_amount"]);
+                                          print(
+                                              "[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
+                                        },
+                                      );
+
+                                      print(
+                                          "pickupadd title:- ${picktitle == "" ? addresspickup : picktitle}");
+                                      print("pickupadd sub :- $picksubtitle");
+                                      print("dropadd title :- $droptitle");
+                                      print("dropadd sub :- $dropsubtitle");
+                                      print("list sub :- $droptitlelist");
+                                      print(
+                                          "99999999999999999999999999 :- ${vihicalCalculateController.vihicalCalculateModel!.driverId}");
+                                      print("22222222222222 :- $payment");
+                                      print("222222mroal22222222 :- $mroal");
+
+                                      percentValue.clear();
+                                      percentValue = [];
+                                      for (int i = 0; i < 4; i++) {
+                                        percentValue.add(0);
+                                      }
+                                      setState(() {
+                                        currentStoryIndex = 0;
+                                        loadertimer = false;
+                                      });
+
+                                      addVihicalCalculateController
+                                          .addvihicalcalculateApi(
+                                              bidd_auto_status: "false",
+                                              pickupadd: {
+                                                "title":
+                                                    "${picktitle == "" ? addresspickup : picktitle}",
+                                                "subt": picksubtitle
+                                              },
+                                              dropadd: {
+                                                "title": droptitle,
+                                                "subt": dropsubtitle
+                                              },
+                                              droplistadd: droptitlelist,
+                                              context: context,
+                                              uid: useridgloable.toString(),
+                                              tot_km: "$totalkm",
+                                              vehicle_id: vehicle_id,
+                                              tot_minute: tot_time,
+                                              tot_hour: tot_hour,
+                                              m_role: mroal,
+                                              coupon_id: couponId,
+                                              payment_id: "$payment",
+                                              driverid:
+                                                  vihicalCalculateController
+                                                      .vihicalCalculateModel!
+                                                      .driverId!,
+                                              price: "$vihicalrice",
+                                              pickup:
+                                                  "$latitudepick,$longitudepick",
+                                              drop:
+                                                  "$latitudedrop,$longitudedrop",
+                                              droplist: onlypass)
+                                          .then(
+                                        (value) {
+                                          print("+++++${value["id"]}");
+                                          setState(() {});
+                                          request_id = value["id"].toString();
+                                          socateempt();
+                                        },
+                                      );
+                                      commonbottomsheetrequestsend(
+                                          context: context);
+                                    },
+                                    context: context,
+                                    txt1: "Book $vihicalname")
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-
-                // Map view
-                Expanded(
-                  child: Consumer<MapState>(
-                    builder: (context, mapState, child) {
-                      return GoogleMap(
-                        onMapCreated: (GoogleMapController controller) {
-                          mapController = controller;
-                          if (themeForMap.isNotEmpty) {
-                            controller.setMapStyle(themeForMap);
-                          }
-                        },
-                        initialCameraPosition: CameraPosition(
-                          target: LatLng(widget.latpic, widget.longpic),
-                          zoom: 14.0,
-                        ),
-                        markers: Set<Marker>.from(mapState.markers.values),
-                        polylines:
-                            Set<Polyline>.from(mapState.polylines.values),
-                        myLocationEnabled: true,
-                        myLocationButtonEnabled: false,
-                        zoomControlsEnabled: false,
-                        mapToolbarEnabled: false,
-                      );
-                    },
-                  ),
-                ),
-              ],
+                  ],
+                );
+        }),
+        body: Stack(
+          children: [
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                  target: LatLng(widget.latpic, widget.longpic), zoom: 15),
+              myLocationEnabled: true,
+              tiltGesturesEnabled: true,
+              compassEnabled: true,
+              scrollGesturesEnabled: true,
+              zoomGesturesEnabled: true,
+              onMapCreated: (controller) {
+                controller.setMapStyle(themeForMap);
+                _onMapCreated(controller);
+              },
+              markers: Set<Marker>.of(markers.values),
+              polylines: Set<Polyline>.of(polylines.values),
             ),
-          ),
-        );
-      },
+            Padding(
+              padding: const EdgeInsets.only(left: 15, top: 60),
+              child: InkWell(
+                onTap: () {
+                  Get.offAll(MapScreen(
+                    selectvihical: true,
+                  ));
+                },
+                child: Container(
+                  height: 30,
+                  width: 30,
+                  decoration: BoxDecoration(
+                    color: notifier.containercolore,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                      child: Image(
+                    image: AssetImage("assets/arrow-left.png"),
+                    height: 20,
+                    color: notifier.textColor,
+                  )),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

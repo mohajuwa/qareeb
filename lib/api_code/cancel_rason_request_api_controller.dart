@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:qareeb/common_code/toastification.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:qareeb/common_code/config.dart';
@@ -31,7 +31,7 @@ class CancelRasonRequestApiController extends GetxController
         update();
       } else {
         Get.back();
-        ToastService.showToast("${data["message"]}");
+        Fluttertoast.showToast(msg: "${data["message"]}");
       }
     } else {
       Get.back();

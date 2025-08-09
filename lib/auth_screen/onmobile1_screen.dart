@@ -200,7 +200,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //         // Navigator.push(context, MaterialPageRoute(builder: (context) => const Onmobile2Screen()));
           //
           //         if(signupmobilecontroller.text.isEmpty){
-          //           ToastService.showToast(msg: "All fields are required.".tr);
+          //           Fluttertoast.showToast(msg: "All fields are required.".tr);
           //         }else{
           //
           //          setState(() {
@@ -226,7 +226,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //
           //               }
           //               else {
-          //                 ToastService.showToast(msg: "No Service".tr);
+          //                 Fluttertoast.showToast(msg: "No Service".tr);
           //               }
           //
           //             }
@@ -241,15 +241,15 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //              }else{
           //
           //                if(loginpassword.text.isEmpty){
-          //                  ToastService.showToast(msg: "Enter Password".tr);
+          //                  Fluttertoast.showToast(msg: "Enter Password".tr);
           //                }else{
-          //                  ToastService.showToast(msg: "All fields are required.".tr);
+          //                  Fluttertoast.showToast(msg: "All fields are required.".tr);
           //                }
           //
           //              }
           //
           //               // print("not done condition");
-          //               // ToastService.showToast(msg: "${value['message']}".tr);
+          //               // Fluttertoast.showToast(msg: "${value['message']}".tr);
           //             }
           //
           //           },);
@@ -327,7 +327,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                             CommonButton(txt1: 'Continue'.tr,containcolore: theamcolore,context: context,onPressed1: () async{
           //
           //                               if(forgotmobile.text.isEmpty){
-          //                                 ToastService.showToast(msg: 'Enter Mobile Number...!!!'.tr,);
+          //                                 Fluttertoast.showToast(msg: 'Enter Mobile Number...!!!'.tr,);
           //                               }else{
           //
           //
@@ -413,12 +413,12 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                                                                       // print("++++++$value");
           //                                                                       // if(value["ResponseCode"] == "200"){
           //                                                                       //   Get.back();
-          //                                                                       //   ToastService.showToast(
+          //                                                                       //   Fluttertoast.showToast(
           //                                                                       //     msg: value["message"],
           //                                                                       //   );
           //                                                                       // }else{
           //                                                                       //
-          //                                                                       //   ToastService.showToast(
+          //                                                                       //   Fluttertoast.showToast(
           //                                                                       //     msg: value["message"],
           //                                                                       //   );
           //                                                                       //
@@ -426,7 +426,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                                                                     });
           //                                                                   }else{
           //
-          //                                                                     ToastService.showToast(
+          //                                                                     Fluttertoast.showToast(
           //                                                                       msg: "Please enter current password".tr,
           //                                                                     );
           //                                                                   }
@@ -436,7 +436,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                                                           ),
           //                                                         ));
           //                                                       } else {
-          //                                                         ToastService.showToast(msg: "Incorrect OTP. Please try again.".tr);
+          //                                                         Fluttertoast.showToast(msg: "Incorrect OTP. Please try again.".tr);
           //                                                       }
           //
           //
@@ -531,12 +531,12 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                                                                       print("++++++$value");
           //                                                                       if(value["ResponseCode"] == "200"){
           //                                                                         Get.back();
-          //                                                                         ToastService.showToast(
+          //                                                                         Fluttertoast.showToast(
           //                                                                           msg: value["message"],
           //                                                                         );
           //                                                                       }else{
           //
-          //                                                                         ToastService.showToast(
+          //                                                                         Fluttertoast.showToast(
           //                                                                           msg: value["message"],
           //                                                                         );
           //
@@ -544,7 +544,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                                                                     });
           //                                                                   }else{
           //
-          //                                                                     ToastService.showToast(
+          //                                                                     Fluttertoast.showToast(
           //                                                                       msg: "Please enter current password".tr,
           //                                                                     );
           //                                                                   }
@@ -554,7 +554,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                                                           ),
           //                                                         ));
           //                                                       } else {
-          //                                                         ToastService.showToast(msg: "Incorrect OTP. Please try again.".tr);
+          //                                                         Fluttertoast.showToast(msg: "Incorrect OTP. Please try again.".tr);
           //                                                       }
           //
           //
@@ -570,11 +570,11 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //
           //                                     }
           //                                     else {
-          //                                       ToastService.showToast(msg: "No Service".tr);
+          //                                       Fluttertoast.showToast(msg: "No Service".tr);
           //                                     }
           //                                   }
           //                                   else{
-          //                                     ToastService.showToast(msg: "${value['message']}",);
+          //                                     Fluttertoast.showToast(msg: "${value['message']}",);
           //                                   }
           //
           //                                 },);

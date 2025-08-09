@@ -43,7 +43,7 @@ class LoginController extends GetxController implements GetxService {
 
       var response = await HttpHelper.post(url,
               body: jsonEncode(body), headers: userHeader)
-          .timeout(const Duration(seconds: 30));
+          .timeout(Duration(seconds: 30));
 
       if (kDebugMode) {
         print('Login Response Status: ${response.statusCode}');
@@ -78,7 +78,7 @@ class LoginController extends GetxController implements GetxService {
             if (permission == LocationPermission.denied) {
               Get.offAll(const PermissionScreen());
             } else {
-              Get.offAll(const ModernMapScreen(selectVehicle: false));
+              Get.offAll(const MapScreen(selectvihical: false));
             }
 
             snackbar(context: context, text: "${data["message"]}");

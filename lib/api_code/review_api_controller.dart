@@ -10,7 +10,6 @@ import 'calculate_api_controller.dart';
 class DriverReviewDetailApiController extends GetxController
     implements GetxService {
   DriverReviewApiModel? driverReviewApiModel;
-  bool isloadoing = true;
 
   Future reviewapi(
       {context,
@@ -44,15 +43,14 @@ class DriverReviewDetailApiController extends GetxController
     var data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      isloadoing = false;
       if (data["Result"] == true) {
         driverReviewApiModel = driverReviewApiModelFromJson(response.body);
         if (driverReviewApiModel!.result == true) {
           // Get.offAll(BoardingPage());
           update();
           showToastForDuration("${data["message"]}", 2);
-          Get.offAll(const ModernMapScreen(
-            selectVehicle: false,
+          Get.offAll(const MapScreen(
+            selectvihical: false,
           ));
           return data;
         } else {
@@ -64,8 +62,6 @@ class DriverReviewDetailApiController extends GetxController
         return data;
       }
     } else {
-      isloadoing = false;
-
       showToastForDuration("Somthing went wrong!.....", 2);
     }
   }

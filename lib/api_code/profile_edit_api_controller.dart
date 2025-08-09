@@ -4,7 +4,8 @@ import 'dart:convert';
 
 import 'dart:io';
 
-import 'package:qareeb/common_code/toastification.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:get/get.dart';
 
 import 'package:http/http.dart' as http;
@@ -31,7 +32,7 @@ class ProfileeditApiController extends GetxController implements GetxService {
       httpClient.badCertificateCallback =
           (X509Certificate cert, String host, int port) => true;
 
-      httpClient.connectionTimeout = const Duration(seconds: 30);
+      httpClient.connectionTimeout = Duration(seconds: 30);
 
       http.Client client = IOClient(httpClient);
 
@@ -60,21 +61,21 @@ class ProfileeditApiController extends GetxController implements GetxService {
         if (responsnessaj["Result"] == true) {
           isLoading = false;
 
-          ToastService.showToast(responsnessaj["message"]);
+          Fluttertoast.showToast(msg: responsnessaj["message"]);
 
           return responsnessaj;
         } else {
-          ToastService.showToast(responsnessaj["message"]);
+          Fluttertoast.showToast(msg: responsnessaj["message"]);
         }
       } else {
-        ToastService.showToast("HTTP Error: ${response.statusCode}");
+        Fluttertoast.showToast(msg: "HTTP Error: ${response.statusCode}");
       }
 
       client.close();
     } catch (e) {
       print("Profile Edit API Error: $e");
 
-      ToastService.showToast("Update failed. Please try again.");
+      Fluttertoast.showToast(msg: "Update failed. Please try again.");
     }
   }
 }

@@ -10,8 +10,6 @@ import 'package:qareeb/api_code/notification_api_controller.dart';
 import 'package:qareeb/app_screen/home_screen.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/config.dart';
-import 'package:qareeb/common_code/global_variables.dart';
-import 'package:qareeb/common_code/modern_loading_widget.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -53,7 +51,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
       body: GetBuilder<NotificationApiController>(
         builder: (notificationApiController) {
           return notificationApiController.isLoading
-              ? modernCircularProgress()
+              ? Center(
+                  child: CircularProgressIndicator(
+                  color: theamcolore,
+                ))
               : notificationApiController.notiFicationApiModel!.ndata!.isEmpty
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,

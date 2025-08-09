@@ -37,7 +37,7 @@ class MyRideDetailApiController extends GetxController implements GetxService {
 
       var response = await HttpHelper.post(url,
               body: jsonEncode(body), headers: userHeader)
-          .timeout(const Duration(seconds: 30));
+          .timeout(Duration(seconds: 30));
 
       if (kDebugMode) {
         print('MyRideDetail Response Status: ${response.statusCode}');

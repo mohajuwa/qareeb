@@ -1,18 +1,18 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:qareeb/common_code/toastification.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:qareeb/common_code/http_helper.dart';
 import '../api_model/pagelist_api_model.dart';
 import '../common_code/config.dart';
 
 // ignore: camel_case_types
-class PagelistApiController extends GetxController implements GetxService {
+class pagelistApiController extends GetxController implements GetxService {
   PageListApiiimodel? pageListApiiimodel;
   bool isLoading = true;
 
-  Future pagelistttApi(BuildContext context) async {
+  Future pagelistttApi(context) async {
     try {
       Map<String, String> userHeader = {
         "Content-type": "application/json",
@@ -26,7 +26,7 @@ class PagelistApiController extends GetxController implements GetxService {
       }
 
       var response = await HttpHelper.get(url, headers: userHeader)
-          .timeout(const Duration(seconds: 30));
+          .timeout(Duration(seconds: 30));
 
       if (kDebugMode) {
         print("PageList API Response Status: ${response.statusCode}");
@@ -42,12 +42,13 @@ class PagelistApiController extends GetxController implements GetxService {
           update();
         } else {
           Get.back();
-          ToastService.showToast("${data["message"]}");
+          Fluttertoast.showToast(msg: "${data["message"]}");
         }
       } else {
         Get.back();
-        ToastService.showToast(
-            "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
+        Fluttertoast.showToast(
+            msg:
+                "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
       }
     } catch (e) {
       if (kDebugMode) {

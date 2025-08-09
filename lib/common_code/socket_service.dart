@@ -27,10 +27,6 @@ class SocketService extends GetxController {
     _setupEventHandlers();
   }
 
-  void initializeSocket() {
-    initSocket(); // Call your existing method
-  }
-
   void _setupEventHandlers() {
     _socket?.onConnect((_) {
       print('Socket connected successfully');

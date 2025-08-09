@@ -10,12 +10,11 @@ class VihicalDriverDetailApiController extends GetxController
     implements GetxService {
   VihicalDriverDetailModel? vihicalDriverDetailModel;
 
-  Future vihicaldriverdetailapi({
-    context,
-    required String uid,
-    required String d_id,
-    String request_id = "", // Default to empty string
-  }) async {
+  Future vihicaldriverdetailapi(
+      {context,
+      required String uid,
+      required String d_id,
+      required String request_id}) async {
     Map body = {
       "uid": uid,
       "d_id": d_id,
@@ -27,42 +26,36 @@ class VihicalDriverDetailApiController extends GetxController
       "Accept": "application/json"
     };
 
-    try {
-      var response = await http.post(
+    var response = await http.post(
         Uri.parse(Config.baseurl + Config.vihicaldriverdetail),
         body: jsonEncode(body),
-        headers: userHeader,
-      );
+        headers: userHeader);
 
-      print(
-          '+ + + + + VihicalDriverDetailApiController + + + + + + :--- $body');
-      print(
-          '- - - - - VihicalDriverDetailApiController - - - - - - :--- ${response.body}');
+    print('+ + + + + VihicalDriverDetailApiController + + + + + + :--- $body');
+    print(
+        '- - - - - VihicalDriverDetailApiController - - - - - - :--- ${response.body}');
 
-      var data = jsonDecode(response.body);
+    var data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        if (data["Result"] == true) {
-          vihicalDriverDetailModel =
-              vihicalDriverDetailModelFromJson(response.body);
-          if (vihicalDriverDetailModel!.result == true) {
-            update();
-            showToastForDuration("${data["message"]}", 2);
-            return data;
-          } else {
-            showToastForDuration("${data["message"]}", 2);
-            return data;
-          }
+    if (response.statusCode == 200) {
+      if (data["Result"] == true) {
+        vihicalDriverDetailModel =
+            vihicalDriverDetailModelFromJson(response.body);
+        if (vihicalDriverDetailModel!.result == true) {
+          // Get.offAll(BoardingPage());
+          update();
+          showToastForDuration("${data["message"]}", 2);
+          return data;
         } else {
           showToastForDuration("${data["message"]}", 2);
           return data;
         }
       } else {
-        showToastForDuration("Something went wrong!", 2);
+        showToastForDuration("${data["message"]}", 2);
+        return data;
       }
-    } catch (e) {
-      print("API Error: $e");
-      showToastForDuration("Network error occurred", 2);
+    } else {
+      showToastForDuration("Somthing went wrong!.....", 2);
     }
   }
 }

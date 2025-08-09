@@ -14,8 +14,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/common_button.dart';
 import 'package:qareeb/common_code/global_variables.dart';
-import 'package:qareeb/common_code/modern_loading_widget.dart';
-import 'package:qareeb/common_code/type_utils.dart';
 import 'dart:ui' as ui;
 import '../api_code/calculate_api_controller.dart';
 import '../api_code/modual_calculate_api_controller.dart';
@@ -40,120 +38,180 @@ class CustomLocationSelectScreen extends StatefulWidget {
 class _CustomLocationSelectScreenState
     extends State<CustomLocationSelectScreen> {
   String themeForMap = "";
-  GoogleMapController? mapController;
-  bool isMapReady = false;
-  Set<Marker> markers = {};
-
-  // Add timeout and error handling
-  static const Duration _apiTimeout = Duration(seconds: 15);
-  static const Duration _mapTimeout = Duration(seconds: 10);
 
   mapThemeStyle({required context}) {
     if (darkMode == true) {
       setState(() {
         DefaultAssetBundle.of(context)
-            .loadString("assets/map_styles/dark_style.json")
+            .loadString("assets/dark_mode_style.json")
             .then(
           (value) {
             setState(() {
               themeForMap = value;
             });
           },
-        ).catchError((error) {
-          if (kDebugMode) {
-            print("❌ Dark style loading error: $error");
-          }
-          // Use default dark theme or leave empty
-          themeForMap = "";
-        });
-      });
-    } else {
-      setState(() {
-        DefaultAssetBundle.of(context)
-            .loadString("assets/map_styles/light_style.json")
-            .then(
-          (value) {
-            setState(() {
-              themeForMap = value;
-            });
-          },
-        ).catchError((error) {
-          if (kDebugMode) {
-            print("❌ Light style loading error: $error");
-          }
-          // Use default light theme or leave empty
-          themeForMap = "";
-        });
+        );
       });
     }
+  }
+
+  bool isLoadingLocation = true;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // datagetfunction();
+    destinationlat = [];
+    destinationlong = [];
+    mapThemeStyle(context: context);
+
+    setState(() {
+      fun().then(
+        (value) {
+          setState(() {});
+          getCurrentLatAndLong(lat, long);
+        },
+      );
+    });
+  }
+
+  Set<Marker> markers = {};
+  late GoogleMapController mapController1;
+
+  Future fun() async {
+    LocationPermission permission;
+    permission = await Geolocator.checkPermission();
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {}
+    var currentLocation = await locateUser();
+    debugPrint('location: ${currentLocation.latitude}');
+    _onAddMarkerButtonPressed(
+        currentLocation.latitude, currentLocation.longitude);
+    getCurrentLatAndLong(
+      currentLocation.latitude,
+      currentLocation.longitude,
+    );
+    print("????????????" + currentLocation.longitude.toString());
+    print("SECOND USER CURRENT LOCATION : --  ${address}");
+  }
+
+  Future<Position> locateUser() async {
+    return Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+  }
+
+  getCurrentLatAndLong(double latitude, double longitude) async {
+    lat = latitude;
+    long = longitude;
+
+    await placemarkFromCoordinates(lat, long)
+        .then((List<Placemark> placemarks) {
+      address =
+          '${placemarks.first.name}, ${placemarks.first.locality}, ${placemarks.first.country}';
+      print("FIRST USER CURRENT LOCATION :-- $address");
+    });
+  }
+
+  void _moveToUserLocation(GoogleMapController controller) async {
+    setState(() => isLoadingLocation = true);
+
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium,
+        timeLimit: const Duration(seconds: 5), // optional timeout
+      );
+
+      final userLatLng = LatLng(position.latitude, position.longitude);
+
+      controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: userLatLng, zoom: 14),
+      ));
+
+      getCurrentLatAndLong(position.latitude, position.longitude);
+
+      _onAddMarkerButtonPressed(position.latitude, position.longitude);
+    } catch (e) {
+      print("Error: $e");
+    }
+
+    setState(() => isLoadingLocation = false);
+  }
+
+  Future<Uint8List> getImages(String path, int width) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
+        targetHeight: width);
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
+        .buffer
+        .asUint8List();
+  }
+
+  Future<void> _onAddMarkerButtonPressed(double? lat, long) async {
+    final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
+    markers.add(Marker(
+      markerId: const MarkerId("1"),
+      onTap: () {
+        showDialog(
+          barrierColor: Colors.transparent,
+          context: context,
+          builder: (context) {
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return Dialog(
+                  alignment: const Alignment(0, -0.22),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  elevation: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: Colors.white,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "${address}",
+                          maxLines: 1,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 14,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Text(
+                        //   "harsh savaliya",
+                        //   maxLines: 1,
+                        //   style: const TextStyle(
+                        //     color: Colors.black,
+                        //     fontSize: 14,
+                        //     overflow: TextOverflow.ellipsis,
+                        //   ),
+                        // ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+      position:
+          LatLng(double.parse(lat.toString()), double.parse(long.toString())),
+      // icon: BitmapDescriptor.defaultMarker,
+      icon: BitmapDescriptor.fromBytes(markIcon),
+    ));
     setState(() {});
   }
 
   CalculateController calculateController = Get.put(CalculateController());
   Modual_CalculateController modual_calculateController =
       Get.put(Modual_CalculateController());
-
-  @override
-  void initState() {
-    super.initState();
-    mapThemeStyle(context: context);
-    _initializeLocation();
-  }
-
-  // Initialize location with error handling
-  Future<void> _initializeLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
-      );
-
-      lat = position.latitude;
-      long = position.longitude;
-
-      // Get address with timeout
-      await _getAddressFromCoordinates(lat, long);
-
-      if (mounted) {
-        setState(() {});
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Location initialization error: $e");
-      }
-      // Set default location (Ibb, Yemen)
-      lat = 13.9667;
-      long = 44.1833;
-      address = "الموقع الافتراضي، إب، اليمن";
-
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  // Get address with proper error handling
-  Future<void> _getAddressFromCoordinates(
-      double latitude, double longitude) async {
-    try {
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(latitude, longitude)
-              .timeout(const Duration(seconds: 5));
-
-      if (placemarks.isNotEmpty) {
-        Placemark place = placemarks[0];
-        address =
-            "${place.street ?? ''}, ${place.locality ?? ''}, ${place.country ?? ''}";
-      } else {
-        address = "$latitude, $longitude";
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Geocoding error: $e");
-      }
-      address = "$latitude, $longitude";
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,331 +221,300 @@ class _CustomLocationSelectScreenState
         padding: const EdgeInsets.all(10),
         child: CommonButton(
             containcolore: theamcolore,
-            onPressed1: () async {
-              await _handleLocationSelection();
+            onPressed1: () {
+              if (picanddrop == false) {
+                print("++++++pickup run+++++++");
+                pickupcontroller.text = address;
+
+                picktitle = address;
+                picksubtitle = address;
+
+                latitudepick = lat;
+                longitudepick = long;
+
+                if (pickupcontroller.text.isNotEmpty &&
+                    dropcontroller.text.isNotEmpty) {
+                  print("++++++++++++++++done++++++++++++++++");
+
+                  widget.bidding == "1"
+                      ? Get.offAll(const MapScreen(
+                          selectvihical: false,
+                        ))
+                      : widget.pagestate == true
+                          ? Navigator.pop(context, RefreshData(true))
+                          : Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => HomeScreen(
+                                        latpic: lat,
+                                        longpic: long,
+                                        latdrop: latitudedrop,
+                                        longdrop: longitudedrop,
+                                        destinationlat: destinationlat,
+                                      )),
+                            );
+
+                  widget.bidding == "1"
+                      ? calculateController
+                          .calculateApi(
+                              context: context,
+                              uid: useridgloable.toString(),
+                              mid: mid,
+                              mrole: mroal,
+                              pickup_lat_lon:
+                                  "${latitudepick},${longitudepick}",
+                              drop_lat_lon: "${latitudedrop},${longitudedrop}",
+                              drop_lat_lon_list: onlypass)
+                          .then(
+                          (value) {
+                            dropprice = 0;
+                            minimumfare = 0;
+                            maximumfare = 0;
+
+                            if (value["Result"] == true) {
+                              dropprice = value["drop_price"];
+                              minimumfare = value["vehicle"]["minimum_fare"];
+                              maximumfare = value["vehicle"]["maximum_fare"];
+                              responsemessage = value["message"];
+
+                              tot_hour = value["tot_hour"].toString();
+                              tot_time = value["tot_minute"].toString();
+                              vehicle_id = value["vehicle"]["id"].toString();
+                              vihicalrice =
+                                  double.parse(value["drop_price"].toString());
+                              totalkm =
+                                  double.parse(value["tot_km"].toString());
+                              tot_secound = "0";
+
+                              vihicalimage =
+                                  value["vehicle"]["map_img"].toString();
+                              vihicalname = value["vehicle"]["name"].toString();
+                            } else {
+                              print(
+                                  "jojojojojojojojojojojojojojojojojojojojojojojojo");
+                            }
+
+                            print(
+                                "********** dropprice **********:----- ${dropprice}");
+                            print(
+                                "********** minimumfare **********:----- ${minimumfare}");
+                            print(
+                                "********** maximumfare **********:----- ${maximumfare}");
+                          },
+                        )
+                      : modual_calculateController
+                          .modualcalculateApi(
+                              context: context,
+                              uid: useridgloable.toString(),
+                              mid: mid,
+                              mrole: mroal,
+                              pickup_lat_lon:
+                                  "${latitudepick},${longitudepick}",
+                              drop_lat_lon: "${latitudedrop},${longitudedrop}",
+                              drop_lat_lon_list: onlypass)
+                          .then(
+                          (value) {
+                            totalkm = double.parse(modual_calculateController
+                                .modualCalculateApiModel!.caldriver![0].dropKm!
+                                .toString());
+                            tot_time = modual_calculateController
+                                .modualCalculateApiModel!
+                                .caldriver![0]
+                                .dropTime!
+                                .toString();
+                            tot_hour = modual_calculateController
+                                .modualCalculateApiModel!
+                                .caldriver![0]
+                                .dropHour!
+                                .toString();
+                            tot_secound = "0";
+                            vihicalname = modual_calculateController
+                                .modualCalculateApiModel!.caldriver![0].name!
+                                .toString();
+                            vihicalimage = modual_calculateController
+                                .modualCalculateApiModel!.caldriver![0].image!
+                                .toString();
+                            vehicle_id = modual_calculateController
+                                .modualCalculateApiModel!.caldriver![0].id!
+                                .toString();
+                          },
+                        );
+                } else {
+                  Get.back();
+                }
+              } else {
+                print("++++++drop run+++++++");
+                dropcontroller.text = address;
+
+                droptitle = address;
+                dropsubtitle = address;
+
+                latitudedrop = lat;
+                longitudedrop = long;
+                if (pickupcontroller.text.isNotEmpty &&
+                    dropcontroller.text.isNotEmpty) {
+                  print("++++++++++++++++done++++++++++++++++");
+
+                  widget.bidding == "1"
+                      ? Get.offAll(const MapScreen(
+                          selectvihical: false,
+                        ))
+                      : widget.pagestate == true
+                          ? Navigator.pop(context, RefreshData(true))
+                          : Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => HomeScreen(
+                                        latpic: latitudepick,
+                                        longpic: longitudepick,
+                                        latdrop: lat,
+                                        longdrop: long,
+                                        destinationlat: destinationlat,
+                                      )),
+                            );
+                  widget.bidding == "1"
+                      ? calculateController
+                          .calculateApi(
+                              context: context,
+                              uid: useridgloable.toString(),
+                              mid: mid,
+                              mrole: mroal,
+                              pickup_lat_lon:
+                                  "${latitudepick},${longitudepick}",
+                              drop_lat_lon: "${latitudedrop},${longitudedrop}",
+                              drop_lat_lon_list: onlypass)
+                          .then(
+                          (value) {
+                            dropprice = 0;
+                            minimumfare = 0;
+                            maximumfare = 0;
+
+                            if (value["Result"] == true) {
+                              amountresponse = "true";
+                              dropprice = value["drop_price"];
+                              minimumfare = value["vehicle"]["minimum_fare"];
+                              maximumfare = value["vehicle"]["maximum_fare"];
+                              responsemessage = value["message"];
+
+                              tot_hour = value["tot_hour"].toString();
+                              tot_time = value["tot_minute"].toString();
+                              vehicle_id = value["vehicle"]["id"].toString();
+                              vihicalrice =
+                                  double.parse(value["drop_price"].toString());
+                              totalkm =
+                                  double.parse(value["tot_km"].toString());
+                              tot_secound = "0";
+
+                              vihicalimage =
+                                  value["vehicle"]["map_img"].toString();
+                              vihicalname = value["vehicle"]["name"].toString();
+
+                              print(".......>>>>>> ${tot_hour}");
+                              print(".......>>>>>> ${tot_time}");
+                              print(".......>>>>>> ${vehicle_id}");
+                              print(".......>>>>>> ${vihicalrice}");
+                              print(".......>>>>>> ${totalkm}");
+                              print(".......>>>>>> ${totalkm}");
+                              print(".......>>>>>> ${totalkm}");
+                            } else {
+                              amountresponse = "false";
+                              print(
+                                  "jojojojojojojojojojojojojojojojojojojojojojojojo");
+                            }
+
+                            print(
+                                "********** dropprice **********:----- ${dropprice}");
+                            print(
+                                "********** minimumfare **********:----- ${minimumfare}");
+                            print(
+                                "********** maximumfare **********:----- ${maximumfare}");
+                          },
+                        )
+                      : modual_calculateController
+                          .modualcalculateApi(
+                              context: context,
+                              uid: useridgloable.toString(),
+                              mid: mid,
+                              mrole: mroal,
+                              pickup_lat_lon:
+                                  "${latitudepick},${longitudepick}",
+                              drop_lat_lon: "${latitudedrop},${longitudedrop}",
+                              drop_lat_lon_list: onlypass)
+                          .then(
+                          (value) {
+                            // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
+                            // vihicalrice = double.parse(modual_calculateController.modualCalculateApiModel!.caldriver![0].dropPrice!.toString());
+                            totalkm = double.parse(modual_calculateController
+                                .modualCalculateApiModel!.caldriver![0].dropKm!
+                                .toString());
+                            tot_time = modual_calculateController
+                                .modualCalculateApiModel!
+                                .caldriver![0]
+                                .dropTime!
+                                .toString();
+                            tot_hour = modual_calculateController
+                                .modualCalculateApiModel!
+                                .caldriver![0]
+                                .dropHour!
+                                .toString();
+                            tot_secound = "0";
+                            vihicalname = modual_calculateController
+                                .modualCalculateApiModel!.caldriver![0].name!
+                                .toString();
+                            vihicalimage = modual_calculateController
+                                .modualCalculateApiModel!.caldriver![0].image!
+                                .toString();
+                            vehicle_id = modual_calculateController
+                                .modualCalculateApiModel!.caldriver![0].id!
+                                .toString();
+
+                            print("GOGOGOGOGOGOGOGOGOGOGOGOG:- ${midseconde}");
+                            print("GOGOGOGOGOGOGOGOGOGOGOGOG:- ${vihicalrice}");
+                          },
+                        );
+                } else {
+                  Get.back();
+                }
+              }
             },
-            txt1: picanddrop == false
-                ? "تأكيد نقطة الانطلاق"
-                : "تأكيد نقطة الوصول"),
+            context: context,
+            txt1: "Done".tr),
       ),
-      appBar: AppBar(
-        backgroundColor: theamcolore,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          picanddrop == false ? "اختيار نقطة الانطلاق" : "اختيار نقطة الوصول",
-          style: TextStyle(color: Colors.white),
-        ),
+      body: GoogleMap(
+        gestureRecognizers: {
+          Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())
+        },
+        initialCameraPosition: const CameraPosition(
+            target: LatLng(15.3694, 44.1910), zoom: 14), // Sana'a
+
+        mapType: MapType.normal,
+        markers: Set<Marker>.of(markers),
+        onTap: (argument) {
+          setState(() {});
+          _onAddMarkerButtonPressed(argument.latitude, argument.longitude);
+          lat = argument.latitude;
+          long = argument.longitude;
+          getCurrentLatAndLong(
+            lat,
+            long,
+          );
+          print("**lato****:--- ${lat}");
+          print("+++longo+++:--- ${long}");
+          print("--------------------------------------");
+          print("hfgjhvhjwfvhjuyfvf:-=---  ${address}");
+        },
+        myLocationEnabled: false,
+        zoomGesturesEnabled: true,
+        tiltGesturesEnabled: true,
+        zoomControlsEnabled: true,
+        onMapCreated: (controller) {
+          setState(() {
+            controller.setMapStyle(themeForMap);
+            mapController1 = controller;
+          });
+          _moveToUserLocation(controller);
+        },
       ),
-      body: lat == null || long == null
-          ? modernCircularProgress(
-              size: 50,
-              customAnimation: 'assets/lottie/loading.json',
-            )
-          : Stack(
-              children: [
-                // Google Map with error handling
-                GoogleMap(
-                  onMapCreated: (GoogleMapController controller) async {
-                    try {
-                      mapController = controller;
-                      // Apply theme only if it loaded successfully
-                      if (themeForMap.isNotEmpty) {
-                        await controller.setMapStyle(themeForMap);
-                      }
-                      isMapReady = true;
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    } catch (e) {
-                      if (kDebugMode) {
-                        print("❌ Map initialization error: $e");
-                      }
-                      // Map will use default style if theme fails to load
-                      isMapReady = true;
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    }
-                  },
-                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                    Factory<OneSequenceGestureRecognizer>(
-                      () => EagerGestureRecognizer(),
-                    ),
-                  },
-                  initialCameraPosition: CameraPosition(
-                    target: LatLng(
-                      double.tryParse(lat.toString()) ?? 13.9667,
-                      double.tryParse(long.toString()) ?? 44.1833,
-                    ),
-                    zoom: 13.0,
-                  ),
-                  onCameraMove: (CameraPosition position) {
-                    lat = position.target.latitude;
-                    long = position.target.longitude;
-                  },
-                  onCameraIdle: () async {
-                    await _getAddressFromCoordinates(lat, long);
-                    if (mounted) {
-                      setState(() {});
-                    }
-                  },
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: true,
-                  zoomControlsEnabled: false,
-                  markers: markers,
-                ),
-
-                // Center marker
-                Center(
-                  child: Icon(
-                    Icons.location_pin,
-                    size: 40,
-                    color: theamcolore,
-                  ),
-                ),
-
-                // Address display
-                Positioned(
-                  top: 20,
-                  left: 20,
-                  right: 20,
-                  child: Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      address ?? "جاري تحديد الموقع...",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ],
-            ),
     );
   }
-
-  // Handle location selection with proper error handling and type safety
-  Future<void> _handleLocationSelection() async {
-    try {
-      if (picanddrop == false) {
-        // Pickup location selection
-        if (kDebugMode) {
-          print("++++++pickup run+++++++");
-        }
-
-        pickupcontroller.text = address ?? "";
-        picktitle = address ?? "";
-        picksubtitle = address ?? "";
-        latitudepick = lat;
-        longitudepick = long;
-
-        if (pickupcontroller.text.isNotEmpty &&
-            dropcontroller.text.isNotEmpty) {
-          await _processCompleteRoute();
-        } else {
-          Navigator.pop(context);
-        }
-      } else {
-        // Drop location selection
-        if (kDebugMode) {
-          print("++++++drop run+++++++");
-        }
-
-        dropcontroller.text = address ?? "";
-        droptitle = address ?? "";
-        dropsubtitle = address ?? "";
-        latitudedrop = lat;
-        longitudedrop = long;
-
-        if (pickupcontroller.text.isNotEmpty &&
-            dropcontroller.text.isNotEmpty) {
-          await _processCompleteRoute();
-        } else {
-          Navigator.pop(context);
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Location selection error: $e");
-      }
-      _showErrorMessage("حدث خطأ أثناء تحديد الموقع");
-    }
-  }
-
-  // Process complete route with enhanced error handling
-  Future<void> _processCompleteRoute() async {
-    try {
-      if (kDebugMode) {
-        print("++++++++++++++++done++++++++++++++++");
-      }
-
-      // ✅ FIXED LOGIC: Perform calculation BEFORE navigating
-      if (widget.bidding == "1") {
-        // 1. Perform the calculation first. This method will show and hide
-        //    its own loading indicator using the current, valid context.
-        await _performCalculation();
-
-        // 2. Once the calculation is complete, navigate to the new screen.
-        //    We use `Get.offAll` so the user can't go back to the selection screen.
-        Get.offAll(() => const ModernMapScreen(selectVehicle: false));
-      } else if (widget.pagestate == true) {
-        // This part is correct, no changes needed
-        Navigator.pop(context, RefreshData(true));
-      } else {
-        // This part is also correct, no changes needed
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(
-              latpic: latitudepick,
-              longpic: longitudepick,
-              latdrop: latitudedrop,
-              longdrop: longitudedrop,
-              destinationlat: destinationlat,
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Route processing error: $e");
-      }
-      _showErrorMessage("حدث خطأ أثناء معالجة المسار");
-    }
-  }
-
-  // Enhanced calculation with proper error handling and type safety
-// Enhanced calculation with proper error handling and type safety
-  Future<void> _performCalculation() async {
-    try {
-      // Show loading indicator (store reference for cleanup)
-      if (mounted) {
-        LoadingService.showLoadingDialog(
-          context: context,
-          message: "جاري التحميل...",
-          customAnimation: 'assets/lottie/loading_.json',
-        );
-      }
-
-      var value = await calculateController
-          .calculateApi(
-            context: context,
-            uid: useridgloable.toString(),
-            mid: mid,
-            mrole: mroal,
-            pickup_lat_lon: "${latitudepick},${longitudepick}",
-            drop_lat_lon: "${latitudedrop},${longitudedrop}",
-            drop_lat_lon_list: onlypass,
-          )
-          .timeout(_apiTimeout);
-
-      // ALWAYS hide loading indicator first
-      if (mounted && Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
-
-      // Reset values with type safety
-      dropprice = 0.0;
-      minimumfare = 0.0;
-      maximumfare = 0.0;
-
-      if (value != null && value["Result"] == true) {
-        amountresponse = "true";
-
-        // ✅ FIXED: Use safeParseDouble for all numeric values
-        dropprice = safeParseDouble(value["drop_price"]);
-        minimumfare = safeParseDouble(value["vehicle"]["minimum_fare"]);
-        maximumfare = safeParseDouble(value["vehicle"]["maximum_fare"]);
-
-        responsemessage = value["message"]?.toString() ?? "";
-        tot_hour = value["tot_hour"]?.toString() ?? "0";
-        tot_time = value["tot_minute"]?.toString() ?? "0";
-        vehicle_id = value["vehicle"]?["id"]?.toString() ?? "";
-
-        // Use safeParseDouble for double variables
-        vihicalrice = safeParseDouble(value["drop_price"]);
-        totalkm = safeParseDouble(value["tot_km"]);
-        tot_secound = "0";
-
-        vihicalimage = value["vehicle"]?["map_img"]?.toString() ?? "";
-        vihicalname = value["vehicle"]?["name"]?.toString() ?? "";
-
-        if (kDebugMode) {
-          print(".......>>>>>> tot_hour: ${tot_hour}");
-          print(".......>>>>>> tot_time: ${tot_time}");
-          print(".......>>>>>> vehicle_id: ${vehicle_id}");
-          print(".......>>>>>> vihicalrice: ${vihicalrice}");
-          print(".......>>>>>> totalkm: ${totalkm}");
-        }
-      } else {
-        amountresponse = "false";
-        String errorMsg = value?["message"]?.toString() ?? "فشل في حساب الأجرة";
-        _showErrorMessage(errorMsg);
-
-        if (kDebugMode) {
-          print("❌ Calculate API failed: $errorMsg");
-        }
-      }
-    } catch (e) {
-      // CRITICAL: Always hide loading indicator in catch block
-      if (mounted && Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
-
-      if (kDebugMode) {
-        print("❌ Calculation error: $e");
-      }
-
-      String errorMessage = "حدث خطأ أثناء حساب الأجرة";
-      if (e.toString().contains('TimeoutException')) {
-        errorMessage = "انتهت مهلة الطلب. حاول مرة أخرى.";
-      } else if (e.toString().contains('SocketException')) {
-        errorMessage = "تحقق من اتصال الإنترنت";
-      }
-
-      _showErrorMessage(errorMessage);
-    }
-  }
-
-  // Show error message
-  void _showErrorMessage(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    mapController?.dispose();
-    super.dispose();
-  }
-}
-
-// Helper class for refresh data
-class RefreshData {
-  final bool refresh;
-  RefreshData(this.refresh);
 }

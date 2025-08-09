@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:qareeb/common_code/config.dart';
 import 'package:qareeb/common_code/http_helper.dart';
-import 'package:qareeb/common_code/toastification.dart';
 import '../api_model/all_request_api_model.dart';
-import 'calculate_api_controller.dart' hide ToastService;
+import 'calculate_api_controller.dart';
 
 class AllRequestDataApiController extends GetxController
     implements GetxService {
@@ -35,7 +34,7 @@ class AllRequestDataApiController extends GetxController
 
       var response = await HttpHelper.post(url,
               body: jsonEncode(body), headers: userHeader)
-          .timeout(const Duration(seconds: 30));
+          .timeout(Duration(seconds: 30));
 
       if (kDebugMode) {
         print('All Request Response Status: ${response.statusCode}');
@@ -72,7 +71,7 @@ class AllRequestDataApiController extends GetxController
                 allRequestDataModelcompleted?.message ??
                 allRequestDataModelcancelled?.message ??
                 "حدث خطأ ما"; // "Something went wrong"
-            ToastService.showToast(message);
+            Fluttertoast.showToast(msg: message);
           }
         } else {
           showToastForDuration("${data["message"]}", 2);

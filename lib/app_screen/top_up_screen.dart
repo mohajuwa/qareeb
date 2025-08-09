@@ -8,8 +8,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:qareeb/common_code/modern_loading_widget.dart';
-import 'package:qareeb/common_code/toastification.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -122,17 +121,19 @@ class _TopUpScreenState extends State<TopUpScreen> {
       // homeApiController.homeApi(uid: userdata['id'],latitude: lathome.toString(),logitude: longhome.toString());
     });
 
-    ToastService.showToast('SUCCESS PAYMENT : ${response.paymentId}',
-        timeInSecForIosWeb: 4);
+    Fluttertoast.showToast(
+        msg: 'SUCCESS PAYMENT : ${response.paymentId}', timeInSecForIosWeb: 4);
   }
 
   void handlePaymentError(PaymentFailureResponse response) {
-    ToastService.showToast('ERROR HERE: ${response.code} - ${response.message}',
+    Fluttertoast.showToast(
+        msg: 'ERROR HERE: ${response.code} - ${response.message}',
         timeInSecForIosWeb: 4);
   }
 
   void handleExternalWallet(ExternalWalletResponse response) {
-    ToastService.showToast('EXTERNAL_WALLET IS: ${response.walletName}',
+    Fluttertoast.showToast(
+        msg: 'EXTERNAL_WALLET IS: ${response.walletName}',
         timeInSecForIosWeb: 4);
   }
 
@@ -160,11 +161,10 @@ class _TopUpScreenState extends State<TopUpScreen> {
       body: GetBuilder<WalletReportApiController>(
         builder: (walletReportApiController) {
           return walletReportApiController.isLoading
-              ? const Center(
-                  child: ModernLoadingWidget(
-                    message: "جاري تحميل المحفظة...",
-                  ),
-                )
+              ? Center(
+                  child: CircularProgressIndicator(
+                  color: theamcolore,
+                ))
               : Padding(
                   padding: const EdgeInsets.all(15),
                   child: Column(
@@ -369,9 +369,9 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                     .text
                                                                     .isEmpty
                                                                 ? () {
-                                                                    ToastService
+                                                                    Fluttertoast
                                                                         .showToast(
-                                                                      "Enter Amount!!!"
+                                                                      msg: "Enter Amount!!!"
                                                                           .tr,
                                                                     );
                                                                   }
@@ -444,7 +444,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    ToastService.showToast(status, timeInSecForIosWeb: 4);
+                                                                                    Fluttertoast.showToast(msg: status, timeInSecForIosWeb: 4);
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -488,7 +488,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    ToastService.showToast(status, timeInSecForIosWeb: 4);
+                                                                                    Fluttertoast.showToast(msg: status, timeInSecForIosWeb: 4);
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -532,7 +532,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    ToastService.showToast(status, timeInSecForIosWeb: 4);
+                                                                                    Fluttertoast.showToast(msg: status, timeInSecForIosWeb: 4);
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -576,7 +576,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    ToastService.showToast(status, timeInSecForIosWeb: 4);
+                                                                                    Fluttertoast.showToast(msg: status, timeInSecForIosWeb: 4);
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -620,7 +620,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    ToastService.showToast(status, timeInSecForIosWeb: 4);
+                                                                                    Fluttertoast.showToast(msg: status, timeInSecForIosWeb: 4);
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -664,7 +664,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    ToastService.showToast(status, timeInSecForIosWeb: 4);
+                                                                                    Fluttertoast.showToast(msg: status, timeInSecForIosWeb: 4);
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -708,7 +708,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    ToastService.showToast(status, timeInSecForIosWeb: 4);
+                                                                                    Fluttertoast.showToast(msg: status, timeInSecForIosWeb: 4);
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }

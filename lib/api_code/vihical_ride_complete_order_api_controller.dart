@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:qareeb/common_code/toastification.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
@@ -83,7 +83,7 @@ class VihicalRideCompleteOrderApiController extends GetxController
         droptitlelist = [];
         destinationlat = [];
         destinationlong = [];
-        // textfieldlist = [];
+        textfieldlist = [];
 
         print("++hahaha++:- (${pickupcontroller.text})");
         print("++hahaha++:- (${dropcontroller.text})");
@@ -97,17 +97,17 @@ class VihicalRideCompleteOrderApiController extends GetxController
         print("++hahaha++:- ($dropsubtitle)");
         print("++hahaha++:- ($droptitlelist)");
 
-        ToastService.showToast(
-          responsnessaj["message"],
+        Fluttertoast.showToast(
+          msg: responsnessaj["message"],
         );
       } else {
-        ToastService.showToast(
-          responsnessaj["message"],
+        Fluttertoast.showToast(
+          msg: responsnessaj["message"],
         );
       }
     } else {
-      ToastService.showToast(
-        responsnessaj["message"],
+      Fluttertoast.showToast(
+        msg: responsnessaj["message"],
       );
     }
   }

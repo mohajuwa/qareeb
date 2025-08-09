@@ -76,7 +76,7 @@ class SignupController extends GetxController implements GetxService {
           if (permission == LocationPermission.denied) {
             Get.offAll(const PermissionScreen());
           } else {
-            Get.offAll(const ModernMapScreen(selectVehicle: false));
+            Get.offAll(const MapScreen(selectvihical: false));
           }
 
           snackbar(context: context, text: "${data["message"]}");

@@ -12,7 +12,6 @@ import 'package:lottie/lottie.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
-import 'package:qareeb/common_code/modern_loading_widget.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qareeb/app_screen/home_screen.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
@@ -77,10 +76,10 @@ class _ReferAndEarnState extends State<ReferAndEarn> {
       body: GetBuilder<referandearnApiController>(
         builder: (referandearnapicontroller) {
           return referandearnapicontroller.isLoading
-              ? modernCircularProgress(
-                  size: 50,
-                  customAnimation: 'assets/lottie/loading.json',
-                )
+              ? Center(
+                  child: CircularProgressIndicator(
+                  color: theamcolore,
+                ))
               : Column(
                   children: [
                     Container(

@@ -1,4 +1,3 @@
-// ✅ FIXED - Splash Screen with proper Provider handling
 // ignore_for_file: avoid_print
 // ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
@@ -29,9 +28,6 @@ class Splase_Screen extends StatefulWidget {
 
 class _Splase_ScreenState extends State<Splase_Screen> {
   bool? isLogin;
-
-  // ✅ FIXED - Initialize ColorNotifier locally to avoid provider dependency
-  ColorNotifier notifier = ColorNotifier();
 
   @override
   void initState() {
@@ -76,8 +72,8 @@ class _Splase_ScreenState extends State<Splase_Screen> {
             Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ModernMapScreen(
-                    selectVehicle: false,
+                  builder: (context) => MapScreen(
+                    selectvihical: false,
                   ),
                 ),
                 (route) => false);
@@ -85,6 +81,10 @@ class _Splase_ScreenState extends State<Splase_Screen> {
         });
       }
     });
+
+    // Timer(const Duration(seconds: 3), () {
+    //   Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => OnboardingScreen(),), (route) => false);
+    // });
   }
 
   Future getDataFromLocal() async {
@@ -94,49 +94,37 @@ class _Splase_ScreenState extends State<Splase_Screen> {
     });
   }
 
+  ColorNotifier notifier = ColorNotifier();
   @override
   Widget build(BuildContext context) {
-    // ✅ SAFER FIX - Use Consumer with error handling
-    return Consumer<ColorNotifier>(
-      builder: (context, colorNotifier, child) {
-        return Scaffold(
-          backgroundColor: colorNotifier.background,
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                darkMode == true
-                    ? SvgPicture.asset(
-                        "assets/svgpicture/app_logo_light.svg",
-                        height: 250,
-                        width: 250,
-                      )
-                    : SvgPicture.asset(
-                        "assets/svgpicture/app_logo_dark.svg",
-                        height: 250,
-                        width: 250,
-                      ),
-              ],
-            ),
-          ),
-        );
-      },
-      // ✅ ADD ERROR FALLBACK
-      child: Scaffold(
-        backgroundColor: darkMode == true ? Colors.black : Colors.white,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SvgPicture.asset(
-                "assets/svgpicture/app_logo_dark.svg",
-                height: 250,
-                width: 250,
-              ),
-            ],
-          ),
+    notifier = Provider.of<ColorNotifier>(context, listen: true);
+    return Scaffold(
+      backgroundColor: notifier.background,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            darkMode == true
+                ? SvgPicture.asset(
+                    "assets/svgpicture/app_logo_light.svg",
+                    height: 250,
+                    width: 250,
+                  )
+                : SvgPicture.asset(
+                    "assets/svgpicture/app_logo_dark.svg",
+                    height: 250,
+                    width: 250,
+                  ),
+          ],
         ),
       ),
     );
   }
+
+  // Future getDataFromLocal() async {
+  //   final SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   setState(() {
+  //     isLogin = prefs.getBool("UserLogin") ?? true;
+  //   });
+  // }
 }
