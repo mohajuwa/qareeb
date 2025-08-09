@@ -1,3 +1,4 @@
+// ✅ MIGRATED - Counter Bottom Sheet with Provider State Management
 // ignore_for_file: avoid_print
 // ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
@@ -5,7 +6,7 @@
 
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -13,28 +14,26 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
 import 'package:qareeb/common_code/socket_service.dart';
-import 'package:qareeb/providers/ride_request_state.dart';
-import 'package:qareeb/providers/timer_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
+
+// ✅ PROVIDER IMPORTS
+import 'package:qareeb/providers/location_state.dart';
+import 'package:qareeb/providers/ride_request_state.dart';
+import 'package:qareeb/providers/timer_state.dart';
+import 'package:qareeb/providers/pricing_state.dart';
 
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/remove_request.dart';
 import '../api_code/resend_request_api_controller.dart';
 import '../api_code/timeout_request_api_controller.dart';
 import '../api_code/vihical_calculate_api_controller.dart';
+import '../api_code/global_driver_access_api_controller.dart';
 import '../common_code/colore_screen.dart';
 import '../common_code/common_button.dart';
 import '../common_code/common_flow_screen.dart';
 import '../common_code/config.dart';
 import 'home_screen.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
-
-List<double> percentValue = [];
-int currentStoryIndex = 0;
-// int durationn = 5;
-int durationn = 180;
-// int durationn = 313;
 
 class CounterBottomSheet extends StatefulWidget {
   const CounterBottomSheet({
@@ -46,24 +45,18 @@ class CounterBottomSheet extends StatefulWidget {
 }
 
 class _CounterBottomSheetState extends State<CounterBottomSheet> {
-  @override
-  void initState() {
-    super.initState();
-    getdata(); // Keep this for user data
+  // ✅ MIGRATED - Local state variables
+  List<double> percentValue = [];
+  int currentStoryIndex = 0;
+  int durationn = 180; // 3 minutes timer
+  Timer? _progressTimer;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Initialize progress tracking
-      for (int i = 0; i < 4; i++) {
-        percentValue.add(0);
-      }
-      _watchStories();
-    });
-  }
-
+  // ✅ MIGRATED - User data variables
   var decodeUid;
   var userid;
   var currencyy;
 
+  // ✅ MIGRATED - GetX controllers for API calls
   TimeoutRequestApiController timeoutRequestApiController =
       Get.put(TimeoutRequestApiController());
   ResendRequestApiController resendRequestApiController =
@@ -73,499 +66,416 @@ class _CounterBottomSheetState extends State<CounterBottomSheet> {
   AddVihicalCalculateController addVihicalCalculateController =
       Get.put(AddVihicalCalculateController());
   RemoveRequest removeRequest = Get.put(RemoveRequest());
+  GlobalDriverAcceptClass globalDriverAcceptClass =
+      Get.put(GlobalDriverAcceptClass());
 
-  getdata() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    var uid = preferences.getString("userLogin");
-    var currency = preferences.getString("currenci");
+  // ✅ MIGRATED - Provider for UI theming
+  ColorNotifier notifier = ColorNotifier();
 
-    decodeUid = jsonDecode(uid!);
-    currencyy = jsonDecode(currency!);
+  @override
+  void initState() {
+    super.initState();
+    _initializeData();
+    _initializeSocket();
 
-    userid = decodeUid['id'];
-    print("****CounterBottomSheet*****:--- ($userid)");
-    print("****CounterBottomSheet*****:--- ($currencyy)");
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeProgressTracking();
+    });
   }
 
-  void _watchStories() {
-    setState(() {});
+  @override
+  void dispose() {
+    _progressTimer?.cancel();
+    SocketService.instance.disconnect();
+    super.dispose();
+  }
 
-    // for(int i=0; i<1; i++){
-    Timer.periodic(Duration(milliseconds: durationn), (timer) {
+  // ✅ MIGRATED - Initialize user data
+  Future<void> _initializeData() async {
+    try {
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      var uid = preferences.getString("userLogin");
+      var currency = preferences.getString("currenci");
+
+      if (uid != null && currency != null) {
+        decodeUid = jsonDecode(uid);
+        currencyy = jsonDecode(currency);
+        userid = decodeUid['id'];
+
+        if (kDebugMode) {
+          print("✅ CounterBottomSheet data initialized:");
+          print("User ID: $userid");
+          print("Currency: $currencyy");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error initializing data: $e");
+    }
+  }
+
+  // ✅ MIGRATED - Socket initialization using SocketService
+  void _initializeSocket() {
+    try {
+      if (!SocketService.instance.isConnected) {
+        SocketService.instance.connect();
+      }
+      _setupSocketListeners();
+    } catch (e) {
+      if (kDebugMode) print("❌ Socket initialization error: $e");
+    }
+  }
+
+  // ✅ MIGRATED - Socket event listeners for ride request updates
+  void _setupSocketListeners() {
+    final socketService = SocketService.instance;
+
+    // Listen for driver response updates
+    socketService.on('driver_response_update$userid', (data) {
+      _handleDriverResponse(data);
+    });
+
+    // Listen for request timeout updates
+    socketService.on('request_timeout$userid', (data) {
+      _handleRequestTimeout(data);
+    });
+
+    // Listen for ride request status changes
+    socketService.on('ride_request_status$userid', (data) {
+      _handleRideRequestStatus(data);
+    });
+
+    if (kDebugMode) print("✅ Socket listeners setup for CounterBottomSheet");
+  }
+
+  // ✅ NEW - Socket event handlers
+  void _handleDriverResponse(dynamic data) {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) print("🚗 Driver response received: $data");
+
+      if (data['status'] == 'accepted') {
+        _progressTimer?.cancel();
+        Get.back(); // Close the counter bottom sheet
+
+        // Navigate to driver detail screen or update state
+        context.read<RideRequestState>().updateAcceptedDriver(data);
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling driver response: $e");
+    }
+  }
+
+  void _handleRequestTimeout(dynamic data) {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) print("⏰ Request timeout received: $data");
+
+      _progressTimer?.cancel();
+      _handleTimeoutCompletion();
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling request timeout: $e");
+    }
+  }
+
+  void _handleRideRequestStatus(dynamic data) {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) print("📊 Ride request status update: $data");
+
+      context.read<RideRequestState>().updateFromVehicleBidding(data);
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling ride request status: $e");
+    }
+  }
+
+  // ✅ MIGRATED - Initialize progress tracking with provider state
+  void _initializeProgressTracking() {
+    percentValue.clear();
+    for (int i = 0; i < 4; i++) {
+      percentValue.add(0);
+    }
+    currentStoryIndex = 0;
+
+    // Initialize timer state in provider
+    context.read<TimerState>().initializeController(durationn ~/ 1000);
+
+    _startProgressAnimation();
+  }
+
+  // ✅ MIGRATED - Progress animation with provider integration
+  void _startProgressAnimation() {
+    if (!mounted) return;
+
+    _progressTimer = Timer.periodic(Duration(milliseconds: durationn), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
       setState(() {
         if (percentValue[currentStoryIndex] + 0.1 < 1) {
           percentValue[currentStoryIndex] += 0.01;
         } else {
           percentValue[currentStoryIndex] = 1;
-
           timer.cancel();
 
-          if (currentStoryIndex < 4 - 1) {
-            setState(() {
-              currentStoryIndex++;
-            });
-
-            setState(() {
-              _watchStories();
-            });
+          if (currentStoryIndex < 3) {
+            // 4 - 1
+            currentStoryIndex++;
+            _startProgressAnimation(); // Restart for next progress bar
           } else {
-            Get.back();
-            percentValue = [];
-            for (int i = 0; i < 4; i++) {
-              percentValue.add(0);
-            }
-
-            setState(() {
-              currentStoryIndex = 0;
-            });
-
-            // removeRequest.removeApi(uid: userid.toString()).then((value) {
-            //   Get.back();
-            //   print("+++ removeApi +++:- ${value["driver_list"]}");
-            //   socket.emit('Vehicle_Ride_Cancel',{
-            //     'uid': "$useridgloable",
-            //     'driverid' : value["driver_list"],
-            //   });
-            // },);
-
-            timeoutRequestApiController
-                .timeoutrequestApi(
-                    uid: userid.toString(), request_id: request_id.toString())
-                .then(
-              (value) {
-                print("*****value data******:--- $value");
-                print("*****value data******:--- ${value["driverid"]}");
-
-                final socketService = SocketService.instance;
-                socketService.emit('RequestTimeOut', {
-                  'requestid': addVihicalCalculateController
-                      .addVihicalCalculateModel!.id,
-                  'driverid': value["driverid"],
-                });
-
-                // socket.emit('Vehicle_Ride_Cancel',{
-                //   'uid': "$useridgloable",
-                //   'driverid' : value["driver_list"],
-                // });
-
-                // socateemptrequesttimeout();
-                Get.bottomSheet(StatefulBuilder(
-                  builder: (context, setState) {
-                    return Container(
-                      // height: 400,
-                      // width: Get.width,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(15),
-                            topRight: Radius.circular(15)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 15, right: 15),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            Row(
-                              children: [
-                                SvgPicture.asset(
-                                  "assets/svgpicture/exclamation-circle.svg",
-                                  height: 25,
-                                ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Text(
-                                  "Captains are busy".tr,
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 30,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    flex: 1,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                          top: 16, bottom: 20, left: 0),
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            height: 15,
-                                            width: 15,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                  color: Colors.green,
-                                                  width: 4),
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
-                                          Container(
-                                            height: 10,
-                                            width: 3,
-                                            decoration: BoxDecoration(
-                                                color: Colors.grey
-                                                    .withOpacity(0.4),
-                                                borderRadius:
-                                                    BorderRadius.circular(10)),
-                                          ),
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
-                                          Container(
-                                            height: 10,
-                                            width: 3,
-                                            decoration: BoxDecoration(
-                                                color: Colors.grey
-                                                    .withOpacity(0.4),
-                                                borderRadius:
-                                                    BorderRadius.circular(10)),
-                                          ),
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
-                                          textfieldlist.isNotEmpty
-                                              ? const SizedBox()
-                                              : Container(
-                                                  height: 10,
-                                                  width: 3,
-                                                  decoration: BoxDecoration(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10)),
-                                                ),
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
-                                          Container(
-                                            height: 15,
-                                            width: 15,
-                                            decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                    color: Colors.red,
-                                                    width: 4)),
-                                          ),
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
-                                          textfieldlist.isEmpty
-                                              ? const SizedBox()
-                                              : Container(
-                                                  height: 10,
-                                                  width: 3,
-                                                  decoration: BoxDecoration(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10)),
-                                                ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                  Expanded(
-                                    flex: 12,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(right: 10),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Transform.translate(
-                                            offset: picktitle == ""
-                                                ? const Offset(0, 0)
-                                                : const Offset(0, -10),
-                                            child: ListTile(
-                                              // isThreeLine: true,
-                                              contentPadding: EdgeInsets.zero,
-                                              title: Text(
-                                                  "${picktitle == "" ? addresspickup : picktitle}"),
-                                              subtitle: Text(
-                                                picksubtitle,
-                                                style: const TextStyle(
-                                                    color: Colors.grey),
-                                                maxLines: 1,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            height: 5,
-                                          ),
-                                          Transform.translate(
-                                            offset: const Offset(0, -30),
-                                            child: ListTile(
-                                              // isThreeLine: true,
-                                              contentPadding: EdgeInsets.zero,
-                                              title: Text(droptitle),
-                                              subtitle: Text(
-                                                dropsubtitle,
-                                                style: const TextStyle(
-                                                    color: Colors.grey),
-                                                maxLines: 1,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            textfieldlist.isEmpty
-                                ? const SizedBox()
-                                : Transform.translate(
-                                    offset: const Offset(0, -30),
-                                    child: ListView.builder(
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      padding: EdgeInsets.zero,
-                                      shrinkWrap: true,
-                                      itemCount: textfieldlist.length,
-                                      itemBuilder: (context, index) {
-                                        return Row(
-                                          children: [
-                                            Expanded(
-                                              flex: 1,
-                                              child: ListView.builder(
-                                                padding: EdgeInsets.zero,
-                                                clipBehavior: Clip.none,
-                                                shrinkWrap: true,
-                                                itemCount: 1,
-                                                itemBuilder: (context, index) {
-                                                  return Transform.translate(
-                                                    offset:
-                                                        const Offset(-5, -25),
-                                                    child: Column(
-                                                      children: [
-                                                        // const SizedBox(height: 4,),
-                                                        Container(
-                                                          height: 10,
-                                                          width: 3,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Colors.grey
-                                                                .withOpacity(
-                                                                    0.4),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        10),
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 4,
-                                                        ),
-                                                        Container(
-                                                          height: 10,
-                                                          width: 3,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Colors.grey
-                                                                .withOpacity(
-                                                                    0.4),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        10),
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 4,
-                                                        ),
-                                                        Container(
-                                                          height: 15,
-                                                          width: 15,
-                                                          decoration: BoxDecoration(
-                                                              color:
-                                                                  Colors.white,
-                                                              shape: BoxShape
-                                                                  .circle,
-                                                              border: Border.all(
-                                                                  color: Colors
-                                                                      .red,
-                                                                  width: 4)),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 4,
-                                                        ),
-                                                        Container(
-                                                          height: 10,
-                                                          width: 3,
-                                                          decoration: BoxDecoration(
-                                                              color: Colors.grey
-                                                                  .withOpacity(
-                                                                      0.4),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10)),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 9,
-                                              child: Transform.translate(
-                                                offset: const Offset(0, -15),
-                                                child: Column(
-                                                  children: [
-                                                    // Transform.translate(
-                                                    //   offset: const Offset(0, -7),
-                                                    //   child: Text("${droptitlelist[index]["title"]}"),
-                                                    // ),
-                                                    // const SizedBox(height: 5,),
-                                                    ListTile(
-                                                      // isThreeLine: true,
-                                                      contentPadding:
-                                                          EdgeInsets.zero,
-                                                      title: Text(
-                                                          "${droptitlelist[index]["title"]}"),
-                                                      subtitle: Text(
-                                                        "${droptitlelist[index]["subt"]}",
-                                                        style: const TextStyle(
-                                                            color: Colors.grey),
-                                                        maxLines: 1,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  ),
-                            // SizedBox(height: 30,),
-                            CommonButton(
-                                containcolore: theamcolore,
-                                onPressed1: () {
-                                  resendRequestApiController
-                                      .resendrequestApi(
-                                          uid: userid.toString(),
-                                          driverid: vihicalCalculateController
-                                              .vihicalCalculateModel!.driverId!)
-                                      .then(
-                                    (value) {
-                                      print(
-                                          "+++ resendrequestApi +++ :- ${value["driver_list"]}");
-                                      Get.back();
-                                      final socketService =
-                                          SocketService.instance;
-                                      socketService.emit('vehiclerequest', {
-                                        'requestid':
-                                            addVihicalCalculateController
-                                                .addVihicalCalculateModel!.id,
-                                        'driverid': value["driver_list"],
-                                        'c_id': useridgloable
-                                      });
-                                      // socateempt();
-                                      commonbottomsheetflow(context: context);
-                                    },
-                                  );
-                                },
-                                txt1: "Try Again",
-                                context: context),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            CommonOutLineButton(
-                                bordercolore: theamcolore,
-                                onPressed1: () {
-                                  removeRequest
-                                      .removeApi(
-                                          uid: userid.toString(),
-                                          context: context)
-                                      .then(
-                                    (value) {
-                                      Get.back();
-                                    },
-                                  );
-                                },
-                                txt1: "Cancel",
-                                context: context),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ));
-              },
-            );
-
-            // setState(() {
-            //   _watchStories();
-            // });
+            _handleTimeoutCompletion();
           }
         }
       });
     });
+  }
 
-    // }
+  // ✅ MIGRATED - Handle timeout completion with provider state
+  void _handleTimeoutCompletion() {
+    if (!mounted) return;
+
+    try {
+      Get.back(); // Close bottom sheet
+
+      // Reset progress tracking
+      percentValue.clear();
+      for (int i = 0; i < 4; i++) {
+        percentValue.add(0);
+      }
+      currentStoryIndex = 0;
+
+      // Call timeout API and emit socket event
+      if (userid != null) {
+        timeoutRequestApiController
+            .timeoutrequestApi(
+          uid: userid.toString(),
+          request_id: globalDriverAcceptClass.request_id.isNotEmpty
+              ? globalDriverAcceptClass.request_id
+              : request_id,
+        )
+            .then((value) {
+          if (kDebugMode) {
+            print("✅ Timeout API response: $value");
+            print("Driver IDs: ${value["driverid"]}");
+          }
+
+          // Emit timeout socket event using SocketService
+          final socketService = SocketService.instance;
+          socketService.emit('RequestTimeOut', {
+            'requestid': globalDriverAcceptClass.request_id.isNotEmpty
+                ? globalDriverAcceptClass.request_id
+                : request_id,
+            'uid': useridgloable,
+            'driverid': value["driverid"] ?? [],
+          });
+
+          // Update provider state
+          context.read<RideRequestState>().handleTimeout({
+            'status': 'timeout',
+            'message': 'No drivers responded to your request'
+          });
+
+          if (kDebugMode) print("📤 RequestTimeOut event emitted");
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling timeout completion: $e");
+    }
+  }
+
+  // ✅ MIGRATED - Resend request with provider state
+  void _handleResendRequest() {
+    if (userid == null) return;
+
+    // Get driver list from VihicalCalculateController which has the driverId list
+    List<dynamic> driverList =
+        vihicalCalculateController.vihicalCalculateModel?.driverId ?? [];
+
+    resendRequestApiController
+        .resendrequestApi(
+      uid: userid.toString(),
+      driverid: driverList,
+    )
+        .then((value) {
+      if (kDebugMode) {
+        print("✅ Resend request API response: $value");
+        print("Driver list: ${value["driver_list"]}");
+      }
+
+      Get.back(); // Close current bottom sheet
+
+      // Emit vehicle request using SocketService
+      final socketService = SocketService.instance;
+      socketService.emit('vehiclerequest', {
+        'requestid':
+            addVihicalCalculateController.addVihicalCalculateModel?.id ??
+                globalDriverAcceptClass.request_id,
+        'driverid': value["driver_list"] ?? [],
+        'c_id': useridgloable
+      });
+
+      // Show common bottom sheet flow
+      commonbottomsheetflow(context: context);
+
+      if (kDebugMode) print("📤 Vehicle request resent");
+    });
+  }
+
+  // ✅ MIGRATED - Cancel request with provider state cleanup
+  void _handleCancelRequest() {
+    if (userid == null) return;
+
+    removeRequest
+        .removeApi(
+      uid: userid.toString(),
+      context: context,
+    )
+        .then((value) {
+      if (kDebugMode) print("✅ Request cancelled: $value");
+
+      Get.back(); // Close bottom sheet
+
+      // Clear provider states
+      context.read<RideRequestState>().clearRideRequest();
+      context.read<LocationState>().clearLocationData();
+      context.read<PricingState>().clearPricingData();
+      context.read<TimerState>().disposeController();
+
+      if (kDebugMode) print("🧹 Provider states cleared");
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        children: [
-          for (int i = 0; i < 4; i++)
-            StatefulBuilder(
-              builder: (context, setState) {
-                return Expanded(
-                  child: LinearPercentIndicator(
-                    lineHeight: 5,
-                    // width: 70,
-                    padding: const EdgeInsets.only(
-                      right: 10,
-                    ),
-                    alignment: MainAxisAlignment.start,
-                    barRadius: const Radius.circular(30),
-                    curve: Curves.bounceInOut,
-                    percent: percentValue[i],
-                    progressColor: theamcolore,
-                    backgroundColor: theamcolore.withOpacity(0.4),
+    notifier = Provider.of<ColorNotifier>(context, listen: true);
+
+    // ✅ MIGRATED - Wrap with Consumer for provider state management
+    return Consumer3<RideRequestState, TimerState, LocationState>(
+      builder: (context, rideRequestState, timerState, locationState, child) {
+        return Container(
+          height: Get.height * 0.7,
+          width: Get.width,
+          decoration: BoxDecoration(
+            color: notifier.containercolore,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(25),
+              topRight: Radius.circular(25),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ✅ KEEP - Header with progress indicators
+                Row(
+                  children: [
+                    for (int i = 0; i < 4; i++)
+                      Expanded(
+                        child: Container(
+                          margin: EdgeInsets.only(right: i < 3 ? 5 : 0),
+                          height: 4,
+                          child: LinearPercentIndicator(
+                            padding: EdgeInsets.zero,
+                            lineHeight: 4,
+                            percent:
+                                i < percentValue.length ? percentValue[i] : 0.0,
+                            backgroundColor: Colors.grey.shade300,
+                            progressColor: currentStoryIndex == i
+                                ? theamcolore
+                                : (i < currentStoryIndex
+                                    ? theamcolore
+                                    : Colors.grey.shade300),
+                            barRadius: const Radius.circular(2),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // ✅ KEEP - Title
+                Text(
+                  "Looking for nearby drivers...".tr,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: notifier.textColor,
                   ),
-                );
-              },
-            )
-        ],
-      ),
+                ),
+                const SizedBox(height: 10),
+
+                // ✅ MIGRATED - Status text with provider state
+                Text(
+                  rideRequestState.status.isEmpty
+                      ? "Please wait while we find the best driver for you.".tr
+                      : "Status: ${rideRequestState.status}".tr,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // ✅ KEEP - Loading animation
+                Center(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 100,
+                        width: 100,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(theamcolore),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        "Searching for drivers...".tr,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: notifier.textColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const Spacer(),
+
+                // ✅ MIGRATED - Action buttons
+                Column(
+                  children: [
+                    // Try Again button
+                    CommonButton(
+                      onPressed1: _handleResendRequest,
+                      txt1: "Try Again".tr,
+                      containcolore: theamcolore,
+                      context: context,
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Cancel button
+                    CommonOutLineButton(
+                      bordercolore: theamcolore,
+                      onPressed1: _handleCancelRequest,
+                      txt1: "Cancel".tr,
+                      context: context,
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,111 +1,292 @@
+// ✅ MIGRATED - Timer Screen with Provider State Management
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/socket_service.dart';
+import 'package:qareeb/common_code/common_button.dart';
+
+// ✅ PROVIDER IMPORTS
+import 'package:qareeb/providers/location_state.dart';
+import 'package:qareeb/providers/ride_request_state.dart';
+import 'package:qareeb/providers/timer_state.dart';
+import 'package:qareeb/providers/pricing_state.dart';
+
 import 'app_screen/driver_startride_screen.dart';
 import 'app_screen/home_screen.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'app_screen/my_ride_screen.dart';
 import 'app_screen/ride_complete_payment_screen.dart';
 import 'common_code/common_flow_screen.dart';
-
-String extraststus = "";
-
-bool timervarable = false;
+import 'api_code/global_driver_access_api_controller.dart';
 
 class TimerScreen extends StatefulWidget {
   final int hours;
   final int minutes;
-  final int secound;
+  final int seconds;
+
   const TimerScreen({
     super.key,
     required this.hours,
     required this.minutes,
-    required this.secound,
+    required this.seconds,
   });
+
   @override
   _TimerScreenState createState() => _TimerScreenState();
 }
 
 class _TimerScreenState extends State<TimerScreen> {
+  // ✅ MIGRATED - Local state variables
+  int hours1 = 0;
+  int minutes1 = 0;
+  int seconds1 = 0;
+  int countdownStart = 0;
+  int remainingTime = 0;
+  Timer? timer;
+  bool isExtraTimeMode = false;
+  String extraStatus = "";
+  bool isLoading = false;
+
+  // ✅ ADD MISSING VARIABLES
+  String statusridestart = "";
+  String totaldropmint = "";
+  String totaldrophoure = "";
+
+  // ✅ MIGRATED - GetX controllers and providers
+  GlobalDriverAcceptClass globalDriverAcceptClass =
+      Get.put(GlobalDriverAcceptClass());
+  ColorNotifier notifier = ColorNotifier();
+
   @override
   void initState() {
     super.initState();
-    print("!!!!!!!!!!!!!!!!!!!!!!!otpstatus!!!!!!!!!!!!!!!!!!! $otpstatus");
-    socketConnect();
+    _initializeTimer();
+    _initializeSocket();
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    SocketService.instance.disconnect();
+    super.dispose();
+  }
+
+  // ✅ MIGRATED - Initialize timer with provider state
+  void _initializeTimer() {
+    if (kDebugMode) {
+      print("✅ Timer initialization:");
+      print(
+          "Hours: ${widget.hours}, Minutes: ${widget.minutes}, Seconds: ${widget.seconds}");
+      print("OTP Status: $otpstatus");
+    }
+
     hours1 = widget.hours;
     minutes1 = widget.minutes;
-    seconds = widget.secound;
-    sur();
-    // _startTimer();
+    seconds1 = widget.seconds;
 
-    plusetimer == "0" ? _startTimer1() : _startTimer();
+    _calculateTotalTime();
 
-    // _startTimer1();
+    // Initialize timer state in provider
+    context.read<TimerState>().initializeController(remainingTime);
+
+    // Start appropriate timer based on plusetimer status
+    if (plusetimer == "0") {
+      _startExtraTimer();
+    } else {
+      _startNormalTimer();
+    }
   }
 
-  socateempt() {
-    socket.emit('Vehicle_Time_Request', {
-      'uid': useridgloable,
-      'd_id': driver_id,
+  void _calculateTotalTime() {
+    countdownStart = (hours1 * 3600) + (minutes1 * 60) + seconds1;
+    remainingTime = countdownStart;
+
+    if (kDebugMode) {
+      print("📊 Total countdown time: $countdownStart seconds");
+    }
+  }
+
+  // ✅ MIGRATED - Socket initialization using SocketService
+  void _initializeSocket() {
+    try {
+      if (!SocketService.instance.isConnected) {
+        SocketService.instance.connect();
+      }
+      _setupSocketListeners();
+    } catch (e) {
+      if (kDebugMode) print("❌ Socket initialization error: $e");
+    }
+  }
+
+  // ✅ MIGRATED - Socket event listeners for timer updates
+  void _setupSocketListeners() {
+    final socketService = SocketService.instance;
+
+    // Listen for time updates from server
+    socketService.on('Vehicle_Time_update$useridgloable', (data) {
+      _handleTimeUpdate(data);
     });
-  }
 
-  int? hours1;
-  int? minutes1;
-  int seconds = 00;
-  int countdownStart = 0;
-
-  sur() {
-    print("start22222");
-    setState(() {
-      countdownStart = (hours1! * 3600) + (minutes1! * 60) + seconds;
-      // countdownStart = (hours1! * 3600) + (minutes1! * 60);
-      _remainingTime = countdownStart;
+    // Listen for ride start/end events
+    socketService.on('Vehicle_Ride_Start_End$useridgloable', (data) {
+      _handleRideStartEnd(data);
     });
+
+    if (kDebugMode) print("✅ Socket listeners setup for TimerScreen");
   }
 
-  // static const int countdownStart = (hours * 3600) + 60; // total time in seconds (2:54 is 174 seconds)
-  int _remainingTime = 0;
-  Timer? _timer;
+  // ✅ NEW - Socket event handlers
+  void _handleTimeUpdate(dynamic vehicleTimeUpdate) {
+    if (!mounted) return;
 
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    try {
+      if (kDebugMode) {
+        print("⏰ Vehicle time update received: $vehicleTimeUpdate");
+        print("Time update type: ${vehicleTimeUpdate.runtimeType}");
+        print("Time update keys: ${vehicleTimeUpdate.keys}");
+      }
+
+      hours1 = 0;
+      minutes1 = int.parse(vehicleTimeUpdate["time"].toString());
+
+      if (remainingTime > 0) {
+        if (kDebugMode) print("🔄 Updating existing timer");
+        _calculateTotalTime();
+      } else {
+        if (kDebugMode) print("🆕 Starting new timer");
+        _calculateTotalTime();
+        _startNormalTimer();
+      }
+
+      // Update provider state
+      context.read<TimerState>().initializeController(remainingTime);
+
+      if (kDebugMode) {
+        print("⏱️ Total hour: $tot_hour");
+        print("⏱️ Total time: $tot_time");
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling time update: $e");
+    }
+  }
+
+  void _handleRideStartEnd(dynamic vehicleRideStartEnd) {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) {
+        print("🚗 Vehicle ride start/end received: $vehicleRideStartEnd");
+        print("Ride event type: ${vehicleRideStartEnd.runtimeType}");
+        print("Current user: $useridgloable");
+        print("Event user: ${vehicleRideStartEnd["uid"]}");
+        print("Driver ID: ${globalDriverAcceptClass.driver_id}");
+      }
+
+      // Reset status variables
+      statusridestart = "";
+      totaldropmint = "";
+      plusetimer = "";
+
+      if (globalDriverAcceptClass.driver_id ==
+          vehicleRideStartEnd["uid"].toString()) {
+        if (kDebugMode) print("✅ Ride event match - processing");
+
+        statusridestart = vehicleRideStartEnd["status"] ?? "";
+        totaldropmint = vehicleRideStartEnd["tot_min"]?.toString() ?? "";
+        totaldrophoure = vehicleRideStartEnd["tot_hour"]?.toString() ?? "";
+
+        if (kDebugMode) {
+          print("📊 Ride status: $statusridestart");
+          print("📊 Total minutes: $totaldropmint");
+          print("📊 Total hours: $totaldrophoure");
+        }
+
+        // Update provider states
+        context.read<RideRequestState>().updateFromVehicleBidding({
+          'status': statusridestart,
+          'total_minutes': totaldropmint,
+          'total_hours': totaldrophoure,
+        });
+
+        // Handle different ride statuses
+        if (statusridestart == "completed") {
+          _handleRideCompletion();
+        } else if (statusridestart == "started") {
+          _handleRideStart();
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling ride start/end: $e");
+    }
+  }
+
+  // ✅ MIGRATED - Timer functions with provider integration
+  void _startNormalTimer() {
+    timer?.cancel();
+
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
       setState(() {
-        if (_remainingTime > 0) {
-          otpstatus == true ? timer.cancel() : _remainingTime--;
-          print("!!!!!otpstatus!!!!!! $otpstatus");
-        } else {
-          setState(() {
-            print("@@@@@@@@@@");
-            print("minutes1$minutes1");
-            print("@@@@@@@@@@$totaldropmint");
+        if (remainingTime > 0) {
+          if (otpstatus == true) {
             timer.cancel();
-            timeincressstatus == "2" ? timer.cancel() : socateempt();
-            timeincressstatus == "2" ? _startTimer1() : timer.cancel();
-          });
+          } else {
+            remainingTime--;
+          }
+
+          if (kDebugMode) print("⏰ Remaining time: $remainingTime");
+        } else {
+          if (kDebugMode) print("⏰ Timer completed");
+
+          timer.cancel();
+
+          if (timeincressstatus == "2") {
+            _startExtraTimer();
+          } else {
+            _emitTimeRequest();
+            timer.cancel();
+          }
         }
       });
     });
   }
 
-  bool isloading = false;
+  void _startExtraTimer() {
+    timer?.cancel();
 
-  void _startTimer1() {
-    extraststus = "";
     setState(() {
-      isloading = true;
-      extraststus = "Time's up. Extra charges apply";
+      isLoading = true;
+      isExtraTimeMode = true;
+      extraStatus = "Time's up. Extra charges apply";
     });
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
       setState(() {
-        if (_remainingTime < 1000000000000000000) {
-          otpstatus == true ? timer.cancel() : _remainingTime++;
-          print("++++++++++:----- $_remainingTime");
-          print("+++++---+++++:----- $otpstatus");
-          print("+++++---extraststus+++++:----- $extraststus");
+        if (remainingTime < 1000000000000000000) {
+          if (otpstatus == true) {
+            timer.cancel();
+          } else {
+            remainingTime++;
+          }
+
+          if (kDebugMode) {
+            print("⏰ Extra time: $remainingTime");
+            print("📊 OTP Status: $otpstatus");
+            print("📊 Extra status: $extraStatus");
+          }
         } else {
           timer.cancel();
         }
@@ -113,6 +294,39 @@ class _TimerScreenState extends State<TimerScreen> {
     });
   }
 
+  // ✅ MIGRATED - Socket emission using SocketService
+  void _emitTimeRequest() {
+    final socketService = SocketService.instance;
+
+    socketService.emit('Vehicle_Time_Request', {
+      'uid': useridgloable,
+      'd_id': globalDriverAcceptClass.driver_id.isNotEmpty
+          ? globalDriverAcceptClass.driver_id
+          : driver_id,
+    });
+
+    if (kDebugMode) print("📤 Vehicle time request emitted");
+  }
+
+  // ✅ NEW - Handle ride events
+  void _handleRideCompletion() {
+    timer?.cancel();
+
+    // Navigate to payment screen
+    Get.offAll(() => const RideCompletePaymentScreen());
+
+    if (kDebugMode) print("🏁 Ride completed - navigating to payment");
+  }
+
+  void _handleRideStart() {
+    // Update timer for ride start
+    _calculateTotalTime();
+    _startNormalTimer();
+
+    if (kDebugMode) print("🚦 Ride started - timer updated");
+  }
+
+  // ✅ MIGRATED - Time formatting
   String _formatTime(int seconds) {
     int hours = seconds ~/ 3600;
     int minutes = (seconds % 3600) ~/ 60;
@@ -120,179 +334,277 @@ class _TimerScreenState extends State<TimerScreen> {
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
-  socketConnect() async {
-    setState(() {});
+  // ✅ NEW - Action handlers
+  void _pauseTimer() {
+    timer?.cancel();
+    context.read<TimerState>().stopAnimation();
 
-    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
-      'autoConnect': false,
-      'transports': ['websocket'],
-      'extraHeaders': {'Accept': '*/*'},
-      'timeout': 30000,
-      'forceNew': true,
-    });
-
-    socket.connect();
-
-    _connectSocket();
+    if (kDebugMode) print("⏸️ Timer paused");
   }
 
-  _connectSocket() async {
+  void _resumeTimer() {
+    if (isExtraTimeMode) {
+      _startExtraTimer();
+    } else {
+      _startNormalTimer();
+    }
+
+    context.read<TimerState>().startAnimation();
+
+    if (kDebugMode) print("▶️ Timer resumed");
+  }
+
+  void _resetTimer() {
+    timer?.cancel();
+
     setState(() {
-      // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
+      remainingTime = countdownStart;
+      isExtraTimeMode = false;
+      extraStatus = "";
+      isLoading = false;
     });
 
-    socket.onConnect((data) => print('Connection established Connected'));
-    socket.onConnectError((data) => print('Connect Error: $data'));
-    socket.onDisconnect((data) => print('Socket.IO server disconnected'));
+    context.read<TimerState>().resetAnimation();
 
-    socket.on('Vehicle_Time_update$useridgloable', (vehicleTimeUpdate) {
-      print("++++++ /Vehicle_Time_update000/ ++++ :---  $vehicleTimeUpdate");
-      print(
-          "Vehicle_Time_update is of type00: ${vehicleTimeUpdate.runtimeType}");
-      print("Vehicle_Time_update keys00: ${vehicleTimeUpdate.keys}");
-
-      hours1 = 0;
-      minutes1 = int.parse(vehicleTimeUpdate["time"]);
-
-      if (_remainingTime > 0) {
-        print("iopioioioiiooiiooiioioioioioioioioioioioio");
-        sur();
-        // _startTimer();
-      } else {
-        print("lklklklklklkklklklklklkllkklklklklklklklkl");
-        sur();
-        _startTimer();
-      }
-
-      // sur();
-      // _startTimer();
-
-      print("+++tot_hour00+++:-- $tot_hour");
-      print("+++tot_time00+++:-- $tot_time");
-    });
-
-    socket.on('Vehicle_Ride_Start_End$useridgloable', (vehicleRideStartEnd) {
-      print("++++++ /Vehicle_Ride_Start_End/ ++++ :---  $vehicleRideStartEnd");
-      print(
-          "Vehicle_Ride_Start_End is of type: ${vehicleRideStartEnd.runtimeType}");
-      print("Vehicle_Ride_Start_End keys: ${vehicleRideStartEnd.keys}");
-      print("++++Vehicle_Ride_Start_End userid+++++: $useridgloable");
-      print(
-          "++++Vehicle_Ride_Start_End gggg +++++: ${vehicleRideStartEnd["uid"].toString()}");
-      print("++++driver_id gggg +++++: $driver_id");
-
-      statusridestart = "";
-      totaldropmint = "";
-      plusetimer = "";
-
-      if (driver_id == vehicleRideStartEnd["uid"].toString()) {
-        print("SuccessFully1");
-        statusridestart = vehicleRideStartEnd["status"];
-        totaldropmint = vehicleRideStartEnd["tot_min"].toString();
-        totaldrophour = vehicleRideStartEnd["tot_hour"].toString();
-        totaldropsecound = vehicleRideStartEnd["tot_second"].toString();
-        otpstatus = false;
-
-        timeincressstatus = "2";
-        print("+++++++totaldropmint++++:-- $totaldropmint");
-        print("+++++++totaldrophour++++:-- $totaldrophour");
-        print("++++++++ststus++++:-- $statusridestart");
-
-        if (statusridestart == "5") {
-          print("555555555555555555555555");
-
-          timervarable = true;
-          droppointstartscreen = [];
-          listdrop = [];
-          listdrop = vehicleRideStartEnd["drop_list"];
-          print("xxxxxxxxx droppointstartscreen xxxxxxxxx$listdrop");
-          print("xxxxxxxxx listdrop length:- ${listdrop.length}");
-
-          for (int i = 0; i < listdrop.length; i++) {
-            print("objectMMMMMMMMM:-- ($i)");
-            droppointstartscreen.add(PointLatLng(
-                double.parse(vehicleRideStartEnd["drop_list"][i]["latitude"]),
-                double.parse(
-                    vehicleRideStartEnd["drop_list"][i]["longitude"])));
-            print(
-                "vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
-          }
-          Get.to(const DriverStartRideScreen());
-          // _remainingTime = 0;
-          minutes1 = int.parse(totaldropmint);
-          hours1 = int.parse(totaldrophour);
-          seconds = int.parse(totaldropsecound);
-          print("======minutes1======:-  $minutes1");
-          print("======hours1======:-  $hours1");
-
-          if (_remainingTime > 0) {
-            print("iopioioioiiooiiooiioioioioioioioioioioioio");
-            sur();
-            // _startTimer();
-          } else {
-            print("lklklklklklkklklklklklkllkklklklklklklklkl");
-            sur();
-            _startTimer();
-          }
-
-          // sur();
-          // _startTimer();
-          // Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartRideScreen(),));
-        } else if (statusridestart == "6") {
-          print("6666666666666666");
-          timervarable = false;
-          droppointstartscreen = [];
-          listdrop = [];
-          listdrop = vehicleRideStartEnd["drop_list"];
-          print("xxxxxxxxx droppointstartscreen xxxxxxxxx$listdrop");
-          print("xxxxxxxxx listdrop length${listdrop.length}");
-          for (int i = 0; i < listdrop.length; i++) {
-            print("objectHHHHH:-- ($i)");
-            droppointstartscreen.add(PointLatLng(
-                double.parse(vehicleRideStartEnd["drop_list"][i]["latitude"]),
-                double.parse(
-                    vehicleRideStartEnd["drop_list"][i]["longitude"])));
-            print(
-                "vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
-          }
-          // Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartRideScreen(),));
-        } else if (statusridestart == "7") {
-          print("7777777777777777");
-          Get.to(const RideCompletePaymentScreen());
-          // Navigator.push(context, MaterialPageRoute(builder: (context) => const RideCompletePaymentScreen(),));
-        } else {}
-      } else {
-        statusridestart = "";
-        print("UnSuccessFully1");
-      }
-    });
+    if (kDebugMode) print("🔄 Timer reset");
   }
 
   @override
   Widget build(BuildContext context) {
-    // double borderWidth = (_remainingTime / countdownStart) * 3; // Calculate border width based on remaining time
-    // if (borderWidth < 1) borderWidth = 1; // Ensure minimum border width of 1
+    notifier = Provider.of<ColorNotifier>(context, listen: true);
 
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: isloading
-                  ? Colors.green
-                  : theamcolore), // Dynamic border width
-          color: theamcolore.withOpacity(0.1),
-        ),
-        child: Text(
-          _formatTime(_remainingTime),
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: isloading ? Colors.green : theamcolore,
+    // ✅ MIGRATED - Wrap with Consumer for provider state management
+    return Consumer3<TimerState, RideRequestState, PricingState>(
+      builder: (context, timerState, rideRequestState, pricingState, child) {
+        return Scaffold(
+          backgroundColor: notifier.background,
+          appBar: AppBar(
+            backgroundColor: notifier.background,
+            elevation: 0,
+            centerTitle: true,
+            leading: InkWell(
+              onTap: () => Get.back(),
+              child: Icon(
+                Icons.arrow_back_ios,
+                color: notifier.textColor,
+              ),
+            ),
+            title: Text(
+              "Ride Timer".tr,
+              style: TextStyle(
+                color: notifier.textColor,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-        ),
-      ),
+          body: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // ✅ KEEP - Timer display
+                Container(
+                  padding: const EdgeInsets.all(30),
+                  decoration: BoxDecoration(
+                    color: notifier.containercolore,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 2,
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Timer circle
+                      Container(
+                        height: 200,
+                        width: 200,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isExtraTimeMode ? Colors.red : theamcolore,
+                            width: 4,
+                          ),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _formatTime(remainingTime.abs()),
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: isExtraTimeMode
+                                      ? Colors.red
+                                      : theamcolore,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                isExtraTimeMode
+                                    ? "Extra Time".tr
+                                    : "Ride Time".tr,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: notifier.textColor.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      if (extraStatus.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border:
+                                Border.all(color: Colors.red.withOpacity(0.3)),
+                          ),
+                          child: Text(
+                            extraStatus.tr,
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // ✅ MIGRATED - Ride information with provider state
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: notifier.containercolore,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Ride Status".tr,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: notifier.textColor,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getStatusColor().withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _getStatusText(),
+                              style: TextStyle(
+                                color: _getStatusColor(),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (globalDriverAcceptClass.driver_name.isNotEmpty) ...[
+                        const SizedBox(height: 15),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Driver".tr,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: notifier.textColor,
+                              ),
+                            ),
+                            Text(
+                              globalDriverAcceptClass.driver_name,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: notifier.textColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                const Spacer(),
+
+                // ✅ MIGRATED - Timer control buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: CommonOutLineButton(
+                        bordercolore: theamcolore,
+                        onPressed1: () {
+                          if (timer?.isActive == true) {
+                            _pauseTimer();
+                          } else {
+                            _resumeTimer();
+                          }
+                        },
+                        txt1:
+                            timer?.isActive == true ? "Pause".tr : "Resume".tr,
+                        context: context,
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: CommonButton(
+                        onPressed1: _resetTimer,
+                        txt1: "Reset".tr,
+                        containcolore: theamcolore,
+                        context: context,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
+  }
+
+  // ✅ NEW - Helper methods for status display
+  Color _getStatusColor() {
+    if (isExtraTimeMode) return Colors.red;
+    if (statusridestart == "completed") return Colors.green;
+    if (statusridestart == "started") return Colors.blue;
+    return theamcolore;
+  }
+
+  String _getStatusText() {
+    if (isExtraTimeMode) return "Extra Time";
+    if (statusridestart.isNotEmpty) {
+      return statusridestart.capitalizeFirst ?? "Active";
+    }
+    return "Active";
   }
 }
