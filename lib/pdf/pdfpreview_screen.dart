@@ -6,7 +6,7 @@ import 'package:printing/printing.dart';
 import 'makepdf_screen.dart';
 
 class PdfPreviewPage extends StatelessWidget {
-  const PdfPreviewPage({Key? key}) : super(key: key);
+  const PdfPreviewPage({Key? key, required String requestId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

@@ -4,6 +4,7 @@
 // ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:get/get.dart';
@@ -11,7 +12,12 @@ import 'package:provider/provider.dart';
 import 'package:qareeb/api_code/global_driver_access_api_controller.dart';
 import 'package:qareeb/common_code/global_variables.dart';
 import 'package:qareeb/common_code/modern_loading_widget.dart';
+import 'package:qareeb/common_code/socket_service.dart';
 import 'package:qareeb/common_code/type_utils.dart';
+import 'package:qareeb/providers/location_state.dart';
+import 'package:qareeb/providers/map_state.dart';
+import 'package:qareeb/providers/pricing_state.dart';
+import 'package:qareeb/providers/ride_request_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/app_screen/my_ride_detail_screen.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
@@ -25,13 +31,11 @@ import '../timer_screen.dart';
 import 'driver_startride_screen.dart';
 import 'home_screen.dart';
 
+// ✅ KEEP - Global variables for ride status (as per migration requirements)
 String appstatus = "";
 String appstatusid = "";
 String runtimestatusid = "";
-
 String plusetimer = "";
-
-// String timerstop = "";
 
 class MyRideScreen extends StatefulWidget {
   const MyRideScreen({super.key});
@@ -42,2232 +46,668 @@ class MyRideScreen extends StatefulWidget {
 
 class _MyRideScreenState extends State<MyRideScreen>
     with TickerProviderStateMixin {
+  // ✅ MIGRATED - Tab controller for ride history tabs
   late final TabController _tabController;
 
-  @override
-  void initState() {
-    super.initState();
-    // socketConnect();
-    _tabController = TabController(length: 3, vsync: this);
-    datagetfunction();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  // socketConnect() async {
-  //
-  //   setState(() {
-  //
-  //   });
-  //
-  //   // socket = IO.io(Config.imageurl,<String,dynamic>{
-  //   //   'autoConnect': false,
-  //   //   'transports': ['websocket'],
-  //   //
-  //   // });
-  //
-  //   socket.connect();
-  //
-  //   // socket.onConnect((_) {
-  //   //   print('Connected');
-  //   //   socket.emit('message', 'Hello from Flutter');
-  //   // });
-  //
-  //   _connectSocket();
-  //
-  // }
-  //
-  // _connectSocket() async {
-  //   setState(() {
-  //     // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
-  //   });
-  //
-  //   socket.onConnect((data) => print('Connection established Connected'));
-  //   socket.onConnectError((data) => print('Connect Error: $data'));
-  //   socket.onDisconnect((data) => print('Socket.IO server disconnected'));
-  // }
-
-  var decodeUid;
-  var userid;
-  var currencyy;
-
+  // ✅ MIGRATED - API Controllers
   AllRequestDataApiController allRequestDataApiController =
       Get.put(AllRequestDataApiController());
   GlobalDriverAcceptClass globalDriverAcceptClass =
       Get.put(GlobalDriverAcceptClass());
 
+  // ✅ KEEP - UI state variables
+  ColorNotifier notifier = ColorNotifier();
+  var decodeUid;
+  var userid;
+  var currencyy;
   bool loader = true;
-  datagetfunction() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    var uid = preferences.getString("userLogin");
-    var currency = preferences.getString("currenci");
-    decodeUid = jsonDecode(uid!);
-    currencyy = jsonDecode(currency!);
-    userid = decodeUid['id'];
 
-    print("++++:---  $userid");
-    print("++ currencyy ++:---  $currencyy");
-    setState(() {});
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    datagetfunction();
 
-    allRequestDataApiController
-        .allrequestApi(uid: userid.toString(), status: "upcoming")
-        .then(
-      (value) {
-        setState(() {});
-        allRequestDataApiController
-            .allrequestApi(uid: userid.toString(), status: "completed")
-            .then(
-          (value) {
-            setState(() {});
-            allRequestDataApiController
-                .allrequestApi(uid: userid.toString(), status: "cancelled")
-                .then(
-              (value) {
-                setState(() {
-                  loader = false;
-                  print("88888888888:-- ${loader}");
-                });
-              },
-            );
-          },
-        );
-      },
-    );
-
-    // livelat = double.parse(value["accepted_d_detail"]["latitude"]);
-    // livelong = double.parse(value["accepted_d_detail"]["longitude"]);
-    // imagenetwork = "${Config.imageurl}${value["accepted_d_detail"]["map_img"]}";
+    // ✅ MIGRATED - Initialize socket connection for real-time updates
+    _initializeSocket();
   }
 
-  ColorNotifier notifier = ColorNotifier();
+  @override
+  void dispose() {
+    _tabController.dispose();
+    SocketService.instance.disconnect();
+    super.dispose();
+  }
+
+  // ✅ MIGRATED - Socket initialization using SocketService
+  void _initializeSocket() {
+    try {
+      if (!SocketService.instance.isConnected) {
+        SocketService.instance.connect();
+      }
+      _setupSocketListeners();
+    } catch (e) {
+      if (kDebugMode) print("❌ Socket initialization error: $e");
+    }
+  }
+
+  // ✅ MIGRATED - Socket event listeners for ride updates
+  void _setupSocketListeners() {
+    final socketService = SocketService.instance;
+
+    // Listen for ride status updates
+    socketService.on('ride_status_update$useridgloable', (data) {
+      _handleRideStatusUpdate(data);
+    });
+
+    // Listen for ride completion updates
+    socketService.on('ride_completed$useridgloable', (data) {
+      _handleRideCompleted(data);
+    });
+
+    // Listen for ride cancellation updates
+    socketService.on('ride_cancelled$useridgloable', (data) {
+      _handleRideCancelled(data);
+    });
+
+    if (kDebugMode) print("✅ Socket listeners setup for MyRideScreen");
+  }
+
+  // ✅ NEW - Socket event handlers
+  void _handleRideStatusUpdate(dynamic data) {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) print("🔄 Ride status update received: $data");
+
+      // Refresh ride data when status changes
+      _refreshRideData();
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling ride status update: $e");
+    }
+  }
+
+  void _handleRideCompleted(dynamic data) {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) print("✅ Ride completed update received: $data");
+
+      // Refresh ride data and show completion message
+      _refreshRideData();
+
+      Get.snackbar(
+        "Ride Completed".tr,
+        "Your ride has been completed successfully!".tr,
+        backgroundColor: Colors.green.withOpacity(0.8),
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling ride completion: $e");
+    }
+  }
+
+  void _handleRideCancelled(dynamic data) {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) print("❌ Ride cancelled update received: $data");
+
+      // Refresh ride data and show cancellation message
+      _refreshRideData();
+
+      Get.snackbar(
+        "Ride Cancelled".tr,
+        "Your ride has been cancelled.".tr,
+        backgroundColor: Colors.orange.withOpacity(0.8),
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling ride cancellation: $e");
+    }
+  }
+
+  // ✅ NEW - Refresh ride data method
+  void _refreshRideData() {
+    if (userid != null) {
+      allRequestDataApiController
+          .allrequestApi(uid: userid.toString(), status: "upcoming")
+          .then((_) {
+        allRequestDataApiController
+            .allrequestApi(uid: userid.toString(), status: "completed")
+            .then((_) {
+          allRequestDataApiController
+              .allrequestApi(uid: userid.toString(), status: "cancelled")
+              .then((_) {
+            if (mounted) {
+              setState(() {});
+            }
+          });
+        });
+      });
+    }
+  }
+
+  // ✅ MIGRATED - Data loading with enhanced error handling
+  datagetfunction() async {
+    try {
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      var uid = preferences.getString("userLogin");
+      var currency = preferences.getString("currenci");
+
+      if (uid == null) {
+        if (kDebugMode) print("❌ No user login data found");
+        setState(() {
+          loader = false;
+        });
+        return;
+      }
+
+      decodeUid = jsonDecode(uid);
+      if (currency != null) {
+        currencyy = jsonDecode(currency);
+      }
+      userid = decodeUid['id'];
+
+      if (kDebugMode) {
+        print("✅ User data loaded: $userid");
+        print("✅ Currency loaded: $currencyy");
+      }
+
+      setState(() {});
+
+      // ✅ IMPROVED - Sequential API calls with better error handling
+      await _loadRideData();
+    } catch (e) {
+      if (kDebugMode) print("❌ Error loading user data: $e");
+      setState(() {
+        loader = false;
+      });
+    }
+  }
+
+  // ✅ NEW - Centralized ride data loading
+  Future<void> _loadRideData() async {
+    try {
+      // Load upcoming rides
+      await allRequestDataApiController.allrequestApi(
+        uid: userid.toString(),
+        status: "upcoming",
+      );
+
+      if (!mounted) return;
+      setState(() {});
+
+      // Load completed rides
+      await allRequestDataApiController.allrequestApi(
+        uid: userid.toString(),
+        status: "completed",
+      );
+
+      if (!mounted) return;
+      setState(() {});
+
+      // Load cancelled rides
+      await allRequestDataApiController.allrequestApi(
+        uid: userid.toString(),
+        status: "cancelled",
+      );
+
+      if (!mounted) return;
+      setState(() {
+        loader = false;
+      });
+
+      if (kDebugMode) print("✅ All ride data loaded successfully");
+    } catch (e) {
+      if (kDebugMode) print("❌ Error loading ride data: $e");
+      if (mounted) {
+        setState(() {
+          loader = false;
+        });
+      }
+    }
+  }
+
+  // ✅ NEW - Navigate to ride detail with enhanced data
+  void _navigateToRideDetail(String requestId, String status, int index) {
+    // ✅ MIGRATED - Update global variables for ride detail screen
+    if (status == "upcoming") {
+      final ride = allRequestDataApiController
+          .allRequestDataModelupcoming!.reuqestList![index];
+
+      // Set global timer variables for upcoming rides
+      if (ride.runTime != null) {
+        tot_time = ride.runTime!.minute.toString();
+        extratime = ride.runTime!.hour.toString();
+        tot_secound = ride.runTime!.second.toString();
+      }
+
+      // Set global location variables
+      if (ride.pickup != null) {
+        picktitle = ride.pickup!.title.toString();
+        picksubtitle = ride.pickup!.subtitle.toString();
+      }
+
+      if (ride.drop != null) {
+        droptitle = ride.drop!.title.toString();
+        dropsubtitle = ride.drop!.subtitle.toString();
+      }
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MyRideDetailScreen(
+          request_id: requestId,
+          status: status,
+        ),
+      ),
+    );
+  }
+
+  // ✅ NEW - Handle ride action (complete/cancel)
+  void _handleRideAction(String requestId, String action, int index) {
+    if (action == "complete") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const RideCompletePaymentScreen(),
+        ),
+      );
+    } else {
+      if (kDebugMode) print("Action: $action for ride: $requestId");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     notifier = Provider.of<ColorNotifier>(context, listen: true);
-    return Scaffold(
-      backgroundColor: notifier.background,
-      appBar: AppBar(
-        backgroundColor: notifier.background,
-        automaticallyImplyLeading: false,
-        elevation: 0,
-        leading: InkWell(
-            onTap: () {
-              Get.back();
-            },
-            child: Padding(
-              padding: EdgeInsets.all(15.0),
-              child: Image(
-                  image: AssetImage("assets/arrow-left.png"),
-                  color: notifier.textColor),
-            )),
-        title: Transform.translate(
-            offset: Offset(-10, 0),
-            child: Text("My Rides".tr,
-                style: TextStyle(color: notifier.textColor, fontSize: 18))),
-      ),
-      body: GetBuilder<AllRequestDataApiController>(
-        builder: (allRequestDataApiController) {
-          return loader
-              ? Center(
-                  child: const ModernLoadingWidget(
-                  size: 60,
-                  message: "جاري تحميل الرحلات...",
-                ))
-              : Padding(
-                  padding:
-                      const EdgeInsets.only(left: 15, right: 15, bottom: 15),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 0, right: 0),
-                          child: Column(
-                            children: [
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    left: 10, right: 10, bottom: 10),
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Colors.grey.withOpacity(0.4)),
-                                    borderRadius: const BorderRadius.all(
-                                        Radius.circular(16)),
-                                  ),
-                                  child: TabBar(
-                                    indicator: BoxDecoration(
-                                      color: theamcolore,
-                                      borderRadius: BorderRadius.circular(16),
+
+    // ✅ MIGRATED - Wrap with Consumer for provider state management
+    return Consumer4<LocationState, MapState, PricingState, RideRequestState>(
+      builder: (context, locationState, mapState, pricingState,
+          rideRequestState, child) {
+        return Scaffold(
+          backgroundColor: notifier.background,
+          appBar: AppBar(
+            backgroundColor: notifier.background,
+            automaticallyImplyLeading: false,
+            elevation: 0,
+            leading: InkWell(
+              onTap: () {
+                Get.back();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Image(
+                  image: const AssetImage("assets/arrow-left.png"),
+                  color: notifier.textColor,
+                ),
+              ),
+            ),
+            title: Transform.translate(
+              offset: const Offset(-10, 0),
+              child: Text(
+                "My Rides".tr,
+                style: TextStyle(color: notifier.textColor, fontSize: 18),
+              ),
+            ),
+          ),
+          body: GetBuilder<AllRequestDataApiController>(
+            builder: (allRequestDataApiController) {
+              return loader
+                  ? const Center(
+                      child: ModernLoadingWidget(
+                        size: 60,
+                        message: "جاري تحميل الرحلات...", // Loading rides...
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(
+                          left: 15, right: 15, bottom: 15),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 0, right: 0),
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 5),
+
+                                  // ✅ ENHANCED - Tab bar with improved styling
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 10, right: 10, bottom: 10),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                            color:
+                                                Colors.grey.withOpacity(0.4)),
+                                        borderRadius: const BorderRadius.all(
+                                            Radius.circular(16)),
+                                      ),
+                                      child: TabBar(
+                                        indicator: BoxDecoration(
+                                          color: theamcolore,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                        controller: _tabController,
+                                        indicatorColor: Colors.red,
+                                        labelColor: Colors.white,
+                                        unselectedLabelColor:
+                                            notifier.textColor,
+                                        dividerColor: Colors.transparent,
+                                        labelStyle:
+                                            const TextStyle(fontSize: 14),
+                                        tabs: <Widget>[
+                                          Tab(text: 'Upcoming'.tr),
+                                          Tab(text: 'Completed'.tr),
+                                          Tab(text: 'Cancelled'.tr),
+                                        ],
+                                      ),
                                     ),
-                                    controller: _tabController,
-                                    indicatorColor: Colors.red,
-                                    labelColor: Colors.white,
-                                    unselectedLabelColor: notifier.textColor,
-                                    dividerColor: Colors.transparent,
-                                    labelStyle: const TextStyle(fontSize: 14),
-                                    tabs: <Widget>[
-                                      Tab(text: 'Upcoming'.tr),
-                                      Tab(text: 'Completed'.tr),
-                                      Tab(text: 'Cancelled'.tr),
-                                    ],
                                   ),
-                                ),
+
+                                  // ✅ ENHANCED - Tab bar view with improved content
+                                  Expanded(
+                                    child: TabBarView(
+                                      controller: _tabController,
+                                      children: <Widget>[
+                                        // ✅ UPCOMING RIDES TAB
+                                        _buildRidesList(
+                                          allRequestDataApiController
+                                                  .allRequestDataModelupcoming
+                                                  ?.reuqestList ??
+                                              [],
+                                          "upcoming",
+                                        ),
+
+                                        // ✅ COMPLETED RIDES TAB
+                                        _buildRidesList(
+                                          allRequestDataApiController
+                                                  .allRequestDataModelcompleted
+                                                  ?.reuqestList ??
+                                              [],
+                                          "completed",
+                                        ),
+
+                                        // ✅ CANCELLED RIDES TAB
+                                        _buildRidesList(
+                                          allRequestDataApiController
+                                                  .allRequestDataModelcancelled
+                                                  ?.reuqestList ??
+                                              [],
+                                          "cancelled",
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Expanded(
-                                child: TabBarView(
-                                  controller: _tabController,
-                                  children: <Widget>[
-                                    allRequestDataApiController
-                                            .allRequestDataModelupcoming!
-                                            .reuqestList!
-                                            .isEmpty
-                                        ? Center(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Container(
-                                                  height: 150,
-                                                  width: 150,
-                                                  decoration: BoxDecoration(
-                                                    image: DecorationImage(
-                                                      image: AssetImage(
-                                                          "assets/emptyOrder.png"),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  height: 10,
-                                                ),
-                                                Text(
-                                                  "No Order Found!".tr,
-                                                  style: TextStyle(
-                                                    color: notifier.textColor,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  height: 5,
-                                                ),
-                                                Text(
-                                                  "Currently you don’t have order."
-                                                      .tr,
-                                                  style: const TextStyle(
-                                                    fontSize: 15,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        : ListView.separated(
-                                            separatorBuilder: (context, index) {
-                                              return const SizedBox(height: 0);
-                                            },
-                                            shrinkWrap: true,
-                                            scrollDirection: Axis.vertical,
-                                            itemCount:
-                                                allRequestDataApiController
-                                                    .allRequestDataModelupcoming!
-                                                    .reuqestList!
-                                                    .length,
-                                            itemBuilder: (BuildContext context,
-                                                int index) {
-                                              return InkWell(
-                                                onTap: () {
-                                                  setState(() {
-                                                    appstatus =
-                                                        allRequestDataApiController
-                                                            .allRequestDataModelupcoming!
-                                                            .reuqestList![index]
-                                                            .status
-                                                            .toString();
-                                                    runtimestatusid =
-                                                        allRequestDataApiController
-                                                            .allRequestDataModelupcoming!
-                                                            .reuqestList![index]
-                                                            .runTime!
-                                                            .status
-                                                            .toString();
-                                                    appstatusid =
-                                                        allRequestDataApiController
-                                                            .allRequestDataModelupcoming!
-                                                            .reuqestList![index]
-                                                            .id
-                                                            .toString();
-
-                                                    if (appstatus == "1") {
-                                                      print("IF CONDITION");
-                                                      LoadingService
-                                                          .showLoadingDialog(
-                                                        context: context,
-                                                        message:
-                                                            "جاري البحث عن السائقين...",
-                                                        customAnimation:
-                                                            'assets/lottie/search_loading.json',
-                                                      );
-
-                                                      // driveridloader == true ? drive_id_list = allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].driverIdList! : [];
-                                                      // print("Status 1 Status:-- $drive_id_list");
-                                                      driver_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .dId
-                                                              .toString();
-                                                      tot_hour =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .hour
-                                                              .toString();
-                                                      tot_time =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .minute
-                                                              .toString();
-                                                      tot_secound =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .second
-                                                              .toString();
-                                                      print(
-                                                          "@@@1@@@:--- ${tot_hour}");
-                                                      print(
-                                                          "@@@1@@@:--- ${tot_time}");
-                                                      print(
-                                                          "@@@1@@@:--- ${tot_secound}");
-
-                                                      vihicalname =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleName
-                                                              .toString();
-                                                      vihicalimage =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleImage
-                                                              .toString();
-
-                                                      picktitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .pickup!
-                                                              .title
-                                                              .toString();
-                                                      picksubtitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .pickup!
-                                                              .subtitle
-                                                              .toString();
-                                                      droptitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .drop!
-                                                              .title
-                                                              .toString();
-                                                      dropsubtitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .drop!
-                                                              .subtitle
-                                                              .toString();
-                                                      request_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .id
-                                                              .toString();
-
-                                                      vihicalrice = safeParseDouble(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .price); // ✅ Safe
-
-                                                      // for(int i=0; i<allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList!.length; i++){
-                                                      //   droptitlelist.add(
-                                                      //       {
-                                                      //         "title" : allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].title,
-                                                      //         "subt": allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].subtitle
-                                                      //       }
-                                                      //   );
-                                                      //   print(".......111111......:--- ${droptitlelist}");
-                                                      // }
-
-                                                      for (int i = 0;
-                                                          i <
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .dropList!
-                                                                  .length;
-                                                          i++) {
-                                                        var dropItem =
-                                                            allRequestDataApiController
-                                                                .allRequestDataModelupcoming!
-                                                                .reuqestList![
-                                                                    index]
-                                                                .dropList![i];
-
-                                                        droptitlelist.add({
-                                                          "title": dropItem[
-                                                              'title'], // Use the key ['title'] if it's a Map
-                                                          "subt": dropItem[
-                                                              'subtitle']
-                                                        });
-
-                                                        print(
-                                                            ".......111111......:--- ${droptitlelist}");
-                                                      }
-
-                                                      globalDriverAcceptClass.driverdetailfunction(
-                                                          lat: double.parse(
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .pickup!
-                                                                  .latitude
-                                                                  .toString()),
-                                                          long: double.parse(
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .pickup!
-                                                                  .longitude
-                                                                  .toString()),
-                                                          d_id:
-                                                              "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dId}",
-                                                          request_id:
-                                                              "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].id}",
-                                                          context: context);
-                                                    } else if (appstatus ==
-                                                        "2") {
-                                                      LoadingService
-                                                          .showLoadingDialog(
-                                                        context: context,
-                                                        message:
-                                                            "جاري تحميل بيانات الرحلة...",
-                                                        customAnimation:
-                                                            'assets/lottie/api_loading.json',
-                                                      );
-
-                                                      plusetimer =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .status
-                                                              .toString();
-                                                      extratime =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .driverWaitTime
-                                                              .toString();
-
-                                                      print(
-                                                          "plusetimer:222plusetimer:- ${plusetimer}");
-                                                      print(
-                                                          "extratime:222extratime:- ${extratime}");
-                                                      print(
-                                                          "appstatus:222appstatus:- ${appstatus}");
-                                                      driver_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .dId
-                                                              .toString();
-                                                      tot_hour =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .hour
-                                                              .toString();
-                                                      tot_time =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .minute
-                                                              .toString();
-                                                      tot_secound =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .second
-                                                              .toString();
-                                                      print(
-                                                          "@@@2@@@:--- ${tot_hour}");
-                                                      print(
-                                                          "@@@2@@@:--- ${tot_time}");
-
-                                                      vihicalname =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleName
-                                                              .toString();
-                                                      vihicalimage =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleImage
-                                                              .toString();
-
-                                                      picktitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .pickup!
-                                                              .title
-                                                              .toString();
-                                                      picksubtitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .pickup!
-                                                              .subtitle
-                                                              .toString();
-                                                      droptitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .drop!
-                                                              .title
-                                                              .toString();
-                                                      dropsubtitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .drop!
-                                                              .subtitle
-                                                              .toString();
-                                                      vihicalrice = safeParseDouble(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .price); // ✅ Safe
-                                                      request_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .id
-                                                              .toString();
-
-                                                      for (int i = 0;
-                                                          i <
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .dropList!
-                                                                  .length;
-                                                          i++) {
-                                                        var dropItem =
-                                                            allRequestDataApiController
-                                                                .allRequestDataModelupcoming!
-                                                                .reuqestList![
-                                                                    index]
-                                                                .dropList![i];
-
-                                                        droptitlelist.add({
-                                                          "title": dropItem[
-                                                              'title'], // Use the key ['title'] if it's a Map
-                                                          "subt": dropItem[
-                                                              'subtitle']
-                                                        });
-
-                                                        print(
-                                                            ".......111111......:--- ${droptitlelist}");
-                                                      }
-
-                                                      globalDriverAcceptClass.driverdetailfunction(
-                                                          lat: double.parse(
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .pickup!
-                                                                  .latitude
-                                                                  .toString()),
-                                                          long: double.parse(
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .pickup!
-                                                                  .longitude
-                                                                  .toString()),
-                                                          d_id:
-                                                              "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dId}",
-                                                          request_id:
-                                                              "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].id}",
-                                                          context: context);
-                                                    } else if (appstatus ==
-                                                        "3") {
-                                                      print(
-                                                          "Status 3 Status:--");
-
-                                                      LoadingService
-                                                          .showLoadingDialog(
-                                                        context: context,
-                                                        message:
-                                                            "جاري تحميل بيانات الرحلة الجارية...",
-                                                        customAnimation:
-                                                            'assets/lottie/loading_.json',
-                                                      );
-                                                      otpstatus = true;
-
-                                                      // timerstop = allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].runTime!.status.toString();
-                                                      //
-                                                      // print("***otpstatus***:---- ${otpstatus}");
-                                                      // print("***timerstop***:---- ${timerstop}");
-
-                                                      driver_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .dId
-                                                              .toString();
-                                                      vihicalname =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleName
-                                                              .toString();
-                                                      vihicalimage =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleImage
-                                                              .toString();
-                                                      // driveridloader == true ? drive_id_list = allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].driverIdList! : [];
-                                                      tot_hour =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .hour
-                                                              .toString();
-                                                      tot_time =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .minute
-                                                              .toString();
-                                                      tot_secound =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .second
-                                                              .toString();
-
-                                                      picktitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .pickup!
-                                                              .title
-                                                              .toString();
-                                                      picksubtitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .pickup!
-                                                              .subtitle
-                                                              .toString();
-                                                      droptitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .drop!
-                                                              .title
-                                                              .toString();
-                                                      dropsubtitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .drop!
-                                                              .subtitle
-                                                              .toString();
-                                                      vihicalrice = safeParseDouble(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .price); // ✅ Safe
-                                                      request_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .id
-                                                              .toString();
-
-                                                      // for(int i=0; i<allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList!.length; i++){
-                                                      //   droptitlelist.add(
-                                                      //       {
-                                                      //         "title" : allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].title,
-                                                      //         "subt": allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].subtitle
-                                                      //       }
-                                                      //   );
-                                                      //   print(".......33333......:--- ${droptitlelist}");
-                                                      // }
-
-                                                      for (int i = 0;
-                                                          i <
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .dropList!
-                                                                  .length;
-                                                          i++) {
-                                                        var dropItem =
-                                                            allRequestDataApiController
-                                                                .allRequestDataModelupcoming!
-                                                                .reuqestList![
-                                                                    index]
-                                                                .dropList![i];
-
-                                                        droptitlelist.add({
-                                                          "title": dropItem[
-                                                              'title'], // Use the key ['title'] if it's a Map
-                                                          "subt": dropItem[
-                                                              'subtitle']
-                                                        });
-
-                                                        print(
-                                                            ".......111111......:--- ${droptitlelist}");
-                                                      }
-
-                                                      globalDriverAcceptClass.driverdetailfunction(
-                                                          lat: double.parse(
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .pickup!
-                                                                  .latitude
-                                                                  .toString()),
-                                                          long: double.parse(
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .pickup!
-                                                                  .longitude
-                                                                  .toString()),
-                                                          d_id:
-                                                              "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dId}",
-                                                          request_id:
-                                                              "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].id}",
-                                                          context: context);
-                                                    } else if (appstatus ==
-                                                        "5") {
-                                                      print(
-                                                          "Status 5 Status:--");
-                                                      LoadingService
-                                                          .showLoadingDialog(
-                                                        context: context,
-                                                        message:
-                                                            "جاري تحميل بيانات الرحلة...",
-                                                        customAnimation:
-                                                            'assets/lottie/api_loading.json',
-                                                      );
-                                                      timervarable = true;
-                                                      vihicalname =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleName
-                                                              .toString();
-                                                      vihicalimage =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleImage
-                                                              .toString();
-
-                                                      picktitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .pickup!
-                                                              .title
-                                                              .toString();
-                                                      picksubtitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .pickup!
-                                                              .subtitle
-                                                              .toString();
-                                                      droptitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .drop!
-                                                              .title
-                                                              .toString();
-                                                      dropsubtitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .drop!
-                                                              .subtitle
-                                                              .toString();
-                                                      vihicalrice = safeParseDouble(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .price); // ✅ Safe
-                                                      statusridestart =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .status
-                                                              .toString();
-
-                                                      totaldrophour =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .hour
-                                                              .toString();
-                                                      totaldropmint =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .minute
-                                                              .toString();
-                                                      totaldropsecound =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .runTime!
-                                                              .second
-                                                              .toString();
-
-                                                      livelat = double.parse(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .latitude
-                                                              .toString());
-                                                      livelong = double.parse(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .longitude
-                                                              .toString());
-                                                      imagenetwork =
-                                                          "${Config.imageurl}${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].mapImg}";
-                                                      droppointstartscreen.add(PointLatLng(
-                                                          double.parse(
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .drop!
-                                                                  .latitude
-                                                                  .toString()),
-                                                          double.parse(
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .drop!
-                                                                  .longitude
-                                                                  .toString())));
-
-                                                      print(
-                                                          "Status !!totaldrophour!! Status:-- ${livelat}");
-                                                      print(
-                                                          "Status !!totaldropmint!! Status:-- ${livelong}");
-                                                      print(
-                                                          "Status !!totaldropsecound!! Status:-- ${imagenetwork}");
-
-                                                      driver_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .dId
-                                                              .toString();
-
-                                                      drivername =
-                                                          "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].firstName} ${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].lastName}";
-                                                      drivervihicalnumber =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleNumber
-                                                              .toString();
-                                                      driverimage =
-                                                          "${Config.imageurl}${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].profileImage.toString()}";
-                                                      driverrating =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .avgStar
-                                                              .toString();
-                                                      driverlanguage =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .language
-                                                              .toString();
-                                                      request_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .id
-                                                              .toString();
-
-                                                      for (int i = 0;
-                                                          i <
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .dropList!
-                                                                  .length;
-                                                          i++) {
-                                                        var dropItem =
-                                                            allRequestDataApiController
-                                                                .allRequestDataModelupcoming!
-                                                                .reuqestList![
-                                                                    index]
-                                                                .dropList![i];
-
-                                                        droptitlelist.add({
-                                                          "title": dropItem[
-                                                              'title'], // Use the key ['title'] if it's a Map
-                                                          "subt": dropItem[
-                                                              'subtitle']
-                                                        });
-
-                                                        // droppointstartscreen.add(PointLatLng(double.parse(dropItem[i]['title']), double.parse(dropItem[i]['subtitle'])));
-
-                                                        print(
-                                                            ".......111111......:--- ${droptitlelist}");
-                                                        // print(".......droppointstartscreen......:--- ${droppointstartscreen}");
-                                                      }
-
-                                                      Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder: (context) =>
-                                                                const DriverStartrideScreen(),
-                                                          ));
-                                                    } else if (appstatus ==
-                                                        "6") {
-                                                      print(
-                                                          "Status 6 Status:--");
-                                                      LoadingService
-                                                          .showLoadingDialog(
-                                                        context: context,
-                                                        message:
-                                                            "جاري تحميل بيانات الرحلة...",
-                                                        customAnimation:
-                                                            'assets/lottie/api_loading.json',
-                                                      );
-                                                      timervarable = false;
-                                                      vihicalname =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleName
-                                                              .toString();
-                                                      vihicalimage =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleImage
-                                                              .toString();
-                                                      driver_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .dId
-                                                              .toString();
-                                                      picktitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .pickup!
-                                                              .title
-                                                              .toString();
-                                                      picksubtitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .pickup!
-                                                              .subtitle
-                                                              .toString();
-                                                      droptitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .drop!
-                                                              .title
-                                                              .toString();
-                                                      dropsubtitle =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .drop!
-                                                              .subtitle
-                                                              .toString();
-                                                      vihicalrice = safeParseDouble(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .price); // ✅ Safe
-                                                      statusridestart =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .status
-                                                              .toString();
-
-                                                      drivername =
-                                                          "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].firstName} ${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].lastName}";
-                                                      drivervihicalnumber =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .vehicleNumber
-                                                              .toString();
-                                                      driverimage =
-                                                          "${Config.imageurl}${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].profileImage.toString()}";
-                                                      driverrating =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .avgStar
-                                                              .toString();
-                                                      driverlanguage =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .language
-                                                              .toString();
-                                                      request_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .id
-                                                              .toString();
-
-                                                      // for(int i=0; i<allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList!.length; i++){
-                                                      //   droptitlelist.add(
-                                                      //       {
-                                                      //         "title" : allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].title,
-                                                      //         "subt": allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].subtitle
-                                                      //       }
-                                                      //   );
-                                                      //   print(".......33333......:--- ${droptitlelist}");
-                                                      // }
-
-                                                      livelat = double.parse(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .latitude
-                                                              .toString());
-                                                      livelong = double.parse(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .longitude
-                                                              .toString());
-                                                      imagenetwork =
-                                                          "${Config.imageurl}${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].mapImg}";
-                                                      droppointstartscreen.add(PointLatLng(
-                                                          double.parse(
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .drop!
-                                                                  .latitude
-                                                                  .toString()),
-                                                          double.parse(
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .drop!
-                                                                  .longitude
-                                                                  .toString())));
-
-                                                      for (int i = 0;
-                                                          i <
-                                                              allRequestDataApiController
-                                                                  .allRequestDataModelupcoming!
-                                                                  .reuqestList![
-                                                                      index]
-                                                                  .dropList!
-                                                                  .length;
-                                                          i++) {
-                                                        var dropItem =
-                                                            allRequestDataApiController
-                                                                .allRequestDataModelupcoming!
-                                                                .reuqestList![
-                                                                    index]
-                                                                .dropList![i];
-
-                                                        droptitlelist.add({
-                                                          "title": dropItem[
-                                                              'title'], // Use the key ['title'] if it's a Map
-                                                          "subt": dropItem[
-                                                              'subtitle']
-                                                        });
-
-                                                        print(
-                                                            ".......111111......:--- ${droptitlelist}");
-                                                      }
-
-                                                      Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder: (context) =>
-                                                                const DriverStartrideScreen(),
-                                                          ));
-                                                    } else if (appstatus ==
-                                                        "7") {
-                                                      print(
-                                                          "Status 7 Status:--");
-
-                                                      // total = Vehicle_Ride_Payment["price_list"]["tot_price"];
-                                                      // finaltotal = Vehicle_Ride_Payment["price_list"]["final_price"];
-                                                      // coupontotal = Vehicle_Ride_Payment["price_list"]["coupon_amount"];
-                                                      // additionaltotal = Vehicle_Ride_Payment["price_list"]["addi_time_price"];
-                                                      // platformfee = Vehicle_Ride_Payment["price_list"]["platform_fee"];
-                                                      // additionaltime = Vehicle_Ride_Payment["price_list"]["addi_time"];
-                                                      print(
-                                                          "//////:-- ${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].finalPrice}");
-
-                                                      total = double.parse(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .price
-                                                              .toString());
-                                                      finaltotal = double.parse(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .finalPrice
-                                                              .toString());
-                                                      coupontotal = double.parse(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .couponAmount
-                                                              .toString());
-                                                      additionaltotal = double.parse(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .addiTimePrice
-                                                              .toString());
-                                                      platformfee = double.parse(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .platformFee
-                                                              .toString());
-                                                      additionaltime = double.parse(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .addiTime
-                                                              .toString());
-                                                      whthercharge = double.parse(
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .weatherPrice
-                                                              .toString());
-
-                                                      driver_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .dId
-                                                              .toString();
-                                                      request_id =
-                                                          allRequestDataApiController
-                                                              .allRequestDataModelupcoming!
-                                                              .reuqestList![
-                                                                  index]
-                                                              .id
-                                                              .toString();
-                                                      driverimage =
-                                                          "${Config.imageurl}${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].profileImage.toString()}";
-
-                                                      print(
-                                                          "'''''':--- ${total}");
-                                                      print(
-                                                          "'''''':--- ${finaltotal}");
-                                                      print(
-                                                          "'''''':--- ${coupontotal}");
-                                                      print(
-                                                          "'''''':--- ${additionaltotal}");
-                                                      print(
-                                                          "'''''':--- ${platformfee}");
-                                                      print(
-                                                          "'''''':--- ${additionaltime}");
-
-                                                      Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder: (context) =>
-                                                                const RideCompletePaymentScreen(),
-                                                          ));
-                                                    } else {
-                                                      print("ELSE");
-                                                    }
-                                                  });
-                                                },
-                                                child: Container(
-                                                  // height: 200,
-                                                  width: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.8,
-                                                  margin: const EdgeInsets.only(
-                                                      bottom: 10),
-                                                  decoration: BoxDecoration(
-                                                    // color: Colors.red,
-                                                    border: Border.all(
-                                                        color: Colors.grey
-                                                            .withOpacity(0.4)),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                  ),
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            15),
-                                                    child: Column(
-                                                      children: [
-                                                        Row(
-                                                          children: [
-                                                            Text(
-                                                              "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].mRole}",
-                                                              style: TextStyle(
-                                                                  color: notifier
-                                                                      .textColor),
-                                                            ),
-                                                            const SizedBox(
-                                                              width: 10,
-                                                            ),
-                                                            Container(
-                                                              height: 5,
-                                                              width: 5,
-                                                              decoration:
-                                                                  const BoxDecoration(
-                                                                color:
-                                                                    Colors.grey,
-                                                                shape: BoxShape
-                                                                    .circle,
-                                                              ),
-                                                            ),
-                                                            const SizedBox(
-                                                              width: 10,
-                                                            ),
-                                                            Text(
-                                                              "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].vehicleName}",
-                                                              style: TextStyle(
-                                                                  color: notifier
-                                                                      .textColor),
-                                                            ),
-                                                            const Spacer(),
-                                                            Text(
-                                                              "${currencyy}${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].price}",
-                                                              style: TextStyle(
-                                                                  color: notifier
-                                                                      .textColor,
-                                                                  fontSize: 18),
-                                                            )
-                                                          ],
-                                                        ),
-                                                        Row(
-                                                          children: [
-                                                            allRequestDataApiController
-                                                                        .allRequestDataModelupcoming!
-                                                                        .reuqestList![
-                                                                            index]
-                                                                        .startTime ==
-                                                                    ""
-                                                                ? SizedBox()
-                                                                : Text(
-                                                                    "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].startTime.toString().split(",").first}, ${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].startTime.toString().split(",").last}",
-                                                                    style: TextStyle(
-                                                                        color: notifier
-                                                                            .textColor),
-                                                                  ),
-                                                            const Spacer(),
-                                                            Text(
-                                                              "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].pName}",
-                                                              style: TextStyle(
-                                                                  color: notifier
-                                                                      .textColor),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 10,
-                                                        ),
-                                                        ListTile(
-                                                          // isThreeLine: true,
-                                                          contentPadding:
-                                                              EdgeInsets.zero,
-                                                          leading: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    top: 8.0),
-                                                            child: Container(
-                                                              height: 22,
-                                                              width: 22,
-                                                              decoration: BoxDecoration(
-                                                                  color: Colors
-                                                                      .green
-                                                                      .withOpacity(
-                                                                          0.2),
-                                                                  shape: BoxShape
-                                                                      .circle),
-                                                              child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .all(6),
-                                                                child:
-                                                                    Container(
-                                                                  // height: 10,
-                                                                  // width: 10,
-                                                                  decoration: const BoxDecoration(
-                                                                      color: Colors
-                                                                          .green,
-                                                                      shape: BoxShape
-                                                                          .circle),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          title: Transform
-                                                              .translate(
-                                                                  offset:
-                                                                      const Offset(
-                                                                          -20,
-                                                                          0),
-                                                                  child: Text(
-                                                                    "Pickup".tr,
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .green),
-                                                                  )),
-                                                          subtitle: Transform
-                                                              .translate(
-                                                                  offset:
-                                                                      const Offset(
-                                                                          -20,
-                                                                          0),
-                                                                  child: Text(
-                                                                    "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].pickup!.title}",
-                                                                    style: TextStyle(
-                                                                        color: notifier
-                                                                            .textColor,
-                                                                        fontSize:
-                                                                            16),
-                                                                    maxLines: 1,
-                                                                  )),
-                                                        ),
-                                                        ListTile(
-                                                          // isThreeLine: true,
-                                                          contentPadding:
-                                                              EdgeInsets.zero,
-                                                          leading: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    top: 8.0),
-                                                            child: Container(
-                                                              height: 22,
-                                                              width: 22,
-                                                              decoration: BoxDecoration(
-                                                                  color: Colors
-                                                                      .red
-                                                                      .withOpacity(
-                                                                          0.2),
-                                                                  shape: BoxShape
-                                                                      .circle),
-                                                              child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .all(6),
-                                                                child:
-                                                                    Container(
-                                                                  // height: 10,
-                                                                  // width: 10,
-                                                                  decoration: const BoxDecoration(
-                                                                      color: Colors
-                                                                          .red,
-                                                                      shape: BoxShape
-                                                                          .circle),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          title: Transform
-                                                              .translate(
-                                                                  offset:
-                                                                      const Offset(
-                                                                          -20,
-                                                                          0),
-                                                                  child: Text(
-                                                                    "Destination"
-                                                                        .tr,
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .red),
-                                                                  )),
-                                                          subtitle: Transform
-                                                              .translate(
-                                                                  offset:
-                                                                      Offset(
-                                                                          -20,
-                                                                          0),
-                                                                  child: Text(
-                                                                    "${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].drop!.title}",
-                                                                    style: TextStyle(
-                                                                        color: notifier
-                                                                            .textColor,
-                                                                        fontSize:
-                                                                            16),
-                                                                    maxLines: 2,
-                                                                  )),
-                                                        ),
-                                                        // const SizedBox(height: 10,),
-                                                        // Row(
-                                                        //   crossAxisAlignment: CrossAxisAlignment.center,
-                                                        //   mainAxisAlignment: MainAxisAlignment.center,
-                                                        //   children: [
-                                                        //     Icon(Icons.person,color: theamcolore,),
-                                                        //     const SizedBox(width: 10,),
-                                                        //     const Text("Driver arrived in",style: TextStyle(color: Colors.black,fontSize: 18),),
-                                                        //     Text(" 15 mins",style: TextStyle(color: theamcolore,fontSize: 18),),
-                                                        //   ],
-                                                        // )
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            }),
-                                    allRequestDataApiController
-                                            .allRequestDataModelcompleted!
-                                            .reuqestList!
-                                            .isEmpty
-                                        ? Center(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Container(
-                                                  height: 150,
-                                                  width: 150,
-                                                  decoration:
-                                                      const BoxDecoration(
-                                                    image: DecorationImage(
-                                                      image: AssetImage(
-                                                          "assets/emptyOrder.png"),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  height: 10,
-                                                ),
-                                                Text(
-                                                  "No Order Found!".tr,
-                                                  style: TextStyle(
-                                                    color: notifier.textColor,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  height: 5,
-                                                ),
-                                                Text(
-                                                  "Currently you don’t have order."
-                                                      .tr,
-                                                  style: const TextStyle(
-                                                    fontSize: 15,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        : ListView.separated(
-                                            separatorBuilder: (context, index) {
-                                              return const SizedBox(height: 0);
-                                            },
-                                            shrinkWrap: true,
-                                            scrollDirection: Axis.vertical,
-                                            itemCount: allRequestDataApiController
-                                                .allRequestDataModelcompleted!
-                                                .reuqestList!
-                                                .length,
-                                            itemBuilder: (BuildContext context,
-                                                int index) {
-                                              return Padding(
-                                                padding: const EdgeInsets.only(
-                                                    top: 0),
-                                                child: InkWell(
-                                                  onTap: () {
-                                                    driver_id =
-                                                        allRequestDataApiController
-                                                            .allRequestDataModelcompleted!
-                                                            .reuqestList![index]
-                                                            .dId
-                                                            .toString();
-                                                    ridecompleterequestid =
-                                                        allRequestDataApiController
-                                                            .allRequestDataModelcompleted!
-                                                            .reuqestList![index]
-                                                            .id
-                                                            .toString();
-                                                    driverimage =
-                                                        "${Config.imageurl}${allRequestDataApiController.allRequestDataModelcompleted!.reuqestList![index].profileImage.toString()}";
-                                                    Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              MyRideDetailScreen(
-                                                            request_id:
-                                                                "${allRequestDataApiController.allRequestDataModelcompleted!.reuqestList![index].id}",
-                                                            status: "complete",
-                                                          ),
-                                                        ));
-                                                  },
-                                                  child: Container(
-                                                    // height: 200,
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.8,
-                                                    margin:
-                                                        const EdgeInsets.only(
-                                                            bottom: 10),
-                                                    decoration: BoxDecoration(
-                                                      // color: Colors.red,
-                                                      border: Border.all(
-                                                          color: Colors.grey
-                                                              .withOpacity(
-                                                                  0.4)),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                    ),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              15),
-                                                      child: Column(
-                                                        children: [
-                                                          Row(
-                                                            children: [
-                                                              Text(
-                                                                "${allRequestDataApiController.allRequestDataModelcompleted!.reuqestList![index].mRole}",
-                                                                style: TextStyle(
-                                                                    color: notifier
-                                                                        .textColor),
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 10,
-                                                              ),
-                                                              Container(
-                                                                height: 5,
-                                                                width: 5,
-                                                                decoration:
-                                                                    const BoxDecoration(
-                                                                  color: Colors
-                                                                      .grey,
-                                                                  shape: BoxShape
-                                                                      .circle,
-                                                                ),
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 10,
-                                                              ),
-                                                              Text(
-                                                                "${allRequestDataApiController.allRequestDataModelcompleted!.reuqestList![index].vehicleName}",
-                                                                style: TextStyle(
-                                                                    color: notifier
-                                                                        .textColor),
-                                                              ),
-                                                              const Spacer(),
-                                                              Text(
-                                                                "${currencyy}${allRequestDataApiController.allRequestDataModelcompleted!.reuqestList![index].finalPrice}",
-                                                                style: TextStyle(
-                                                                    color: notifier
-                                                                        .textColor,
-                                                                    fontSize:
-                                                                        18),
-                                                              )
-                                                            ],
-                                                          ),
-                                                          Row(
-                                                            children: [
-                                                              Text(
-                                                                "${allRequestDataApiController.allRequestDataModelcompleted!.reuqestList![index].startTime.toString().split(",").first}, ${allRequestDataApiController.allRequestDataModelcompleted!.reuqestList![index].startTime.toString().split(",").last}",
-                                                                style: TextStyle(
-                                                                    color: notifier
-                                                                        .textColor),
-                                                              ),
-                                                              // const Text("18/11/2024, 10:24 AM"),
-                                                              const Spacer(),
-                                                              allRequestDataApiController
-                                                                          .allRequestDataModelcompleted!
-                                                                          .reuqestList![
-                                                                              index]
-                                                                          .walletPrice ==
-                                                                      0
-                                                                  ? Text(
-                                                                      "${allRequestDataApiController.allRequestDataModelcompleted!.reuqestList![index].pName}",
-                                                                      style: TextStyle(
-                                                                          color:
-                                                                              notifier.textColor),
-                                                                    )
-                                                                  : allRequestDataApiController
-                                                                              .allRequestDataModelcompleted!
-                                                                              .reuqestList![index]
-                                                                              .paidAmount ==
-                                                                          0
-                                                                      ? Text(
-                                                                          "Wallet"
-                                                                              .tr,
-                                                                          style:
-                                                                              TextStyle(color: notifier.textColor),
-                                                                        )
-                                                                      : Text(
-                                                                          "Wallet + ${allRequestDataApiController.allRequestDataModelcompleted!.reuqestList![index].pName}",
-                                                                          style:
-                                                                              TextStyle(color: notifier.textColor),
-                                                                        )
-                                                            ],
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 10,
-                                                          ),
-                                                          ListTile(
-                                                            // isThreeLine: true,
-                                                            contentPadding:
-                                                                EdgeInsets.zero,
-                                                            leading: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                      top: 8.0),
-                                                              child: Container(
-                                                                height: 22,
-                                                                width: 22,
-                                                                decoration: BoxDecoration(
-                                                                    color: Colors
-                                                                        .green
-                                                                        .withOpacity(
-                                                                            0.2),
-                                                                    shape: BoxShape
-                                                                        .circle),
-                                                                child: Padding(
-                                                                  padding:
-                                                                      const EdgeInsets
-                                                                          .all(
-                                                                          6),
-                                                                  child:
-                                                                      Container(
-                                                                    // height: 10,
-                                                                    // width: 10,
-                                                                    decoration: const BoxDecoration(
-                                                                        color: Colors
-                                                                            .green,
-                                                                        shape: BoxShape
-                                                                            .circle),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            title: Transform
-                                                                .translate(
-                                                                    offset:
-                                                                        const Offset(
-                                                                            -20,
-                                                                            0),
-                                                                    child: Text(
-                                                                      "Pickup"
-                                                                          .tr,
-                                                                      style: TextStyle(
-                                                                          color:
-                                                                              Colors.green),
-                                                                    )),
-                                                            subtitle: Transform
-                                                                .translate(
-                                                                    offset:
-                                                                        const Offset(
-                                                                            -20,
-                                                                            0),
-                                                                    child: Text(
-                                                                      "${allRequestDataApiController.allRequestDataModelcompleted!.reuqestList![index].pickup!.title}",
-                                                                      style: TextStyle(
-                                                                          color: notifier
-                                                                              .textColor,
-                                                                          fontSize:
-                                                                              16),
-                                                                      maxLines:
-                                                                          1,
-                                                                    )),
-                                                          ),
-                                                          ListTile(
-                                                            // isThreeLine: true,
-                                                            contentPadding:
-                                                                EdgeInsets.zero,
-                                                            leading: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                      top: 8.0),
-                                                              child: Container(
-                                                                height: 22,
-                                                                width: 22,
-                                                                decoration: BoxDecoration(
-                                                                    color: Colors
-                                                                        .red
-                                                                        .withOpacity(
-                                                                            0.2),
-                                                                    shape: BoxShape
-                                                                        .circle),
-                                                                child: Padding(
-                                                                  padding:
-                                                                      const EdgeInsets
-                                                                          .all(
-                                                                          6),
-                                                                  child:
-                                                                      Container(
-                                                                    // height: 10,
-                                                                    // width: 10,
-                                                                    decoration: const BoxDecoration(
-                                                                        color: Colors
-                                                                            .red,
-                                                                        shape: BoxShape
-                                                                            .circle),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            title: Transform
-                                                                .translate(
-                                                                    offset:
-                                                                        const Offset(
-                                                                            -20,
-                                                                            0),
-                                                                    child: Text(
-                                                                      "Destination"
-                                                                          .tr,
-                                                                      style: TextStyle(
-                                                                          color:
-                                                                              Colors.red),
-                                                                    )),
-                                                            subtitle: Transform
-                                                                .translate(
-                                                                    offset:
-                                                                        const Offset(
-                                                                            -20,
-                                                                            0),
-                                                                    child: Text(
-                                                                      "${allRequestDataApiController.allRequestDataModelcompleted!.reuqestList![index].drop!.title}",
-                                                                      style: TextStyle(
-                                                                          color: notifier
-                                                                              .textColor,
-                                                                          fontSize:
-                                                                              16),
-                                                                      maxLines:
-                                                                          2,
-                                                                    )),
-                                                          ),
-                                                          // const SizedBox(height: 10,),
-                                                          // Row(
-                                                          //   crossAxisAlignment: CrossAxisAlignment.center,
-                                                          //   mainAxisAlignment: MainAxisAlignment.center,
-                                                          //   children: [
-                                                          //     Icon(Icons.person,color: theamcolore,),
-                                                          //     const SizedBox(width: 10,),
-                                                          //     const Text("Driver arrived in",style: TextStyle(color: Colors.black,fontSize: 18),),
-                                                          //     Text(" 15mins",style: TextStyle(color: theamcolore,fontSize: 18),),
-                                                          //   ],
-                                                          // )
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            }),
-                                    allRequestDataApiController
-                                            .allRequestDataModelcancelled!
-                                            .reuqestList!
-                                            .isEmpty
-                                        ? Center(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Container(
-                                                  height: 150,
-                                                  width: 150,
-                                                  decoration:
-                                                      const BoxDecoration(
-                                                    image: DecorationImage(
-                                                      image: AssetImage(
-                                                          "assets/emptyOrder.png"),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  height: 10,
-                                                ),
-                                                Text(
-                                                  "No Order Found!".tr,
-                                                  style: TextStyle(
-                                                    color: notifier.textColor,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  height: 5,
-                                                ),
-                                                Text(
-                                                  "Currently you don’t have order."
-                                                      .tr,
-                                                  style: const TextStyle(
-                                                    fontSize: 15,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        : ListView.separated(
-                                            separatorBuilder: (context, index) {
-                                              return const SizedBox(height: 0);
-                                            },
-                                            shrinkWrap: true,
-                                            scrollDirection: Axis.vertical,
-                                            itemCount: allRequestDataApiController
-                                                .allRequestDataModelcancelled!
-                                                .reuqestList!
-                                                .length,
-                                            itemBuilder: (BuildContext context,
-                                                int index) {
-                                              return Padding(
-                                                padding: const EdgeInsets.only(
-                                                    top: 0),
-                                                child: InkWell(
-                                                  onTap: () {
-                                                    Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              MyRideDetailScreen(
-                                                            request_id:
-                                                                "${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].id}",
-                                                            status: "cancel",
-                                                          ),
-                                                        ));
-                                                    print(
-                                                        "***:-- ${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].id}");
-                                                  },
-                                                  child: Container(
-                                                    // height: 200,
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.8,
-                                                    margin:
-                                                        const EdgeInsets.only(
-                                                            bottom: 10),
-                                                    decoration: BoxDecoration(
-                                                      // color: Colors.red,
-                                                      border: Border.all(
-                                                          color: Colors.grey
-                                                              .withOpacity(
-                                                                  0.4)),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                    ),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              15),
-                                                      child: Column(
-                                                        children: [
-                                                          Row(
-                                                            children: [
-                                                              Text(
-                                                                "${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].mRole}",
-                                                                style: TextStyle(
-                                                                    color: notifier
-                                                                        .textColor),
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 10,
-                                                              ),
-                                                              Container(
-                                                                height: 5,
-                                                                width: 5,
-                                                                decoration:
-                                                                    const BoxDecoration(
-                                                                  color: Colors
-                                                                      .grey,
-                                                                  shape: BoxShape
-                                                                      .circle,
-                                                                ),
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 10,
-                                                              ),
-                                                              Text(
-                                                                "${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].vehicleName}",
-                                                                style: TextStyle(
-                                                                    color: notifier
-                                                                        .textColor),
-                                                              ),
-                                                              const Spacer(),
-                                                              Text(
-                                                                "${currencyy}${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].price}",
-                                                                style: TextStyle(
-                                                                    color: notifier
-                                                                        .textColor,
-                                                                    fontSize:
-                                                                        18),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Row(
-                                                            children: [
-                                                              // const Text("18/11/2024, 10:24 AM"),
-                                                              Text(
-                                                                "${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].startTime.toString().split(",").first}, ${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].startTime.toString().split(",").last}",
-                                                                style: TextStyle(
-                                                                    color: notifier
-                                                                        .textColor),
-                                                              ),
-                                                              const Spacer(),
-                                                              allRequestDataApiController
-                                                                          .allRequestDataModelcancelled!
-                                                                          .reuqestList![
-                                                                              index]
-                                                                          .walletPrice ==
-                                                                      0
-                                                                  ? Text(
-                                                                      "${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].pName}",
-                                                                      style: TextStyle(
-                                                                          color:
-                                                                              notifier.textColor),
-                                                                    )
-                                                                  : allRequestDataApiController
-                                                                              .allRequestDataModelcancelled!
-                                                                              .reuqestList![index]
-                                                                              .paidAmount ==
-                                                                          0
-                                                                      ? Text(
-                                                                          "Wallet"
-                                                                              .tr,
-                                                                          style:
-                                                                              TextStyle(color: notifier.textColor),
-                                                                        )
-                                                                      : Text(
-                                                                          "Wallet + ${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].pName}",
-                                                                          style:
-                                                                              TextStyle(color: notifier.textColor),
-                                                                        )
-
-                                                              // Text("${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].pName}"),
-                                                            ],
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 10,
-                                                          ),
-                                                          ListTile(
-                                                            // isThreeLine: true,
-                                                            contentPadding:
-                                                                EdgeInsets.zero,
-                                                            leading: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                      top: 8.0),
-                                                              child: Container(
-                                                                height: 22,
-                                                                width: 22,
-                                                                decoration: BoxDecoration(
-                                                                    color: Colors
-                                                                        .green
-                                                                        .withOpacity(
-                                                                            0.2),
-                                                                    shape: BoxShape
-                                                                        .circle),
-                                                                child: Padding(
-                                                                  padding:
-                                                                      const EdgeInsets
-                                                                          .all(
-                                                                          6),
-                                                                  child:
-                                                                      Container(
-                                                                    // height: 10,
-                                                                    // width: 10,
-                                                                    decoration: const BoxDecoration(
-                                                                        color: Colors
-                                                                            .green,
-                                                                        shape: BoxShape
-                                                                            .circle),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            title: Transform.translate(
-                                                                offset:
-                                                                    const Offset(
-                                                                        -20, 0),
-                                                                child: Text(
-                                                                    "Pickup".tr,
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .green))),
-                                                            subtitle: Transform
-                                                                .translate(
-                                                                    offset:
-                                                                        const Offset(
-                                                                            -20,
-                                                                            0),
-                                                                    child: Text(
-                                                                      "${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].pickup!.title}",
-                                                                      style: TextStyle(
-                                                                          color: notifier
-                                                                              .textColor,
-                                                                          fontSize:
-                                                                              16),
-                                                                      maxLines:
-                                                                          1,
-                                                                    )),
-                                                          ),
-                                                          ListTile(
-                                                            // isThreeLine: true,
-                                                            contentPadding:
-                                                                EdgeInsets.zero,
-                                                            leading: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                      top: 8.0),
-                                                              child: Container(
-                                                                height: 22,
-                                                                width: 22,
-                                                                decoration: BoxDecoration(
-                                                                    color: Colors
-                                                                        .red
-                                                                        .withOpacity(
-                                                                            0.2),
-                                                                    shape: BoxShape
-                                                                        .circle),
-                                                                child: Padding(
-                                                                  padding:
-                                                                      const EdgeInsets
-                                                                          .all(
-                                                                          6),
-                                                                  child:
-                                                                      Container(
-                                                                    // height: 10,
-                                                                    // width: 10,
-                                                                    decoration: const BoxDecoration(
-                                                                        color: Colors
-                                                                            .red,
-                                                                        shape: BoxShape
-                                                                            .circle),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            title: Transform
-                                                                .translate(
-                                                                    offset:
-                                                                        const Offset(
-                                                                            -20,
-                                                                            0),
-                                                                    child: Text(
-                                                                      "Destination"
-                                                                          .tr,
-                                                                      style: TextStyle(
-                                                                          color:
-                                                                              Colors.red),
-                                                                    )),
-                                                            subtitle: Transform
-                                                                .translate(
-                                                                    offset:
-                                                                        const Offset(
-                                                                            -20,
-                                                                            0),
-                                                                    child: Text(
-                                                                      "${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].drop!.title}",
-                                                                      style: TextStyle(
-                                                                          color: notifier
-                                                                              .textColor,
-                                                                          fontSize:
-                                                                              16),
-                                                                      maxLines:
-                                                                          2,
-                                                                    )),
-                                                          ),
-                                                          // const SizedBox(height: 10,),
-                                                          // Row(
-                                                          //   crossAxisAlignment: CrossAxisAlignment.center,
-                                                          //   mainAxisAlignment: MainAxisAlignment.center,
-                                                          //   children: [
-                                                          //     Icon(Icons.person,color: theamcolore,),
-                                                          //     const SizedBox(width: 10,),
-                                                          //     const Text("Driver arrived in",style: TextStyle(color: Colors.black,fontSize: 18),),
-                                                          //     Text(" 15 mins",style: TextStyle(color: theamcolore,fontSize: 18),),
-                                                          //   ],
-                                                          // )
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            }),
-                                  ],
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
+                        ],
+                      ),
+                    );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  // ✅ NEW - Reusable rides list builder
+  Widget _buildRidesList(List<dynamic> rides, String status) {
+    if (rides.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return ListView.separated(
+      separatorBuilder: (context, index) => const SizedBox(height: 0),
+      shrinkWrap: true,
+      scrollDirection: Axis.vertical,
+      itemCount: rides.length,
+      itemBuilder: (BuildContext context, int index) {
+        final ride = rides[index];
+        return _buildRideCard(ride, status, index);
+      },
+    );
+  }
+
+  // ✅ NEW - Empty state widget
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            height: 150,
+            width: 150,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/emptyOrder.png"),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "No Order Found!".tr,
+            style: TextStyle(
+              color: notifier.textColor,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            "Currently you don't have order.".tr,
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ✅ NEW - Enhanced ride card widget
+  Widget _buildRideCard(dynamic ride, String status, int index) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 0),
+      child: InkWell(
+        onTap: () {
+          _navigateToRideDetail(
+            ride.id.toString(),
+            status == "completed" ? "complete" : status,
+            index,
+          );
+        },
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.8,
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.withOpacity(0.4)),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ✅ Ride header with status
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "#${ride.id}",
+                      style: TextStyle(
+                        color: notifier.textColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(status).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _getStatusColor(status),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        status.toUpperCase(),
+                        style: TextStyle(
+                          color: _getStatusColor(status),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                // ✅ Pickup location
+                if (ride.pickup != null) ...[
+                  Row(
+                    children: [
+                      Container(
+                        height: 8,
+                        width: 8,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "${ride.pickup.title}",
+                          style: TextStyle(
+                            color: notifier.textColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                );
-        },
+                  const SizedBox(height: 5),
+                ],
+
+                // ✅ Drop location
+                if (ride.drop != null) ...[
+                  Row(
+                    children: [
+                      Container(
+                        height: 8,
+                        width: 8,
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "${ride.drop.title}",
+                          style: TextStyle(
+                            color: notifier.textColor,
+                            fontSize: 14,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
+                // ✅ Additional drop locations if any
+                if (ride.dropList != null && ride.dropList.isNotEmpty) ...[
+                  const SizedBox(height: 5),
+                  for (int i = 0; i < ride.dropList.length; i++) ...[
+                    Row(
+                      children: [
+                        Container(
+                          height: 6,
+                          width: 6,
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            "${ride.dropList[i].title}",
+                            style: TextStyle(
+                              color: notifier.textColor.withOpacity(0.8),
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                  ],
+                ],
+
+                const SizedBox(height: 10),
+
+                // ✅ Ride metadata
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (ride.bookingDate != null)
+                      Text(
+                        "${ride.bookingDate}",
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    if (ride.total != null)
+                      Text(
+                        "${ride.total} ${currencyy ?? 'SAR'}",
+                        style: TextStyle(
+                          color: theamcolore,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
+  }
+
+  // ✅ NEW - Get status color helper
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'upcoming':
+        return Colors.orange;
+      case 'completed':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }

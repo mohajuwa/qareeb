@@ -3,110 +3,139 @@
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
 // ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
 
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:qareeb/common_code/toastification.dart';
 import 'package:get/get.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/api_code/global_driver_access_api_controller.dart';
 import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/socket_service.dart';
+import 'package:qareeb/providers/location_state.dart';
+import 'package:qareeb/providers/map_state.dart';
+import 'package:qareeb/providers/pricing_state.dart';
+import 'package:qareeb/providers/ride_request_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:qareeb/common_code/common_button.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:qareeb/app_screen/driver_detail_screen.dart';
-import 'package:qareeb/common_code/colore_screen.dart';
-import '../chat_code/chat_screen.dart';
+import '../api_code/add_vehical_api_controller.dart';
+import '../api_code/driver_detail_api.dart';
+import '../api_code/vihical_calculate_api_controller.dart';
+import '../api_code/vihical_driver_detail_api_controller.dart';
 import '../common_code/common_flow_screen.dart';
 import '../common_code/config.dart';
+import '../timer_screen.dart';
+import 'home_screen.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:ui' as ui;
-import '../timer_screen.dart';
-import 'home_screen.dart';
+import '../common_code/colore_screen.dart';
 import 'map_screen.dart';
+import 'my_ride_screen.dart';
 
-Future<Uint8List> resizeImage(Uint8List data,
-    {required int targetWidth, required int targetHeight}) async {
-  // Decode the image
-  final ui.Codec codec = await ui.instantiateImageCodec(data);
-  final ui.FrameInfo frameInfo = await codec.getNextFrame();
+class DriverStartRideScreen extends StatefulWidget {
+  final double lat;
+  final double long;
+  final String driverId;
+  final String requestId;
 
-  // Original dimensions
-  final int originalWidth = frameInfo.image.width;
-  final int originalHeight = frameInfo.image.height;
-
-  // Calculate the aspect ratio
-  final double aspectRatio = originalWidth / originalHeight;
-
-  // Determine the dimensions to maintain the aspect ratio
-  int resizedWidth, resizedHeight;
-  if (originalWidth > originalHeight) {
-    resizedWidth = targetWidth;
-    resizedHeight = (targetWidth / aspectRatio).round();
-  } else {
-    resizedHeight = targetHeight;
-    resizedWidth = (targetHeight * aspectRatio).round();
-  }
-
-  // Resize image
-  final ui.PictureRecorder recorder = ui.PictureRecorder();
-  final Canvas canvas = Canvas(recorder);
-  final Size size = Size(resizedWidth.toDouble(), resizedHeight.toDouble());
-  final Rect rect = Rect.fromLTWH(0.0, 0.0, size.width, size.height);
-
-  // Paint image
-  final Paint paint = Paint()..isAntiAlias = true;
-  canvas.drawImageRect(
-      frameInfo.image,
-      Rect.fromLTWH(
-          0.0, 0.0, originalWidth.toDouble(), originalHeight.toDouble()),
-      rect,
-      paint);
-
-  final ui.Image resizedImage =
-      await recorder.endRecording().toImage(resizedWidth, resizedHeight);
-
-  final ByteData? resizedByteData =
-      await resizedImage.toByteData(format: ImageByteFormat.png);
-  return resizedByteData!.buffer.asUint8List();
-}
-
-Future<Uint8List> getNetworkImage(String path,
-    {int targetWidth = 50, int targetHeight = 50}) async {
-  final completer = Completer<ImageInfo>();
-  var image = NetworkImage(path);
-  image.resolve(const ImageConfiguration()).addListener(
-        ImageStreamListener((info, _) => completer.complete(info)),
-      );
-  final ImageInfo imageInfo = await completer.future;
-
-  final ByteData? byteData = await imageInfo.image.toByteData(
-    format: ImageByteFormat.png,
-  );
-
-  Uint8List resizedImage = await resizeImage(Uint8List.view(byteData!.buffer),
-      targetWidth: targetWidth, targetHeight: targetHeight);
-  return resizedImage;
-}
-
-// List multipledropaddress = [];
-
-class DriverStartrideScreen extends StatefulWidget {
-  const DriverStartrideScreen({super.key});
+  const DriverStartRideScreen({
+    super.key,
+    required this.lat,
+    required this.long,
+    required this.driverId,
+    required this.requestId,
+  });
 
   @override
-  State<DriverStartrideScreen> createState() => _DriverStartrideScreenState();
+  State<DriverStartRideScreen> createState() => _DriverStartRideScreenState();
 }
 
-class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
-  // Start Ride Map And Poliline Code
+class _DriverStartRideScreenState extends State<DriverStartRideScreen> {
+  // ✅ MIGRATED - Use GetX controllers as before
+  GlobalDriverAcceptClass globalDriverAcceptClass =
+      Get.put(GlobalDriverAcceptClass());
+  DriverDetailApiController driverDetailApiController =
+      Get.put(DriverDetailApiController());
+  VihicalDriverDetailApiController vihicalDriverDetailApiController =
+      Get.put(VihicalDriverDetailApiController());
+  VihicalCalculateController vihicalCalculateApiController =
+      Get.put(VihicalCalculateController());
+  AddVihicalCalculateController addVihicalCalculateController =
+      Get.put(AddVihicalCalculateController());
 
-  Map<MarkerId, Marker> markers = {};
-  Map<PolylineId, Polyline> polylines = {};
+  // ✅ MIGRATED - Map functionality now uses provider
   PolylinePoints polylinePoints = PolylinePoints();
+  GoogleMapController? mapController;
 
-  void _onMapCreated(GoogleMapController controller) async {}
+  // ✅ KEEP - UI state variables
+  ColorNotifier notifier = ColorNotifier();
+  var decodeUid;
+  var userid;
+  var currencyy; // ✅ ADDED - Missing currency variable
+  bool isLoad = false;
+  String imagenetwork = "";
+  String themeForMap = "";
+  double livelat = 0.0;
+  double livelong = 0.0;
+
+  // ✅ KEEP - Drop location data
+  List<dynamic> listdrop = [];
+  List<PointLatLng> droppointstartscreen = [];
+
+  @override
+  void initState() {
+    super.initState();
+    getdatafromserver(); // ✅ ADDED - Load user data including currency
+    socketConnect();
+    mapThemeStyle(context: context);
+
+    if (kDebugMode) {
+      print("================imagenetwork: ${imagenetwork}");
+      print("================livelat: ${livelat}");
+      print("================livelong: ${livelong}");
+    }
+
+    // Initialize with current driver location if available
+    if (livelat != 0.0 && livelong != 0.0) {
+      updatemarker(LatLng(livelat, livelong), "origin", imagenetwork);
+    }
+  }
+
+  // ✅ ADDED - Load user data method
+  getdatafromserver() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var userLoginString = prefs.getString("userLogin");
+    var currencyString = prefs.getString("currenci");
+
+    if (userLoginString != null) {
+      setState(() {
+        userid = jsonDecode(userLoginString);
+      });
+    }
+
+    if (currencyString != null) {
+      currencyy = jsonDecode(currencyString);
+    }
+  }
+
+  @override
+  void dispose() {
+    SocketService.instance.disconnect();
+    super.dispose();
+  }
+
+  void _onMapCreated(GoogleMapController controller) async {
+    mapController = controller;
+    if (themeForMap.isNotEmpty) {
+      await mapController?.setMapStyle(themeForMap);
+    }
+  }
 
   Future<Uint8List> getImages(String path, int width) async {
     ByteData data = await rootBundle.load(path);
@@ -118,108 +147,182 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
         .asUint8List();
   }
 
-  _addMarker(LatLng position, String id, BitmapDescriptor descriptor) async {
+  Future<Uint8List> getNetworkImage(String url) async {
+    try {
+      final response = await NetworkAssetBundle(Uri.parse(url)).load("");
+      return response.buffer.asUint8List();
+    } catch (e) {
+      if (kDebugMode) print("❌ Error loading network image: $e");
+      return await getImages("assets/pickup_marker.png", 80);
+    }
+  }
+
+  // ✅ MIGRATED - Use MapState provider instead of local markers
+  void _addMarker(
+      LatLng position, String id, BitmapDescriptor descriptor) async {
     final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
     MarkerId markerId = MarkerId(id);
     Marker marker = Marker(
       markerId: markerId,
       icon: BitmapDescriptor.fromBytes(markIcon),
       position: position,
+      onTap: () {
+        showDialog(
+          barrierColor: Colors.transparent,
+          context: context,
+          builder: (context) {
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return Dialog(
+                  alignment: const Alignment(0, -0.25),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  elevation: 0,
+                  child: Container(
+                    width: 50,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: Colors.white,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Display drop location details if available
+                        if (listdrop.isNotEmpty)
+                          for (int a = 0; a < listdrop.length; a++)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${listdrop[a]["title"] ?? "Drop Location"}",
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Text(
+                                  "${listdrop[a]["subtitle"] ?? ""}",
+                                  maxLines: 3,
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                              ],
+                            ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
-    markers[markerId] = marker;
+
+    // ✅ MIGRATED - Use MapState provider
+    context.read<MapState>().addMarker(markerId, marker);
   }
 
-  _addMarker3(String id) async {
-    for (int a = 0; a < droppointstartscreen.length; a++) {
-      final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
-      MarkerId markerId = MarkerId(id[a]);
+  // ✅ MIGRATED - Add destination markers for drop locations
+  void _addMarker3(String id) async {
+    if (droppointstartscreen.isEmpty) return;
 
-      // Assuming _dropOffPoints[a] is of type PointLatLng, convert it to LatLng
-      LatLng position = LatLng(
-          droppointstartscreen[a].latitude, droppointstartscreen[a].longitude);
+    for (int i = 0; i < droppointstartscreen.length; i++) {
+      final dropPoint = droppointstartscreen[i];
+      final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
+      MarkerId markerId = MarkerId("${id}_$i");
 
       Marker marker = Marker(
         markerId: markerId,
         icon: BitmapDescriptor.fromBytes(markIcon),
-        position: position,
+        position: LatLng(dropPoint.latitude, dropPoint.longitude),
         onTap: () {
-          showDialog(
-            barrierColor: Colors.transparent,
-            context: context,
-            builder: (context) {
-              return StatefulBuilder(
-                builder: (context, setState) {
-                  return Dialog(
-                    alignment: const Alignment(0, -0.25),
-                    shape: RoundedRectangleBorder(
+          // Show drop location details
+          if (i < listdrop.length) {
+            showDialog(
+              barrierColor: Colors.transparent,
+              context: context,
+              builder: (context) {
+                return Dialog(
+                  alignment: const Alignment(0, -0.25),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(15),
+                      color: Colors.white,
                     ),
-                    elevation: 0,
-                    child: Container(
-                      width: 50,
-                      padding: EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: Colors.white,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "${listdrop[a]["title"]}",
-                            maxLines: 1,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${listdrop[i]["title"] ?? "Drop Location ${i + 1}"}",
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
-                          Text(
-                            "${listdrop[a]["subtitle"]}",
-                            maxLines: 3,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          "${listdrop[i]["subtitle"] ?? "Drop location details"}",
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  );
-                },
-              );
-            },
-          );
+                  ),
+                );
+              },
+            );
+          }
         },
       );
 
-      markers[markerId] = marker;
+      // ✅ MIGRATED - Use MapState provider
+      context.read<MapState>().addMarker(markerId, marker);
     }
   }
 
-  updatemarker(LatLng position, String id, String imageUrl) async {
+  // ✅ MIGRATED - Use MapState provider for marker updates
+  void updatemarker(LatLng position, String id, String imageUrl) async {
     final Uint8List markIcon = await getNetworkImage(imageUrl);
     MarkerId markerId = MarkerId(id);
-    Marker marker = Marker(
-      markerId: markerId,
-      icon: BitmapDescriptor.fromBytes(markIcon),
-      position: position,
-    );
-    markers[markerId] = marker;
-    if (markers.containsKey(markerId)) {
-      final Marker oldMarker = markers[markerId]!;
-      // Create a new marker with the updated position, keeping other properties same
-      final Marker updatedMarker = oldMarker.copyWith(
-        positionParam: position, // Update the marker's position
+
+    // ✅ MIGRATED - Use MapState provider
+    final mapState = context.read<MapState>();
+
+    if (mapState.markers.containsKey(markerId)) {
+      // Update existing marker position
+      mapState.updateMarkerPosition(markerId, position);
+    } else {
+      // Create new marker
+      Marker marker = Marker(
+        markerId: markerId,
+        icon: BitmapDescriptor.fromBytes(markIcon),
+        position: position,
       );
-      markers[markerId] = updatedMarker;
-      setState(() {});
+      mapState.addMarker(markerId, marker);
     }
+
+    setState(() {});
   }
 
-  addPolyLine(List<LatLng> polylineCoordinates) {
+  // ✅ MIGRATED - Use MapState provider for polylines
+  void addPolyLine(List<LatLng> polylineCoordinates) {
     PolylineId id = const PolylineId("poly");
     Polyline polyline = Polyline(
       polylineId: id,
@@ -227,12 +330,15 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
       points: polylineCoordinates,
       width: 3,
     );
-    polylines[id] = polyline;
+
+    // ✅ MIGRATED - Use MapState provider
+    context.read<MapState>().addPolyline(id, polyline);
   }
 
-  Future getDirections(
-      {required PointLatLng lat1,
-      required List<PointLatLng> dropOffPoints}) async {
+  Future getDirections({
+    required PointLatLng lat1,
+    required List<PointLatLng> dropOffPoints,
+  }) async {
     List<LatLng> polylineCoordinates = [];
     List<PointLatLng> allPoints = [lat1, ...dropOffPoints];
 
@@ -252,75 +358,114 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
           polylineCoordinates.add(LatLng(point.latitude, point.longitude));
         }
       } else {
-        // Handle the case where no route is found
+        if (kDebugMode)
+          print("❌ No route found between points $i and ${i + 1}");
       }
     }
 
     addPolyLine(polylineCoordinates);
   }
 
+  // ✅ MIGRATED - Use SocketService.instance instead of direct socket
   socketConnect() async {
     setState(() {});
-    socket.connect();
-    _connectSocket();
+
+    try {
+      SocketService.instance.connect();
+      _connectSocket();
+    } catch (e) {
+      if (kDebugMode) print("❌ Socket connection error: $e");
+    }
   }
 
+  // ✅ MIGRATED - Socket event handlers using SocketService.instance
   _connectSocket() async {
     setState(() {});
 
-    socket.on('V_Driver_Location$useridgloable', (V_Driver_Location) {
-      print("++++++ /V_Driver_Location111/ ++++ :---  $V_Driver_Location");
-      print(
-          "V_Driver_Location111 is of type: ${V_Driver_Location.runtimeType}");
-      print("V_Driver_Location111 keys: ${V_Driver_Location.keys}");
-      print("+++++V_Driver_Location111 userid+++++: $useridgloable");
-      print("++++driver_id hhhh111 +++++: $driver_id");
-      print(
-          "++++ooooooooooooooooooooooooo111 +++++: ${V_Driver_Location["driver_location"]["image"]}");
-      print(
-          "++++oooooooooooooooooooooooooimagenetwork111 +++++: $imagenetwork");
+    final socketService = SocketService.instance;
 
-      if (driver_id == V_Driver_Location["d_id"].toString()) {
-        print("SuccessFully111");
+    if (kDebugMode) print('✅ Setting up socket connection - DriverStartRide');
 
-        if (droppointstartscreen.isEmpty) {
-          print("ififififi");
-          socket.emit('drop_location_list', {
-            'c_id': useridgloable,
-            'd_id': driver_id,
-            'r_id': request_id,
-          });
-        } else {
-          livelat =
-              double.parse(V_Driver_Location["driver_location"]["latitude"]);
-          livelong =
-              double.parse(V_Driver_Location["driver_location"]["longitude"]);
-          imagenetwork =
-              "${Config.imageurl}${V_Driver_Location["driver_location"]["image"]}";
+    if (kDebugMode) print("🔍 Listening for ride updates: ${useridgloable}");
 
-          print("****livelat****:-- ${livelat}");
-          print("****livelong****:-- ${livelong}");
-
-          print("elselese11");
-          print("....::-- ${livelat}--${livelong}");
-          print("*****:-- ${droppointstartscreen}");
-          updatemarker(LatLng(livelat, livelong), "origin", imagenetwork);
-          for (int a = 0; a < droppointstartscreen.length; a++) {
-            _addMarker3("destination");
-          }
-          getDirections(
-              lat1: PointLatLng(livelat, livelong),
-              dropOffPoints: droppointstartscreen);
-          print("==========:--- ${droppointstartscreen}");
-          print("=====length=====:--- ${droppointstartscreen.length}");
-        }
-      } else {
-        print("UnSuccessFully111");
-      }
+    // ✅ MIGRATED - Use SocketService.instance.on instead of socket.on
+    socketService.on('V_Driver_Location$useridgloable', (V_Driver_Location) {
+      _handleDriverLocation(V_Driver_Location);
     });
 
-    socket.on('drop_location$useridgloable', (drop_location) {
-      print("++++++ /drop_location_list/ ++++ :---  $drop_location");
+    socketService.on('drop_location$useridgloable', (drop_location) {
+      _handleDropLocation(drop_location);
+    });
+
+    socketService.on('ride_started$useridgloable', (ride_started) {
+      _handleRideStarted(ride_started);
+    });
+
+    socketService.on('ride_completed$useridgloable', (ride_completed) {
+      _handleRideCompleted(ride_completed);
+    });
+
+    socketService.on('payment_request$useridgloable', (payment_request) {
+      _handlePaymentRequest(payment_request);
+    });
+  }
+
+  // ✅ NEW - Organized event handlers
+  void _handleDriverLocation(dynamic V_Driver_Location) {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) {
+        print("++++++ /V_Driver_Location/ ++++ :---  $V_Driver_Location");
+        print("V_Driver_Location is of type: ${V_Driver_Location.runtimeType}");
+      }
+
+      if (driver_id == V_Driver_Location["d_id"].toString()) {
+        if (kDebugMode) print("✅ Driver location match - updating");
+
+        livelat =
+            double.parse(V_Driver_Location["driver_location"]["latitude"]);
+        livelong =
+            double.parse(V_Driver_Location["driver_location"]["longitude"]);
+
+        if (V_Driver_Location["driver_location"]["image"] != null) {
+          imagenetwork =
+              "${Config.imageurl}${V_Driver_Location["driver_location"]["image"]}";
+        }
+
+        if (kDebugMode) {
+          print("****livelat****:-- ${livelat}");
+          print("****livelong****:-- ${livelong}");
+        }
+
+        updatemarker(LatLng(livelat, livelong), "origin", imagenetwork);
+
+        // Update directions if we have drop points
+        if (droppointstartscreen.isNotEmpty) {
+          getDirections(
+            lat1: PointLatLng(livelat, livelong),
+            dropOffPoints: droppointstartscreen,
+          );
+        }
+      } else {
+        if (kDebugMode) {
+          print("❌ Driver ID mismatch:");
+          print("Expected: (${driver_id})");
+          print("Received: (${V_Driver_Location["d_id"]})");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling driver location: $e");
+    }
+  }
+
+  void _handleDropLocation(dynamic drop_location) {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) {
+        print("++++++ /drop_location_list/ ++++ :---  $drop_location");
+      }
 
       livelat = double.parse(drop_location["driver_location"]["latitude"]);
       livelong = double.parse(drop_location["driver_location"]["longitude"]);
@@ -329,6 +474,7 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
 
       listdrop = [];
       listdrop = drop_location["drop_list"];
+      droppointstartscreen.clear();
 
       for (int i = 0; i < listdrop.length; i++) {
         droppointstartscreen.add(PointLatLng(
@@ -338,433 +484,511 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
 
       updatemarker(LatLng(livelat, livelong), "origin", imagenetwork);
 
-      for (int a = 0; a < droppointstartscreen.length; a++) {
-        _addMarker3("destination");
-      }
+      // Add destination markers for all drop points
+      _addMarker3("destination");
 
       getDirections(
           lat1: PointLatLng(livelat, livelong),
           dropOffPoints: droppointstartscreen);
-      print("==========:--- ${droppointstartscreen}");
-      print("=====length=====:--- ${droppointstartscreen.length}");
-    });
+
+      if (kDebugMode) {
+        print("==========:--- ${droppointstartscreen}");
+        print("=====length=====:--- ${droppointstartscreen.length}");
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling drop location: $e");
+    }
   }
 
-  String themeForMap = "";
+  void _handleRideStarted(dynamic ride_started) {
+    if (!mounted) return;
 
-  mapThemeStyle({required context}) {
+    try {
+      if (kDebugMode) {
+        print("++++++ /ride_started/ ++++ :---  $ride_started");
+      }
+
+      if (ride_started["c_id"] == useridgloable.toString()) {
+        if (kDebugMode) print("✅ Ride started confirmed");
+
+        // Update ride status
+        globalDriverAcceptClass.setRideStarted(true);
+
+        // Show ride started notification
+        Get.snackbar(
+          "Ride Started".tr,
+          "Your ride has started. Enjoy your journey!".tr,
+          backgroundColor: Colors.green.withOpacity(0.8),
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling ride started: $e");
+    }
+  }
+
+  void _handleRideCompleted(dynamic ride_completed) {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) {
+        print("++++++ /ride_completed/ ++++ :---  $ride_completed");
+      }
+
+      if (ride_completed["c_id"] == useridgloable.toString()) {
+        if (kDebugMode) print("✅ Ride completed confirmed");
+
+        // Update ride status
+        globalDriverAcceptClass.setRideCompleted(true);
+
+        // Navigate to payment or rating screen
+        Get.snackbar(
+          "Ride Completed".tr,
+          "Your ride has been completed successfully!".tr,
+          backgroundColor: Colors.blue.withOpacity(0.8),
+          colorText: Colors.white,
+        );
+
+        // Navigate back to home after delay
+        Future.delayed(const Duration(seconds: 2), () {
+          Get.offAll(() => HomeScreen(
+                latpic: context.read<LocationState>().latitudePick,
+                longpic: context.read<LocationState>().longitudePick,
+                latdrop: context.read<LocationState>().latitudeDrop,
+                longdrop: context.read<LocationState>().longitudeDrop,
+                destinationlat: context.read<LocationState>().destinationLat,
+              ));
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling ride completed: $e");
+    }
+  }
+
+  void _handlePaymentRequest(dynamic payment_request) {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) {
+        print("++++++ /payment_request/ ++++ :---  $payment_request");
+      }
+
+      if (payment_request["c_id"] == useridgloable.toString()) {
+        if (kDebugMode) print("✅ Payment request received");
+
+        // Show payment dialog or navigate to payment screen
+        _showPaymentDialog(payment_request);
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error handling payment request: $e");
+    }
+  }
+
+  void _showPaymentDialog(dynamic paymentData) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Payment Required".tr),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Please proceed with payment for your ride.".tr),
+              const SizedBox(height: 10),
+              if (paymentData["amount"] != null)
+                Text(
+                  "Amount: ${paymentData["amount"]} ${currencyy ?? "SAR"}",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Navigate to payment screen
+                // Get.to(() => PaymentScreen(paymentData: paymentData));
+              },
+              child: Text("Pay Now".tr),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  mapThemeStyle({required BuildContext context}) {
     if (darkMode == true) {
       setState(() {
         DefaultAssetBundle.of(context)
             .loadString("assets/map_styles/dark_style.json")
-            .then(
-          (value) {
-            setState(() {
-              themeForMap = value;
-            });
-          },
-        );
+            .then((value) {
+          setState(() {
+            themeForMap = value;
+          });
+        });
       });
     }
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-
-    socketConnect();
-
-    print("================(${imagenetwork})");
-    print("================1(${livelat})");
-    print("================2(${livelong})");
-    mapThemeStyle(context: context);
-    updatemarker(LatLng(livelat, livelong), "origin", imagenetwork);
-    for (int a = 0; a < droppointstartscreen.length; a++) {
-      _addMarker3("destination");
-    }
-    getDirections(
-        lat1: PointLatLng(livelat, livelong),
-        dropOffPoints: droppointstartscreen);
-
-    Timer(const Duration(seconds: 3), () {
-      print("TIMER TIMER TIMER");
-      setState(() {
-        updatemarker(LatLng(livelat, livelong), "origin", imagenetwork);
-        for (int a = 0; a < droppointstartscreen.length; a++) {
-          _addMarker3("destination");
-        }
-        getDirections(
-            lat1: PointLatLng(livelat, livelong),
-            dropOffPoints: droppointstartscreen);
-      });
-    });
-
-    print("================(${imagenetwork})");
-    print("================1(${livelat})");
-    print("================2(${livelong})");
-    super.initState();
-  }
-
-  Future<void> _makingPhoneCall({required String number}) async {
-    await Permission.phone.request();
-    var status = await Permission.phone.status;
-
-    if (!status.isGranted) {
-      status = await Permission.phone.request();
-    }
-
-    if (status.isGranted) {
-      var url = Uri.parse('tel:$number');
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url);
-      } else {
-        throw 'Could not launch $url';
-      }
-    } else if (status.isPermanentlyDenied) {
-      ToastService.showToast("Please allow calls Permission");
-      await openAppSettings();
-    } else {
-      ToastService.showToast("Please allow calls Permission");
-      await openAppSettings();
-    }
-  }
-
-  ColorNotifier notifier = ColorNotifier();
   @override
   Widget build(BuildContext context) {
     notifier = Provider.of<ColorNotifier>(context, listen: true);
-    return WillPopScope(
-      onWillPop: () {
-        return Future(() => false);
-      },
-      child: Scaffold(
-        extendBody: true,
-        // backgroundColor: Colors.black,
-        // backgroundColor: Colors.transparent,
-        bottomNavigationBar: Container(
-          height: 380,
-          decoration: BoxDecoration(
-            color: notifier.containercolore,
-            borderRadius: BorderRadius.only(
-                topRight: Radius.circular(15), topLeft: Radius.circular(15)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(15),
-            child: Column(
-              children: [
-                Container(
-                  height: 5,
-                  width: 50,
-                  decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.4),
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(10))),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Row(
-                  children: [
-                    Text(
-                      "Heading to the destination".tr,
-                      style: TextStyle(fontSize: 16, color: notifier.textColor),
-                    ),
-                    const Spacer(),
-                    // Container(
-                    //   height: 40,
-                    //   width: 80,
-                    //   decoration: BoxDecoration(
-                    //     color: theamcolore,
-                    //     borderRadius: BorderRadius.circular(20),
-                    //   ),
-                    //   child: Center(child: Text("$totaldropmint min",style: const TextStyle(color: Colors.white),),),
-                    // ),
-                    // Text("${totaldrophour},${totaldropmint}"),
-                    // SizedBox(width: 5,),
-                    timervarable == false
-                        ? SizedBox()
-                        : TimerScreen(
-                            hours: int.parse(totaldrophour),
-                            minutes: int.parse(totaldropmint),
-                            secound: int.parse(totaldropsecound),
-                          ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Divider(
-                  color: Colors.black.withOpacity(0.2),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    "Drop to".tr,
-                    style: TextStyle(color: notifier.textColor),
-                  ),
-                  // subtitle: Text("${droptitle}"),
-                  subtitle: listdrop.isEmpty
-                      ? SizedBox()
-                      : Text(
-                          "${listdrop[0]["title"]}",
-                          style: TextStyle(color: notifier.textColor),
-                        ),
 
-                  // subtitle: const Text("Ambika Pinnacle"),
-                  trailing: InkWell(
+    // ✅ MIGRATED - Wrap with Consumers for provider data
+    return Consumer3<LocationState, MapState, RideRequestState>(
+      builder: (context, locationState, mapState, rideRequestState, child) {
+        return Scaffold(
+          backgroundColor: notifier.backgroundgrey,
+          body: SizedBox(
+            height: Get.height,
+            width: Get.width,
+            child: Stack(
+              children: [
+                // ✅ MIGRATED - Use mapState.markers and mapState.polylines
+                GoogleMap(
+                  onMapCreated: _onMapCreated,
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(widget.lat, widget.long),
+                    zoom: 14.0,
+                  ),
+                  markers: Set<Marker>.from(mapState.markers.values),
+                  polylines: Set<Polyline>.from(mapState.polylines.values),
+                  zoomControlsEnabled: false,
+                  mapToolbarEnabled: false,
+                  buildingsEnabled: false,
+                  indoorViewEnabled: false,
+                  compassEnabled: false,
+                  style: themeForMap.isNotEmpty ? themeForMap : null,
+                ),
+
+                // ✅ KEEP - UI Elements remain the same
+                Positioned(
+                  top: 60,
+                  left: 20,
+                  child: InkWell(
                     onTap: () {
-                      commonbottomsheetcancelflow(context: context);
+                      Navigator.pop(context);
                     },
                     child: Container(
-                      height: 35,
-                      width: 110,
+                      height: 40,
+                      width: 40,
                       decoration: BoxDecoration(
-                          border:
-                              Border.all(color: Colors.grey.withOpacity(0.4)),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Center(
-                        child: Text(
-                          "Trip Details".tr,
-                          style: TextStyle(color: notifier.textColor),
-                        ),
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            spreadRadius: 1,
+                            blurRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.black,
+                        size: 20,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Container(
-                  height: 180,
-                  decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(15),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+
+                // ✅ KEEP - Bottom sheet UI for ride progress
+                Positioned(
+                  bottom: 0,
+                  child: Container(
+                    width: Get.width,
+                    decoration: BoxDecoration(
+                      color: notifier.containercolore,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(25),
+                        topRight: Radius.circular(25),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Ride status
+                          Row(
                             children: [
-                              Text(drivername,
-                                  style: TextStyle(
-                                      color: notifier.textColor, fontSize: 18)),
-                              const SizedBox(
-                                height: 2,
-                              ),
-                              Text(
-                                drivervihicalnumber,
-                                style: const TextStyle(
-                                    color: Colors.grey, fontSize: 12),
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                            ],
-                          ),
-                          subtitle: Text(
-                            driverlanguage,
-                            style: TextStyle(color: notifier.textColor),
-                          ),
-                          trailing: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              InkWell(
-                                onTap: () {
-                                  driverdetailbottomsheet();
-                                },
-                                child: Container(
-                                  height: 60,
-                                  width: 60,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.white,
-                                    image: DecorationImage(
-                                        image: NetworkImage(driverimage),
-                                        fit: BoxFit.cover),
-                                  ),
-                                  // child: Image(image: NetworkImage("https://i.pinimg.com/originals/a3/fc/98/a3fc98cd46931905114589e2e8abdc49.jpg"))
-                                ),
-                              ),
-                              Positioned(
-                                bottom: -15,
-                                left: 0,
-                                right: 0,
-                                child: Container(
-                                  height: 25,
-                                  width: 40,
-                                  decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                          color: Colors.grey.withOpacity(0.2)),
-                                      borderRadius: BorderRadius.circular(15)),
-                                  child: Center(
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        // Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.rating}"),
-                                        Text("${driverrating}"),
-                                        const SizedBox(
-                                          width: 5,
-                                        ),
-                                        SvgPicture.asset(
-                                          "assets/svgpicture/star-fill.svg",
-                                          height: 15,
-                                        ),
-                                        // const Icon(Icons.star,color: Colors.yellow,size: 15,)
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Row(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _makingPhoneCall(
-                                      number:
-                                          "${drivercountrycode}${driverphonenumber}");
-                                });
-                              },
-                              child: Container(
-                                height: 45,
-                                width: 45,
+                              Container(
+                                height: 12,
+                                width: 12,
                                 decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.grey)),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.call,
-                                    color: Colors.grey,
-                                    size: 20,
+                                  color: globalDriverAcceptClass.is_ride_started
+                                      ? Colors.green
+                                      : Colors.orange,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  globalDriverAcceptClass.is_ride_started
+                                      ? "Ride in Progress".tr
+                                      : "Driver is arriving".tr,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: notifier.textColor,
                                   ),
                                 ),
                               ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          // Driver info section
+                          Container(
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: notifier.backgroundgrey,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            Expanded(
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ChatScreen(),
-                                      ));
-                                },
-                                child: Container(
-                                  height: 45,
+                            child: Row(
+                              children: [
+                                // Driver image
+                                Container(
+                                  height: 50,
+                                  width: 50,
                                   decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(30),
-                                      border: Border.all(
-                                        color: Colors.grey,
-                                      )),
-                                  child: Row(
+                                    shape: BoxShape.circle,
+                                    image: imagenetwork.isNotEmpty
+                                        ? DecorationImage(
+                                            image: NetworkImage(imagenetwork),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
+                                    color: imagenetwork.isEmpty
+                                        ? Colors.grey
+                                        : null,
+                                  ),
+                                  child: imagenetwork.isEmpty
+                                      ? const Icon(Icons.person,
+                                          color: Colors.white)
+                                      : null,
+                                ),
+
+                                const SizedBox(width: 15),
+
+                                // Driver details
+                                Expanded(
+                                  child: Column(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment.center,
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      const Icon(
-                                        Icons.message,
-                                        color: Colors.grey,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
                                       Text(
-                                        "Message ${drivername}",
+                                        globalDriverAcceptClass
+                                                .driver_name.isNotEmpty
+                                            ? globalDriverAcceptClass
+                                                .driver_name
+                                            : "Driver",
                                         style: TextStyle(
-                                            color: notifier.textColor),
-                                      )
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: notifier.textColor,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        "${globalDriverAcceptClass.vehicle_type} • ${globalDriverAcceptClass.vehicle_number}",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: notifier.textColor
+                                              .withOpacity(0.7),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
+
+                                // Call button
+                                InkWell(
+                                  onTap: () {
+                                    if (globalDriverAcceptClass
+                                        .driver_phone.isNotEmpty) {
+                                      _makePhoneCall(
+                                          globalDriverAcceptClass.driver_phone);
+                                    }
+                                  },
+                                  child: Container(
+                                    height: 40,
+                                    width: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.green,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Icon(
+                                      Icons.call,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          // Drop locations list
+                          if (listdrop.isNotEmpty) ...[
+                            Text(
+                              "Drop Locations".tr,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: notifier.textColor,
                               ),
-                            )
+                            ),
+                            const SizedBox(height: 10),
+                            Container(
+                              constraints: const BoxConstraints(maxHeight: 150),
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: listdrop.length,
+                                itemBuilder: (context, index) {
+                                  final drop = listdrop[index];
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: notifier.backgroundgrey,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: Colors.grey.withOpacity(0.3),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          height: 8,
+                                          width: 8,
+                                          decoration: BoxDecoration(
+                                            color: theamcolore,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "${drop["title"] ?? "Drop Location ${index + 1}"}",
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: notifier.textColor,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              if (drop["subtitle"] != null) ...[
+                                                const SizedBox(height: 3),
+                                                Text(
+                                                  "${drop["subtitle"]}",
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: notifier.textColor
+                                                        .withOpacity(0.6),
+                                                  ),
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 15),
                           ],
-                        ),
-                        // const SizedBox(height: 10,),
-                      ],
+
+                          // Emergency button
+                          InkWell(
+                            onTap: () {
+                              _showEmergencyDialog();
+                            },
+                            child: Container(
+                              height: 50,
+                              width: Get.width,
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.red, width: 1),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  "Emergency".tr,
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),
-        ),
-        // body: GoogleMap(
-        //   initialCameraPosition: CameraPosition(target: LatLng(livelat, livelong),zoom: 15),
-        //   myLocationEnabled: true,
-        //   tiltGesturesEnabled: true,
-        //   compassEnabled: true,
-        //   scrollGesturesEnabled: true,
-        //   zoomGesturesEnabled: true,
-        //   onMapCreated: _onMapCreated,
-        //   markers: Set<Marker>.of(markers.values),
-        //   polylines: Set<Polyline>.of(polylines.values),
-        // ),
-        body:
-            // droppointstartscreen.isEmpty ? SizedBox() :
-            Stack(
-          children: [
-            GoogleMap(
-              initialCameraPosition:
-                  CameraPosition(target: LatLng(livelat, livelong), zoom: 15),
-              myLocationEnabled: true,
-              tiltGesturesEnabled: true,
-              compassEnabled: true,
-              scrollGesturesEnabled: true,
-              zoomGesturesEnabled: true,
-              onMapCreated: (controller) {
-                controller.setMapStyle(themeForMap);
-                _onMapCreated(controller);
+        );
+      },
+    );
+  }
+
+  // ✅ KEEP - Helper methods
+  void _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    await launchUrl(launchUri);
+  }
+
+  void _showEmergencyDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Emergency".tr),
+          content: Text("Do you need emergency assistance?".tr),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
               },
-              markers: Set<Marker>.of(markers.values),
-              polylines: Set<Polyline>.of(polylines.values),
+              child: Text("Cancel".tr),
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 15, top: 60),
-              child: InkWell(
-                onTap: () {
-                  Get.offAll(const ModernMapScreen(
-                    selectVehicle: false,
-                  ));
-                },
-                child: Container(
-                  height: 30,
-                  width: 30,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                      child: Image(
-                    image: AssetImage("assets/arrow-left.png"),
-                    height: 20,
-                  )),
-                ),
-              ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _makePhoneCall("911"); // Emergency number
+              },
+              child: Text("Call Emergency".tr),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -1,2 +1,405 @@
-analyze the projct perfectly and and the loading I want to use the ModernLoadingWidget inested of any loading and  do the what in pasted content :
+Launching lib\main.dart on sdk gphone64 x86 64 in debug mode...
+lib/timer_screen.dart:50:5: Error: The getter 'socket' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'socket'.
+    socket.emit('Vehicle_Time_Request', {
+    ^^^^^^
+lib/timer_screen.dart:84:31: Error: The getter 'totaldropmint' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'totaldropmint'.
+            print("@@@@@@@@@@$totaldropmint");
+                              ^^^^^^^^^^^^^
+lib/timer_screen.dart:126:5: Error: The setter 'socket' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'socket'.
+    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
+    ^^^^^^
+lib/timer_screen.dart:134:5: Error: The getter 'socket' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'socket'.
+    socket.connect();
+    ^^^^^^
+lib/timer_screen.dart:220:45: Error: Required named parameter 'lat' must be provided.
+          Get.to(const DriverStartRideScreen());
+                                            ^
+lib/app_screen/driver_startride_screen.dart:47:9: Context: Found this candidate, but the arguments don't match.
+  const DriverStartRideScreen({
+        ^^^^^^^^^^^^^^^^^^^^^
+lib/timer_screen.dart:144:5: Error: The getter 'socket' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'socket'.
+    socket.onConnect((data) => print('Connection established Connected'));
+    ^^^^^^
+lib/timer_screen.dart:145:5: Error: The getter 'socket' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'socket'.
+    socket.onConnectError((data) => print('Connect Error: $data'));
+    ^^^^^^
+lib/timer_screen.dart:146:5: Error: The getter 'socket' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'socket'.
+    socket.onDisconnect((data) => print('Socket.IO server disconnected'));
+    ^^^^^^
+lib/timer_screen.dart:148:5: Error: The getter 'socket' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'socket'.
+    socket.on('Vehicle_Time_update$useridgloable', (vehicleTimeUpdate) {
+    ^^^^^^
+lib/timer_screen.dart:174:5: Error: The getter 'socket' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'socket'.
+    socket.on('Vehicle_Ride_Start_End$useridgloable', (vehicleRideStartEnd) {
+    ^^^^^^
+lib/timer_screen.dart:184:7: Error: The setter 'statusridestart' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'statusridestart'.
+      statusridestart = "";
+      ^^^^^^^^^^^^^^^
+lib/timer_screen.dart:185:7: Error: The setter 'totaldropmint' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'totaldropmint'.
+      totaldropmint = "";
+      ^^^^^^^^^^^^^
+lib/timer_screen.dart:190:9: Error: The setter 'statusridestart' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'statusridestart'.
+        statusridestart = vehicleRideStartEnd["status"];
+        ^^^^^^^^^^^^^^^
+lib/timer_screen.dart:191:9: Error: The setter 'totaldropmint' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'totaldropmint'.
+        totaldropmint = vehicleRideStartEnd["tot_min"].toString();
+        ^^^^^^^^^^^^^
+lib/timer_screen.dart:192:9: Error: The setter 'totaldrophour' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'totaldrophour'.
+        totaldrophour = vehicleRideStartEnd["tot_hour"].toString();
+        ^^^^^^^^^^^^^
+lib/timer_screen.dart:193:9: Error: The setter 'totaldropsecound' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'totaldropsecound'.
+        totaldropsecound = vehicleRideStartEnd["tot_second"].toString();
+        ^^^^^^^^^^^^^^^^
+lib/timer_screen.dart:197:45: Error: The getter 'totaldropmint' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'totaldropmint'.
+        print("+++++++totaldropmint++++:-- $totaldropmint");
+                                            ^^^^^^^^^^^^^
+lib/timer_screen.dart:198:45: Error: The getter 'totaldrophour' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'totaldrophour'.
+        print("+++++++totaldrophour++++:-- $totaldrophour");
+                                            ^^^^^^^^^^^^^
+lib/timer_screen.dart:199:39: Error: The getter 'statusridestart' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'statusridestart'.
+        print("++++++++ststus++++:-- $statusridestart");
+                                      ^^^^^^^^^^^^^^^
+lib/timer_screen.dart:201:13: Error: The getter 'statusridestart' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'statusridestart'.
+        if (statusridestart == "5") {
+            ^^^^^^^^^^^^^^^
+lib/timer_screen.dart:205:11: Error: The setter 'droppointstartscreen' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'droppointstartscreen'.
+          droppointstartscreen = [];
+          ^^^^^^^^^^^^^^^^^^^^
+lib/timer_screen.dart:206:11: Error: The setter 'listdrop' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'listdrop'.
+          listdrop = [];
+          ^^^^^^^^
+lib/timer_screen.dart:207:11: Error: The setter 'listdrop' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'listdrop'.
+          listdrop = vehicleRideStartEnd["drop_list"];
+          ^^^^^^^^
+lib/timer_screen.dart:208:59: Error: The getter 'listdrop' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'listdrop'.
+          print("xxxxxxxxx droppointstartscreen xxxxxxxxx$listdrop");
+                                                          ^^^^^^^^
+lib/timer_screen.dart:209:48: Error: The getter 'listdrop' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'listdrop'.
+          print("xxxxxxxxx listdrop length:- ${listdrop.length}");
+                                               ^^^^^^^^
+lib/timer_screen.dart:211:31: Error: The getter 'listdrop' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'listdrop'.
+          for (int i = 0; i < listdrop.length; i++) {
+                              ^^^^^^^^
+lib/timer_screen.dart:213:13: Error: The getter 'droppointstartscreen' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'droppointstartscreen'.
+            droppointstartscreen.add(PointLatLng(
+            ^^^^^^^^^^^^^^^^^^^^
+lib/timer_screen.dart:218:63: Error: The getter 'droppointstartscreen' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'droppointstartscreen'.
+                "vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
+                                                              ^^^^^^^^^^^^^^^^^^^^
+lib/timer_screen.dart:222:32: Error: The getter 'totaldropmint' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'totaldropmint'.
+          minutes1 = int.parse(totaldropmint);
+                               ^^^^^^^^^^^^^
+lib/timer_screen.dart:223:30: Error: The getter 'totaldrophour' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'totaldrophour'.
+          hours1 = int.parse(totaldrophour);
+                             ^^^^^^^^^^^^^
+lib/timer_screen.dart:224:31: Error: The getter 'totaldropsecound' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'totaldropsecound'.
+          seconds = int.parse(totaldropsecound);
+                              ^^^^^^^^^^^^^^^^
+lib/timer_screen.dart:241:20: Error: The getter 'statusridestart' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'statusridestart'.
+        } else if (statusridestart == "6") {
+                   ^^^^^^^^^^^^^^^
+lib/timer_screen.dart:244:11: Error: The setter 'droppointstartscreen' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'droppointstartscreen'.
+          droppointstartscreen = [];
+          ^^^^^^^^^^^^^^^^^^^^
+lib/timer_screen.dart:245:11: Error: The setter 'listdrop' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'listdrop'.
+          listdrop = [];
+          ^^^^^^^^
+lib/timer_screen.dart:246:11: Error: The setter 'listdrop' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'listdrop'.
+          listdrop = vehicleRideStartEnd["drop_list"];
+          ^^^^^^^^
+lib/timer_screen.dart:247:59: Error: The getter 'listdrop' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'listdrop'.
+          print("xxxxxxxxx droppointstartscreen xxxxxxxxx$listdrop");
+                                                          ^^^^^^^^
+lib/timer_screen.dart:248:45: Error: The getter 'listdrop' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'listdrop'.
+          print("xxxxxxxxx listdrop length${listdrop.length}");
+                                            ^^^^^^^^
+lib/timer_screen.dart:249:31: Error: The getter 'listdrop' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'listdrop'.
+          for (int i = 0; i < listdrop.length; i++) {
+                              ^^^^^^^^
+lib/timer_screen.dart:251:13: Error: The getter 'droppointstartscreen' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'droppointstartscreen'.
+            droppointstartscreen.add(PointLatLng(
+            ^^^^^^^^^^^^^^^^^^^^
+lib/timer_screen.dart:256:63: Error: The getter 'droppointstartscreen' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'droppointstartscreen'.
+                "vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
+                                                              ^^^^^^^^^^^^^^^^^^^^
+lib/timer_screen.dart:259:20: Error: The getter 'statusridestart' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'statusridestart'.
+        } else if (statusridestart == "7") {
+                   ^^^^^^^^^^^^^^^
+lib/timer_screen.dart:265:9: Error: The setter 'statusridestart' isn't defined for the class '_TimerScreenState'.
+ - '_TimerScreenState' is from 'package:qareeb/timer_screen.dart' ('lib/timer_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'statusridestart'.
+        statusridestart = "";
+        ^^^^^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:199:9: Error: The method 'rateBottomSheet' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'rateBottomSheet'.
+        rateBottomSheet();
+        ^^^^^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:291:20: Error: The getter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'finaltotal'.
+            child: finaltotal == 0
+                   ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:311:27: Error: The method 'rateBottomSheet' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'rateBottomSheet'.
+                          rateBottomSheet();
+                          ^^^^^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:331:39: Error: The getter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'finaltotal'.
+                            amount: '$finaltotal',
+                                      ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:380:29: Error: The method 'rateBottomSheet' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'rateBottomSheet'.
+                            rateBottomSheet();
+                            ^^^^^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:490:51: Error: The method 'rateBottomSheet' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'rateBottomSheet'.
+                                                  rateBottomSheet();
+                                                  ^^^^^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:691:51: Error: The method 'rateBottomSheet' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'rateBottomSheet'.
+                                                  rateBottomSheet();
+                                                  ^^^^^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:844:43: Error: The getter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'finaltotal'.
+                            "$currencyy ${finaltotal.toStringAsFixed(2)}",
+                                          ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:870:47: Error: The getter 'total' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'total'.
+                                "$currencyy ${total.toStringAsFixed(2)}",
+                                              ^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:883:29: Error: The getter 'coupontotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'coupontotal'.
+                            coupontotal == 0
+                            ^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:886:29: Error: The getter 'coupontotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'coupontotal'.
+                            coupontotal == 0
+                            ^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:902:59: Error: The getter 'coupontotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'coupontotal'.
+                                          "- $currencyy ${coupontotal.toStringAsFixed(2)}",
+                                                          ^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:913:25: Error: The getter 'coupontotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'coupontotal'.
+                        coupontotal == 0
+                        ^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:916:25: Error: The getter 'additionaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'additionaltotal'.
+                        additionaltotal == 0
+                        ^^^^^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:924:58: Error: The getter 'additionaltime' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'additionaltime'.
+                                      "Additional time(${additionaltime.toStringAsFixed(2)} mint)",
+                                                         ^^^^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:932:53: Error: The getter 'additionaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'additionaltotal'.
+                                      "$currencyy ${additionaltotal.toStringAsFixed(2)}",
+                                                    ^^^^^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:942:25: Error: The getter 'whthercharge' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'whthercharge'.
+                        whthercharge == 0
+                        ^^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:958:53: Error: The getter 'whthercharge' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'whthercharge'.
+                                      "$currencyy ${whthercharge.toStringAsFixed(2)}",
+                                                    ^^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:968:25: Error: The getter 'platformfee' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'platformfee'.
+                        platformfee == 0
+                        ^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:984:53: Error: The getter 'platformfee' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'platformfee'.
+                                      "$currencyy ${platformfee.toStringAsFixed(2)}",
+                                                    ^^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:1011:39: Error: The getter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'finaltotal'.
+                        "$currencyy ${finaltotal.toStringAsFixed(2)}",
+                                      ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:1090:53: Error: The getter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'finaltotal'.
+                                                if (finaltotal >
+                                                    ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:1094:51: Error: The getter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'finaltotal'.
+                                                  finaltotal -= walletValue;
+                                                  ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:1094:51: Error: The setter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'finaltotal'.
+                                                  finaltotal -= walletValue;
+                                                  ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:1100:57: Error: The getter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'finaltotal'.
+                                                      "$finaltotal");
+                                                        ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:1101:51: Error: The getter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'finaltotal'.
+                                                  finaltotal -= finaltotal;
+                                                  ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:1101:65: Error: The getter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'finaltotal'.
+                                                  finaltotal -= finaltotal;
+                                                                ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:1101:51: Error: The setter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'finaltotal'.
+                                                  finaltotal -= finaltotal;
+                                                  ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:1110:88: Error: The getter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'finaltotal'.
+                                                      "++++++ finaltotal +++++ : --   $finaltotal");
+                                                                                       ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:1117:49: Error: The setter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'finaltotal'.
+                                                finaltotal = finaltotalsecounde;
+                                                ^^^^^^^^^^
+lib/app_screen/ride_complete_payment_screen.dart:1152:48: Error: The getter 'finaltotal' isn't defined for the class '_RideCompletePaymentScreenState'.
+ - '_RideCompletePaymentScreenState' is from 'package:qareeb/app_screen/ride_complete_payment_screen.dart' ('lib/app_screen/ride_complete_payment_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'finaltotal'.
+                                        onTap: finaltotal == 0
+                                               ^^^^^^^^^^
+lib/app_screen/counter_bottom_sheet.dart:244:43: Error: The getter 'textfieldlist' isn't defined for the class '_CounterBottomSheetState'.
+ - '_CounterBottomSheetState' is from 'package:qareeb/app_screen/counter_bottom_sheet.dart' ('lib/app_screen/counter_bottom_sheet.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'textfieldlist'.
+                                          textfieldlist.isNotEmpty
+                                          ^^^^^^^^^^^^^
+lib/app_screen/counter_bottom_sheet.dart:272:43: Error: The getter 'textfieldlist' isn't defined for the class '_CounterBottomSheetState'.
+ - '_CounterBottomSheetState' is from 'package:qareeb/app_screen/counter_bottom_sheet.dart' ('lib/app_screen/counter_bottom_sheet.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'textfieldlist'.
+                                          textfieldlist.isEmpty
+                                          ^^^^^^^^^^^^^
+lib/app_screen/counter_bottom_sheet.dart:342:29: Error: The getter 'textfieldlist' isn't defined for the class '_CounterBottomSheetState'.
+ - '_CounterBottomSheetState' is from 'package:qareeb/app_screen/counter_bottom_sheet.dart' ('lib/app_screen/counter_bottom_sheet.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'textfieldlist'.
+                            textfieldlist.isEmpty
+                            ^^^^^^^^^^^^^
+lib/app_screen/counter_bottom_sheet.dart:351:50: Error: The getter 'textfieldlist' isn't defined for the class '_CounterBottomSheetState'.
+ - '_CounterBottomSheetState' is from 'package:qareeb/app_screen/counter_bottom_sheet.dart' ('lib/app_screen/counter_bottom_sheet.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'textfieldlist'.
+                                      itemCount: textfieldlist.length,
+                                                 ^^^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
 
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\Users\ModWir\dev\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 13s
+Error: Gradle task assembleDebug failed with exit code 1
+
+Exited (1).

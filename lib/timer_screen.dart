@@ -217,7 +217,7 @@ class _TimerScreenState extends State<TimerScreen> {
             print(
                 "vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
           }
-          Get.to(const DriverStartrideScreen());
+          Get.to(const DriverStartRideScreen());
           // _remainingTime = 0;
           minutes1 = int.parse(totaldropmint);
           hours1 = int.parse(totaldrophour);
@@ -237,7 +237,7 @@ class _TimerScreenState extends State<TimerScreen> {
 
           // sur();
           // _startTimer();
-          // Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartrideScreen(),));
+          // Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartRideScreen(),));
         } else if (statusridestart == "6") {
           print("6666666666666666");
           timervarable = false;
@@ -255,7 +255,7 @@ class _TimerScreenState extends State<TimerScreen> {
             print(
                 "vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
           }
-          // Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartrideScreen(),));
+          // Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartRideScreen(),));
         } else if (statusridestart == "7") {
           print("7777777777777777");
           Get.to(const RideCompletePaymentScreen());
