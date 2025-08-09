@@ -66,6 +66,11 @@ num walleteamount = 0.00;
 var lathomecurrent;
 var longhomecurrent;
 
+var d_id;
+String driver_id = "";
+String price = "0";
+String request_id = "";
+
 // ===========================================
 // REFRESH DATA CLASS
 // ===========================================

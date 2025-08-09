@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/app_screen/driver_detail_screen.dart';
 import 'package:qareeb/app_screen/home_screen.dart';
 import 'package:qareeb/providers/location_state.dart';
 import 'package:qareeb/providers/map_state.dart';
@@ -139,89 +140,46 @@ class GlobalDriverAcceptClass extends GetxController {
     update();
   }
 
-  // ✅ MIGRATED DRIVER DETAIL FUNCTION WITH PROVIDERS
+// ✅ LEGACY FUNCTION TO MAINTAIN COMPATIBILITY WITH OLD CALLS
   void driverdetailfunction({
     required dynamic context,
-    required String name,
-    required String phone,
-    required String image,
-    required String id,
-    required String rating,
     required double lat,
-    required double lon,
+    required double long,
+    required String d_id,
+    required String request_id,
   }) {
     try {
       if (kDebugMode) {
-        print("=== Driver Detail Function Called ===");
-        print("Driver ID: $id");
-        print("Driver Name: $name");
-        print("Driver Phone: $phone");
-        print("Driver Rating: $rating");
-        print("Driver Location: $lat, $lon");
+        print("=== Legacy Driver Detail Function Called ===");
+        print("Driver ID: $d_id");
+        print("Request ID: $request_id");
+        print("Location: $lat, $long");
       }
 
-      // Update this controller's data
-      setDriverData(
-        id: id,
-        name: name,
-        phone: phone,
-        image: image,
-        rating: rating,
-        vType: vehicle_type,
-        vNumber: vehicle_number,
-        vColor: vehicle_color,
-        lat: lat,
-        lng: lon,
-      );
+      // Set the global variables
+      this.request_id = request_id;
+      driver_id = d_id;
 
-      // Update provider states if context is available
-      if (context != null) {
-        // Update RideRequestState with driver info
-        context.read<RideRequestState>().updateAcceptedDriver({
-          'driver_id': id,
-          'driver_name': name,
-          'driver_phone': phone,
-          'driver_image': image,
-          'driver_rating': rating,
-          'driver_lat': lat.toString(),
-          'driver_lng': lon.toString(),
-          'vehicle_type': vehicle_type,
-          'vehicle_number': vehicle_number,
-          'vehicle_color': vehicle_color,
-        });
-
-        // Update MapState with driver marker
-        final mapState = context.read<MapState>();
-        if (lat != 0.0 && lon != 0.0) {
-          // Add or update driver marker on map
-          mapState.addDriverMarker(
-            driverId: id,
-            position: LatLng(lat, lon),
-            driverName: name,
-            vehicleType: vehicle_type,
-          );
-        }
-
-        // Emit socket event for driver acceptance
-        SocketService.instance.emit('Driver_Accepted', {
-          'request_id': request_id,
-          'driver_id': id,
-          'user_id': useridgloable,
-          'driver_lat': lat.toString(),
-          'driver_lng': lon.toString(),
-        });
-      }
+      // Update global variables
 
       // Set driver as accepted
       setDriverAccepted(true);
       setRideStatus("driver_accepted");
 
+      // Navigate to driver detail screen
+      if (context != null) {
+        Get.to(() => DriverDetailScreen(
+              lat: lat,
+              long: long,
+            ));
+      }
+
       if (kDebugMode) {
-        print("✅ Driver detail function completed successfully");
+        print("✅ Legacy driver detail function completed successfully");
       }
     } catch (e) {
       if (kDebugMode) {
-        print("❌ Error in driverdetailfunction: $e");
+        print("❌ Error in legacy driverdetailfunction: $e");
       }
     }
   }

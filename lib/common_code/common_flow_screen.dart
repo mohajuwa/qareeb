@@ -32,7 +32,6 @@ import 'global_variables.dart';
 import 'modern_loading_widget.dart';
 import 'toastification.dart';
 
-String request_id = "";
 GlobalDriverAcceptClass globalDriverAcceptClass =
     Get.put(GlobalDriverAcceptClass());
 
