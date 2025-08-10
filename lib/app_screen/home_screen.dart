@@ -15,6 +15,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/controllers/app_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/vihical_calculate_api_controller.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
@@ -35,33 +36,16 @@ import 'package:http/http.dart' as http;
 import 'counter_bottom_sheet.dart';
 import 'my_ride_screen.dart';
 
-int midseconde = 0;
-// int select = 0;
-int select = -1;
-double vihicalrice = 0.00;
-double totalkm = 0.00;
-String tot_time = "";
-String tot_hour = "";
-String tot_secound = "";
-String vihicalname = "";
-String vihicalimage = "";
-String vehicle_id = "";
+final appController = AppController.instance;
 
-String extratime = "";
-
-String timeincressstatus = "";
-String request_id = "";
-String driver_id = "";
-var useridgloable;
-
-bool loadertimer = false;
-
-bool otpstatus = false;
 void resetAllRideData() {
-  print(
-      "--- 🔄 Resetting ALL global ride data by creating NEW controllers... ---");
+  print("--- 🔄 Resetting ALL global ride data by using AppController... ---");
 
-  // Reset all other ride-related global variables
+  // Use the centralized controller instead of global variables
+  final appController = AppController.instance;
+  appController.resetAllRideData();
+
+  // Reset pickup_drop_point.dart variables
   latitudepick = 0.00;
   longitudepick = 0.00;
   latitudedrop = 0.00;
@@ -70,24 +54,19 @@ void resetAllRideData() {
   picksubtitle = "";
   droptitle = "";
   dropsubtitle = "";
-  droptitlelist = [];
-  destinationlat = [];
-  onlypass = [];
-  dropprice = 0.0;
-  minimumfare = 0.0;
-  maximumfare = 0.0;
+  droptitlelist.clear();
+  destinationlat.clear();
+  onlypass.clear();
+  destinationlong.clear();
+  picanddrop = true;
   amountresponse = "";
   responsemessage = "";
-  midseconde = 0;
-  select = -1;
-  vihicalrice = 0.00;
-  totalkm = 0.00;
-  tot_time = "";
-  tot_hour = "";
-  tot_secound = "";
-  vihicalname = "";
-  vihicalimage = "";
-  vehicle_id = "";
+
+  // Clear controllers
+  pickupcontroller.clear();
+  dropcontroller.clear();
+
+  print("--- ✅ All ride data reset completed ---");
 }
 
 class HomeScreen extends StatefulWidget {
@@ -227,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
           "++++hjhhhhhhhhhhhhhhhhhh+++++: ${acceptvehrequest["uid"].toString()}");
       loadertimer = true;
 
-      request_id = acceptvehrequest["request_id"].toString();
+      appController.requestId.value = acceptvehrequest["request_id"].toString();
       driver_id = acceptvehrequest["uid"].toString();
 
       if (acceptvehrequest["c_id"]
@@ -752,12 +731,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                               "+++++_iconPathsbiddingoff++++++++++:-- $_iconPathsbiddingoff");
                                           setState(() {});
 
-                                          midseconde =
+                                          appController.selectedVehicleIndex.value =
                                               modual_calculateController
                                                   .modualCalculateApiModel!
                                                   .caldriver![index]
                                                   .id!;
-                                          vihicalrice = double.parse(
+                                          appController.vehiclePrice.value = double.parse(
                                               modual_calculateController
                                                   .modualCalculateApiModel!
                                                   .caldriver![index]
@@ -1474,7 +1453,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                     setState(() {
                                                                                       couponadd[index] = false;
                                                                                       dropprice = mainamount as double;
-                                                                                      vihicalrice = double.parse(mainamount);
+                                                                                      appController.vehiclePrice.value = double.parse(mainamount);
                                                                                       couponname = "";
                                                                                       couponId = "";
 
@@ -1519,7 +1498,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                         }
                                                                                       });
 
-                                                                                      vihicalrice = vihicalrice - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount!);
+                                                                                      appController.vehiclePrice.value = vihicalrice - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount!);
 
                                                                                       couponId = paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString();
 
@@ -1717,7 +1696,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         (value) {
                                           print("+++++${value["id"]}");
                                           setState(() {});
-                                          request_id = value["id"].toString();
+                                          appController.requestId.value = value["id"].toString();
                                           socateempt();
                                         },
                                       );

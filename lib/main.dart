@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/controllers/ride_controller.dart';
 import 'auth_screen/splase_screen.dart';
 import 'common_code/colore_screen.dart';
 import 'common_code/language_translate.dart';
 
 Future<void> main() async {
   // Get.put(SocketService(), permanent: true);
-
+  Get.put(RideController());
   runApp(const MyApp());
 }
 

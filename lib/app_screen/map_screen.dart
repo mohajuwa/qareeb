@@ -20,6 +20,8 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
+import 'package:qareeb/controllers/app_controller.dart';
+import 'package:qareeb/controllers/ride_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:qareeb/api_code/coupon_payment_api_contoller.dart';
@@ -78,7 +80,7 @@ num walleteamount = 0.00;
 late IO.Socket socket;
 var lathomecurrent;
 var longhomecurrent;
-
+final appController = AppController.instance;
 AnimationController? controller;
 late Animation<Color?> colorAnimation;
 
@@ -175,144 +177,83 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // late AnimationController controller;
   // late Animation<Color?> colorAnimation;
 
-// COMPLETE socketConnect method:
   socketConnect() async {
     try {
+      final appController = AppController.instance;
       SharedPreferences preferences = await SharedPreferences.getInstance();
       var uid = preferences.getString("userLogin");
       var currency = preferences.getString("currenci");
 
-      // Check if data exists before using null check operator
       if (uid == null) {
         if (kDebugMode) {
           print("Error: User login data not found in SharedPreferences");
-          print("uid: $uid");
         }
         Get.offAll(() => const OnboardingScreen());
         return;
       }
 
-      // Currency can be null, we'll handle it gracefully
-      if (currency == null) {
-        if (kDebugMode) {
-          print("Warning: Currency data not found, using default");
-        }
-        // Set a default currency or empty object
-        currencyy = {};
-      }
-
-      // Now safe to decode JSON
+      // Decode user data safely
       try {
         decodeUid = jsonDecode(uid);
         if (currency != null) {
           currencyy = jsonDecode(currency);
+        } else {
+          currencyy = {};
         }
       } catch (e) {
         if (kDebugMode) {
           print("Error decoding JSON: $e");
-          print("uid content: $uid");
-          print("currency content: $currency");
         }
-        // Don't redirect to login for currency decode errors, only for uid errors
-        if (uid == null || uid.isEmpty) {
-          await preferences.remove("userLogin");
-          await preferences.remove("currenci");
-          Get.offAll(() => const OnboardingScreen());
-          return;
-        }
-        // If only currency failed, continue with empty currency
-        currencyy = {};
-      }
-
-      // Check if decoded data has required fields
-      if (decodeUid == null || decodeUid['id'] == null) {
-        if (kDebugMode) {
-          print("Error: Decoded user data is invalid");
-          print("decodeUid: $decodeUid");
-        }
-        await preferences.remove("userLogin");
         Get.offAll(() => const OnboardingScreen());
         return;
       }
 
+      // Set user variables
       userid = decodeUid['id'];
       username = decodeUid["name"] ?? "";
-      useridgloable = decodeUid['id'];
+
+      // Update app controller
+      appController.userId.value = userid.toString();
+      appController.userName.value = username;
+      useridgloable.value = userid.toString();
 
       if (kDebugMode) {
-        print("++++:---  $userid");
-        print("++ currencyy ++:---  $currencyy");
-        print("++ username ++:---  $username");
+        print("User data loaded: $userid, $username");
       }
 
+      // Initialize socket through service
+      appController.socketService.initSocket(userid.toString());
+
+      // Set up socket listeners
+      _setupSocketListeners();
+
       setState(() {});
-
-      // INITIALIZE SOCKET HERE FIRST - This is critical!
-      socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
-        'autoConnect': false,
-        'transports': ['websocket'],
-        'extraHeaders': {'Accept': '*/*'},
-        'timeout': 30000,
-        'forceNew': true,
-      });
-
-      // Mark socket as initialized IMMEDIATELY after creation
-      socketInitialized = true;
-
-      // Set up basic socket events
-      socket.onConnect((_) {
-        if (kDebugMode) {
-          print('Socket Connected successfully');
-        }
-        socket.emit('message', 'Hello from Flutter');
-      });
-
-      socket.onDisconnect((_) {
-        if (kDebugMode) {
-          print('Socket Disconnected');
-        }
-      });
-
-      socket.onConnectError((error) {
-        if (kDebugMode) {
-          print('Socket Connection Error: $error');
-        }
-      });
-
-      // Connect the socket
-      socket.connect();
-
-      // Wait a moment for socket to initialize properly, then call _connectSocket
-      await Future.delayed(Duration(milliseconds: 200));
-
-      // Now it's safe to call _connectSocket
-      _connectSocket();
     } catch (e) {
       if (kDebugMode) {
         print("Error in socketConnect: $e");
       }
-
-      // Only redirect to login if it's a critical error
-      // Don't redirect for minor issues like socket connection problems
-      if (e.toString().contains('userLogin') || userid == null) {
-        try {
-          SharedPreferences preferences = await SharedPreferences.getInstance();
-          await preferences.remove("userLogin");
-          await preferences.remove("currenci");
-        } catch (prefError) {
-          if (kDebugMode) {
-            print("Error clearing preferences: $prefError");
-          }
-        }
-        Get.offAll(() => const OnboardingScreen());
-      } else {
-        // For socket connection errors, just log and continue
-        if (kDebugMode) {
-          print(
-              "Socket connection failed, but user is logged in. Continuing...");
-        }
-      }
+      Get.offAll(() => const OnboardingScreen());
     }
+  }
+
+  void _setupSocketListeners() {
+    final socketService = appController.socketService;
+
+    // Home event listener
+    socketService.on('home', (data) {
+      if (kDebugMode) {
+        print("🏠 Home event: $data");
+      }
+      // Handle home event
+    });
+
+    // Vehicle request acceptance
+    socketService.on('acceptvehrequest${appController.userId.value}', (data) {
+      if (kDebugMode) {
+        print("🚗 Accept vehicle request: $data");
+      }
+      // Handle acceptance
+    });
   }
 
 // COMPLETE _connectSocket method:
@@ -1028,43 +969,44 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   void socateemptrequesttimeout() {
-    emitSocketEvent('Vehicle_Ride_Cancel', {
-      'uid': "$useridgloable",
-      'driverid': calculateController.calCulateModel!.driverId!,
-    });
+    appController.socketService.emitVehicleRideCancel(
+      useridgloable.value.isNotEmpty
+          ? useridgloable.value
+          : useridgloable.toString(),
+      calculateController.calCulateModel!.driverId!,
+    );
   }
 
 // Add this to your dispose method:
   @override
   void dispose() {
-    // ✅ FIX: Dispose the controller to prevent memory leaks.
-    controller?.dispose();
-
-    if (socketInitialized) {
-      try {
-        socket.dispose();
-      } catch (e) {
-        if (kDebugMode) {
-          print("Error disposing socket: $e");
-        }
-      }
-      socketInitialized = false;
+    if (kDebugMode) {
+      print("🗑️ MapScreen disposing...");
     }
+
+    // Dispose animation controller properly
+    if (controller != null) {
+      controller!.dispose();
+      controller = null;
+    }
+
+    // Don't dispose socket here - it's managed by SocketService
+    // The AppController will handle socket cleanup
+
     super.dispose();
   }
 
 // For other files that need to emit socket events, create helper methods:
 // These methods can be called from other files safely
 
-  void emitVehicleRideCancel(String uid, List driverid) {
-    emitSocketEvent('Vehicle_Ride_Cancel', {
-      'uid': uid,
-      'driverid': driverid,
-    });
+  void emitVehicleRideCancel(String uid, dynamic driverid) {
+    final appController = AppController.instance;
+    appController.socketService.emitVehicleRideCancel(uid, driverid);
   }
 
   void emitVehiclePaymentChange(String userid, String dId, int paymentId) {
-    emitSocketEvent('Vehicle_P_Change', {
+    final appController = AppController.instance;
+    appController.socketService.emit('Vehicle_P_Change', {
       'userid': userid,
       'd_id': dId,
       'payment_id': paymentId,
@@ -1072,7 +1014,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   void emitVehicleRideComplete(String dId, String requestId) {
-    emitSocketEvent('Vehicle_Ride_Complete', {
+    final appController = AppController.instance;
+    appController.socketService.emit('Vehicle_Ride_Complete', {
       'd_id': dId,
       'request_id': requestId,
     });
@@ -1080,7 +1023,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   void emitSendChat(
       String senderId, String receiverId, String message, String status) {
-    emitSocketEvent('Send_Chat', {
+    final appController = AppController.instance;
+    appController.socketService.emit('Send_Chat', {
       'sender_id': senderId,
       'recevier_id': receiverId,
       'message': message,
@@ -1090,24 +1034,18 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   void emitAcceptBidding(
       String uid, String dId, String requestId, String price) {
-    emitSocketEvent('Accept_Bidding', {
-      'uid': uid,
-      'd_id': dId,
-      'request_id': requestId,
-      'price': price,
-    });
+    final appController = AppController.instance;
+    appController.socketService.emitAcceptBidding(uid, dId, requestId, price);
   }
 
   void emitVehicleRequest(String requestId, List driverId, String cId) {
-    emitSocketEvent('vehiclerequest', {
-      'requestid': requestId,
-      'driverid': driverId,
-      'c_id': cId,
-    });
+    final appController = AppController.instance;
+    appController.socketService.emitVehicleRequest(requestId, driverId, cId);
   }
 
   void emitVehicleTimeRequest(String uid, String dId) {
-    emitSocketEvent('Vehicle_Time_Request', {
+    final appController = AppController.instance;
+    appController.socketService.emit('Vehicle_Time_Request', {
       'uid': uid,
       'd_id': dId,
     });
@@ -1565,10 +1503,14 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                       print(
                                           "+++ removeApi +++:- ${value["driver_list"]}");
 
-                                      socket.emit('Vehicle_Ride_Cancel', {
-                                        'uid': "$useridgloable",
-                                        'driverid': value["driver_list"],
-                                      });
+                                      appController.socketService
+                                          .emitVehicleRideCancel(
+                                        appController
+                                                .globalUserId.value.isNotEmpty
+                                            ? useridgloable.value
+                                            : useridgloable.toString(),
+                                        value["driver_list"],
+                                      );
                                     },
                                   );
                                 },
@@ -5558,18 +5500,17 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                               "++CANCEL LOADER++:- ${cancelloader}");
                                           removeRequest
                                               .removeApi(
-                                                  uid: useridgloable.toString())
+                                                  uid: appController
+                                                      .globalUserId
+                                                      .toString())
                                               .then(
                                             (value) {
-                                              socket.emit('AcceRemoveOther', {
+                                              appController.socketService
+                                                  .emit('AcceRemoveOther', {
                                                 'requestid': request_id,
                                                 'driverid': calculateController
                                                     .calCulateModel!.driverId!,
                                               });
-                                              // socket.emit('Vehicle_Ride_Cancel',{
-                                              //   'uid': "$useridgloable",
-                                              //   'driverid' : value["driver_list"],
-                                              // });
                                               Future.delayed(
                                                   Duration(microseconds: 500),
                                                   () {
@@ -5583,8 +5524,10 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                           );
                                           if (controller != null &&
                                               controller!.isAnimating) {
-                                            print("vgvgvgvgvgvgvgvgvgvgv");
-                                            controller!.dispose();
+                                            print(
+                                                "🔄 Stopping controller and resetting data");
+                                            controller!.stop();
+                                            controller!.reset();
                                             resetAllRideData();
                                           }
                                         });
