@@ -23,9 +23,6 @@ import '../common_code/common_button.dart';
 import 'map_screen.dart';
 import 'my_ride_screen.dart';
 
-TextEditingController pickupcontroller = TextEditingController();
-TextEditingController dropcontroller = TextEditingController();
-
 double latitudepick = 0.00;
 double longitudepick = 0.00;
 double latitudedrop = 0.00;
@@ -207,7 +204,7 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                   selectvihical: false,
                                 ));
                                 print(
-                                    "++++dropcontroller++++:--- ${dropcontroller.text}");
+                                    "++++appController.dropController++++:--- ${appController.dropController.text}");
                               },
                               child: Image(
                                 image: AssetImage("assets/arrow-left.png"),
@@ -335,7 +332,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                       TextField(
                                         style: TextStyle(
                                             color: notifier.textColor),
-                                        controller: pickupcontroller,
+                                        controller:
+                                            appController.pickupController,
                                         focusNode: focusNode1,
                                         onTap: () {
                                           setState(() {
@@ -347,8 +345,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                           setState(() {
                                             mapSuggestGetApiController.mapApi(
                                                 context: context,
-                                                suggestkey:
-                                                    pickupcontroller.text);
+                                                suggestkey: appController
+                                                    .pickupController.text);
                                           });
                                         },
                                         decoration: InputDecoration(
@@ -379,8 +377,10 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                     .tr,
                                             hintStyle: TextStyle(
                                                 color: notifier.textColor),
-                                            suffixIcon: pickupcontroller
-                                                    .text.isEmpty
+                                            suffixIcon: appController
+                                                    .pickupController
+                                                    .text
+                                                    .isEmpty
                                                 ? const SizedBox()
                                                 : Padding(
                                                     padding:
@@ -389,7 +389,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                     child: InkWell(
                                                       onTap: () {
                                                         setState(() {
-                                                          pickupcontroller
+                                                          appController
+                                                              .pickupController
                                                               .clear();
                                                         });
                                                       },
@@ -423,7 +424,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                         height: 5,
                                       ),
                                       TextField(
-                                        controller: dropcontroller,
+                                        controller:
+                                            appController.dropController,
                                         focusNode: focusNode2,
                                         onTap: () {
                                           setState(() {
@@ -437,10 +439,10 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                           setState(() {
                                             mapSuggestGetApiController.mapApi(
                                                 context: context,
-                                                suggestkey:
-                                                    dropcontroller.text);
+                                                suggestkey: appController
+                                                    .dropController.text);
                                             print(
-                                                "---:-  ${dropcontroller.text}");
+                                                "---:-  ${appController.dropController.text}");
                                           });
                                         },
                                         decoration: InputDecoration(
@@ -469,8 +471,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                             hintText: "Drop location".tr,
                                             hintStyle: TextStyle(
                                                 color: notifier.textColor),
-                                            suffixIcon: dropcontroller
-                                                    .text.isEmpty
+                                            suffixIcon: appController
+                                                    .dropController.text.isEmpty
                                                 ? const SizedBox()
                                                 : Padding(
                                                     padding:
@@ -479,7 +481,8 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                     child: InkWell(
                                                       onTap: () {
                                                         setState(() {
-                                                          dropcontroller
+                                                          appController
+                                                              .dropController
                                                               .clear();
                                                         });
                                                       },
@@ -762,7 +765,7 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                             ? const SizedBox()
                             : picanddrop == true
                                 ? const SizedBox()
-                                : pickupcontroller.text.isEmpty
+                                : appController.pickupController.text.isEmpty
                                     ? const SizedBox()
                                     : GetBuilder<MapSuggestGetApiController>(
                                         builder: (mapSuggestGetApiController) {
@@ -787,7 +790,9 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                       print(
                                                           "****:--- ${mapSuggestGetApiController.mapApiModel!.results?[index].name}");
                                                       setState(() {
-                                                        pickupcontroller.text =
+                                                        appController
+                                                                .pickupController
+                                                                .text =
                                                             mapSuggestGetApiController
                                                                 .mapApiModel!
                                                                 .results![index]
@@ -828,10 +833,13 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                             ?.results
                                                             ?.clear();
                                                         focusNode1.unfocus();
-                                                        if (pickupcontroller
+                                                        if (appController
+                                                                .pickupController
                                                                 .text
                                                                 .isNotEmpty &&
-                                                            dropcontroller.text
+                                                            appController
+                                                                .dropController
+                                                                .text
                                                                 .isNotEmpty) {
                                                           driveridloader =
                                                               false;
@@ -1107,7 +1115,7 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                             ? const SizedBox()
                             : picanddrop == false
                                 ? const SizedBox()
-                                : dropcontroller.text.isEmpty
+                                : appController.dropController.text.isEmpty
                                     ? const SizedBox()
                                     : GetBuilder<MapSuggestGetApiController>(
                                         builder: (mapSuggestGetApiController) {
@@ -1136,7 +1144,9 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                             "++++++++++++++++lat++++++++++++++++ ${mapSuggestGetApiController.mapApiModel!.results![index].geometry!.location!.lat!}");
                                                         print(
                                                             "++++++++++++++++lng++++++++++++++++ ${mapSuggestGetApiController.mapApiModel!.results![index].geometry!.location!.lng!}");
-                                                        dropcontroller.text =
+                                                        appController
+                                                                .dropController
+                                                                .text =
                                                             mapSuggestGetApiController
                                                                 .mapApiModel!
                                                                 .results![index]
@@ -1177,10 +1187,13 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                             ?.results
                                                             ?.clear();
                                                         focusNode2.unfocus();
-                                                        if (pickupcontroller
+                                                        if (appController
+                                                                .pickupController
                                                                 .text
                                                                 .isNotEmpty &&
-                                                            dropcontroller.text
+                                                            appController
+                                                                .dropController
+                                                                .text
                                                                 .isNotEmpty) {
                                                           driveridloader =
                                                               false;
@@ -1545,9 +1558,11 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                                 mapSuggestGetApiController
                                                     .mapApiModel?.results
                                                     ?.clear();
-                                                if (pickupcontroller
-                                                        .text.isNotEmpty &&
-                                                    dropcontroller
+                                                if (appController
+                                                        .pickupController
+                                                        .text
+                                                        .isNotEmpty &&
+                                                    appController.dropController
                                                         .text.isNotEmpty) {
                                                   driveridloader = false;
                                                   socket.close();

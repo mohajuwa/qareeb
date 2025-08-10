@@ -1,10 +1,15 @@
 // lib/controllers/app_controller.dart
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../services/socket_service.dart';
 
 class AppController extends GetxController {
   static AppController get instance => Get.find();
+
+  // Controllers that were causing memory leaks
+  final pickupController = TextEditingController();
+  final dropController = TextEditingController();
 
   // Ride state - REPLACE ALL GLOBAL VARIABLES
   final RxDouble vehiclePrice = 0.0.obs;
@@ -78,6 +83,10 @@ class AppController extends GetxController {
     dropTitle.value = "";
     dropSubtitle.value = "";
     dropTitleList.clear();
+
+    // Clear controllers
+    pickupController.clear();
+    dropController.clear();
   }
 
   void showLoading(String message) {
@@ -95,6 +104,11 @@ class AppController extends GetxController {
     if (kDebugMode) {
       print("🗑️ AppController disposing");
     }
+
+    // Dispose controllers to prevent memory leaks
+    pickupController.dispose();
+    dropController.dispose();
+
     socketService.disconnect();
     super.onClose();
   }

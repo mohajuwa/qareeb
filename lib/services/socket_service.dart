@@ -1,105 +1,131 @@
 // lib/services/socket_service.dart
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 
 class SocketService extends GetxController {
   static SocketService get instance => Get.find();
 
   IO.Socket? _socket;
-  bool _isConnected = false;
-  String? _currentUserId;
+  final RxBool _isConnected = false.obs;
+  int reconnectCount = 0;
 
-  bool get isConnected => _isConnected && (_socket?.connected ?? false);
+  bool get isConnected => _isConnected.value;
 
-  void initSocket(String userId) {
-    if (_socket?.connected == true && _currentUserId == userId) {
+  @override
+  void onInit() {
+    super.onInit();
+    _initializeSocket();
+  }
+
+  void _initializeSocket() {
+    if (_socket != null) {
       if (kDebugMode) {
-        print('🔌 Socket already connected for user $userId');
+        print("⚠️ Socket already initialized, skipping");
       }
       return;
     }
 
-    // Disconnect existing socket if user changed
-    if (_currentUserId != userId) {
-      disconnect();
+    if (kDebugMode) {
+      print("🔌 Initializing socket connection...");
     }
-
-    _currentUserId = userId;
 
     _socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
       'autoConnect': false,
       'transports': ['websocket'],
       'extraHeaders': {'Accept': '*/*'},
       'timeout': 30000,
-      'forceNew': true,
+      'forceNew': false, // Prevent multiple connections
     });
 
-    _setupEventHandlers(userId);
-    _socket?.connect();
+    _setupSocketListeners();
+    connect();
   }
 
-  void _setupEventHandlers(String userId) {
+  void _setupSocketListeners() {
     _socket?.onConnect((_) {
       if (kDebugMode) {
-        print('✅ Socket connected successfully for user $userId');
+        print("✅ Socket connected successfully");
       }
-      _isConnected = true;
-      _socket?.emit('message', 'Hello from Flutter');
+      _isConnected.value = true;
+      reconnectCount = 0;
     });
 
     _socket?.onDisconnect((_) {
       if (kDebugMode) {
-        print('❌ Socket disconnected');
+        print("❌ Socket disconnected");
       }
-      _isConnected = false;
+      _isConnected.value = false;
     });
 
-    _socket?.onConnectError((error) {
+    _socket?.onConnectError((data) {
       if (kDebugMode) {
-        print('💥 Socket connection error: $error');
+        print("🚫 Socket connection error: $data");
       }
-      _isConnected = false;
+      _isConnected.value = false;
+      _handleReconnect();
     });
 
-    // Add ride-specific listeners
-    _socket?.on('home', (data) {
+    _socket?.onError((data) {
       if (kDebugMode) {
-        print('🏠 Home event received: $data');
+        print("💥 Socket error: $data");
       }
-      // Handle home event - you can add callback here
-    });
-
-    _socket?.on('acceptvehrequest$userId', (data) {
-      if (kDebugMode) {
-        print('🚗 Vehicle request accepted: $data');
-      }
-      // Handle vehicle request acceptance
     });
   }
 
+  void _handleReconnect() {
+    if (reconnectCount < 5) {
+      reconnectCount++;
+      if (kDebugMode) {
+        print("🔄 Attempting reconnect #$reconnectCount");
+      }
+      Future.delayed(Duration(seconds: 2 * reconnectCount), () {
+        connect();
+      });
+    }
+  }
+
+  void connect() {
+    if (_socket?.connected == true) {
+      if (kDebugMode) {
+        print("✅ Socket already connected");
+      }
+      return;
+    }
+
+    _socket?.connect();
+  }
+
+  void disconnect() {
+    if (kDebugMode) {
+      print("🔌 Disconnecting socket...");
+    }
+    _socket?.disconnect();
+    _isConnected.value = false;
+  }
+
   void emit(String event, dynamic data) {
-    if (isConnected) {
+    if (_socket?.connected == true) {
       _socket?.emit(event, data);
       if (kDebugMode) {
-        print('📤 Emitted $event: $data');
+        print("📤 Emitted: $event with data: $data");
       }
     } else {
       if (kDebugMode) {
-        print('⚠️ Cannot emit $event - socket not connected');
+        print("⚠️ Cannot emit $event - socket not connected");
       }
     }
   }
 
-  void on(String event, Function(dynamic) handler) {
-    _socket?.on(event, handler);
+  void on(String event, Function(dynamic) callback) {
+    _socket?.on(event, callback);
   }
 
   void off(String event) {
     _socket?.off(event);
   }
 
-  // Helper methods for specific events
+  // Specific emit methods for common events
   void emitVehicleRequest(String requestId, List driverId, String cId) {
     emit('vehiclerequest', {
       'requestid': requestId,
@@ -125,21 +151,24 @@ class SocketService extends GetxController {
     });
   }
 
-  void disconnect() {
-    if (kDebugMode) {
-      print('🔌 Disconnecting socket...');
-    }
-
-    _socket?.disconnect();
-    _socket?.dispose();
-    _socket = null;
-    _isConnected = false;
-    _currentUserId = null;
+  void emitSendChat(
+      String senderId, String receiverId, String message, String status) {
+    emit('Send_Chat', {
+      'sender_id': senderId,
+      'recevier_id': receiverId,
+      'message': message,
+      'status': status,
+    });
   }
 
   @override
   void onClose() {
+    if (kDebugMode) {
+      print("🗑️ SocketService disposing...");
+    }
     disconnect();
+    _socket?.dispose();
+    _socket = null;
     super.onClose();
   }
 }

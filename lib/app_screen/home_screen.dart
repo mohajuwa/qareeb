@@ -15,6 +15,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import 'package:qareeb/controllers/app_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/vihical_calculate_api_controller.dart';
@@ -36,8 +37,6 @@ import 'package:http/http.dart' as http;
 import 'counter_bottom_sheet.dart';
 import 'my_ride_screen.dart';
 
-final appController = AppController.instance;
-
 void resetAllRideData() {
   print("--- 🔄 Resetting ALL global ride data by using AppController... ---");
 
@@ -45,20 +44,6 @@ void resetAllRideData() {
   final appController = AppController.instance;
   appController.resetAllRideData();
 
-  // Reset pickup_drop_point.dart variables
-  latitudepick = 0.00;
-  longitudepick = 0.00;
-  latitudedrop = 0.00;
-  longitudedrop = 0.00;
-  picktitle = "";
-  picksubtitle = "";
-  droptitle = "";
-  dropsubtitle = "";
-  droptitlelist.clear();
-  destinationlat.clear();
-  onlypass.clear();
-  destinationlong.clear();
-  picanddrop = true;
   amountresponse = "";
   responsemessage = "";
 
@@ -731,17 +716,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                               "+++++_iconPathsbiddingoff++++++++++:-- $_iconPathsbiddingoff");
                                           setState(() {});
 
-                                          appController.selectedVehicleIndex.value =
+                                          appController
+                                                  .selectedVehicleIndex.value =
                                               modual_calculateController
                                                   .modualCalculateApiModel!
                                                   .caldriver![index]
                                                   .id!;
-                                          appController.vehiclePrice.value = double.parse(
-                                              modual_calculateController
-                                                  .modualCalculateApiModel!
-                                                  .caldriver![index]
-                                                  .dropPrice!
-                                                  .toString());
+                                          appController.vehiclePrice.value =
+                                              double.parse(
+                                                  modual_calculateController
+                                                      .modualCalculateApiModel!
+                                                      .caldriver![index]
+                                                      .dropPrice!
+                                                      .toString());
                                           totalkm = double.parse(
                                               modual_calculateController
                                                   .modualCalculateApiModel!
@@ -1696,7 +1683,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         (value) {
                                           print("+++++${value["id"]}");
                                           setState(() {});
-                                          appController.requestId.value = value["id"].toString();
+                                          appController.requestId.value =
+                                              value["id"].toString();
                                           socateempt();
                                         },
                                       );
