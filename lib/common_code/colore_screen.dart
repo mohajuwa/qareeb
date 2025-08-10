@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:qareeb/common_code/global_variables.dart';
 
 import '../app_screen/map_screen.dart';
 

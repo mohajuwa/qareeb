@@ -9,7 +9,6 @@ import 'package:get/get.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
-import 'package:qareeb/common_code/global_variables.dart';
 
 import '../common_code/common_button.dart';
 

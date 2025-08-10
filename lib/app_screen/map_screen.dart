@@ -20,7 +20,6 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
-import 'package:qareeb/common_code/global_variables.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:qareeb/api_code/coupon_payment_api_contoller.dart';
@@ -62,6 +61,29 @@ import 'language_screen.dart';
 import 'my_ride_screen.dart';
 import 'notification_screen.dart';
 
+bool buttontimer = false;
+bool socketInitialized = false;
+
+bool darkMode = false;
+num priceyourfare = 0;
+bool isControllerDisposed = false;
+bool isanimation = false;
+String mid = "";
+String mroal = "";
+int select1 = 0;
+String globalcurrency = "";
+List vehicle_bidding_driver = [];
+List vehicle_bidding_secounde = [];
+num walleteamount = 0.00;
+late IO.Socket socket;
+var lathomecurrent;
+var longhomecurrent;
+
+AnimationController? controller;
+late Animation<Color?> colorAnimation;
+
+int durationInSeconds = 0;
+
 class MapScreen extends StatefulWidget {
   final bool selectvihical;
   const MapScreen({super.key, required this.selectvihical});
@@ -86,7 +108,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (darkMode == true) {
       setState(() {
         DefaultAssetBundle.of(context)
-            .loadString("assets/dark_mode_style.json")
+            .loadString("assets/map_styles/dark_style.json")
             .then(
           (value) {
             setState(() {
@@ -538,9 +560,15 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                       runningRide.dropLatlon!.longitude.toString());
                 }
 
-                maximumfare = runningRide.maximumFare as double;
-                minimumfare = runningRide.minimumFare as double;
-                dropprice = (runningRide.price?.toString() ?? "0") as double;
+                maximumfare = double.tryParse(
+                        runningRide.maximumFare?.toString() ?? "0") ??
+                    0.0;
+                minimumfare = double.tryParse(
+                        runningRide.minimumFare?.toString() ?? "0") ??
+                    0.0;
+                dropprice =
+                    double.tryParse(runningRide.price?.toString() ?? "0") ??
+                        0.0;
                 priceyourfare = runningRide.price ?? 0;
                 request_id = runningRide.id?.toString() ?? "";
 
@@ -1009,6 +1037,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 // Add this to your dispose method:
   @override
   void dispose() {
+    // ✅ FIX: Dispose the controller to prevent memory leaks.
+    controller?.dispose();
+
     if (socketInitialized) {
       try {
         socket.dispose();
@@ -1115,37 +1146,14 @@ globalMapScreen = this;
 // In other files:
 globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 */
-  late Timer timer;
-
   bool isTimerRunning = false;
 
-  void startTimer() {
-    if (isTimerRunning) return; // Prevent multiple timers from starting
-
-    isTimerRunning = true;
-  }
-
-  void cancelTimer() {
-    print("object hjhjhjhjjhjhhjhjhj");
-    // cancelloader = false;
-    if (isTimerRunning) {
-      timer.cancel();
-      isTimerRunning = false; // Mark timer as not running
-      print("Timer canceled");
-    }
-  }
-
   requesttime() {
-    // timeout = false;
-    // timeoutsecound = int.parse(calculateController.calCulateModel!.offerExpireTime.toString());
-
-    // calculateController.calCulateModel!.offerExpireTime = 2;
-    // print("DATA TIME:- ${calculateController.calCulateModel!.offerExpireTime}");
     durationInSeconds = int.parse(
         calculateController.calCulateModel!.offerExpireTime.toString());
     print("DURATION IN SECOUNDE : - ${durationInSeconds}");
 
-    startTimer();
+    // The startTimer() call is removed.
 
     controller = AnimationController(
       vsync: this,
@@ -1176,10 +1184,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             // Open bottom sheet when animation is completed
-            cancelTimer();
-            print("Timer finished 111 !");
+            print("Animation Controller finished!");
             isanimation = false;
-            // bottomshhetopen = false;
 
             setState(() {
               // timeout = true;
@@ -1790,9 +1796,16 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
 
                 if (value?["Result"] == true) {
                   amountresponse = "true";
-                  dropprice = value["drop_price"];
-                  minimumfare = value["vehicle"]["minimum_fare"];
-                  maximumfare = value["vehicle"]["maximum_fare"];
+                  // ✅ FIX: Safely parse all incoming values to the correct double type.
+                  dropprice = (value["drop_price"] as num?)?.toDouble() ?? 0.0;
+                  minimumfare = double.tryParse(
+                          value["vehicle"]["minimum_fare"]?.toString() ??
+                              '0') ??
+                      0.0;
+                  maximumfare = double.tryParse(
+                          value["vehicle"]["maximum_fare"]?.toString() ??
+                              '0') ??
+                      0.0;
                   responsemessage = value["message"];
 
                   tot_hour = value["tot_hour"]?.toString() ?? "0";
@@ -2159,76 +2172,45 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
   }
 
   void _addMarkers() async {
-    // Future<BitmapDescriptor> _loadIcon(String url) async {
-    //   try {
-    //     if (url.isEmpty || url.contains("undefined")) {
-    //       // Fallback to a default icon if the URL is invalid
-    //       return BitmapDescriptor.defaultMarker;
-    //     }
-    //
-    //     final http.Response response = await http.get(Uri.parse(url));
-    //     if (response.statusCode == 200) {
-    //       final Uint8List bytes = response.bodyBytes;
-    //
-    //       // Decode image and resize it
-    //       final ui.Codec codec = await ui.instantiateImageCodec(bytes, targetWidth: 30,targetHeight: 50);
-    //       final ui.FrameInfo frameInfo = await codec.getNextFrame();
-    //       final ByteData? byteData = await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-    //
-    //       return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-    //     } else {
-    //       throw Exception('Failed to load image from $url');
-    //     }
-    //   } catch (e) {
-    //     // Log the error and return a default icon
-    //     print("Error loading icon from $url: $e");
-    //     return BitmapDescriptor.defaultMarker;
-    //   }
-    // }
-
+    // The loadIcon helper function is fine.
     Future<BitmapDescriptor> loadIcon(String url,
         {int targetWidth = 30, int targetHeight = 50}) async {
       try {
         if (url.isEmpty || url.contains("undefined")) {
-          // Fallback to a default icon if the URL is invalid
           return BitmapDescriptor.defaultMarker;
         }
-
         final http.Response response = await http.get(Uri.parse(url));
         if (response.statusCode == 200) {
           final Uint8List bytes = response.bodyBytes;
-
-          // Decode image and resize it
           final ui.Codec codec = await ui.instantiateImageCodec(bytes,
               targetWidth: targetWidth, targetHeight: targetHeight);
           final ui.FrameInfo frameInfo = await codec.getNextFrame();
           final ByteData? byteData =
               await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-
           return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
         } else {
           throw Exception('Failed to load image from $url');
         }
       } catch (e) {
-        // Log the error and return a default icon
         print("Error loading icon from $url: $e");
         return BitmapDescriptor.defaultMarker;
       }
     }
 
-    // Load all icons
+    // Load all icons asynchronously
     final List<BitmapDescriptor> icons = await Future.wait(
       _iconPaths.map((path) => loadIcon(path)),
     );
 
-    setState(() {
-      pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
-          ? setState(() {
-              polylines11.clear();
-            })
-          : "";
+    // ✅ FIX 1: Check if the widget is still mounted before calling setState.
+    if (!mounted) return;
 
-      // vihicallocations = [];
+    // ✅ FIX 2: Refactored to a single, efficient setState call.
+    setState(() {
+      if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
+        polylines11.clear();
+      }
+
       for (var i = 0; i < vihicallocations.length; i++) {
         print("qqqqqqqqq:-- ${homeMapController.homeMapApiModel!.list![i].id}");
         print("aaaaaaaaa:-- ${vihicallocations.length}");
@@ -2244,53 +2226,50 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                   .toString())),
         );
         markers[markerId] = marker;
-        setState(() {});
       }
     });
   }
 
   void _addMarkers2() async {
+    // The loadIcon helper function is fine.
     Future<BitmapDescriptor> loadIcon(String url) async {
       try {
         if (url.isEmpty || url.contains("undefined")) {
-          // Fallback to a default icon if the URL is invalid
           return BitmapDescriptor.defaultMarker;
         }
-
         final http.Response response = await http.get(Uri.parse(url));
         if (response.statusCode == 200) {
           final Uint8List bytes = response.bodyBytes;
-
-          // Decode image and resize it
           final ui.Codec codec = await ui.instantiateImageCodec(bytes,
               targetWidth: 30, targetHeight: 50);
           final ui.FrameInfo frameInfo = await codec.getNextFrame();
           final ByteData? byteData =
               await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-
           return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
         } else {
           throw Exception('Failed to load image from $url');
         }
       } catch (e) {
-        // Log the error and return a default icon
         print("Error loading icon from $url: $e");
         return BitmapDescriptor.defaultMarker;
       }
     }
 
-    // Load all icons
+    // Load all icons asynchronously
     final List<BitmapDescriptor> icons = await Future.wait(
       _iconPathsbiddingon.map((path) => loadIcon(path)),
     );
 
+    // ✅ FIX 1: Check if the widget is still mounted before calling setState.
+    if (!mounted) return;
+
+    // ✅ FIX 2: Refactored to a single, efficient setState call.
     setState(() {
       markers11.clear();
 
       _addMarker11(LatLng(latitudepick, longitudepick), "origin",
           BitmapDescriptor.defaultMarker);
 
-      /// destination marker
       _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
           BitmapDescriptor.defaultMarkerWithHue(90));
 
@@ -2304,12 +2283,10 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
           dropOffPoints: _dropOffPoints);
 
       for (var i = 0; i < vihicallocationsbiddingon.length; i++) {
-        // final markerId = MarkerId('marker_$i');
         final markerId =
             MarkerId('${homeMapController.homeMapApiModel!.list![i].id}');
         final marker = Marker(
           markerId: markerId,
-          // position: vihicallocationsbiddingon[i],
           position: LatLng(
               double.parse(homeMapController.homeMapApiModel!.list![i].latitude
                   .toString()),
@@ -3998,19 +3975,28 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                             // This bool value toggles the switch.
                                             value: notifier.isDark,
                                             activeColor: theamcolore,
-                                            onChanged: (bool value) {
-                                              setState(() async {
-                                                SharedPreferences prefs =
-                                                    await SharedPreferences
-                                                        .getInstance();
-                                                prefs.setBool("isDark", value);
-                                                notifier.isAvailable(value);
-                                                darkMode = value;
-                                                Get.offAll(MapScreen(
-                                                  selectvihical: false,
-                                                ));
-                                              });
-                                              // mapThemeStyle(context: context);
+                                            onChanged: (bool value) async {
+                                              // ✅ 1. Make the whole callback `async`
+                                              // ✅ 2. Perform all `await` operations BEFORE setState
+                                              SharedPreferences prefs =
+                                                  await SharedPreferences
+                                                      .getInstance();
+                                              await prefs.setBool(
+                                                  "isDark", value);
+
+                                              // ✅ 3. Update the state synchronously
+                                              if (mounted) {
+                                                // Optional but good practice
+                                                setState(() {
+                                                  notifier.isAvailable(value);
+                                                  darkMode = value;
+                                                });
+                                              }
+
+                                              // ✅ 4. Navigate AFTER state is updated
+                                              Get.offAll(const MapScreen(
+                                                selectvihical: false,
+                                              ));
                                             },
                                           ),
                                         ),
@@ -4312,8 +4298,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
       amountcontroller.text = dropprice.toString();
       // var maxprice =  dropprice + (dropprice * int.parse(maximumfare) / 100);
       // var minprice =  dropprice - (dropprice * int.parse(minimumfare) / 100);
-      int maxprice = int.parse(maximumfare as String);
-      int minprice = int.parse(minimumfare as String);
+      int maxprice = maximumfare.toInt();
+      int minprice = minimumfare.toInt();
       print("**maxprice**:-- $maxprice");
       print("**maxprice**:-- $minprice");
       // controller.reset();
@@ -4345,7 +4331,7 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                       children: [
                         isanimation == false
                             ? const SizedBox()
-                            : lottie.Lottie.asset("assets/lottie/loadding.json",
+                            : lottie.Lottie.asset("assets/lottie/loading.json",
                                 height: 30),
 
                         const SizedBox(
@@ -5599,8 +5585,8 @@ globalMapScreen?.emitVehiclePaymentChange(userid, driver_id, payment);
                                               controller!.isAnimating) {
                                             print("vgvgvgvgvgvgvgvgvgvgv");
                                             controller!.dispose();
+                                            resetAllRideData();
                                           }
-                                          cancelTimer();
                                         });
                                       },
                                       context: context,

@@ -15,7 +15,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/common_code/global_variables.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/vihical_calculate_api_controller.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
@@ -51,12 +50,45 @@ String vehicle_id = "";
 String extratime = "";
 
 String timeincressstatus = "";
+String request_id = "";
 String driver_id = "";
 var useridgloable;
 
 bool loadertimer = false;
 
 bool otpstatus = false;
+void resetAllRideData() {
+  print(
+      "--- 🔄 Resetting ALL global ride data by creating NEW controllers... ---");
+
+  // Reset all other ride-related global variables
+  latitudepick = 0.00;
+  longitudepick = 0.00;
+  latitudedrop = 0.00;
+  longitudedrop = 0.00;
+  picktitle = "";
+  picksubtitle = "";
+  droptitle = "";
+  dropsubtitle = "";
+  droptitlelist = [];
+  destinationlat = [];
+  onlypass = [];
+  dropprice = 0.0;
+  minimumfare = 0.0;
+  maximumfare = 0.0;
+  amountresponse = "";
+  responsemessage = "";
+  midseconde = 0;
+  select = -1;
+  vihicalrice = 0.00;
+  totalkm = 0.00;
+  tot_time = "";
+  tot_hour = "";
+  tot_secound = "";
+  vihicalname = "";
+  vihicalimage = "";
+  vehicle_id = "";
+}
 
 class HomeScreen extends StatefulWidget {
   final double latpic;
@@ -232,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (darkMode == true) {
       setState(() {
         DefaultAssetBundle.of(context)
-            .loadString("assets/dark_mode_style.json")
+            .loadString("assets/map_styles/dark_style.json")
             .then(
           (value) {
             setState(() {

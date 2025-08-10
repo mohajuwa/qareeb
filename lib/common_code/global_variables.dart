@@ -87,7 +87,4 @@ int durationInSeconds = 0;
 // ===========================================
 // REFRESH DATA CLASS
 // ===========================================
-class RefreshData {
-  final bool shouldRefresh;
-  RefreshData(this.shouldRefresh);
-}
+

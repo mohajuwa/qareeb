@@ -11,9 +11,10 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:qareeb/app_screen/pickup_drop_point.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/common_button.dart';
-import 'package:qareeb/common_code/global_variables.dart';
+import 'package:qareeb/common_code/refrish_data.dart';
 import 'dart:ui' as ui;
 import '../api_code/calculate_api_controller.dart';
 import '../api_code/modual_calculate_api_controller.dart';
@@ -43,7 +44,7 @@ class _CustomLocationSelectScreenState
     if (darkMode == true) {
       setState(() {
         DefaultAssetBundle.of(context)
-            .loadString("assets/dark_mode_style.json")
+            .loadString("assets/map_styles/dark_style.json")
             .then(
           (value) {
             setState(() {
@@ -272,9 +273,19 @@ class _CustomLocationSelectScreenState
                             maximumfare = 0;
 
                             if (value["Result"] == true) {
-                              dropprice = value["drop_price"];
-                              minimumfare = value["vehicle"]["minimum_fare"];
-                              maximumfare = value["vehicle"]["maximum_fare"];
+                              dropprice =
+                                  (value["drop_price"] as num?)?.toDouble() ??
+                                      0.0;
+                              minimumfare = double.tryParse(value["vehicle"]
+                                              ["minimum_fare"]
+                                          ?.toString() ??
+                                      '0') ??
+                                  0.0;
+                              maximumfare = double.tryParse(value["vehicle"]
+                                              ["maximum_fare"]
+                                          ?.toString() ??
+                                      '0') ??
+                                  0.0;
                               responsemessage = value["message"];
 
                               tot_hour = value["tot_hour"].toString();
@@ -383,53 +394,67 @@ class _CustomLocationSelectScreenState
                                   "${latitudepick},${longitudepick}",
                               drop_lat_lon: "${latitudedrop},${longitudedrop}",
                               drop_lat_lon_list: onlypass)
-                          .then(
-                          (value) {
-                            dropprice = 0;
-                            minimumfare = 0;
-                            maximumfare = 0;
+                          .then((value) {
+                          dropprice = 0;
+                          minimumfare = 0;
+                          maximumfare = 0;
 
-                            if (value["Result"] == true) {
-                              amountresponse = "true";
-                              dropprice = value["drop_price"];
-                              minimumfare = value["vehicle"]["minimum_fare"];
-                              maximumfare = value["vehicle"]["maximum_fare"];
-                              responsemessage = value["message"];
+                          if (value["Result"] == true) {
+                            dropprice =
+                                (value["drop_price"] as num?)?.toDouble() ??
+                                    0.0;
+                            minimumfare = double.tryParse(value["vehicle"]
+                                            ["minimum_fare"]
+                                        ?.toString() ??
+                                    '0') ??
+                                0.0;
+                            maximumfare = double.tryParse(value["vehicle"]
+                                            ["maximum_fare"]
+                                        ?.toString() ??
+                                    '0') ??
+                                0.0;
+                            responsemessage = value["message"];
+                            // ✅ FIX: Properly convert to double with null safety
+                            tot_hour = (value["tot_hour"] ?? 0).toString();
+                            tot_time = (value["tot_minute"] ?? 0).toString();
+                            vehicle_id = value["vehicle"]["id"].toString();
 
-                              tot_hour = value["tot_hour"].toString();
-                              tot_time = value["tot_minute"].toString();
-                              vehicle_id = value["vehicle"]["id"].toString();
-                              vihicalrice =
-                                  double.parse(value["drop_price"].toString());
-                              totalkm =
-                                  double.parse(value["tot_km"].toString());
-                              tot_secound = "0";
+                            // ✅ FIX: Safe conversion to double
+                            vihicalrice = (value["drop_price"] is num)
+                                ? value["drop_price"].toDouble()
+                                : double.tryParse(
+                                        value["drop_price"].toString()) ??
+                                    0.0;
 
-                              vihicalimage =
-                                  value["vehicle"]["map_img"].toString();
-                              vihicalname = value["vehicle"]["name"].toString();
+                            totalkm = (value["tot_km"] is num)
+                                ? value["tot_km"].toDouble()
+                                : double.tryParse(value["tot_km"].toString()) ??
+                                    0.0;
 
-                              print(".......>>>>>> ${tot_hour}");
-                              print(".......>>>>>> ${tot_time}");
-                              print(".......>>>>>> ${vehicle_id}");
-                              print(".......>>>>>> ${vihicalrice}");
-                              print(".......>>>>>> ${totalkm}");
-                              print(".......>>>>>> ${totalkm}");
-                              print(".......>>>>>> ${totalkm}");
-                            } else {
-                              amountresponse = "false";
-                              print(
-                                  "jojojojojojojojojojojojojojojojojojojojojojojojo");
-                            }
+                            tot_secound = "0";
 
+                            vihicalimage =
+                                value["vehicle"]["map_img"].toString();
+                            vihicalname = value["vehicle"]["name"].toString();
+
+                            print(".......>>>>>> ${tot_hour}");
+                            print(".......>>>>>> ${tot_time}");
+                            print(".......>>>>>> ${vehicle_id}");
+                            print(".......>>>>>> ${vihicalrice}");
+                            print(".......>>>>>> ${totalkm}");
+                          } else {
+                            amountresponse = "false";
                             print(
-                                "********** dropprice **********:----- ${dropprice}");
-                            print(
-                                "********** minimumfare **********:----- ${minimumfare}");
-                            print(
-                                "********** maximumfare **********:----- ${maximumfare}");
-                          },
-                        )
+                                "jojojojojojojojojojojojojojojojojojojojojojojojo");
+                          }
+
+                          print(
+                              "********** dropprice **********:----- ${dropprice}");
+                          print(
+                              "********** minimumfare **********:----- ${minimumfare}");
+                          print(
+                              "********** maximumfare **********:----- ${maximumfare}");
+                        })
                       : modual_calculateController
                           .modualcalculateApi(
                               context: context,
