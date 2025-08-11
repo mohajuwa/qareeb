@@ -11,6 +11,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import 'package:qareeb/common_code/refrish_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/map_api_get.dart';
@@ -22,19 +23,6 @@ import '../common_code/colore_screen.dart';
 import '../common_code/common_button.dart';
 import 'map_screen.dart';
 import 'my_ride_screen.dart';
-
-double latitudepick = 0.00;
-double longitudepick = 0.00;
-double latitudedrop = 0.00;
-double longitudedrop = 0.00;
-
-String picktitle = "";
-String picksubtitle = "";
-
-String droptitle = "";
-String dropsubtitle = "";
-
-List droptitlelist = [];
 
 List<DynamicWidget> textfieldlist = [];
 
@@ -49,8 +37,6 @@ var addresspickup;
 var dropprice;
 var minimumfare;
 var maximumfare;
-String amountresponse = "";
-String responsemessage = "";
 
 class PickupDropPoint extends StatefulWidget {
   final bool pagestate;

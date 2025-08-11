@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:qareeb/app_screen/driver_detail_screen.dart';
 import 'package:qareeb/common_code/colore_screen.dart';

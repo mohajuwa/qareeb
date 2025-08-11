@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../app_screen/map_screen.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 
 Color theamcolore = const Color(0xff00cdbc);
 Color greaycolore = const Color(0xffF6F6F6);

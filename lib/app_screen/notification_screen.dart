@@ -10,6 +10,7 @@ import 'package:qareeb/api_code/notification_api_controller.dart';
 import 'package:qareeb/app_screen/home_screen.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/config.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});

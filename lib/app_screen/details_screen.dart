@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 
 import '../common_code/common_button.dart';
 
@@ -668,7 +669,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         borderRadius: BorderRadius.circular(10)),
                     child: Row(
                       children: [
-                        Text("Recommended fare: ${globalcurrency} 3350".tr)
+                        Text(
+                            "Recommended fare: ${appController.globalCurrency.value} 3350"
+                                .tr)
                       ],
                     ),
                   ),
@@ -831,7 +834,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                                               Get.back();
                                             },
                                             txt1:
-                                                "Book Auto for ${globalcurrency}45",
+                                                "Book Auto for ${appController.globalCurrency.value}45",
                                             context: context),
                                         const SizedBox(
                                           height: 10,

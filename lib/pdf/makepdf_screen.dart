@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import '../api_code/my_ride_detail_api.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -269,7 +270,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.price}",
+                          "${appController.globalCurrency.value}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.price}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -285,7 +286,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.couponAmount}",
+                          "${appController.globalCurrency.value}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.couponAmount}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -301,7 +302,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.platformFee}",
+                          "${appController.globalCurrency.value}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.platformFee}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -317,7 +318,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.weatherPrice}",
+                          "${appController.globalCurrency.value}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.weatherPrice}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -333,7 +334,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.addiTimePrice}",
+                          "${appController.globalCurrency.value}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.addiTimePrice}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -352,7 +353,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.walletPrice}",
+                          "${appController.globalCurrency.value}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.walletPrice}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -375,7 +376,7 @@ Future<Uint8List> makePdf() async {
                               ),
                         Spacer(),
                         Text(
-                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.paidAmount}",
+                          "${appController.globalCurrency.value}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.paidAmount}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],
@@ -388,7 +389,7 @@ Future<Uint8List> makePdf() async {
                         ),
                         Spacer(),
                         Text(
-                          "$globalcurrency${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.finalPrice}",
+                          "${appController.globalCurrency.value}${myRideDetailApiController.myRideDetailApiModel!.reuqestList!.finalPrice}",
                           style: const TextStyle(fontSize: 18),
                         ),
                       ],

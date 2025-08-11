@@ -14,6 +14,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/common_button.dart';
+import 'package:qareeb/common_code/global_variables.dart' hide destinationlat;
 import 'package:qareeb/common_code/refrish_data.dart';
 import 'dart:ui' as ui;
 import '../api_code/calculate_api_controller.dart';

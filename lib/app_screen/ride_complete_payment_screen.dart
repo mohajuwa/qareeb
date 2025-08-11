@@ -12,6 +12,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/api_code/vihical_ride_complete_order_api_controller.dart';
@@ -1109,7 +1110,8 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                                 }
                                               } else {
                                                 print("hello else");
-                                                walleteamount = walleteelse;
+                                                walleteamount =
+                                                    walleteelse.toDouble();
                                                 finaltotal = finaltotalsecounde;
                                                 walletValue = 0;
                                                 setState(() {});

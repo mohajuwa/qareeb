@@ -9,6 +9,7 @@ import 'package:qareeb/api_code/chat_list_api_controller.dart';
 import 'package:qareeb/app_screen/home_screen.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:get/get.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:qareeb/common_code/config.dart';
 import '../app_screen/map_screen.dart';
@@ -63,8 +64,8 @@ class _ChatScreenState extends State<ChatScreen> {
       // print("////:--- ${messaj}");
 
       chatListApiController.chatlistApi(
-          uid: useridgloable.toString(),
-          sender_id: useridgloable.toString(),
+          uid: appController.globalCurrency.value,
+          sender_id: appController.globalCurrency.value,
           recevier_id: driver_id.toString(),
           status: "customer");
     });
@@ -85,8 +86,8 @@ class _ChatScreenState extends State<ChatScreen> {
     _controller = ScrollController();
     socketConnect();
     chatListApiController.chatlistApi(
-        uid: useridgloable.toString(),
-        sender_id: useridgloable.toString(),
+        uid: appController.globalCurrency.value,
+        sender_id: appController.globalCurrency.value,
         recevier_id: driver_id.toString(),
         status: "customer");
     super.initState();
@@ -399,8 +400,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                 "mesjmesjmesj:--- (${messageController.text.trim()})");
                             sendmessaj();
                             chatListApiController.chatlistApi(
-                                uid: useridgloable.toString(),
-                                sender_id: useridgloable.toString(),
+                                uid: appController.globalCurrency.value,
+                                sender_id: appController.globalCurrency.value,
                                 recevier_id: driver_id.toString(),
                                 status: "customer");
                             setState(() {});

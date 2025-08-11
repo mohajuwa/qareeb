@@ -8,6 +8,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:qareeb/common_code/global_variables.dart';
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/cancel_rason_request_api_controller.dart';
 import '../api_code/remove_request.dart';
@@ -683,7 +684,7 @@ Future commonbottomsheetcancelflow({required context}) {
                               fontWeight: FontWeight.bold,
                               fontSize: 16)),
                       const Spacer(),
-                      Text("$globalcurrency $vihicalrice",
+                      Text("${appController.globalCurrency.value} $vihicalrice",
                           style: TextStyle(
                               color: notifier.textColor,
                               fontWeight: FontWeight.bold,
@@ -1339,7 +1340,7 @@ Future rateBottomSheet() {
                                   ),
                                   const SizedBox(width: 5),
                                   Text(
-                                    "Paid $globalcurrency$finaltotal",
+                                    "Paid ${appController.globalCurrency.value}$finaltotal",
                                     style: TextStyle(
                                       fontSize: 15,
                                       // fontWeight: FontWeight.w500,
