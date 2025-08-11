@@ -8,18 +8,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/common_flow_screen.dart';
 import 'package:qareeb/common_code/global_variables.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:qareeb/app_screen/driver_detail_screen.dart';
 import 'package:qareeb/app_screen/home_screen.dart';
-import 'package:qareeb/app_screen/pickup_drop_point.dart';
 import 'package:qareeb/common_code/common_button.dart';
 import 'package:qareeb/common_code/config.dart';
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/calculate_api_controller.dart';
 import '../common_code/colore_screen.dart';
-import '../common_code/common_flow_screen.dart';
-import 'map_screen.dart';
 
 class DriverListScreen extends StatefulWidget {
   const DriverListScreen({super.key});
@@ -35,10 +33,11 @@ class _DriverListScreenState extends State<DriverListScreen>
   GlobalDriverAcceptClass globalDriverAcceptClass =
       Get.put(GlobalDriverAcceptClass());
   CalculateController calculateController = Get.put(CalculateController());
-  // late AnimationController controller;
+  AnimationController? _animationController;
+  Animation<Color?>? _colorAnimation;
   List<double> progressList = [];
-
-  List<AnimationController> controllers = [];
+  int get _durationInSeconds => appController.durationInSeconds.value;
+  num get priceyourfare => appController.priceYourFare.value;
 
   socketConnect() async {
     socket.connect();
@@ -119,16 +118,16 @@ class _DriverListScreenState extends State<DriverListScreen>
   //   // print("ghjkbgjkhbfkb  ${timeoutsecound}");
   //   socketConnect();
   //   startTimer();
-  //   print("aaaaaaaadfssf (${durationInSeconds})");
+  //   print("aaaaaaaadfssf (${_durationInSeconds})");
   //
-  //   controller = AnimationController(
+  //   _animationController = AnimationController(
   //     vsync: this,
   //     duration: Duration(
-  //       seconds: durationInSeconds,
+  //       seconds: _durationInSeconds,
   //     ),
   //   );
   //
-  //   controller.addStatusListener((status) {
+  //   _animationController.addStatusListener((status) {
   //     print("Timer finished! ddddddd");
   //     if (status == AnimationStatus.completed) {
   //       print("Timer finished! dgdg");
@@ -143,7 +142,7 @@ class _DriverListScreenState extends State<DriverListScreen>
   //     }
   //   });
   //
-  //   controller.forward();
+  //   _animationController.forward();
   //
   // }
 
@@ -152,19 +151,19 @@ class _DriverListScreenState extends State<DriverListScreen>
     super.initState();
     socketConnect();
     startTimer();
-    print("Initializing with duration (${durationInSeconds})");
+    print("Initializing with duration (${_durationInSeconds})");
     buttontimer = true;
     print("========= BOTTONTIMER :- ${buttontimer}");
 
-    if (controller == null || !controller!.isAnimating) {
-      controller = AnimationController(
+    if (_animationController == null || !_animationController!.isAnimating) {
+      _animationController = AnimationController(
         vsync: this,
         duration: Duration(
-          seconds: durationInSeconds,
+          seconds: _durationInSeconds,
         ),
       );
 
-      controller!.addStatusListener((status) {
+      _animationController!.addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           print("Timer finished!");
 
@@ -176,16 +175,16 @@ class _DriverListScreenState extends State<DriverListScreen>
         }
       });
 
-      controller!.forward();
+      _animationController!.forward();
     }
   }
 
   @override
   void dispose() {
-    // for (var controller in controllers) {
-    //   controller.dispose();
+    // for (var _animationController in controllers) {
+    //   _animationController.dispose();
     // }
-    // controller.dispose();
+    // _animationController.dispose();
     countdownTimer?.cancel();
     super.dispose();
   }
@@ -447,10 +446,12 @@ class _DriverListScreenState extends State<DriverListScreen>
                                               buttontimer = false;
                                               isanimation = false;
                                               isControllerDisposed = true;
-                                              if (controller != null &&
-                                                  controller!.isAnimating) {
+                                              if (_animationController !=
+                                                      null &&
+                                                  _animationController!
+                                                      .isAnimating) {
                                                 print("vgvgvgvgvgvgvgvgvgvgv");
-                                                controller!.dispose();
+                                                _animationController!.dispose();
                                               }
                                               d_id =
                                                   vehicle_bidding_driver[index]
@@ -503,7 +504,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                       //     minHeight: 4,
                       //     backgroundColor: Colors.white,
                       //     color: Colors.green,
-                      //     value: 1.0 - controller.value,
+                      //     value: 1.0 - _animationController.value,
                       //     semanticsLabel: 'Linear progress indicator',
                       //   ),
                       // ),

@@ -1,4 +1,5 @@
 // lib/controllers/app_controller.dart - COMPLETE VERSION
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,27 +14,27 @@ class AppController extends GetxController {
   final dropController = TextEditingController();
 
   // ✅ RIDE STATE - ALL MISSING VARIABLES FROM MAP_SCREEN
-  final RxDouble vehiclePrice = 0.0.obs;      // vihicalrice
-  final RxString requestId = "".obs;          // request_id
-  final RxString driverId = "".obs;           // driver_id
+  final RxDouble vehiclePrice = 0.0.obs; // vihicalrice
+  final RxString requestId = "".obs; // request_id
+  final RxString driverId = "".obs; // driver_id
   final RxBool isLoading = false.obs;
   final RxString loadingMessage = "".obs;
   final RxInt selectedVehicleIndex = (-1).obs; // select
-  final RxString vehicleName = "".obs;        // vihicalname
-  final RxString vehicleImage = "".obs;       // vihicalimage
-  final RxString vehicleId = "".obs;          // vehicle_id
-  final RxDouble totalKm = 0.0.obs;           // totalkm
-  final RxString totalTime = "".obs;          // tot_time
-  final RxString totalHour = "".obs;          // tot_hour
-  final RxString totalSecond = "".obs;        // tot_secound
-  final RxBool loadingTimer = false.obs;      // loadertimer
-  final RxBool otpStatus = false.obs;         // otpstatus
+  final RxString vehicleName = "".obs; // vihicalname
+  final RxString vehicleImage = "".obs; // vihicalimage
+  final RxString vehicleId = "".obs; // vehicle_id
+  final RxDouble totalKm = 0.0.obs; // totalkm
+  final RxString totalTime = "".obs; // tot_time
+  final RxString totalHour = "".obs; // tot_hour
+  final RxString totalSecond = "".obs; // tot_secound
+  final RxBool loadingTimer = false.obs; // loadertimer
+  final RxBool otpStatus = false.obs; // otpstatus
   final RxString timeIncreaseStatus = "".obs; // timeincressstatus
-  final RxString extraTime = "".obs;          // extratime
+  final RxString extraTime = "".obs; // extratime
 
   // ✅ ADDITIONAL RIDE VARIABLES
-  final RxInt midSecond = 0.obs;              // midseconde
-  final RxString statusRideStart = "".obs;    // statusridestart
+  final RxInt midSecond = 0.obs; // midseconde
+  final RxString statusRideStart = "".obs; // statusridestart
   final RxString platformFee = "".obs;
   final RxString weatherCharge = "".obs;
   final RxString additionalTime = "".obs;
@@ -42,26 +43,26 @@ class AppController extends GetxController {
   final RxDouble additionalTotal = 0.0.obs;
 
   // ✅ LOCATION STATE
-  final RxDouble pickupLat = 0.0.obs;         // latitudepick
-  final RxDouble pickupLng = 0.0.obs;         // longitudepick
-  final RxDouble dropLat = 0.0.obs;           // latitudedrop
-  final RxDouble dropLng = 0.0.obs;           // longitudedrop
-  final RxString pickupTitle = "".obs;        // picktitle
-  final RxString pickupSubtitle = "".obs;     // picksubtitle
-  final RxString dropTitle = "".obs;          // droptitle
-  final RxString dropSubtitle = "".obs;       // dropsubtitle
-  final RxList dropTitleList = [].obs;        // droptitlelist
+  final RxDouble pickupLat = 0.0.obs; // latitudepick
+  final RxDouble pickupLng = 0.0.obs; // longitudepick
+  final RxDouble dropLat = 0.0.obs; // latitudedrop
+  final RxDouble dropLng = 0.0.obs; // longitudedrop
+  final RxString pickupTitle = "".obs; // picktitle
+  final RxString pickupSubtitle = "".obs; // picksubtitle
+  final RxString dropTitle = "".obs; // droptitle
+  final RxString dropSubtitle = "".obs; // dropsubtitle
+  final RxList dropTitleList = [].obs; // droptitlelist
 
   // ✅ DESTINATION LISTS
-  final RxList<double> destinationLat = <double>[].obs; // destinationlat
+  final RxList<PointLatLng> destinationLat = <PointLatLng>[].obs;
   final RxList<double> destinationLng = <double>[].obs; // destinationlong
-  final RxList<String> onlyPass = <String>[].obs;       // onlypass
+  final RxList<String> onlyPass = <String>[].obs; // onlypass
 
   // ✅ USER STATE
   final RxString userId = "".obs;
   final RxString userName = "".obs;
   final RxMap userProfile = {}.obs;
-  final RxString globalUserId = "".obs;       // useridgloable
+  final RxString globalUserId = "".obs; // useridgloable
 
   // ✅ DRIVER INFORMATION
   final RxString driverName = "".obs;
@@ -82,21 +83,23 @@ class AppController extends GetxController {
   final RxDouble walletAmount = 0.0.obs;
 
   // ✅ CURRENCY AND PRICING VARIABLES
-  final RxString globalCurrency = "".obs;        // globalcurrency
-  final RxDouble priceYourFare = 0.0.obs;        // priceyourfare - FIXED TYPE
-  final RxString currencySymbol = "".obs;        // Currency symbol
-  final RxString currencyCode = "".obs;          // Currency code
+  final RxString globalCurrency = "".obs; // globalcurrency
+  final RxDouble priceYourFare = 0.0.obs; // priceyourfare - FIXED TYPE
+  final RxString currencySymbol = "".obs; // Currency symbol
+  final RxString currencyCode = "".obs; // Currency code
 
   // ✅ TIMER AND ANIMATION STATE
-  final RxBool buttonTimer = false.obs;       // buttontimer
-  final RxBool isAnimation = false.obs;       // isanimation
+  final RxBool buttonTimer = false.obs; // buttontimer
+  final RxBool isAnimation = false.obs; // isanimation
   final RxBool isControllerDisposed = false.obs; // isControllerDisposed
-  final RxInt durationInSeconds = 0.obs;      // durationInSeconds (safe)
+  final RxInt durationInSeconds = 0.obs; // durationInSeconds (safe)
 
   // ✅ VEHICLE BIDDING VARIABLES
-  final RxList<int> vehicleBiddingDriver = <int>[].obs;      // vehicle_bidding_driver
-  final RxList<int> vehicleBiddingSecond = <int>[].obs;      // vehicle_bidding_secounde
-  final RxList<int> driverIdList = <int>[].obs;              // drive_id_list
+  final RxList<int> vehicleBiddingDriver =
+      <int>[].obs; // vehicle_bidding_driver
+  final RxList<int> vehicleBiddingSecond =
+      <int>[].obs; // vehicle_bidding_secounde
+  final RxList<int> driverIdList = <int>[].obs; // drive_id_list
 
   // ✅ MAP AND MARKERS - FIXED TYPES
   final RxSet<Marker> markers = <Marker>{}.obs;
@@ -307,7 +310,7 @@ class AppController extends GetxController {
 
   List get droptitlelist => dropTitleList;
 
-  List<double> get destinationlat => destinationLat;
+  RxList<PointLatLng> get destinationlat => destinationLat;
   List<double> get destinationlong => destinationLng;
   List<String> get onlypass => onlyPass;
 

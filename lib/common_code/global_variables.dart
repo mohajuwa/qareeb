@@ -1,7 +1,9 @@
 // lib/common_code/global_variables.dart - CLEANED VERSION
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:qareeb/common_code/daynamic_widget.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../controllers/app_controller.dart';
 
@@ -72,6 +74,7 @@ int midseconde = 0;
 // Theme and UI state
 bool darkMode = false;
 bool light = false;
+List<DynamicWidget> textfieldlist = [];
 
 // API response states
 String amountresponse = "";
@@ -95,7 +98,7 @@ String mroal = "";
 int select1 = 0;
 
 // Bidding arrays (safe when properly managed)
-List<int> vehicle_bidding_driver = [];
+List vehicle_bidding_driver = [];
 List<int> vehicle_bidding_secounde = [];
 
 // Location for home (safe primitives)
@@ -114,6 +117,7 @@ double walleteamount = 0.00;
 
 // ✅ These getters/setters provide backward compatibility during migration
 // Replace usage gradually with AppController.instance
+// MIGRATION HELPERS - BACKWARD COMPATIBILITY
 
 // Location helpers
 double get latitudepick => appController.pickupLat.value;
@@ -140,18 +144,24 @@ set droptitle(String value) => appController.dropTitle.value = value;
 String get dropsubtitle => appController.dropSubtitle.value;
 set dropsubtitle(String value) => appController.dropSubtitle.value = value;
 
+// RxList setters use assignAll to update contents, not replace the object
 List get droptitlelist => appController.dropTitleList;
+set droptitlelist(List value) => appController.dropTitleList.assignAll(value);
 
-List<double> get destinationlat => appController.destinationLat;
+List<PointLatLng> get destinationlat => appController.destinationLat;
+set destinationlat(List<PointLatLng> value) =>
+    appController.destinationLat.assignAll(value);
+
 List<double> get destinationlong => appController.destinationLng;
+set destinationlong(List<double> value) =>
+    appController.destinationLng.assignAll(value);
 
-// Controller helpers
+// TextEditingController getters only, no setters (final fields)
 TextEditingController get pickupcontroller => appController.pickupController;
 TextEditingController get dropcontroller => appController.dropController;
 
 // Socket helper
 bool get socketInitialized => appController.socketService.isConnected;
-
 // ===========================================
 // CENTRALIZED RESET FUNCTION
 // ===========================================

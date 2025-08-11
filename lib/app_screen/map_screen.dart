@@ -20,7 +20,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
-import 'package:qareeb/common_code/global_variables.dart' hide destinationlat;
+import 'package:qareeb/common_code/global_variables.dart';
 import 'package:qareeb/controllers/app_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
