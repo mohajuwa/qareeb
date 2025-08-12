@@ -22,7 +22,6 @@ import '../common_code/common_button.dart';
 bool picanddrop = true;
 // bool multilistselection = false;
 var addresspickup;
-List onlypass = [];
 
 var dropprice;
 var minimumfare;
@@ -404,20 +403,19 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                                       setState(() {
                                         textfieldlist.removeAt(index);
                                         destinationlat.removeAt(index);
-                                        onlypass.removeAt(index);
+                                        appController.onlypass.removeAt(index);
                                         // ✅ REPLACE: droptitlelist with AppController
-                                        appController.dropTitleList
-                                            .removeAt(index);
+                                        droptitlelist.removeAt(index);
 
                                         if (kDebugMode) {
                                           print(
-                                              ">>>>>>>>>>>>>>>>textfieldlist<<<<<<<<<<<<<<<< ${textfieldlist}");
+                                              ">>>>>>>>>>>>>>>>textfieldlist<<<<<<<<<<<<<<<< $textfieldlist");
                                           print(
-                                              ">>>>>>>>>>>>>>>>onlypass<<<<<<<<<<<<<<<< ${onlypass}");
+                                              ">>>>>>>>>>>>>>>>appController.onlypass<<<<<<<<<<<<<<<< ${appController.onlypass}");
                                           print(
-                                              ">>>>>>>>>>>>>>>>destinationlat<<<<<<<<<<<<<<<< ${destinationlat}");
+                                              ">>>>>>>>>>>>>>>>destinationlat<<<<<<<<<<<<<<<< $destinationlat");
                                           print(
-                                              ">>>>>>>>>>>>>>>>droptitlelist<<<<<<<<<<<<<<<< ${appController.dropTitleList}");
+                                              ">>>>>>>>>>>>>>>>droptitlelist<<<<<<<<<<<<<<<< $droptitlelist");
                                         }
                                       });
                                     },
@@ -531,7 +529,7 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                           "${appController.pickupLat.value},${appController.pickupLng.value}",
                       drop_lat_lon:
                           "${appController.dropLat.value},${appController.dropLng.value}",
-                      drop_lat_lon_list: onlypass,
+                      drop_lat_lon_list: appController.onlypass,
                     )
                         .then((value) {
                       dropprice = 0.0;
@@ -576,7 +574,7 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                           "${appController.pickupLat.value},${appController.pickupLng.value}",
                       drop_lat_lon:
                           "${appController.dropLat.value},${appController.dropLng.value}",
-                      drop_lat_lon_list: onlypass,
+                      drop_lat_lon_list: appController.onlypass,
                     )
                         .then((value) {
                       if (value != null &&

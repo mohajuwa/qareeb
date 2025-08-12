@@ -311,7 +311,7 @@ class _CustomLocationSelectScreenState
                               pickup_lat_lon:
                                   "${latitudepick},${longitudepick}",
                               drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: onlypass)
+                              drop_lat_lon_list: appController.onlypass)
                           .then(
                           (value) {
                             dropprice = 0;
@@ -368,7 +368,7 @@ class _CustomLocationSelectScreenState
                               pickup_lat_lon:
                                   "${latitudepick},${longitudepick}",
                               drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: onlypass)
+                              drop_lat_lon_list: appController.onlypass)
                           .then(
                           (value) {
                             totalkm = double.parse(modual_calculateController
@@ -439,7 +439,7 @@ class _CustomLocationSelectScreenState
                               pickup_lat_lon:
                                   "${latitudepick},${longitudepick}",
                               drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: onlypass)
+                              drop_lat_lon_list: appController.onlypass)
                           .then((value) {
                           dropprice = 0;
                           minimumfare = 0;
@@ -510,7 +510,7 @@ class _CustomLocationSelectScreenState
                               pickup_lat_lon:
                                   "${latitudepick},${longitudepick}",
                               drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: onlypass)
+                              drop_lat_lon_list: appController.onlypass)
                           .then(
                           (value) {
                             // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;

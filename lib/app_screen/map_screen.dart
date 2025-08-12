@@ -75,6 +75,8 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final appController = AppController.instance;
 
+  Map<MarkerId, Marker> markers = {};
+
   bool _isInitializing = true;
 
   String _initializationStatus = "Loading...";
@@ -423,15 +425,34 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
+  Timer? _vehicleRefreshTimer;
+
+  void startVehicleRefreshTimer() {
+    _vehicleRefreshTimer = Timer.periodic(Duration(seconds: 30), (timer) {
+      if (mounted && mid.isNotEmpty && lathome != null && longhome != null) {
+        loadVehiclesForCategory(mid);
+      }
+    });
+  }
+
+  void stopVehicleRefreshTimer() {
+    _vehicleRefreshTimer?.cancel();
+
+    _vehicleRefreshTimer = null;
+  }
+
 // Add this to your dispose method:
   @override
   void dispose() {
     if (kDebugMode) {
       print("🗑️ MapScreen disposing...");
     }
+
     _animationController?.dispose();
 
     _animationController = null;
+
+    stopVehicleRefreshTimer();
 
     super.dispose();
   }
@@ -592,6 +613,44 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
       await makeInitialAPICalls();
 
+      // ✅ CRITICAL: Load home API and set default vehicle category
+
+      if (mounted) {
+        setState(() {
+          _initializationStatus = "Loading vehicles...";
+        });
+      }
+
+      await homeApiController.homeApi(
+        uid: userid.toString(),
+        lat: lathome.toString(),
+        lon: longhome.toString(),
+      );
+
+      // ✅ Set default vehicle category (index 0)
+
+      if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
+        final firstCategory = homeApiController.homeapimodel!.categoryList![0];
+
+        setState(() {
+          select1 = 0;
+
+          vehicle_id = firstCategory.id.toString();
+
+          vihicalname = firstCategory.name.toString();
+
+          vihicalimage = firstCategory.image.toString();
+
+          mid = firstCategory.id.toString();
+
+          mroal = firstCategory.role.toString();
+        });
+
+        // ✅ Load vehicles for default category
+
+        await loadVehiclesForCategory(mid);
+      }
+
       // ✅ CRITICAL: Add a small delay to ensure everything is loaded
 
       await Future.delayed(const Duration(milliseconds: 500));
@@ -642,6 +701,142 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
+// ✅ FIX 2: Improved loadVehiclesForCategory with debugging
+
+  Future<void> loadVehiclesForCategory(String categoryId) async {
+    if (kDebugMode) {
+      print(
+          "🔄 Loading vehicles for category: $categoryId at location: $lathome, $longhome");
+    }
+
+    try {
+      await homeMapController.homemapApi(
+        mid: categoryId,
+        lat: lathome.toString(),
+        lon: longhome.toString(),
+      );
+
+      if (kDebugMode) {
+        print("📡 API Response received for category $categoryId");
+
+        print(
+            "📊 Vehicles found: ${homeMapController.homeMapApiModel?.list?.length ?? 0}");
+      }
+
+      if (homeMapController.homeMapApiModel?.list?.isNotEmpty == true) {
+        if (mounted) {
+          setState(() {
+            vihicallocations.clear();
+
+            _iconPaths.clear();
+
+            for (int i = 0;
+                i < homeMapController.homeMapApiModel!.list!.length;
+                i++) {
+              final vehicle = homeMapController.homeMapApiModel!.list![i];
+
+              vihicallocations.add(LatLng(
+                  double.parse(vehicle.latitude.toString()),
+                  double.parse(vehicle.longitude.toString())));
+
+              _iconPaths.add("${Config.imageurl}${vehicle.image}");
+
+              if (kDebugMode) {
+                print(
+                    "🚗 Vehicle $i: Lat ${vehicle.latitude}, Lng ${vehicle.longitude}");
+              }
+            }
+
+            if (kDebugMode) {
+              print(
+                  "🎯 About to call _addMarkers with ${vihicallocations.length} vehicles");
+            }
+
+            // Add markers to map
+
+            _addMarkers();
+          });
+        }
+
+        if (kDebugMode) {
+          print(
+              "✅ Successfully loaded ${homeMapController.homeMapApiModel!.list!.length} vehicles for category $categoryId");
+        }
+      } else {
+        if (kDebugMode) {
+          print("⚠️ No vehicles found for category: $categoryId");
+        }
+
+        // Clear existing vehicle markers if no vehicles found
+
+        if (mounted) {
+          setState(() {
+            vihicallocations.clear();
+
+            _iconPaths.clear();
+
+            markers.removeWhere((key, value) =>
+                key.value.startsWith('vehicle_') ||
+                key.value.contains('driver'));
+          });
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error loading vehicles for category $categoryId: $e");
+      }
+    }
+  }
+
+  // ✅ ADD: Load initial vehicles when app starts
+  Future<void> loadInitialVehicles() async {
+    if (kDebugMode) {
+      print("🚗 Loading initial vehicles...");
+    }
+
+    try {
+      // Load home API data first
+      await homeApiController.homeApi(
+        uid: userid.toString(),
+        lat: lathome.toString(),
+        lon: longhome.toString(),
+      );
+
+      if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
+        // Set default vehicle category (first one)
+        final firstCategory = homeApiController.homeapimodel!.categoryList![0];
+        select1 = 0;
+        vehicle_id = firstCategory.id.toString();
+        vihicalname = firstCategory.name.toString();
+        vihicalimage = firstCategory.image.toString();
+        mid = firstCategory.id.toString();
+        mroal = firstCategory.role.toString();
+
+        // Load vehicles for the selected category
+        await loadVehiclesForCategory(mid);
+      }
+
+      if (kDebugMode) {
+        print("✅ Initial vehicles loaded successfully");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error loading initial vehicles: $e");
+      }
+    }
+  }
+
+  void displayVehicleCount() {
+    if (kDebugMode && homeMapController.homeMapApiModel?.list != null) {
+      print(
+          "📍 Displaying ${homeMapController.homeMapApiModel!.list!.length} vehicles on map");
+
+      print("🚗 Vehicle category: $vihicalname");
+
+      print("📡 Vehicles online and available");
+    }
+  }
+
   Future<void> loadUserData() async {
     try {
       SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -668,17 +863,17 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (currency != null && currency.isNotEmpty) {
         try {
           currencyy = jsonDecode(currency);
-          globalcurrency = currencyy['symbol']?.toString() ?? "\$";
+          globalcurrency = currencyy['symbol']?.toString() ?? "YER";
         } catch (e) {
           if (kDebugMode) {
             print("Error parsing currency JSON: $e");
           }
           currencyy = {};
-          globalcurrency = "\$";
+          globalcurrency = "YER";
         }
       } else {
         currencyy = {};
-        globalcurrency = "\$";
+        globalcurrency = "YER";
       }
 
       // ✅ FIX: Safer user ID extraction
@@ -764,10 +959,19 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
-// Setup map markers
   void setupMapMarkers() {
     try {
-      // Add markers only if coordinates are valid
+      // Clear existing pickup/drop markers
+
+      setState(() {
+        markers11.removeWhere((key, value) =>
+            key.value == "origin" ||
+            key.value == "destination" ||
+            key.value.startsWith("destination"));
+      });
+
+      // Add pickup marker
+
       if (appController.pickupLat.value != 0.0 &&
           appController.pickupLng.value != 0.0) {
         _addMarker11(
@@ -777,36 +981,51 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             BitmapDescriptor.defaultMarker);
       }
 
-      if (appController.dropLat != 0.0 && appController.dropLng != 0.0) {
-        /// destination marker
+      // Add drop marker
+
+      if (appController.dropLat.value != 0.0 &&
+          appController.dropLng.value != 0.0) {
         _addMarker2(
             LatLng(appController.dropLat.value, appController.dropLng.value),
             "destination",
             BitmapDescriptor.defaultMarkerWithHue(90));
       }
 
-      // Add drop-off point markers
+      // Add multiple drop-off points
+
       for (int a = 0; a < _dropOffPoints.length; a++) {
-        _addMarker3("destination");
+        _addMarker3("destination$a");
       }
 
-      // Get directions if we have valid coordinates
-      if (latitudepick != 0.0 &&
-          longitudepick != 0.0 &&
-          latitudedrop != 0.0 &&
-          longitudedrop != 0.0) {
+      // Get directions
+
+      if (appController.pickupLat.value != 0.0 &&
+          appController.pickupLng.value != 0.0 &&
+          appController.dropLat.value != 0.0 &&
+          appController.dropLng.value != 0.0) {
         getDirections11(
-            lat1: PointLatLng(latitudepick, longitudepick),
-            lat2: PointLatLng(latitudedrop, longitudedrop),
+            lat1: PointLatLng(
+                appController.pickupLat.value, appController.pickupLng.value),
+            lat2: PointLatLng(
+                appController.dropLat.value, appController.dropLng.value),
             dropOffPoints: _dropOffPoints);
+      }
+
+      // ✅ CRITICAL: Keep vehicle markers visible after setting pickup/drop
+
+      if (mid.isNotEmpty && lathome != null && longhome != null) {
+        loadVehiclesForCategory(mid);
+      }
+
+      if (kDebugMode) {
+        print("✅ Map markers setup completed");
       }
     } catch (e) {
       if (kDebugMode) {
-        print("Error setting up map markers: $e");
+        print("❌ Error setting up map markers: $e");
       }
     }
   }
-
   // Poliline Map Code
 
   //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1085,24 +1304,51 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   void _addMarkers() async {
     if (kDebugMode) {
       print("🔍 _addMarkers called");
+
       print("   Vehicle locations: ${vihicallocations.length}");
+
       print("   Icon paths: ${_iconPaths.length}");
-      print(
-          "   HomeMap list: ${homeMapController.homeMapApiModel?.list?.length ?? 0}");
+
+      print("   Selected category: $mid");
     }
 
     // ✅ SAFETY CHECK: Ensure we have data
+
     if (homeMapController.homeMapApiModel?.list == null ||
         homeMapController.homeMapApiModel!.list!.isEmpty) {
       if (kDebugMode) {
         print("❌ No vehicle data available for markers");
       }
+
+      // ✅ CRITICAL: Clear existing vehicle markers when no data
+
+      setState(() {
+        // Remove only vehicle markers, keep pickup/drop markers
+
+        markers.removeWhere((key, value) =>
+            key.value.startsWith('vehicle_') || key.value.contains('driver'));
+      });
+
       return;
     }
 
     final vehicleList = homeMapController.homeMapApiModel!.list!;
 
+    // ✅ CRITICAL: Clear previous vehicle markers before adding new ones
+
+    setState(() {
+      // Remove only vehicle markers, keep user location and pickup/drop markers
+
+      markers.removeWhere((key, value) =>
+              key.value.startsWith('vehicle_') ||
+              key.value.contains('driver') ||
+              key.value != "my_1" // Keep user location marker
+
+          );
+    });
+
     // ✅ SAFETY CHECK: Ensure lists match
+
     if (vihicallocations.length != vehicleList.length ||
         _iconPaths.length != vehicleList.length) {
       if (kDebugMode) {
@@ -1110,121 +1356,18 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       }
 
       // Rebuild the data to ensure consistency
+
       vihicallocations.clear();
+
       _iconPaths.clear();
 
       for (int i = 0; i < vehicleList.length; i++) {
         vihicallocations.add(LatLng(
             double.parse(vehicleList[i].latitude.toString()),
             double.parse(vehicleList[i].longitude.toString())));
+
         _iconPaths.add("${Config.imageurl}${vehicleList[i].image}");
       }
-    }
-
-    // ✅ HELPER: Load icons safely
-    Future<BitmapDescriptor> loadIcon(String url,
-        {int targetWidth = 30, int targetHeight = 50}) async {
-      try {
-        if (url.isEmpty || url.contains("undefined") || url.contains("null")) {
-          if (kDebugMode) {
-            print("⚠️ Invalid icon URL: $url - using default");
-          }
-          return BitmapDescriptor.defaultMarker;
-        }
-
-        final http.Response response =
-            await http.get(Uri.parse(url)).timeout(Duration(seconds: 10));
-
-        if (response.statusCode == 200) {
-          final Uint8List bytes = response.bodyBytes;
-          final ui.Codec codec = await ui.instantiateImageCodec(bytes,
-              targetWidth: targetWidth, targetHeight: targetHeight);
-          final ui.FrameInfo frameInfo = await codec.getNextFrame();
-          final ByteData? byteData =
-              await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-          return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-        } else {
-          if (kDebugMode) {
-            print(
-                "⚠️ Failed to load image from $url - HTTP ${response.statusCode}");
-          }
-          return BitmapDescriptor.defaultMarker;
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print("❌ Error loading icon from $url: $e");
-        }
-        return BitmapDescriptor.defaultMarker;
-      }
-    }
-
-    try {
-      // Load all icons with error handling
-      final List<BitmapDescriptor> icons = await Future.wait(
-        _iconPaths.map((path) => loadIcon(path)),
-      );
-
-      if (kDebugMode) {
-        print("✅ Loaded ${icons.length} icons successfully");
-      }
-
-      // ✅ CHECK: Widget still mounted before setState
-      if (!mounted) return;
-
-      setState(() {
-        // Clear polylines if pickup/drop are empty
-        if (appController.pickupController.text.isEmpty ||
-            appController.dropController.text.isEmpty) {
-          polylines11.clear();
-        }
-
-        // ✅ SAFE ITERATION: Use the actual data length, not assumptions
-        final itemCount = math.min(vihicallocations.length,
-            math.min(icons.length, vehicleList.length));
-
-        if (kDebugMode) {
-          print("🎯 Adding $itemCount markers");
-        }
-
-        for (int i = 0; i < itemCount; i++) {
-          try {
-            final vehicleId = vehicleList[i].id?.toString() ?? "vehicle_$i";
-
-            if (kDebugMode) {
-              print("   Adding marker $i - Vehicle ID: $vehicleId");
-            }
-
-            MarkerId markerId = MarkerId(vehicleId);
-            Marker marker = Marker(
-              markerId: markerId,
-              icon:
-                  icons[i], // This is now safe because of itemCount calculation
-              position: vihicallocations[i],
-              onTap: () {
-                if (kDebugMode) {
-                  print("🚗 Tapped vehicle: $vehicleId");
-                }
-                // Add any vehicle tap handling here
-              },
-            );
-            markers[markerId] = marker;
-          } catch (e) {
-            if (kDebugMode) {
-              print("❌ Error adding marker $i: $e");
-            }
-            // Continue with next marker instead of failing completely
-          }
-        }
-
-        if (kDebugMode) {
-          print("✅ Successfully added ${markers.length} markers to map");
-        }
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error in _addMarkers: $e");
-      }
-      // Don't crash the app, just log the error
     }
   }
 
@@ -1249,29 +1392,122 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     final vehicleList = homeMapController.homeMapApiModel!.list!;
 
     // ✅ HELPER: Load icons safely
-    Future<BitmapDescriptor> loadIcon(String url) async {
+    Future<BitmapDescriptor> loadIcon(String url,
+        {int targetWidth = 30, int targetHeight = 50}) async {
       try {
         if (url.isEmpty || url.contains("undefined") || url.contains("null")) {
+          if (kDebugMode) {
+            print("⚠️ Invalid icon URL: $url - using default");
+          }
+
           return BitmapDescriptor.defaultMarker;
         }
+
         final http.Response response =
             await http.get(Uri.parse(url)).timeout(Duration(seconds: 10));
+
         if (response.statusCode == 200) {
           final Uint8List bytes = response.bodyBytes;
+
           final ui.Codec codec = await ui.instantiateImageCodec(bytes,
-              targetWidth: 30, targetHeight: 50);
+              targetWidth: targetWidth, targetHeight: targetHeight);
+
           final ui.FrameInfo frameInfo = await codec.getNextFrame();
+
           final ByteData? byteData =
               await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+
           return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+        } else {
+          if (kDebugMode) {
+            print(
+                "⚠️ Failed to load image from $url - HTTP ${response.statusCode}");
+          }
+
+          return BitmapDescriptor.defaultMarker;
         }
-        return BitmapDescriptor.defaultMarker;
       } catch (e) {
         if (kDebugMode) {
-          print("Error loading icon from $url: $e");
+          print("❌ Error loading icon from $url: $e");
         }
+
         return BitmapDescriptor.defaultMarker;
       }
+    }
+
+    try {
+      // Load all icons with error handling
+
+      final List<BitmapDescriptor> icons = await Future.wait(
+        _iconPaths.map((path) => loadIcon(path)),
+      );
+
+      if (kDebugMode) {
+        print("✅ Loaded ${icons.length} icons successfully");
+      }
+
+      // ✅ CHECK: Widget still mounted before setState
+
+      if (!mounted) return;
+
+      setState(() {
+        // ✅ SAFE ITERATION: Use the actual data length, not assumptions
+
+        final itemCount = math.min(vihicallocations.length,
+            math.min(icons.length, vehicleList.length));
+
+        if (kDebugMode) {
+          print("🎯 Adding $itemCount vehicle markers for category: $mid");
+        }
+
+        for (int i = 0; i < itemCount; i++) {
+          try {
+            final vehicleId =
+                "vehicle_${vehicleList[i].id}_$mid"; // Include category in ID
+
+            if (kDebugMode) {
+              print("   Adding marker $i - Vehicle ID: $vehicleId");
+            }
+
+            MarkerId markerId = MarkerId(vehicleId);
+
+            Marker marker = Marker(
+              markerId: markerId,
+              icon: icons[i],
+              position: vihicallocations[i],
+              onTap: () {
+                if (kDebugMode) {
+                  print("🚗 Tapped vehicle: $vehicleId");
+                }
+
+                // Show vehicle info dialog
+
+                showVehicleInfo(vehicleList[i]);
+              },
+            );
+
+            markers[markerId] = marker;
+          } catch (e) {
+            if (kDebugMode) {
+              print("❌ Error adding marker $i: $e");
+            }
+
+            // Continue with next marker instead of failing completely
+          }
+        }
+
+        if (kDebugMode) {
+          print("✅ Successfully added ${itemCount} vehicle markers to map");
+
+          print("📍 Total markers on map: ${markers.length}");
+        }
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error in _addMarkers: $e");
+      }
+
+      // Don't crash the app, just log the error
     }
 
     try {
@@ -1344,9 +1580,36 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
-  Map<MarkerId, Marker> markers = {};
-
   late GoogleMapController mapController1;
+  void showVehicleInfo(dynamic vehicle) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        child: Container(
+          padding: EdgeInsets.all(15),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Driver Information",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              SizedBox(height: 10),
+              Text("Driver ID: ${vehicle.id}"),
+              Text("Distance: ${vehicle.distance ?? 'N/A'} km"),
+              Text("Rating: ${vehicle.rating ?? 'N/A'} ⭐"),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Close"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Future fun() async {
     LocationPermission permission;
@@ -1643,14 +1906,36 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 "🔄 HomeApiController has no data and not loading - triggering API call");
           }
 
-          // Trigger the home API call
+          // ✅ FORCE load vehicles after map is created
+
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (userid != null && lathome != null && longhome != null) {
-              homeApiController.homeApi(
-                uid: userid.toString(),
-                lat: lathome.toString(),
-                lon: longhome.toString(),
-              );
+            if (lathome != null && longhome != null) {
+              if (mid.isEmpty &&
+                  homeApiController.homeapimodel?.categoryList?.isNotEmpty ==
+                      true) {
+                // Set default category if not set
+
+                final firstCategory =
+                    homeApiController.homeapimodel!.categoryList![0];
+
+                setState(() {
+                  select1 = 0;
+
+                  vehicle_id = firstCategory.id.toString();
+
+                  vihicalname = firstCategory.name.toString();
+
+                  vihicalimage = firstCategory.image.toString();
+
+                  mid = firstCategory.id.toString();
+
+                  mroal = firstCategory.role.toString();
+                });
+              }
+
+              if (mid.isNotEmpty) {
+                loadVehiclesForCategory(mid);
+              }
             }
           });
         }
@@ -1800,45 +2085,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                   ? Set<Marker>.of(markers.values)
                                   : Set<Marker>.of(markers11.values),
                               onTap: (argument) {
-                                setState(() {
-                                  _onAddMarkerButtonPressed(
-                                      argument.latitude, argument.longitude);
-                                  lathome = argument.latitude;
-                                  longhome = argument.longitude;
-                                  getCurrentLatAndLong(lathome, longhome);
-
-                                  homeMapController
-                                      .homemapApi(
-                                          mid: mid,
-                                          lat: lathome.toString(),
-                                          lon: longhome.toString())
-                                      .then((value) {
-                                    setState(() {
-                                      vihicallocations.clear();
-                                      _iconPaths.clear();
-                                      for (int i = 0;
-                                          i <
-                                              homeMapController.homeMapApiModel!
-                                                  .list!.length;
-                                          i++) {
-                                        vihicallocations.add(LatLng(
-                                            double.parse(homeMapController
-                                                .homeMapApiModel!
-                                                .list![i]
-                                                .latitude
-                                                .toString()),
-                                            double.parse(homeMapController
-                                                .homeMapApiModel!
-                                                .list![i]
-                                                .longitude
-                                                .toString())));
-                                        _iconPaths.add(
-                                            "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                                      }
-                                      _addMarkers();
-                                    });
-                                  });
-                                });
+                                handleMapTap(argument);
                               },
                               myLocationEnabled: false,
                               zoomGesturesEnabled: true,
@@ -1848,6 +2095,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 setState(() {
                                   controller.setMapStyle(themeForMap);
                                   mapController1 = controller;
+
                                   if (appController
                                           .pickupController.text.isNotEmpty &&
                                       appController
@@ -2131,187 +2379,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                   const SizedBox(height: 20),
 
                                   // Debug info for vehicle categories - only in debug mode
-                                  if (kDebugMode) ...[
-                                    Padding(
-                                      padding: const EdgeInsets.all(20),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue.withOpacity(0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                        child: Column(
-                                          children: [
-                                            Text(
-                                              "VEHICLE CATEGORIES DEBUG:",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            Text(
-                                              "Categories: ${homeApiController.homeapimodel?.categoryList?.length ?? 0}",
-                                            ),
-                                            if (homeApiController
-                                                    .homeapimodel
-                                                    ?.categoryList
-                                                    ?.isNotEmpty ==
-                                                true)
-                                              Text(
-                                                "First category: ${homeApiController.homeapimodel!.categoryList![0].name}",
-                                              ),
-                                            Text(
-                                              "Selected: $select1",
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
 
                                   // ✅ VEHICLE SELECTION HORIZONTAL LIST
                                   if (homeApiController.homeapimodel
                                           ?.categoryList?.isNotEmpty ==
                                       true)
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 10, right: 10),
-                                      child: SizedBox(
-                                        height: 90,
-                                        child: ListView.builder(
-                                          scrollDirection: Axis.horizontal,
-                                          itemCount: homeApiController
-                                              .homeapimodel!
-                                              .categoryList!
-                                              .length,
-                                          itemBuilder: (context, index) {
-                                            final category = homeApiController
-                                                .homeapimodel!
-                                                .categoryList![index];
-                                            return Padding(
-                                              padding: const EdgeInsets.all(4),
-                                              child: InkWell(
-                                                onTap: () {
-                                                  setState(() {
-                                                    select1 = index;
-                                                    vehicle_id =
-                                                        category.id.toString();
-                                                    vihicalname = category.name
-                                                        .toString();
-                                                    vihicalimage = category
-                                                        .image
-                                                        .toString();
-                                                    mid =
-                                                        category.id.toString();
-                                                    mroal = category.role
-                                                        .toString();
-
-                                                    // Update markers on map after vehicle selection
-                                                    if (lathome != null &&
-                                                        longhome != null) {
-                                                      homeMapController
-                                                          .homemapApi(
-                                                              mid: mid,
-                                                              lat: lathome
-                                                                  .toString(),
-                                                              lon: longhome
-                                                                  .toString())
-                                                          .then((value) {
-                                                        setState(() {
-                                                          vihicallocations
-                                                              .clear();
-                                                          _iconPaths.clear();
-                                                          for (int i = 0;
-                                                              i <
-                                                                  homeMapController
-                                                                      .homeMapApiModel!
-                                                                      .list!
-                                                                      .length;
-                                                              i++) {
-                                                            vihicallocations.add(LatLng(
-                                                                double.parse(homeMapController
-                                                                    .homeMapApiModel!
-                                                                    .list![i]
-                                                                    .latitude
-                                                                    .toString()),
-                                                                double.parse(homeMapController
-                                                                    .homeMapApiModel!
-                                                                    .list![i]
-                                                                    .longitude
-                                                                    .toString())));
-                                                            _iconPaths.add(
-                                                                "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                                                          }
-                                                          _addMarkers();
-                                                        });
-                                                      });
-                                                    }
-                                                  });
-                                                },
-                                                child: Container(
-                                                  width: 100,
-                                                  decoration: BoxDecoration(
-                                                    color: select1 == index
-                                                        ? theamcolore
-                                                            .withOpacity(0.08)
-                                                        : notifier
-                                                            .containercolore,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                    border: select1 == index
-                                                        ? Border.all(
-                                                            color: theamcolore,
-                                                            width: 2)
-                                                        : null,
-                                                  ),
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Image.network(
-                                                        "${Config.imageurl}${category.image}",
-                                                        height: 30,
-                                                        width: 30,
-                                                        errorBuilder: (context,
-                                                            error, stackTrace) {
-                                                          return Icon(
-                                                              Icons
-                                                                  .directions_car,
-                                                              size: 30);
-                                                        },
-                                                      ),
-                                                      const SizedBox(height: 5),
-                                                      Text(
-                                                        "${category.name}",
-                                                        style: TextStyle(
-                                                          color: select1 ==
-                                                                  index
-                                                              ? theamcolore
-                                                              : notifier
-                                                                  .textColor,
-                                                          fontSize: 12,
-                                                          fontWeight: select1 ==
-                                                                  index
-                                                              ? FontWeight.bold
-                                                              : FontWeight
-                                                                  .normal,
-                                                        ),
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        maxLines: 2,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    )
+                                    buildVehicleSelection(homeApiController)
                                   else
                                     Padding(
                                       padding: const EdgeInsets.all(20),
@@ -2330,210 +2403,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                           .pickupController.text.isNotEmpty &&
                                       appController
                                           .dropController.text.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.all(10),
-                                      child: GetBuilder<CalculateController>(
-                                        builder: (calculateController) {
-                                          return calculateController.isLoading
-                                              ? Container(
-                                                  height: 50,
-                                                  decoration: BoxDecoration(
-                                                    color: theamcolore
-                                                        .withOpacity(0.5),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            15),
-                                                  ),
-                                                  child: Center(
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                )
-                                              : ElevatedButton(
-                                                  onPressed: () {
-                                                    if (calculateController
-                                                            .calCulateModel
-                                                            ?.driverId !=
-                                                        null) {
-                                                      // Price calculation is done, show booking dialog
-                                                      Buttonpresebottomshhet();
-                                                    } else {
-                                                      // Need to calculate price first
-                                                      calculateController
-                                                          .calculateApi(
-                                                        context: context,
-                                                        uid: appController
-                                                            .globalUserId.value,
-                                                        mid: mid,
-                                                        mrole: mroal,
-                                                        pickup_lat_lon:
-                                                            "${appController.pickupLat.value},${appController.pickupLng.value}",
-                                                        drop_lat_lon:
-                                                            "${appController.dropLat.value},${appController.dropLng.value}",
-                                                        drop_lat_lon_list:
-                                                            onlypass,
-                                                      )
-                                                          .then((value) {
-                                                        if (value["Result"] ==
-                                                            true) {
-                                                          dropprice = value[
-                                                              "drop_price"];
-                                                          minimumfare = value[
-                                                                  "vehicle"]
-                                                              ["minimum_fare"];
-                                                          maximumfare = value[
-                                                                  "vehicle"]
-                                                              ["maximum_fare"];
-                                                          responsemessage =
-                                                              value["message"];
-                                                          amountresponse =
-                                                              "true";
-
-                                                          // Now show booking dialog
-                                                          Buttonpresebottomshhet();
-                                                        } else {
-                                                          amountresponse =
-                                                              "false";
-                                                          responsemessage =
-                                                              value["message"];
-                                                          Fluttertoast.showToast(
-                                                              msg:
-                                                                  responsemessage);
-                                                        }
-                                                      });
-                                                    }
-                                                  },
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        theamcolore,
-                                                    minimumSize: const Size(
-                                                        double.infinity, 50),
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              15),
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    calculateController
-                                                                .calCulateModel
-                                                                ?.driverId !=
-                                                            null
-                                                        ? "Set your price".tr
-                                                        : "Calculate price".tr,
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                );
-                                        },
-                                      ),
-                                    ),
-
-                                  // ✅ QUICK ACTIONS (Add home, work shortcuts, etc.)
-                                  if (appController
-                                          .pickupController.text.isEmpty ||
-                                      appController.dropController.text.isEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.all(15),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            "Quick actions".tr,
-                                            style: TextStyle(
-                                              color: notifier.textColor,
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 15),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: InkWell(
-                                                  onTap: () {
-                                                    // Navigate to add home address
-                                                    _navigateAndRefresh();
-                                                  },
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            15),
-                                                    decoration: BoxDecoration(
-                                                      color:
-                                                          notifier.background,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              12),
-                                                    ),
-                                                    child: Row(
-                                                      children: [
-                                                        Icon(Icons.home,
-                                                            color: theamcolore),
-                                                        const SizedBox(
-                                                            width: 10),
-                                                        Text(
-                                                          "Add Home".tr,
-                                                          style: TextStyle(
-                                                              color: notifier
-                                                                  .textColor),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Expanded(
-                                                child: InkWell(
-                                                  onTap: () {
-                                                    // Navigate to add work address
-                                                    _navigateAndRefresh();
-                                                  },
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            15),
-                                                    decoration: BoxDecoration(
-                                                      color:
-                                                          notifier.background,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              12),
-                                                    ),
-                                                    child: Row(
-                                                      children: [
-                                                        Icon(Icons.work,
-                                                            color: theamcolore),
-                                                        const SizedBox(
-                                                            width: 10),
-                                                        Text(
-                                                          "Add Work".tr,
-                                                          style: TextStyle(
-                                                              color: notifier
-                                                                  .textColor),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
+                                    buildCalculationDisplay(),
                                   const SizedBox(height: 20),
+                                  buildFindDriverButton(),
                                 ])
                               ],
                             ),
@@ -3406,8 +3278,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                       } else {
                                         toast = 0;
                                         dropprice =
-                                            int.parse(amountcontroller.text)
-                                                as double;
+                                            int.parse(amountcontroller.text);
                                         mainamount = amountcontroller.text;
                                       }
                                     });
@@ -3488,7 +3359,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             width: 30,
                           ),
                           title: Text(
-                            "Automatically book the nearest driver for (${globalcurrency}${amountcontroller.text})"
+                            "Automatically book the nearest driver for (${amountcontroller.text} ${globalcurrency})"
                                 .tr,
                             style: TextStyle(
                                 color: notifier.textColor, fontSize: 16),
@@ -3568,7 +3439,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                   },
                                   context: context,
                                   txt1:
-                                      "Book for ${currencyy ?? globalcurrency}${amountcontroller.text}")
+                                      "Book for A ${amountcontroller.text} ${globalcurrency}")
                               : AnimatedBuilder(
                                   // ✅ FIX: Use local animation controller
                                   animation: _animationController!,
@@ -3665,7 +3536,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                             ),
                                             offerpluse == true
                                                 ? Text(
-                                                    "Raise fare to $currencyy${amountcontroller.text}",
+                                                    "Raise fare to ${globalcurrency}${amountcontroller.text}",
                                                     style: const TextStyle(
                                                       fontSize: 14,
                                                       fontWeight:
@@ -3675,7 +3546,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                     ),
                                                   )
                                                 : Text(
-                                                    "Book for $currencyy${amountcontroller.text}",
+                                                    "Book for  AfterRise${globalcurrency}${amountcontroller.text}",
                                                     style: const TextStyle(
                                                       fontSize: 14,
                                                       fontWeight:
@@ -3812,22 +3683,22 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         "title": appController.dropTitle.value,
         "subt": appController.dropSubtitle.value
       },
-      droplistadd: appController.dropTitleList,
+      droplistadd: droptitlelist,
       context: context,
       uid: appController.globalUserId.value,
-      tot_km: "$totalkm",
-      vehicle_id: vehicle_id,
-      tot_minute: tot_time,
-      tot_hour: tot_hour,
+      tot_km: "${appController.totalkm}",
+      vehicle_id: appController.vehicle_id,
+      tot_minute: appController.tot_time,
+      tot_hour: appController.tot_hour,
       m_role: mroal,
-      coupon_id: couponId,
+      coupon_id: appController.couponId.value,
       payment_id: "$payment",
       driverid: calculateController.calCulateModel!.driverId!,
       price: amountcontroller.text,
       pickup:
           "${appController.pickupLat.value},${appController.pickupLng.value}",
       drop: "${appController.dropLat.value},${appController.dropLng.value}",
-      droplist: onlypass,
+      droplist: appController.onlypass,
       bidd_auto_status: biddautostatus,
     ).then((value) {
       if (kDebugMode) {
@@ -3851,7 +3722,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 "${appController.pickupLat.value},${appController.pickupLng.value}",
             drop_lat_lon:
                 "${appController.dropLat.value},${appController.dropLng.value}",
-            drop_lat_lon_list: onlypass)
+            drop_lat_lon_list: appController.onlypass)
         .then((value) {
       dropprice = 0;
       minimumfare = 0;
@@ -3876,5 +3747,382 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         print("********** maximumfare **********:----- $maximumfare");
       }
     });
+  }
+
+  // ✅ IMPROVED: Map tap handler with vehicle loading
+  void handleMapTap(LatLng tappedPoint) {
+    setState(() {
+      _onAddMarkerButtonPressed(tappedPoint.latitude, tappedPoint.longitude);
+      lathome = tappedPoint.latitude;
+      longhome = tappedPoint.longitude;
+      getCurrentLatAndLong(lathome, longhome);
+    });
+
+    // ✅ Load vehicles at new location
+    if (mid.isNotEmpty) {
+      loadVehiclesForCategory(mid);
+    }
+  }
+
+  // ✅ IMPROVED: Vehicle selection with immediate map update
+
+  Widget buildVehicleSelection(HomeApiController homeApiController) {
+    if (homeApiController.homeapimodel?.categoryList?.isNotEmpty != true) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(
+          "No vehicles available",
+          style: TextStyle(color: notifier.textColor),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 10, right: 10),
+      child: SizedBox(
+        height: 90,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: homeApiController.homeapimodel!.categoryList!.length,
+          itemBuilder: (context, index) {
+            final category =
+                homeApiController.homeapimodel!.categoryList![index];
+
+            return Padding(
+              padding: const EdgeInsets.all(4),
+              child: InkWell(
+                onTap: () async {
+                  if (kDebugMode) {
+                    print(
+                        "🚗 Selected vehicle category: ${category.name} (ID: ${category.id})");
+                  }
+
+                  setState(() {
+                    select1 = index;
+
+                    vehicle_id = category.id.toString();
+
+                    vihicalname = category.name.toString();
+
+                    vihicalimage = category.image.toString();
+
+                    mid = category.id.toString();
+
+                    mroal = category.role.toString();
+                  });
+
+                  // ✅ CRITICAL: Clear existing markers and load new category
+
+                  if (lathome != null && longhome != null) {
+                    // Clear previous vehicle markers immediately
+
+                    setState(() {
+                      markers.removeWhere((key, value) =>
+                          key.value.startsWith('vehicle_') ||
+                          key.value.contains('driver'));
+                    });
+
+                    // Load vehicles for new category
+
+                    await loadVehiclesForCategory(mid);
+                  }
+                },
+                child: Container(
+                  width: 100,
+                  decoration: BoxDecoration(
+                    color: select1 == index
+                        ? theamcolore.withOpacity(0.08)
+                        : notifier.containercolore,
+                    borderRadius: BorderRadius.circular(10),
+                    border: select1 == index
+                        ? Border.all(color: theamcolore, width: 2)
+                        : null,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.network(
+                        "${Config.imageurl}${category.image}",
+                        height: 30,
+                        width: 30,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(Icons.directions_car, size: 30);
+                        },
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        "${category.name}",
+                        style: TextStyle(
+                          color: select1 == index
+                              ? theamcolore
+                              : notifier.textColor,
+                          fontSize: 12,
+                          fontWeight: select1 == index
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget buildCalculationDisplay() {
+    if (calculateController.calCulateModel == null) {
+      return SizedBox.shrink();
+    }
+
+    return GetBuilder<CalculateController>(
+      builder: (calculateController) {
+        if (calculateController.calCulateModel == null) {
+          return SizedBox.shrink();
+        }
+
+        final calculation = calculateController.calCulateModel!;
+
+        // ✅ Use proper currency from shared preferences
+
+        String currency = globalcurrency.isNotEmpty
+            ? globalcurrency
+            : (currencyy != null && currencyy['symbol'] != null
+                ? currencyy['symbol']
+                : 'YER');
+
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+          padding: EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: notifier.containercolore,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theamcolore.withOpacity(0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.calculate, color: theamcolore, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    "Trip Calculation",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: notifier.textColor,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Distance:",
+                      style: TextStyle(color: notifier.textColor)),
+                  Text(
+                    "${calculation.totKm ?? totalkm} km",
+                    style: TextStyle(
+                        color: notifier.textColor, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Duration:",
+                      style: TextStyle(color: notifier.textColor)),
+                  Text(
+                    "${calculation.totHour ?? tot_hour}h ${calculation.totMinute ?? tot_time}m",
+                    style: TextStyle(
+                        color: notifier.textColor, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Estimated Fare:",
+                      style: TextStyle(color: notifier.textColor)),
+                  Text(
+                    "${calculation.dropPrice ?? dropprice} $currency",
+                    style: TextStyle(
+                      color: theamcolore,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              if (minimumfare > 0 && maximumfare > 0) ...[
+                SizedBox(height: 5),
+                Text(
+                  "{Range}.tr: ${minimumfare.toInt()} $currency - ${maximumfare.toInt()} $currency",
+                  style: TextStyle(
+                    color: notifier.textColor?.withOpacity(0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+// ✅ FIX 4: Fixed button loading state and position
+
+  Widget buildFindDriverButton() {
+    if (appController.pickupController.text.isEmpty ||
+        appController.dropController.text.isEmpty) {
+      return SizedBox.shrink();
+    }
+
+    // ✅ Use proper currency
+
+    String currency = globalcurrency.isNotEmpty
+        ? globalcurrency
+        : (currencyy != null && currencyy['symbol'] != null
+            ? currencyy['symbol']
+            : 'YER');
+
+    return Padding(
+      padding: const EdgeInsets.all(10),
+      child: GetBuilder<CalculateController>(
+        builder: (calculateController) {
+          return calculateController.isLoading
+              ? Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: theamcolore.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          "Calculating trip...",
+                          style: TextStyle(color: Colors.white, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : ElevatedButton(
+                  onPressed: () async {
+                    if (calculateController.calCulateModel?.driverId != null) {
+                      // Price calculation is done, show booking dialog
+
+                      Buttonpresebottomshhet();
+                    } else {
+                      // Need to calculate price first
+
+                      if (kDebugMode) {
+                        print("🔄 Calculating trip price...");
+                      }
+
+                      try {
+                        final result = await calculateController.calculateApi(
+                          context: context,
+                          uid: appController.globalUserId.value,
+                          mid: mid,
+                          mrole: mroal,
+                          pickup_lat_lon:
+                              "${appController.pickupLat.value},${appController.pickupLng.value}",
+                          drop_lat_lon:
+                              "${appController.dropLat.value},${appController.dropLng.value}",
+                          drop_lat_lon_list: appController.onlypass,
+                        );
+
+                        if (result["Result"] == true) {
+                          setState(() {
+                            dropprice = result["drop_price"];
+
+                            minimumfare = result["vehicle"]["minimum_fare"];
+
+                            maximumfare = result["vehicle"]["maximum_fare"];
+
+                            responsemessage = result["message"];
+
+                            amountresponse = "true";
+
+                            // Update other calculation data
+
+                            totalkm = result["tot_km"] ?? 0.0;
+
+                            tot_time = result["tot_minute"]?.toString() ?? "0";
+
+                            tot_hour = result["tot_hour"]?.toString() ?? "0";
+                          });
+
+                          if (kDebugMode) {
+                            print(
+                                "✅ Calculation completed: $dropprice $currency");
+                          }
+
+                          // Show booking dialog
+
+                          Buttonpresebottomshhet();
+                        } else {
+                          setState(() {
+                            amountresponse = "false";
+
+                            responsemessage =
+                                result["message"] ?? "Calculation failed";
+                          });
+
+                          Fluttertoast.showToast(msg: responsemessage);
+                        }
+                      } catch (e) {
+                        if (kDebugMode) {
+                          print("❌ Calculation error: $e");
+                        }
+
+                        Fluttertoast.showToast(
+                            msg: "Failed to calculate trip price");
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theamcolore,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  child: Text(
+                    calculateController.calCulateModel?.driverId != null
+                        ? "Set your price -   ${dropprice.toInt()} $currency".tr
+                        : "Calculate price".tr,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+        },
+      ),
+    );
   }
 }

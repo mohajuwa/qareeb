@@ -55,6 +55,7 @@ class CalculateController extends GetxController implements GetxService {
         if (data["Result"] == true) {
           calCulateModel = calCulateModelFromJson(response.body);
           if (calCulateModel!.result == true) {
+            isLoading = false;
             update();
             return data;
           } else {

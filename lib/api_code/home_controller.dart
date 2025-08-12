@@ -40,6 +40,7 @@ class HomeApiController extends GetxController implements GetxService {
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
+        isLoading = false;
 
         if (data["Result"] == true) {
           homeapimodel = homeModelFromJson(response.body);

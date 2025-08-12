@@ -5,7 +5,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -114,15 +113,15 @@ class _HomeScreenState extends State<HomeScreen> {
     socket.onDisconnect(
         (data) => print('Socket.IO server disconnected home screen'));
 
-    print("*********midsecounde*********:--  ($midseconde)");
-    print("*********midsecounde*********:--  ($vihicalrice)");
+    print("*********midsecounde*********:--  (${appController.midSecond})");
+    print("*********midsecounde*********:--  (${appController.vihicalrice})");
     vihicalCalculateController
         .vihicalcalculateApi(
             uid: userId.toString(),
-            mid: "$midseconde",
+            mid: "${appController.midSecond}",
             pickup_lat_lon: "$latitudepick,$longitudepick",
             drop_lat_lon: "$latitudedrop,$longitudedrop",
-            drop_lat_lon_list: onlypass)
+            drop_lat_lon_list: appController.onlypass)
         .then(
       (value) {
         print("-----------------:--- $value");
@@ -155,10 +154,10 @@ class _HomeScreenState extends State<HomeScreen> {
       vihicalCalculateController
           .vihicalcalculateApi(
               uid: userId.toString(),
-              mid: "$midseconde",
+              mid: "${appController.midSecond}",
               pickup_lat_lon: "$latitudepick,$longitudepick",
               drop_lat_lon: "$latitudedrop,$longitudedrop",
-              drop_lat_lon_list: onlypass)
+              drop_lat_lon_list: appController.onlypass)
           .then(
         (value) {
           for (int i = 0;
@@ -190,10 +189,10 @@ class _HomeScreenState extends State<HomeScreen> {
           "++++hjhhhhhhhhhhhhhhhhhh+++++: ${acceptvehrequest["uid"].toString()}");
       print(
           "++++hjhhhhhhhhhhhhhhhhhh+++++: ${acceptvehrequest["uid"].toString()}");
-      loadertimer = true;
+      appController.loadertimer = true;
 
       appController.requestId.value = acceptvehrequest["request_id"].toString();
-      driver_id = acceptvehrequest["uid"].toString();
+      appController.driver_id = acceptvehrequest["uid"].toString();
 
       if (acceptvehrequest["c_id"].toString().contains(userId.toString())) {
         print("condition done");
@@ -284,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     print("1111/////1111:---  ${widget.latpic},${widget.longpic}");
     print("2222/////2222:---  ${widget.latdrop},${widget.longdrop}");
-    print("3333/////3333:---  $onlypass");
+    print("3333/////3333:---  $appController.onlypass");
     print("4444/////4444:---  $_dropOffPoints");
 
     print("()()()()() :---  ${picktitle == "" ? addresspickup : picktitle}");
@@ -701,7 +700,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     return InkWell(
                                       onTap: () {
                                         setState(() {
-                                          select = index;
+                                          appController.select = index;
 
                                           vihicallocationsbiddingoff.clear();
                                           _iconPathsbiddingoff.clear();
@@ -724,36 +723,38 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       .caldriver![index]
                                                       .dropPrice!
                                                       .toString());
-                                          totalkm = double.parse(
+                                          appController.totalkm = double.parse(
                                               modual_calculateController
                                                   .modualCalculateApiModel!
                                                   .caldriver![index]
                                                   .dropKm!
                                                   .toString());
-                                          tot_time = modual_calculateController
-                                              .modualCalculateApiModel!
-                                              .caldriver![index]
-                                              .dropTime!
-                                              .toString();
-                                          tot_hour = modual_calculateController
-                                              .modualCalculateApiModel!
-                                              .caldriver![index]
-                                              .dropHour!
-                                              .toString();
-                                          tot_secound = "0";
-                                          vihicalname =
+                                          appController.tot_time =
+                                              modual_calculateController
+                                                  .modualCalculateApiModel!
+                                                  .caldriver![index]
+                                                  .dropTime!
+                                                  .toString();
+                                          appController.tot_hour =
+                                              modual_calculateController
+                                                  .modualCalculateApiModel!
+                                                  .caldriver![index]
+                                                  .dropHour!
+                                                  .toString();
+                                          appController.tot_secound = "0";
+                                          appController.vihicalname =
                                               modual_calculateController
                                                   .modualCalculateApiModel!
                                                   .caldriver![index]
                                                   .name!
                                                   .toString();
-                                          vihicalimage =
+                                          appController.vihicalimage =
                                               modual_calculateController
                                                   .modualCalculateApiModel!
                                                   .caldriver![index]
                                                   .image!
                                                   .toString();
-                                          vehicle_id =
+                                          appController.vehicle_id =
                                               modual_calculateController
                                                   .modualCalculateApiModel!
                                                   .caldriver![index]
@@ -762,17 +763,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                           setState(() {});
                                           print(
-                                              "+++++dropprice++++++++++:-- $vihicalrice");
+                                              "+++++dropprice++++++++++:-- ${appController.vihicalrice}");
 
                                           vihicalCalculateController
                                               .vihicalcalculateApi(
                                                   uid: userId.toString(),
-                                                  mid: midseconde.toString(),
+                                                  mid: appController.midseconde
+                                                      .toString(),
                                                   pickup_lat_lon:
                                                       "$latitudepick,$longitudepick",
                                                   drop_lat_lon:
                                                       "$latitudedrop,$longitudedrop",
-                                                  drop_lat_lon_list: onlypass)
+                                                  drop_lat_lon_list:
+                                                      appController.onlypass)
                                               .then(
                                             (value) {
                                               setState(() {});
@@ -842,10 +845,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                         width: Get.width,
                                         decoration: BoxDecoration(
                                           border: Border.all(
-                                              color: select == index
-                                                  ? theamcolore
-                                                  : Colors.grey
-                                                      .withOpacity(0.4),
+                                              color:
+                                                  appController.select == index
+                                                      ? theamcolore
+                                                      : Colors.grey
+                                                          .withOpacity(0.4),
                                               width: 1),
                                           borderRadius:
                                               BorderRadius.circular(10),
@@ -878,7 +882,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 const SizedBox(
                                                   width: 10,
                                                 ),
-                                                select == index
+                                                appController.select == index
                                                     ? SvgPicture.asset(
                                                         "assets/svgpicture/user.svg",
                                                         height: 15,
@@ -886,7 +890,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                             notifier.textColor,
                                                       )
                                                     : const SizedBox(),
-                                                select == index
+                                                appController.select == index
                                                     ? Text(
                                                         "${modual_calculateController.modualCalculateApiModel!.caldriver![index].passengerCapacity}",
                                                         style: TextStyle(
@@ -1215,7 +1219,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       child: InkWell(
                                         onTap: () {
                                           setState(() {
-                                            mainamount = vihicalrice.toString();
+                                            mainamount = appController
+                                                .vihicalrice
+                                                .toString();
                                             if (couponadd.isEmpty) {
                                               for (int i = 0;
                                                   i <
@@ -1461,7 +1467,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                       ))))
                                                                               : InkWell(
                                                                                   onTap: () {
-                                                                                    if (vihicalrice >= double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount.toString())) {
+                                                                                    if (appController.vihicalrice >= double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount.toString())) {
                                                                                       setState(() {
                                                                                         couponAmt = int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString());
 
@@ -1480,7 +1486,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                         }
                                                                                       });
 
-                                                                                      appController.vehiclePrice.value = vihicalrice - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount!);
+                                                                                      appController.vehiclePrice.value = appController.vihicalrice - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount!);
 
                                                                                       couponId = paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString();
 
@@ -1597,12 +1603,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ],
                             ),
-                            select == -1
+                            appController.select == -1
                                 ? CommonButton(
                                     containcolore: theamcolore.withOpacity(0.1),
                                     onPressed1: () {},
                                     context: context,
-                                    txt1: "Book $vihicalname")
+                                    txt1: "Book $appController.vihicalname")
                                 : CommonButton(
                                     containcolore: theamcolore,
                                     onPressed1: () {
@@ -1639,7 +1645,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       }
                                       setState(() {
                                         currentStoryIndex = 0;
-                                        loadertimer = false;
+                                        appController.loadertimer = false;
                                       });
 
                                       addVihicalCalculateController
@@ -1657,10 +1663,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                               droplistadd: droptitlelist,
                                               context: context,
                                               uid: userId.toString(),
-                                              tot_km: "$totalkm",
-                                              vehicle_id: vehicle_id,
-                                              tot_minute: tot_time,
-                                              tot_hour: tot_hour,
+                                              tot_km:
+                                                  "${appController.totalkm}",
+                                              vehicle_id:
+                                                  appController.vehicle_id,
+                                              tot_minute:
+                                                  appController.tot_time,
+                                              tot_hour: appController.tot_hour,
                                               m_role: mroal,
                                               coupon_id: couponId,
                                               payment_id: "$payment",
@@ -1668,12 +1677,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   vihicalCalculateController
                                                       .vihicalCalculateModel!
                                                       .driverId!,
-                                              price: "$vihicalrice",
+                                              price:
+                                                  "${appController.vihicalrice}",
                                               pickup:
                                                   "$latitudepick,$longitudepick",
                                               drop:
                                                   "$latitudedrop,$longitudedrop",
-                                              droplist: onlypass)
+                                              droplist: appController.onlypass)
                                           .then(
                                         (value) {
                                           print("+++++${value["id"]}");
@@ -1687,7 +1697,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           context: context);
                                     },
                                     context: context,
-                                    txt1: "Book $vihicalname")
+                                    txt1: "Book $appController.vihicalname")
                           ],
                         ),
                       ),
