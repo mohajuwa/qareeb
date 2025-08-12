@@ -55,9 +55,9 @@ class _ChatScreenState extends State<ChatScreen> {
     socket.onDisconnect(
         (data) => print('Socket.IO server disconnected driverdetail'));
 
-    print("999999:-- $useridgloable");
+    print("999999:-- ${appController.globalUserId}");
 
-    socket.on('New_Chat$useridgloable', (New_Chat) {
+    socket.on('New_Chat${appController.globalUserId}', (New_Chat) {
       print("???????:-- ($New_Chat)");
 
       // messaj.add(New_Chat["message"]);
@@ -66,15 +66,15 @@ class _ChatScreenState extends State<ChatScreen> {
       chatListApiController.chatlistApi(
           uid: appController.globalCurrency.value,
           sender_id: appController.globalCurrency.value,
-          recevier_id: driver_id.toString(),
+          recevier_id: appController.driver_id.toString(),
           status: "customer");
     });
   }
 
   sendmessaj() {
     socket.emit('Send_Chat', {
-      'sender_id': useridgloable,
-      'recevier_id': driver_id,
+      'sender_id': appController.globalUserId,
+      'recevier_id': appController.driver_id,
       'message': messageController.text.trim(),
       'status': "customer",
     });
@@ -88,7 +88,7 @@ class _ChatScreenState extends State<ChatScreen> {
     chatListApiController.chatlistApi(
         uid: appController.globalCurrency.value,
         sender_id: appController.globalCurrency.value,
-        recevier_id: driver_id.toString(),
+        recevier_id: appController.driverId.toString(),
         status: "customer");
     super.initState();
   }
@@ -402,7 +402,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             chatListApiController.chatlistApi(
                                 uid: appController.globalCurrency.value,
                                 sender_id: appController.globalCurrency.value,
-                                recevier_id: driver_id.toString(),
+                                recevier_id: appController.driver_id.toString(),
                                 status: "customer");
                             setState(() {});
                           } else {

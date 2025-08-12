@@ -268,12 +268,14 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
   _connectSocket() async {
     setState(() {});
 
-    socket.on('V_Driver_Location$useridgloable', (V_Driver_Location) {
+    socket.on('V_Driver_Location${appController.globalUserId}',
+        (V_Driver_Location) {
       print("++++++ /V_Driver_Location111/ ++++ :---  $V_Driver_Location");
       print(
           "V_Driver_Location111 is of type: ${V_Driver_Location.runtimeType}");
       print("V_Driver_Location111 keys: ${V_Driver_Location.keys}");
-      print("+++++V_Driver_Location111 userid+++++: $useridgloable");
+      print(
+          "+++++V_Driver_Location111 userid+++++: ${appController.globalUserId}");
       print("++++driver_id hhhh111 +++++: $driver_id");
       print(
           "++++ooooooooooooooooooooooooo111 +++++: ${V_Driver_Location["driver_location"]["image"]}");
@@ -286,7 +288,7 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
         if (droppointstartscreen.isEmpty) {
           print("ififififi");
           socket.emit('drop_location_list', {
-            'c_id': useridgloable,
+            'c_id': {appController.globalUserId},
             'd_id': driver_id,
             'r_id': request_id,
           });
@@ -319,7 +321,7 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
       }
     });
 
-    socket.on('drop_location$useridgloable', (drop_location) {
+    socket.on('drop_location${appController.globalUserId}', (drop_location) {
       print("++++++ /drop_location_list/ ++++ :---  $drop_location");
 
       livelat = double.parse(drop_location["driver_location"]["latitude"]);
@@ -352,20 +354,16 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
 
   String themeForMap = "";
 
-  mapThemeStyle({required context}) {
-    if (darkMode == true) {
+  mapThemeStyle({required BuildContext context}) {
+    final stylePath = darkMode == true
+        ? "assets/map_styles/dark_style.json"
+        : "assets/map_styles/light_style.json";
+
+    DefaultAssetBundle.of(context).loadString(stylePath).then((value) {
       setState(() {
-        DefaultAssetBundle.of(context)
-            .loadString("assets/map_styles/dark_style.json")
-            .then(
-          (value) {
-            setState(() {
-              themeForMap = value;
-            });
-          },
-        );
+        themeForMap = value;
       });
-    }
+    });
   }
 
   @override

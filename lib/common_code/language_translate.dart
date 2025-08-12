@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 class AppTranslations extends Translations {
   @override
   Map<String, Map<String, String>> get keys => {
-        'en_English': {
+        'en': {
           "Captains are busy": "Captains are busy",
           "Find a driver": "Find a driver",
           "City to city": "City to city",
@@ -62,6 +62,8 @@ class AppTranslations extends Translations {
           "Try Again": "Try Again",
           "Cancel": "Cancel",
           "Home": "Home",
+          "Dark Mode": "Dark Mode.",
+
           "My Ride": "My Ride",
           "Wallet": "Wallet",
           "Profile": "Profile",
@@ -210,7 +212,7 @@ class AppTranslations extends Translations {
           "Choose a ride": "Choose a ride",
           // "" : "",
         },
-        "ur_arabic": {
+        "ar": {
           "Captains are busy": "القادة مشغولون",
           "Find a driver": "ابحث عن سائق",
           "City to city": "من مدينة إلى مدينة",
@@ -266,6 +268,7 @@ class AppTranslations extends Translations {
           "Try Again": "حاول مرة أخرى",
           "Cancel": "إلغاء",
           "Home": "الرئيسية",
+          "Dark Mode": "الوضع الداكن",
           "My Ride": "رحلاتي",
           "Wallet": "المحفظة",
           "Profile": "الملف الشخصي",

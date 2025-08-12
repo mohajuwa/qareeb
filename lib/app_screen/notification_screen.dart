@@ -23,7 +23,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   void initState() {
     // TODO: implement initState
-    notificationApiController.notificationApi(uid: useridgloable.toString());
+    notificationApiController.notificationApi(
+        uid: appController.globalUserId.toString());
     super.initState();
   }
 

@@ -1,4 +1,4 @@
-// lib/services/socket_service.dart - COMPLETE IMPLEMENTATION
+// lib/services/socket_service.dart - COMPLETE FIX
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -9,14 +9,30 @@ class SocketService extends GetxController {
   IO.Socket? _socket;
   final RxBool _isConnected = false.obs;
   final RxString _connectionStatus = "Disconnected".obs;
+  bool _isConnecting = false;
 
   // Getters
   bool get isConnected => _isConnected.value;
   String get connectionStatus => _connectionStatus.value;
   IO.Socket? get socket => _socket;
 
-  // ✅ INITIALIZE SOCKET CONNECTION
-  void connect() {
+  @override
+  void onInit() {
+    super.onInit();
+    if (kDebugMode) {
+      print("SocketService initialized");
+    }
+  }
+
+  // ✅ INITIALIZE SOCKET CONNECTION WITH PROPER ERROR HANDLING
+  Future<void> connect() async {
+    if (_isConnecting) {
+      if (kDebugMode) {
+        print("Socket connection already in progress");
+      }
+      return;
+    }
+
     if (_socket != null && _socket!.connected) {
       if (kDebugMode) {
         print("Socket already connected");
@@ -25,35 +41,73 @@ class SocketService extends GetxController {
     }
 
     try {
-      _socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
-        'autoConnect': false,
-        'transports': ['websocket'],
-        'extraHeaders': {'Accept': '*/*'},
-        'timeout': 30000,
-        'forceNew': true,
-      });
+      _isConnecting = true;
+      _connectionStatus.value = "Connecting...";
 
-      // Set up connection event listeners
-      _setupConnectionListeners();
-
-      // Connect
-      _socket!.connect();
+      // Disconnect existing socket if any
+      await disconnect();
 
       if (kDebugMode) {
-        print("🔌 Socket connection initiated");
+        print("🔌 Socket connection initiated to: https://qareeb.modwir.com");
       }
+
+      _socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
+        'autoConnect': false,
+        'transports': ['websocket', 'polling'], // Added polling as fallback
+        'timeout': 30000,
+        'forceNew': true,
+        'reconnection': true,
+        'reconnectionAttempts': 5,
+        'reconnectionDelay': 1000,
+        'extraHeaders': {
+          'Accept': '*/*',
+          'User-Agent': 'QareebApp/1.0',
+        },
+      });
+
+      // Set up all event listeners before connecting
+      _setupAllListeners();
+
+      // Connect with timeout
+      _socket!.connect();
+
+      // Wait for connection with timeout
+      await _waitForConnection();
     } catch (e) {
       if (kDebugMode) {
         print("❌ Socket connection error: $e");
       }
-      _connectionStatus.value = "Error: $e";
+      _connectionStatus.value = "Error: ${e.toString()}";
+      _isConnected.value = false;
+    } finally {
+      _isConnecting = false;
     }
   }
 
-  // ✅ SETUP CONNECTION LISTENERS
-  void _setupConnectionListeners() {
+  // ✅ WAIT FOR CONNECTION WITH TIMEOUT
+  Future<void> _waitForConnection() async {
+    int attempts = 0;
+    const maxAttempts = 10; // 10 seconds timeout
+
+    while (!_isConnected.value && attempts < maxAttempts) {
+      await Future.delayed(const Duration(seconds: 1));
+      attempts++;
+
+      if (kDebugMode) {
+        print("Waiting for connection... attempt $attempts/$maxAttempts");
+      }
+    }
+
+    if (!_isConnected.value) {
+      throw Exception("Connection timeout after ${maxAttempts} seconds");
+    }
+  }
+
+  // ✅ SETUP ALL EVENT LISTENERS
+  void _setupAllListeners() {
     if (_socket == null) return;
 
+    // Connection events
     _socket!.onConnect((data) {
       _isConnected.value = true;
       _connectionStatus.value = "Connected";
@@ -70,85 +124,89 @@ class SocketService extends GetxController {
       }
     });
 
-    _socket!.onDisconnect((data) {
+    _socket!.onDisconnect((reason) {
       _isConnected.value = false;
-      _connectionStatus.value = "Disconnected";
+      _connectionStatus.value = "Disconnected: $reason";
       if (kDebugMode) {
-        print("🔌 Socket disconnected: $data");
+        print("🔌 Socket disconnected: $reason");
+      }
+
+      // Auto-reconnect for certain disconnect reasons
+      if (reason == 'io server disconnect' || reason == 'transport close') {
+        if (kDebugMode) {
+          print("🔄 Attempting auto-reconnect...");
+        }
+        Future.delayed(const Duration(seconds: 3), () {
+          if (!_isConnected.value) {
+            connect();
+          }
+        });
       }
     });
 
-    _socket!.onError((data) {
+    _socket!.onError((error) {
       if (kDebugMode) {
-        print("❌ Socket error: $data");
+        print("❌ Socket error: $error");
       }
+      _connectionStatus.value = "Error: $error";
     });
 
     _socket!.onReconnect((data) {
       _isConnected.value = true;
+      _connectionStatus.value = "Reconnected";
       if (kDebugMode) {
-        print("🔄 Socket reconnected");
+        print("🔄 Socket reconnected: $data");
       }
+    });
+
+    _socket!.onReconnectAttempt((data) {
+      if (kDebugMode) {
+        print("🔄 Socket reconnection attempt: $data");
+      }
+      _connectionStatus.value = "Reconnecting... ($data)";
+    });
+
+    _socket!.onReconnectError((data) {
+      if (kDebugMode) {
+        print("❌ Socket reconnect error: $data");
+      }
+    });
+
+    _socket!.onReconnectFailed((data) {
+      if (kDebugMode) {
+        print("❌ Socket reconnect failed: $data");
+      }
+      _connectionStatus.value = "Reconnection failed";
     });
   }
 
-  // ✅ EMIT EVENTS SAFELY
-  void emit(String event, dynamic data) {
-    if (_socket == null || !_socket!.connected) {
+  // ✅ LISTEN TO SPECIFIC EVENTS
+  void on(String event, Function(dynamic) callback) {
+    if (_socket != null) {
+      _socket!.on(event, callback);
       if (kDebugMode) {
-        print("❌ Cannot emit '$event': Socket not connected");
+        print("📡 Listening to event: $event");
       }
-      return;
+    } else {
+      if (kDebugMode) {
+        print("⚠️ Cannot listen to '$event' - socket not initialized");
+      }
     }
+  }
 
-    try {
+  // ✅ EMIT EVENTS
+  void emit(String event, [dynamic data]) {
+    if (_socket != null && _isConnected.value) {
       _socket!.emit(event, data);
       if (kDebugMode) {
-        print("📤 Emitted '$event': $data");
+        print("📤 Emitted event: $event with data: $data");
       }
-    } catch (e) {
+    } else {
       if (kDebugMode) {
-        print("❌ Error emitting '$event': $e");
+        print("⚠️ Cannot emit '$event' - socket not connected");
       }
     }
   }
-
-  // ✅ LISTEN TO EVENTS SAFELY
-  void on(String event, Function(dynamic) handler) {
-    if (_socket == null) {
-      if (kDebugMode) {
-        print("❌ Cannot listen to '$event': Socket not initialized");
-      }
-      return;
-    }
-
-    _socket!.on(event, (data) {
-      if (kDebugMode) {
-        print("📥 Received '$event': $data");
-      }
-      handler(data);
-    });
-  }
-
-  // ✅ REMOVE LISTENERS
-  void off(String event) {
-    if (_socket == null) return;
-    _socket!.off(event);
-    if (kDebugMode) {
-      print("🔇 Removed listener for '$event'");
-    }
-  }
-
-  // ✅ CLEAR ALL LISTENERS
-  void clearListeners() {
-    if (_socket == null) return;
-    _socket!.clearListeners();
-    if (kDebugMode) {
-      print("🔇 Cleared all socket listeners");
-    }
-  }
-
-  // ✅ SPECIFIC EMIT METHODS FOR YOUR APP
 
   void emitVehicleRequest(String requestId, List driverId, String cId) {
     emit('vehiclerequest', {
@@ -214,40 +272,37 @@ class SocketService extends GetxController {
     });
   }
 
-  // ✅ DISCONNECT SAFELY
-  void disconnect() {
-    if (_socket == null) return;
+  // ✅ DISCONNECT SOCKET
+  Future<void> disconnect() async {
+    if (_socket != null) {
+      if (kDebugMode) {
+        print("🔌 Disconnecting socket...");
+      }
 
-    try {
-      clearListeners();
       _socket!.disconnect();
       _socket!.dispose();
       _socket = null;
-      _isConnected.value = false;
-      _connectionStatus.value = "Disconnected";
-
-      if (kDebugMode) {
-        print("🔌 Socket disconnected and disposed");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error disconnecting socket: $e");
-      }
     }
+
+    _isConnected.value = false;
+    _connectionStatus.value = "Disconnected";
+    _isConnecting = false;
   }
 
-  // ✅ RECONNECT METHOD
-  void reconnect() {
+  // ✅ RECONNECT
+  Future<void> reconnect() async {
     if (kDebugMode) {
-      print("🔄 Attempting to reconnect socket...");
+      print("🔄 Manual reconnect requested");
     }
-    disconnect();
-    connect();
+
+    await disconnect();
+    await Future.delayed(const Duration(milliseconds: 500));
+    await connect();
   }
 
   // ✅ CHECK CONNECTION STATUS
-  bool isSocketReady() {
-    return _socket != null && _socket!.connected;
+  bool get isSocketConnected {
+    return _socket != null && _socket!.connected && _isConnected.value;
   }
 
   @override

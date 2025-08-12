@@ -521,7 +521,7 @@ class _CounterBottomSheetState extends State<CounterBottomSheet> {
                                             addVihicalCalculateController
                                                 .addVihicalCalculateModel!.id,
                                         'driverid': value["driver_list"],
-                                        'c_id': useridgloable
+                                        'c_id': appController.globalUserId
                                       });
                                       // socateempt();
                                       commonbottomsheetrequestsend(

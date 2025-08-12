@@ -9,7 +9,7 @@ import '../api_model/calculate_api_model.dart';
 
 class CalculateController extends GetxController implements GetxService {
   CalCulateModel? calCulateModel;
-
+  bool isLoading = false;
   Future calculateApi(
       {context,
       required String uid,
@@ -51,7 +51,7 @@ class CalculateController extends GetxController implements GetxService {
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
-
+        isLoading = true;
         if (data["Result"] == true) {
           calCulateModel = calCulateModelFromJson(response.body);
           if (calCulateModel!.result == true) {

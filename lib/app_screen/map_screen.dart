@@ -6,6 +6,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -22,6 +23,7 @@ import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/global_variables.dart';
 import 'package:qareeb/controllers/app_controller.dart';
+import 'package:qareeb/services/socket_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:qareeb/api_code/coupon_payment_api_contoller.dart';
@@ -72,6 +74,10 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   final appController = AppController.instance;
+
+  bool _isInitializing = true;
+
+  String _initializationStatus = "Loading...";
 
   int get _durationInSeconds => appController.durationInSeconds.value;
 
@@ -167,20 +173,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   String themeForMap = "";
 
-  mapThemeStyle({required context}) {
-    if (darkMode == true) {
+  mapThemeStyle({required BuildContext context}) {
+    final stylePath = darkMode == true
+        ? "assets/map_styles/dark_style.json"
+        : "assets/map_styles/light_style.json";
+
+    DefaultAssetBundle.of(context).loadString(stylePath).then((value) {
       setState(() {
-        DefaultAssetBundle.of(context)
-            .loadString("assets/map_styles/dark_style.json")
-            .then(
-          (value) {
-            setState(() {
-              themeForMap = value;
-            });
-          },
-        );
+        themeForMap = value;
       });
-    }
+    });
   }
 
   bool isLoad = false;
@@ -240,51 +242,54 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // late AnimationController controller;
   // late Animation<Color?> colorAnimation;
 
-  socketConnect() async {
+  Future<void> socketConnect() async {
     try {
-      SharedPreferences preferences = await SharedPreferences.getInstance();
+      final socketService = SocketService.instance;
 
-      var uid = preferences.getString("userLogin");
-
-      var currency = preferences.getString("currenci");
-
-      if (uid == null) {
-        Get.offAll(() => const OnboardingScreen());
-
-        return;
-      }
-
-      decodeUid = jsonDecode(uid);
-
-      if (currency != null) {
-        currencyy = jsonDecode(currency);
-
-        globalcurrency = currencyy['symbol'] ?? "\$"; // ✅ Direct assignment
+      if (!socketService.isConnected) {
+        if (kDebugMode) {
+          print("Socket not connected, connecting...");
+        }
+        await socketService.connect();
       } else {
-        currencyy = {};
-
-        globalcurrency = "\$";
+        if (kDebugMode) {
+          print("Socket already connected");
+        }
       }
 
-      userid = decodeUid['id'];
+      // Set up event listeners
+      socketService.on('home', (data) {
+        if (kDebugMode) {
+          print("Received 'home' event: $data");
+        }
+        // Handle home event
+      });
 
-      username = decodeUid["name"] ?? "";
-
-      appController.globalUserId.value = userid.toString();
-
-      appController.userName.value = username;
-
-      appController.socketService.connect();
-
-      _setupSocketListeners();
-
-      setState(() {});
+      socketService.on('acceptvehrequest', (data) {
+        if (kDebugMode) {
+          print("Received 'acceptvehrequest' event: $data");
+        }
+        // Handle vehicle request acceptance
+      });
     } catch (e) {
       if (kDebugMode) {
-        print("Error in socketConnect: $e");
+        print("Socket connection error: $e");
       }
+      // Don't throw - allow app to continue without socket
+    }
+  }
 
-      Get.offAll(() => const OnboardingScreen());
+  void _debugState() {
+    if (kDebugMode) {
+      print("🔍 DEBUG STATE:");
+
+      print("   _isInitializing: $_isInitializing");
+
+      print("   _initializationStatus: $_initializationStatus");
+
+      print("   lathome: $lathome");
+
+      print("  userid: $userid");
     }
   }
 
@@ -499,48 +504,141 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
 
     // ✅ KEEP: Map theme
+
     mapThemeStyle(context: context);
 
     // ✅ KEEP: Initialize drop off points
+
     _dropOffPoints = [];
+
     _dropOffPoints = destinationlat;
+
     if (kDebugMode) {
       print("****////***:-----  $_dropOffPoints");
     }
 
     // ✅ KEEP: Load user data FIRST, then call APIs
+
     initializeApp();
   }
 
-// New method to handle proper initialization order:
+  // ✅ FIXED: Add proper state management and error handling
+
   Future<void> initializeApp() async {
+    if (kDebugMode) {
+      print("🚀 Starting MapScreen initialization...");
+    }
+
     try {
+      // Ensure we start in loading state
+
+      if (mounted) {
+        setState(() {
+          _isInitializing = true;
+
+          _initializationStatus = "Loading user data...";
+        });
+      }
+
+      _debugState();
+
       // Step 1: Load user data first
+
       await loadUserData();
 
       if (userid == null) {
         if (kDebugMode) {
-          print("User not logged in, redirecting to login");
+          print("❌ User not logged in, redirecting to login");
         }
+
         Get.offAll(() => const OnboardingScreen());
+
         return;
       }
 
-      // Step 2: Initialize location and socket
+      if (mounted) {
+        setState(() {
+          _initializationStatus = "Getting location...";
+        });
+      }
+
+      _debugState();
+
+      // Step 2: Initialize location
+
       await fun();
-      setState(() {});
-      getCurrentLatAndLong(lathome, longhome);
+
+      if (mounted) {
+        setState(() {
+          _initializationStatus = "Connecting to server...";
+        });
+      }
+
+      _debugState();
 
       // Step 3: Initialize socket with user data
+
       await socketConnect();
 
+      if (mounted) {
+        setState(() {
+          _initializationStatus = "Loading map data...";
+        });
+      }
+
+      _debugState();
+
       // Step 4: Now make API calls that need user data
-      makeInitialAPICalls();
+
+      await makeInitialAPICalls();
+
+      // ✅ CRITICAL: Add a small delay to ensure everything is loaded
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // ✅ CRITICAL: Set initialization complete
+
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+
+          _initializationStatus = "Ready";
+        });
+      }
+
+      _debugState();
+
+      if (kDebugMode) {
+        print("✅ MapScreen initialization completed successfully");
+      }
     } catch (e) {
       if (kDebugMode) {
-        print("Error in initializeApp: $e");
+        print("❌ Error in initializeApp: $e");
       }
-      // Don't force logout for initialization errors
+
+      // ✅ Show error but don't block UI
+
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+
+          _initializationStatus = "Error: $e";
+        });
+      }
+
+      _debugState();
+
+      // Show error to user
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Initialization error: ${e.toString()}"),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -549,197 +647,121 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       SharedPreferences preferences = await SharedPreferences.getInstance();
 
       var uid = preferences.getString("userLogin");
-
       var currency = preferences.getString("currenci");
 
       if (uid == null) {
         throw Exception("No user data");
       }
 
-      decodeUid = jsonDecode(uid);
+      // ✅ FIX: Safer JSON parsing
+      try {
+        decodeUid = jsonDecode(uid);
+      } catch (e) {
+        if (kDebugMode) {
+          print("Error parsing user JSON: $e");
+          print("Raw uid data: $uid");
+        }
+        throw Exception("Invalid user data format");
+      }
 
-      if (currency != null) {
-        currencyy = jsonDecode(currency);
-
-        globalcurrency = currencyy['symbol'] ?? "\$"; // ✅ Direct assignment
+      // ✅ FIX: Safer currency parsing
+      if (currency != null && currency.isNotEmpty) {
+        try {
+          currencyy = jsonDecode(currency);
+          globalcurrency = currencyy['symbol']?.toString() ?? "\$";
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error parsing currency JSON: $e");
+          }
+          currencyy = {};
+          globalcurrency = "\$";
+        }
       } else {
         currencyy = {};
-
         globalcurrency = "\$";
       }
 
-      userid = decodeUid['id'];
+      // ✅ FIX: Safer user ID extraction
+      if (decodeUid != null && decodeUid is Map) {
+        userid = decodeUid['id'];
+        username = decodeUid["name"]?.toString() ?? "User";
 
-      username = decodeUid["name"] ?? "";
+        // ✅ FIX: Ensure userid is properly typed
+        if (userid != null) {
+          userid = userid is String ? int.tryParse(userid) ?? userid : userid;
+        }
+      } else {
+        throw Exception("Invalid user data structure");
+      }
 
-      appController.globalUserId.value = userid.toString();
-
-      appController.userName.value = username;
-
-      setState(() {});
+      if (kDebugMode) {
+        print("✅ User data loaded: userid=$userid, username=$username");
+        print("   Currency: $globalcurrency");
+        print("   User data type: ${decodeUid.runtimeType}");
+      }
     } catch (e) {
       if (kDebugMode) {
         print("Error loading user data: $e");
       }
-
       throw e;
     }
   }
 
-// Make API calls that need user data - ONLY after user data is loaded
-  void makeInitialAPICalls() {
-    if (userid == null) {
+  Future<void> makeInitialAPICalls() async {
+    try {
+      if (userid == null) {
+        throw Exception("User ID not available");
+      }
+
       if (kDebugMode) {
-        print("Cannot make API calls - userid is null");
+        print("Making initial API calls with userid: $userid");
       }
-      return;
-    }
 
-    if (kDebugMode) {
-      print("Making initial API calls with userid: $userid");
-    }
+      // Make API calls concurrently for better performance
 
-    // Payment API call
-    paymentGetApiController.paymentlistApi(context).then((value) {
-      try {
-        if (paymentGetApiController.paymentgetwayapi?.paymentList != null) {
-          for (int i = 1;
-              i < paymentGetApiController.paymentgetwayapi!.paymentList!.length;
-              i++) {
-            if (int.parse(paymentGetApiController
-                    .paymentgetwayapi!.defaultPayment
-                    .toString()) ==
-                paymentGetApiController.paymentgetwayapi!.paymentList![i].id) {
-              setState(() {
-                payment = paymentGetApiController
-                    .paymentgetwayapi!.paymentList![i].id!;
-                paymentname = paymentGetApiController
-                    .paymentgetwayapi!.paymentList![i].name!;
-                if (kDebugMode) {
-                  print("+++++payment: $payment");
-                  print("+++++index: $i");
-                }
-              });
-            }
-          }
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print("Error processing payment data: $e");
-        }
-      }
-    }).catchError((error) {
+      await Future.wait([
+        _makePaymentAPICall(),
+        _makePageListAPICall(),
+      ]);
+    } catch (e) {
       if (kDebugMode) {
-        print("Error in payment API: $error");
+        print("Error in makeInitialAPICalls: $e");
       }
-    });
 
-    // Page list API call
-    pagelistcontroller.pagelistttApi(context);
-
-    // Handle widget.selectvihical case
-    if (widget.selectvihical == true) {
-      if (kDebugMode) {
-        print("selectvihical is true - calling homeApi and calculateApi");
-      }
-      select1 = 0;
-
-      homeApiController
-          .homeApi(
-              uid: userid.toString(),
-              lat: lathome.toString(),
-              lon: longhome.toString())
-          .then((value) {
-        try {
-          if (homeApiController.homeapimodel?.categoryList?.isNotEmpty ==
-              true) {
-            mid =
-                homeApiController.homeapimodel!.categoryList![0].id.toString();
-            mroal = homeApiController.homeapimodel!.categoryList![0].role
-                .toString();
-
-            // Now call calculateApi with proper user data
-            calculateController
-                .calculateApi(
-                    context: context,
-                    uid: appController.globalUserId.value,
-                    mid: mid,
-                    mrole: mroal,
-                    pickup_lat_lon:
-                        "${appController.pickupLat.value},${appController.pickupLng.value}",
-                    drop_lat_lon:
-                        "${appController.dropLat.value},${appController.dropLng.value}",
-                    drop_lat_lon_list: onlypass)
-                .then((value) {
-              try {
-                dropprice = 0;
-                minimumfare = 0;
-                maximumfare = 0;
-
-                if (value?["Result"] == true) {
-                  amountresponse = "true";
-                  // ✅ FIX: Safely parse all incoming values to the correct double type.
-                  dropprice = (value["drop_price"] as num?)?.toDouble() ?? 0.0;
-                  minimumfare = double.tryParse(
-                          value["vehicle"]["minimum_fare"]?.toString() ??
-                              '0') ??
-                      0.0;
-                  maximumfare = double.tryParse(
-                          value["vehicle"]["maximum_fare"]?.toString() ??
-                              '0') ??
-                      0.0;
-                  responsemessage = value["message"];
-
-                  tot_hour = value["tot_hour"]?.toString() ?? "0";
-                  tot_time = value["tot_minute"]?.toString() ?? "0";
-                  vehicle_id = value["vehicle"]["id"]?.toString() ?? "";
-                  vihicalrice =
-                      double.parse(value["drop_price"]?.toString() ?? "0");
-                  totalkm = double.parse(value["tot_km"]?.toString() ?? "0");
-                  tot_secound = "0";
-
-                  vihicalimage = value["vehicle"]["map_img"]?.toString() ?? "";
-                  vihicalname = value["vehicle"]["name"]?.toString() ?? "";
-
-                  setState(() {});
-                } else {
-                  amountresponse = "false";
-                  if (kDebugMode) {
-                    print("Calculate API returned false result");
-                  }
-                  setState(() {});
-                }
-
-                if (kDebugMode) {
-                  print("********** dropprice **********:----- $dropprice");
-                  print("********** minimumfare **********:----- $minimumfare");
-                  print("********** maximumfare **********:----- $maximumfare");
-                }
-              } catch (e) {
-                if (kDebugMode) {
-                  print("Error processing calculate API response: $e");
-                }
-              }
-            }).catchError((error) {
-              if (kDebugMode) {
-                print("Error in calculate API call: $error");
-              }
-            });
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print("Error processing home API response: $e");
-          }
-        }
-      }).catchError((error) {
-        if (kDebugMode) {
-          print("Error in home API call: $error");
-        }
-      });
+      // Don't throw - allow app to continue with partial data
     }
+  }
 
-    // Setup map markers after location is loaded
-    setupMapMarkers();
+  Future<void> _makePageListAPICall() async {
+    try {
+      await pagelistcontroller.pagelistttApi(context);
+
+      if (kDebugMode) {
+        print("✅ PageList API call completed");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("PageList API error: $e");
+      }
+    }
+  }
+
+  // ✅ ADD: Method to show loading overlay
+
+  Future<void> _makePaymentAPICall() async {
+    try {
+      final paymentController = Get.find<PaymentGetApiController>();
+
+      await paymentController.paymentlistApi(context);
+
+      if (kDebugMode) {
+        print("✅ Payment API call completed");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Payment API error: $e");
+      }
+    }
   }
 
 // Setup map markers
@@ -1061,14 +1083,58 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   void _addMarkers() async {
-    // The loadIcon helper function is fine.
+    if (kDebugMode) {
+      print("🔍 _addMarkers called");
+      print("   Vehicle locations: ${vihicallocations.length}");
+      print("   Icon paths: ${_iconPaths.length}");
+      print(
+          "   HomeMap list: ${homeMapController.homeMapApiModel?.list?.length ?? 0}");
+    }
+
+    // ✅ SAFETY CHECK: Ensure we have data
+    if (homeMapController.homeMapApiModel?.list == null ||
+        homeMapController.homeMapApiModel!.list!.isEmpty) {
+      if (kDebugMode) {
+        print("❌ No vehicle data available for markers");
+      }
+      return;
+    }
+
+    final vehicleList = homeMapController.homeMapApiModel!.list!;
+
+    // ✅ SAFETY CHECK: Ensure lists match
+    if (vihicallocations.length != vehicleList.length ||
+        _iconPaths.length != vehicleList.length) {
+      if (kDebugMode) {
+        print("⚠️ List length mismatch - rebuilding data");
+      }
+
+      // Rebuild the data to ensure consistency
+      vihicallocations.clear();
+      _iconPaths.clear();
+
+      for (int i = 0; i < vehicleList.length; i++) {
+        vihicallocations.add(LatLng(
+            double.parse(vehicleList[i].latitude.toString()),
+            double.parse(vehicleList[i].longitude.toString())));
+        _iconPaths.add("${Config.imageurl}${vehicleList[i].image}");
+      }
+    }
+
+    // ✅ HELPER: Load icons safely
     Future<BitmapDescriptor> loadIcon(String url,
         {int targetWidth = 30, int targetHeight = 50}) async {
       try {
-        if (url.isEmpty || url.contains("undefined")) {
+        if (url.isEmpty || url.contains("undefined") || url.contains("null")) {
+          if (kDebugMode) {
+            print("⚠️ Invalid icon URL: $url - using default");
+          }
           return BitmapDescriptor.defaultMarker;
         }
-        final http.Response response = await http.get(Uri.parse(url));
+
+        final http.Response response =
+            await http.get(Uri.parse(url)).timeout(Duration(seconds: 10));
+
         if (response.statusCode == 200) {
           final Uint8List bytes = response.bodyBytes;
           final ui.Codec codec = await ui.instantiateImageCodec(bytes,
@@ -1078,55 +1144,118 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
           return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
         } else {
-          throw Exception('Failed to load image from $url');
+          if (kDebugMode) {
+            print(
+                "⚠️ Failed to load image from $url - HTTP ${response.statusCode}");
+          }
+          return BitmapDescriptor.defaultMarker;
         }
       } catch (e) {
-        print("Error loading icon from $url: $e");
+        if (kDebugMode) {
+          print("❌ Error loading icon from $url: $e");
+        }
         return BitmapDescriptor.defaultMarker;
       }
     }
 
-    // Load all icons asynchronously
-    final List<BitmapDescriptor> icons = await Future.wait(
-      _iconPaths.map((path) => loadIcon(path)),
-    );
+    try {
+      // Load all icons with error handling
+      final List<BitmapDescriptor> icons = await Future.wait(
+        _iconPaths.map((path) => loadIcon(path)),
+      );
 
-    // ✅ FIX 1: Check if the widget is still mounted before calling setState.
-    if (!mounted) return;
-
-    // ✅ FIX 2: Refactored to a single, efficient setState call.
-    setState(() {
-      if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
-        polylines11.clear();
+      if (kDebugMode) {
+        print("✅ Loaded ${icons.length} icons successfully");
       }
 
-      for (var i = 0; i < vihicallocations.length; i++) {
-        print("qqqqqqqqq:-- ${homeMapController.homeMapApiModel!.list![i].id}");
-        print("aaaaaaaaa:-- ${vihicallocations.length}");
-        MarkerId markerId =
-            MarkerId("${homeMapController.homeMapApiModel!.list![i].id}");
-        Marker marker = Marker(
-          markerId: markerId,
-          icon: icons[i],
-          position: LatLng(
-              double.parse(homeMapController.homeMapApiModel!.list![i].latitude
-                  .toString()),
-              double.parse(homeMapController.homeMapApiModel!.list![i].longitude
-                  .toString())),
-        );
-        markers[markerId] = marker;
+      // ✅ CHECK: Widget still mounted before setState
+      if (!mounted) return;
+
+      setState(() {
+        // Clear polylines if pickup/drop are empty
+        if (appController.pickupController.text.isEmpty ||
+            appController.dropController.text.isEmpty) {
+          polylines11.clear();
+        }
+
+        // ✅ SAFE ITERATION: Use the actual data length, not assumptions
+        final itemCount = math.min(vihicallocations.length,
+            math.min(icons.length, vehicleList.length));
+
+        if (kDebugMode) {
+          print("🎯 Adding $itemCount markers");
+        }
+
+        for (int i = 0; i < itemCount; i++) {
+          try {
+            final vehicleId = vehicleList[i].id?.toString() ?? "vehicle_$i";
+
+            if (kDebugMode) {
+              print("   Adding marker $i - Vehicle ID: $vehicleId");
+            }
+
+            MarkerId markerId = MarkerId(vehicleId);
+            Marker marker = Marker(
+              markerId: markerId,
+              icon:
+                  icons[i], // This is now safe because of itemCount calculation
+              position: vihicallocations[i],
+              onTap: () {
+                if (kDebugMode) {
+                  print("🚗 Tapped vehicle: $vehicleId");
+                }
+                // Add any vehicle tap handling here
+              },
+            );
+            markers[markerId] = marker;
+          } catch (e) {
+            if (kDebugMode) {
+              print("❌ Error adding marker $i: $e");
+            }
+            // Continue with next marker instead of failing completely
+          }
+        }
+
+        if (kDebugMode) {
+          print("✅ Successfully added ${markers.length} markers to map");
+        }
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error in _addMarkers: $e");
       }
-    });
+      // Don't crash the app, just log the error
+    }
   }
 
+  // ✅ COMPLETE _addMarkers2() METHOD:
   void _addMarkers2() async {
-    // The loadIcon helper function is fine.
+    if (kDebugMode) {
+      print("🔍 _addMarkers2 called");
+      print(
+          "   Vehicle locations bidding: ${vihicallocationsbiddingon.length}");
+      print("   Icon paths bidding: ${_iconPathsbiddingon.length}");
+    }
+
+    // ✅ SAFETY CHECK: Ensure we have data
+    if (homeMapController.homeMapApiModel?.list == null ||
+        homeMapController.homeMapApiModel!.list!.isEmpty) {
+      if (kDebugMode) {
+        print("❌ No vehicle data available for markers2");
+      }
+      return;
+    }
+
+    final vehicleList = homeMapController.homeMapApiModel!.list!;
+
+    // ✅ HELPER: Load icons safely
     Future<BitmapDescriptor> loadIcon(String url) async {
       try {
-        if (url.isEmpty || url.contains("undefined")) {
+        if (url.isEmpty || url.contains("undefined") || url.contains("null")) {
           return BitmapDescriptor.defaultMarker;
         }
-        final http.Response response = await http.get(Uri.parse(url));
+        final http.Response response =
+            await http.get(Uri.parse(url)).timeout(Duration(seconds: 10));
         if (response.statusCode == 200) {
           final Uint8List bytes = response.bodyBytes;
           final ui.Codec codec = await ui.instantiateImageCodec(bytes,
@@ -1135,57 +1264,84 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           final ByteData? byteData =
               await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
           return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-        } else {
-          throw Exception('Failed to load image from $url');
         }
+        return BitmapDescriptor.defaultMarker;
       } catch (e) {
-        print("Error loading icon from $url: $e");
+        if (kDebugMode) {
+          print("Error loading icon from $url: $e");
+        }
         return BitmapDescriptor.defaultMarker;
       }
     }
 
-    // Load all icons asynchronously
-    final List<BitmapDescriptor> icons = await Future.wait(
-      _iconPathsbiddingon.map((path) => loadIcon(path)),
-    );
+    try {
+      // Load all icons with error handling
+      final List<BitmapDescriptor> icons = await Future.wait(
+        _iconPathsbiddingon.map((path) => loadIcon(path)),
+      );
 
-    // ✅ FIX 1: Check if the widget is still mounted before calling setState.
-    if (!mounted) return;
+      // ✅ CHECK: Widget still mounted
+      if (!mounted) return;
 
-    // ✅ FIX 2: Refactored to a single, efficient setState call.
-    setState(() {
-      markers11.clear();
+      setState(() {
+        markers11.clear();
 
-      _addMarker11(LatLng(latitudepick, longitudepick), "origin",
-          BitmapDescriptor.defaultMarker);
+        // Add pickup/drop markers
+        if (latitudepick != 0.0 && longitudepick != 0.0) {
+          _addMarker11(LatLng(latitudepick, longitudepick), "origin",
+              BitmapDescriptor.defaultMarker);
+        }
 
-      _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
-          BitmapDescriptor.defaultMarkerWithHue(90));
+        if (latitudedrop != 0.0 && longitudedrop != 0.0) {
+          _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
+              BitmapDescriptor.defaultMarkerWithHue(90));
+        }
 
-      for (int a = 0; a < _dropOffPoints.length; a++) {
-        _addMarker3("destination");
+        // Add drop-off points
+        if (_dropOffPoints.isNotEmpty) {
+          for (int a = 0; a < _dropOffPoints.length; a++) {
+            _addMarker3("destination");
+          }
+        }
+
+        // Add directions
+        if (latitudepick != 0.0 &&
+            longitudepick != 0.0 &&
+            latitudedrop != 0.0 &&
+            longitudedrop != 0.0) {
+          getDirections11(
+              lat1: PointLatLng(latitudepick, longitudepick),
+              lat2: PointLatLng(latitudedrop, longitudedrop),
+              dropOffPoints: _dropOffPoints);
+        }
+
+        // ✅ SAFE ITERATION: Use minimum length
+        final itemCount = math.min(vihicallocationsbiddingon.length,
+            math.min(icons.length, vehicleList.length));
+
+        for (int i = 0; i < itemCount; i++) {
+          try {
+            final vehicleId =
+                vehicleList[i].id?.toString() ?? "vehicle_bidding_$i";
+            final markerId = MarkerId(vehicleId);
+            final marker = Marker(
+              markerId: markerId,
+              position: vihicallocationsbiddingon[i],
+              icon: icons[i], // Safe because of itemCount calculation
+            );
+            markers11[markerId] = marker;
+          } catch (e) {
+            if (kDebugMode) {
+              print("❌ Error adding bidding marker $i: $e");
+            }
+          }
+        }
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error in _addMarkers2: $e");
       }
-
-      getDirections11(
-          lat1: PointLatLng(latitudepick, longitudepick),
-          lat2: PointLatLng(latitudedrop, longitudedrop),
-          dropOffPoints: _dropOffPoints);
-
-      for (var i = 0; i < vihicallocationsbiddingon.length; i++) {
-        final markerId =
-            MarkerId('${homeMapController.homeMapApiModel!.list![i].id}');
-        final marker = Marker(
-          markerId: markerId,
-          position: LatLng(
-              double.parse(homeMapController.homeMapApiModel!.list![i].latitude
-                  .toString()),
-              double.parse(homeMapController.homeMapApiModel!.list![i].longitude
-                  .toString())),
-          icon: icons[i],
-        );
-        markers11[markerId] = marker; // Add marker to the map
-      }
-    });
+    }
   }
 
   Map<MarkerId, Marker> markers = {};
@@ -1448,178 +1604,302 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     notifier = Provider.of<ColorNotifier>(context, listen: true);
+
+    // Debug the current state
+    _debugState();
+
     return Scaffold(
       key: _key,
       drawer: draweropen(context),
-      body: GetBuilder<HomeApiController>(
-        builder: (homeApiController) {
-          return homeApiController.isLoading
-              ? Center(
-                  child: CircularProgressIndicator(
-                  color: theamcolore,
-                ))
-              : Stack(
-                  children: [
-                    // pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty ? lathome == null ? Center(child: CircularProgressIndicator(color: theamcolore,)) :
-                    lathome == null
-                        ? Center(
-                            child: CircularProgressIndicator(
-                            color: theamcolore,
-                          ))
-                        : GoogleMap(
-                            gestureRecognizers: {
-                              Factory<OneSequenceGestureRecognizer>(
-                                  () => EagerGestureRecognizer())
-                            },
-                            initialCameraPosition: appController
-                                        .pickupController.text.isEmpty ||
-                                    appController.dropController.text.isEmpty
-                                ? CameraPosition(
-                                    target: LatLng(lathome, longhome), zoom: 13)
-                                : CameraPosition(
-                                    target: LatLng(
-                                        appController.pickupLat.value,
-                                        appController.pickupLng.value),
-                                    zoom: 13),
+      body: _isInitializing
+          ? _buildLoadingOverlay() // Show loading when initializing
+          : _buildMainContent(), // Show main content when ready
+    );
+  }
 
-                            mapType: MapType.normal,
-                            // markers: markers.,
-                            markers: appController
-                                        .pickupController.text.isEmpty ||
-                                    appController.dropController.text.isEmpty
-                                ? Set<Marker>.of(markers.values)
-                                : Set<Marker>.of(markers11.values),
-                            onTap: (argument) {
-                              setState(() {
-                                _onAddMarkerButtonPressed(
-                                    argument.latitude, argument.longitude);
-                                lathome = argument.latitude;
-                                longhome = argument.longitude;
-                                getCurrentLatAndLong(
-                                  lathome,
-                                  longhome,
+  Widget _buildMainContent() {
+    if (kDebugMode) {
+      print("🎯 _buildMainContent called");
+    }
+
+    return GetBuilder<HomeApiController>(
+      builder: (homeApiController) {
+        if (kDebugMode) {
+          print("🏠 HomeApiController state:");
+          print("   isLoading: ${homeApiController.isLoading}");
+          print(
+              "   homeapimodel: ${homeApiController.homeapimodel != null ? 'exists' : 'null'}");
+          if (homeApiController.homeapimodel != null) {
+            print(
+                "   categoryList length: ${homeApiController.homeapimodel!.categoryList?.length ?? 0}");
+          }
+        }
+
+        // ✅ Check if HomeApiController needs to load data
+        if (homeApiController.homeapimodel == null &&
+            !homeApiController.isLoading) {
+          if (kDebugMode) {
+            print(
+                "🔄 HomeApiController has no data and not loading - triggering API call");
+          }
+
+          // Trigger the home API call
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (userid != null && lathome != null && longhome != null) {
+              homeApiController.homeApi(
+                uid: userid.toString(),
+                lat: lathome.toString(),
+                lon: longhome.toString(),
+              );
+            }
+          });
+        }
+
+        return homeApiController.isLoading
+            ? Container(
+                color: notifier.background,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(color: theamcolore),
+                      const SizedBox(height: 20),
+                      Text(
+                        "Loading vehicles...".tr,
+                        style: TextStyle(color: notifier.textColor),
+                      ),
+                      // Debug info - only show in debug mode
+                      if (kDebugMode) ...[
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                "HOME API DEBUG:",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Loading: ${homeApiController.isLoading}",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 10),
+                              ),
+                              Text(
+                                "UserId: $userid",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 10),
+                              ),
+                              Text(
+                                "Lat: $lathome",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 10),
+                              ),
+                              Text(
+                                "Lon: $longhome",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 10),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (userid != null &&
+                                lathome != null &&
+                                longhome != null) {
+                              homeApiController.homeApi(
+                                uid: userid.toString(),
+                                lat: lathome.toString(),
+                                lon: longhome.toString(),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: theamcolore),
+                          child: Text("Force Load Home API",
+                              style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              )
+            : homeApiController.homeapimodel == null
+                ? Container(
+                    color: notifier.background,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline,
+                              size: 50, color: Colors.red),
+                          const SizedBox(height: 20),
+                          Text(
+                            "No vehicle data available".tr,
+                            style: TextStyle(
+                                color: notifier.textColor, fontSize: 16),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (userid != null &&
+                                  lathome != null &&
+                                  longhome != null) {
+                                homeApiController.homeApi(
+                                  uid: userid.toString(),
+                                  lat: lathome.toString(),
+                                  lon: longhome.toString(),
                                 );
-                                homeMapController
-                                    .homemapApi(
-                                        mid: mid,
-                                        lat: lathome.toString(),
-                                        lon: longhome.toString())
-                                    .then((value) {
-                                  setState(() {});
-                                  print("///:---  ${value["Result"]}");
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: theamcolore),
+                            child: Text("Retry",
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : Stack(
+                    children: [
+                      // ✅ MAIN MAP
+                      lathome == null
+                          ? Center(
+                              child:
+                                  CircularProgressIndicator(color: theamcolore))
+                          : GoogleMap(
+                              gestureRecognizers: {
+                                Factory<OneSequenceGestureRecognizer>(
+                                    () => EagerGestureRecognizer())
+                              },
+                              initialCameraPosition: appController
+                                          .pickupController.text.isEmpty ||
+                                      appController.dropController.text.isEmpty
+                                  ? CameraPosition(
+                                      target: LatLng(lathome, longhome),
+                                      zoom: 13)
+                                  : CameraPosition(
+                                      target: LatLng(
+                                          appController.pickupLat.value,
+                                          appController.pickupLng.value),
+                                      zoom: 13),
+                              mapType: MapType.normal,
+                              markers: appController
+                                          .pickupController.text.isEmpty ||
+                                      appController.dropController.text.isEmpty
+                                  ? Set<Marker>.of(markers.values)
+                                  : Set<Marker>.of(markers11.values),
+                              onTap: (argument) {
+                                setState(() {
+                                  _onAddMarkerButtonPressed(
+                                      argument.latitude, argument.longitude);
+                                  lathome = argument.latitude;
+                                  longhome = argument.longitude;
+                                  getCurrentLatAndLong(lathome, longhome);
 
-                                  if (value["Result"] == false) {
+                                  homeMapController
+                                      .homemapApi(
+                                          mid: mid,
+                                          lat: lathome.toString(),
+                                          lon: longhome.toString())
+                                      .then((value) {
                                     setState(() {
                                       vihicallocations.clear();
-                                      markers.clear();
+                                      _iconPaths.clear();
+                                      for (int i = 0;
+                                          i <
+                                              homeMapController.homeMapApiModel!
+                                                  .list!.length;
+                                          i++) {
+                                        vihicallocations.add(LatLng(
+                                            double.parse(homeMapController
+                                                .homeMapApiModel!
+                                                .list![i]
+                                                .latitude
+                                                .toString()),
+                                            double.parse(homeMapController
+                                                .homeMapApiModel!
+                                                .list![i]
+                                                .longitude
+                                                .toString())));
+                                        _iconPaths.add(
+                                            "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                                      }
                                       _addMarkers();
-                                      print(
-                                          "***if condition+++:---  $vihicallocations");
                                     });
-                                  } else {
-                                    setState(() {});
-                                    vihicallocations.clear();
-                                    for (int i = 0;
-                                        i <
-                                            homeMapController
-                                                .homeMapApiModel!.list!.length;
-                                        i++) {
-                                      vihicallocations.add(LatLng(
-                                          double.parse(homeMapController
-                                              .homeMapApiModel!
-                                              .list![i]
-                                              .latitude
-                                              .toString()),
-                                          double.parse(homeMapController
-                                              .homeMapApiModel!
-                                              .list![i]
-                                              .longitude
-                                              .toString())));
-                                      _iconPaths.add(
-                                          "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                                    }
-                                    _addMarkers();
-                                  }
-
-                                  print(
-                                      "******-**:::::------$vihicallocations");
-                                });
-                              });
-
-                              // print("***lato****:--- $lathome");
-                              // print("+++longo+++:--- $longhome");
-                              // print("--------------------------------------");
-                              // print("hfgjhvhjwfvhjuyfvf:-=---  $addresshome");
-                            },
-                            myLocationEnabled: false,
-                            zoomGesturesEnabled: true,
-                            tiltGesturesEnabled: true,
-                            zoomControlsEnabled: true,
-                            onMapCreated: (controller) {
-                              setState(() {
-                                controller.setMapStyle(themeForMap);
-                                mapController1 = controller;
-                              });
-                            },
-                            polylines: Set<Polyline>.of(polylines11.values),
-                          ),
-                    //   : GoogleMap(
-                    //   initialCameraPosition: CameraPosition(
-                    //     target: LatLng(latitudepick, longitudepick),
-                    //     zoom: 15,
-                    //   ),
-                    //   myLocationEnabled: true,
-                    //   tiltGesturesEnabled: true,
-                    //   compassEnabled: true,
-                    //   scrollGesturesEnabled: true,
-                    //   zoomGesturesEnabled: true,
-                    //   onMapCreated: _onMapCreated11,
-                    //   markers: Set<Marker>.of(markers11.values),
-                    //   polylines: Set<Polyline>.of(polylines11.values),
-                    // ),
-
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(top: 60, left: 10, right: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _key.currentState!.openDrawer();
+                                  });
                                 });
                               },
-                              child: Container(
-                                height: 50,
-                                // width: 50,
-                                decoration: BoxDecoration(
-                                    color: notifier.containercolore,
-                                    shape: BoxShape.circle),
-                                child: Center(
-                                    child: Image(
-                                  image: const AssetImage("assets/menu.png"),
-                                  height: 20,
-                                  color: notifier.textColor,
-                                )),
+                              myLocationEnabled: false,
+                              zoomGesturesEnabled: true,
+                              tiltGesturesEnabled: true,
+                              zoomControlsEnabled: true,
+                              onMapCreated: (controller) {
+                                setState(() {
+                                  controller.setMapStyle(themeForMap);
+                                  mapController1 = controller;
+                                  if (appController
+                                          .pickupController.text.isNotEmpty &&
+                                      appController
+                                          .dropController.text.isNotEmpty) {
+                                    setupMapMarkers();
+                                  }
+                                });
+                              },
+                              polylines: Set<Polyline>.of(polylines11.values),
+                            ),
+
+                      // ✅ TOP UI BAR (Menu + Search)
+                      Padding(
+                        padding:
+                            const EdgeInsets.only(top: 60, left: 10, right: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _key.currentState!.openDrawer();
+                                  });
+                                },
+                                child: Container(
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                      color: notifier.containercolore,
+                                      shape: BoxShape.circle),
+                                  child: Center(
+                                      child: Image(
+                                    image: const AssetImage("assets/menu.png"),
+                                    height: 20,
+                                    color: notifier.textColor,
+                                  )),
+                                ),
                               ),
                             ),
-                          ),
-                          Expanded(
-                            flex: 5,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  color: notifier.containercolore,
-                                  borderRadius: BorderRadius.circular(25)),
-                              child: TextField(
-                                onTap: () {
-                                  _addMarkers();
-                                  fun().then((value) {
-                                    setState(() {});
-                                    getCurrentLatAndLong(lathome, longhome)
-                                        .then(
-                                      (value) {
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    color: notifier.containercolore,
+                                    borderRadius: BorderRadius.circular(25)),
+                                child: TextField(
+                                  onTap: () {
+                                    _addMarkers();
+                                    fun().then((value) {
+                                      setState(() {});
+                                      getCurrentLatAndLong(lathome, longhome)
+                                          .then((value) {
                                         mapController1.animateCamera(
                                           CameraUpdate.newCameraPosition(
                                             CameraPosition(
@@ -1628,74 +1908,56 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                             ),
                                           ),
                                         );
-                                      },
-                                    );
-                                    // socketConnect();
-                                  });
-                                  // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
-                                },
-                                // controller: controller,
-                                readOnly: true,
-                                style: const TextStyle(color: Colors.black),
-                                decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        vertical: 15, horizontal: 15),
-                                    border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(25)),
-                                        borderSide: BorderSide(
-                                            color: notifier.background)),
-                                    enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(25)),
-                                        borderSide: BorderSide(
-                                            color: notifier.background)),
-                                    hintText: "Your Current Location".tr,
-                                    hintStyle: const TextStyle(
-                                        color: Colors.grey,
-                                        fontFamily: "SofiaProBold",
-                                        fontSize: 14),
-                                    focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(25)),
-                                        borderSide: BorderSide(
-                                            color: notifier.containercolore)),
-                                    prefixIcon: Padding(
-                                      padding: const EdgeInsets.all(15),
-                                      child: Container(
-                                        height: 20,
-                                        width: 20,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                              color: Colors.green, width: 6),
+                                      });
+                                    });
+                                  },
+                                  readOnly: true,
+                                  style: const TextStyle(color: Colors.black),
+                                  decoration: InputDecoration(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              vertical: 15, horizontal: 15),
+                                      border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(25)),
+                                          borderSide: BorderSide(
+                                              color: notifier.background)),
+                                      enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(25)),
+                                          borderSide: BorderSide(
+                                              color: notifier.background)),
+                                      hintText: "Your Current Location".tr,
+                                      hintStyle: const TextStyle(
+                                          color: Colors.grey,
+                                          fontFamily: "SofiaProBold",
+                                          fontSize: 14),
+                                      focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(25)),
+                                          borderSide: BorderSide(
+                                              color: notifier.containercolore)),
+                                      prefixIcon: Padding(
+                                        padding: const EdgeInsets.all(15),
+                                        child: Container(
+                                          height: 20,
+                                          width: 20,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                                color: Colors.green, width: 6),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    suffixIcon: InkWell(
-                                        onTap: () {
-                                          // fun().then((value) {
-                                          //   setState(() {
-                                          //   });
-                                          //   getCurrentLatAndLong(lathome, longhome);
-                                          //   mapController1.animateCamera(
-                                          //     CameraUpdate.newCameraPosition(
-                                          //       CameraPosition(
-                                          //         target: LatLng(lathome, longhome),
-                                          //         zoom: 14.0,
-                                          //       ),
-                                          //     ),
-                                          //   );
-                                          // });
-
-                                          _addMarkers();
-                                          fun().then((value) {
-                                            setState(() {});
-                                            getCurrentLatAndLong(
-                                                    lathome, longhome)
-                                                .then(
-                                              (value) {
+                                      suffixIcon: InkWell(
+                                          onTap: () {
+                                            _addMarkers();
+                                            fun().then((value) {
+                                              setState(() {});
+                                              getCurrentLatAndLong(
+                                                      lathome, longhome)
+                                                  .then((value) {
                                                 mapController1.animateCamera(
                                                   CameraUpdate
                                                       .newCameraPosition(
@@ -1706,237 +1968,401 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                     ),
                                                   ),
                                                 );
-                                              },
-                                            );
-                                            // socketConnect();
-                                          });
-                                        },
-                                        child: SvgPicture.asset(
-                                          "assets/svgpicture/gpsicon.svg",
-                                        ))),
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    DraggableScrollableSheet(
-                      // initialChildSize:  homeApiController.homeapimodel!.categoryList![select1].bidding == "1" ? 0.37 : 0.30, // Set the default height to 50% of the screen
-                      initialChildSize:
-                          0.45, // Set the default height to 50% of the screen
-                      minChildSize: 0.2, // Minimum height
-                      maxChildSize: 1.0,
-                      controller: sheetController,
-                      builder: (BuildContext context, scrollController) {
-                        return Container(
-                          // height: 100,
-                          clipBehavior: Clip.hardEdge,
-                          decoration: BoxDecoration(
-                            // color: Colors.white,
-                            color: notifier.containercolore,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(25),
-                              topRight: Radius.circular(25),
-                            ),
-                          ),
-                          child: CustomScrollView(
-                            controller: scrollController,
-                            slivers: [
-                              SliverToBoxAdapter(
-                                child: Center(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: notifier.textColor,
-                                      borderRadius: const BorderRadius.all(
-                                          Radius.circular(10)),
-                                    ),
-                                    height: 4,
-                                    width: 40,
-                                    margin: const EdgeInsets.symmetric(
-                                        vertical: 10),
-                                  ),
+                                              });
+                                            });
+                                          },
+                                          child: SvgPicture.asset(
+                                            "assets/svgpicture/gpsicon.svg",
+                                          ))),
                                 ),
                               ),
-                              SliverList.list(children: [
-                                const SizedBox(height: 10),
+                            )
+                          ],
+                        ),
+                      ),
 
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: 10, right: 10),
-                                  child: SizedBox(
-                                    height: 90,
-                                    child: ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      clipBehavior: Clip.none,
-                                      itemCount: homeApiController
-                                          .homeapimodel!.categoryList!.length,
-                                      shrinkWrap: true,
-                                      itemBuilder: (context, index) {
-                                        return InkWell(
-                                            onTap: () {
-                                              setState(() {
-                                                select1 = index;
-                                                // dropcontroller.clear();
-                                                mid = homeApiController
-                                                    .homeapimodel!
-                                                    .categoryList![index]
-                                                    .id
-                                                    .toString();
-                                                mroal = homeApiController
-                                                    .homeapimodel!
-                                                    .categoryList![index]
-                                                    .role
-                                                    .toString();
-                                                print(
-                                                    "*****mid*-**:::::------$mid");
-                                                _iconPaths.clear();
-                                                vihicallocations.clear();
-                                                _iconPathsbiddingon.clear();
-                                                vihicallocationsbiddingon
-                                                    .clear();
+                      // ✅ BOTTOM DRAGGABLE SHEET - Complete with all features
+                      DraggableScrollableSheet(
+                        initialChildSize: 0.45,
+                        minChildSize: 0.2,
+                        maxChildSize: 1.0,
+                        controller: sheetController,
+                        builder: (BuildContext context, scrollController) {
+                          return Container(
+                            clipBehavior: Clip.hardEdge,
+                            decoration: BoxDecoration(
+                              color: notifier.containercolore,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(25),
+                                topRight: Radius.circular(25),
+                              ),
+                            ),
+                            child: CustomScrollView(
+                              controller: scrollController,
+                              slivers: [
+                                SliverToBoxAdapter(
+                                  child: Center(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: notifier.textColor,
+                                        borderRadius: const BorderRadius.all(
+                                            Radius.circular(10)),
+                                      ),
+                                      height: 4,
+                                      width: 40,
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 10),
+                                    ),
+                                  ),
+                                ),
+                                SliverList.list(children: [
+                                  const SizedBox(height: 10),
 
-                                                pickupcontroller.text.isEmpty ||
-                                                        dropcontroller
+                                  // ✅ PICKUP AND DROP SELECTION
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 15, right: 15),
+                                    child: InkWell(
+                                      onTap: () {
+                                        _navigateAndRefresh();
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(15),
+                                        decoration: BoxDecoration(
+                                          color: notifier.background,
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Column(
+                                              children: [
+                                                Container(
+                                                  height: 10,
+                                                  width: 10,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(
+                                                        color: Colors.green,
+                                                        width: 3),
+                                                  ),
+                                                ),
+                                                Container(
+                                                  height: 30,
+                                                  width: 1,
+                                                  color: Colors.grey,
+                                                ),
+                                                Container(
+                                                  height: 10,
+                                                  width: 10,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.red,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(width: 15),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    appController
+                                                            .pickupController
+                                                            .text
+                                                            .isEmpty
+                                                        ? "Select pickup location"
+                                                            .tr
+                                                        : appController
+                                                            .pickupController
+                                                            .text,
+                                                    style: TextStyle(
+                                                      color: notifier.textColor,
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 5),
+                                                  Container(
+                                                    height: 1,
+                                                    color: Colors.grey
+                                                        .withOpacity(0.3),
+                                                  ),
+                                                  const SizedBox(height: 5),
+                                                  Text(
+                                                    appController.dropController
                                                             .text.isEmpty
-                                                    ? markers.clear()
-                                                    : "";
-                                                pickupcontroller.text.isEmpty ||
-                                                        dropcontroller
-                                                            .text.isEmpty
-                                                    ? fun().then((value) {
-                                                        setState(() {});
-                                                        getCurrentLatAndLong(
-                                                            lathome, longhome);
-                                                        // _loadMapStyles();
-                                                        // socketConnect();
-                                                      })
-                                                    : "";
+                                                        ? "Where to go?".tr
+                                                        : appController
+                                                            .dropController
+                                                            .text,
+                                                    style: TextStyle(
+                                                      color: appController
+                                                              .dropController
+                                                              .text
+                                                              .isEmpty
+                                                          ? Colors.grey
+                                                          : notifier.textColor,
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const Icon(Icons.add),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
 
-                                                // vihicallocations.clear();
-                                                // markers.clear();
-                                                // _addMarkers();
+                                  const SizedBox(height: 20),
 
-                                                pickupcontroller.text.isEmpty ||
-                                                        dropcontroller
-                                                            .text.isEmpty
-                                                    ? homeMapController
-                                                        .homemapApi(
-                                                            mid: mid,
-                                                            lat: lathome
-                                                                .toString(),
-                                                            lon: longhome
-                                                                .toString())
-                                                        .then(
-                                                        (value) {
-                                                          setState(() {});
-                                                          print(
-                                                              "///:---  ${value["Result"]}");
+                                  // Debug info for vehicle categories - only in debug mode
+                                  if (kDebugMode) ...[
+                                    Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              "VEHICLE CATEGORIES DEBUG:",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            Text(
+                                              "Categories: ${homeApiController.homeapimodel?.categoryList?.length ?? 0}",
+                                            ),
+                                            if (homeApiController
+                                                    .homeapimodel
+                                                    ?.categoryList
+                                                    ?.isNotEmpty ==
+                                                true)
+                                              Text(
+                                                "First category: ${homeApiController.homeapimodel!.categoryList![0].name}",
+                                              ),
+                                            Text(
+                                              "Selected: $select1",
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
 
-                                                          if (value["Result"] ==
-                                                              false) {
-                                                            setState(() {
-                                                              vihicallocations
-                                                                  .clear();
-                                                              markers.clear();
-                                                              _addMarkers();
-                                                              fun().then(
-                                                                  (value) {
-                                                                setState(() {});
-                                                                getCurrentLatAndLong(
-                                                                    lathome,
-                                                                    longhome);
-                                                                // socketConnect();
-                                                              });
-                                                              print(
-                                                                  "***if condition+++:---  $vihicallocations");
-                                                            });
-                                                          } else {
-                                                            setState(() {});
-                                                            for (int i = 0;
-                                                                i <
-                                                                    homeMapController
-                                                                        .homeMapApiModel!
-                                                                        .list!
-                                                                        .length;
-                                                                i++) {
-                                                              vihicallocations.add(LatLng(
-                                                                  double.parse(homeMapController
+                                  // ✅ VEHICLE SELECTION HORIZONTAL LIST
+                                  if (homeApiController.homeapimodel
+                                          ?.categoryList?.isNotEmpty ==
+                                      true)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 10, right: 10),
+                                      child: SizedBox(
+                                        height: 90,
+                                        child: ListView.builder(
+                                          scrollDirection: Axis.horizontal,
+                                          itemCount: homeApiController
+                                              .homeapimodel!
+                                              .categoryList!
+                                              .length,
+                                          itemBuilder: (context, index) {
+                                            final category = homeApiController
+                                                .homeapimodel!
+                                                .categoryList![index];
+                                            return Padding(
+                                              padding: const EdgeInsets.all(4),
+                                              child: InkWell(
+                                                onTap: () {
+                                                  setState(() {
+                                                    select1 = index;
+                                                    vehicle_id =
+                                                        category.id.toString();
+                                                    vihicalname = category.name
+                                                        .toString();
+                                                    vihicalimage = category
+                                                        .image
+                                                        .toString();
+                                                    mid =
+                                                        category.id.toString();
+                                                    mroal = category.role
+                                                        .toString();
+
+                                                    // Update markers on map after vehicle selection
+                                                    if (lathome != null &&
+                                                        longhome != null) {
+                                                      homeMapController
+                                                          .homemapApi(
+                                                              mid: mid,
+                                                              lat: lathome
+                                                                  .toString(),
+                                                              lon: longhome
+                                                                  .toString())
+                                                          .then((value) {
+                                                        setState(() {
+                                                          vihicallocations
+                                                              .clear();
+                                                          _iconPaths.clear();
+                                                          for (int i = 0;
+                                                              i <
+                                                                  homeMapController
                                                                       .homeMapApiModel!
-                                                                      .list![i]
-                                                                      .latitude
-                                                                      .toString()),
-                                                                  double.parse(homeMapController
-                                                                      .homeMapApiModel!
-                                                                      .list![i]
-                                                                      .longitude
-                                                                      .toString())));
-                                                              _iconPaths.add(
-                                                                  "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                                                            }
-                                                            _addMarkers();
+                                                                      .list!
+                                                                      .length;
+                                                              i++) {
+                                                            vihicallocations.add(LatLng(
+                                                                double.parse(homeMapController
+                                                                    .homeMapApiModel!
+                                                                    .list![i]
+                                                                    .latitude
+                                                                    .toString()),
+                                                                double.parse(homeMapController
+                                                                    .homeMapApiModel!
+                                                                    .list![i]
+                                                                    .longitude
+                                                                    .toString())));
+                                                            _iconPaths.add(
+                                                                "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
                                                           }
-
-                                                          print(
-                                                              "******-**:::::------$vihicallocations");
+                                                          _addMarkers();
+                                                        });
+                                                      });
+                                                    }
+                                                  });
+                                                },
+                                                child: Container(
+                                                  width: 100,
+                                                  decoration: BoxDecoration(
+                                                    color: select1 == index
+                                                        ? theamcolore
+                                                            .withOpacity(0.08)
+                                                        : notifier
+                                                            .containercolore,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    border: select1 == index
+                                                        ? Border.all(
+                                                            color: theamcolore,
+                                                            width: 2)
+                                                        : null,
+                                                  ),
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Image.network(
+                                                        "${Config.imageurl}${category.image}",
+                                                        height: 30,
+                                                        width: 30,
+                                                        errorBuilder: (context,
+                                                            error, stackTrace) {
+                                                          return Icon(
+                                                              Icons
+                                                                  .directions_car,
+                                                              size: 30);
                                                         },
-                                                      )
-                                                    : homeMapController
-                                                        .homemapApi(
-                                                            mid: mid,
-                                                            lat: lathome
-                                                                .toString(),
-                                                            lon: longhome
-                                                                .toString())
-                                                        .then(
-                                                        (value) {
-                                                          setState(() {});
-                                                          print(
-                                                              "///:---  ${value["Result"]}");
+                                                      ),
+                                                      const SizedBox(height: 5),
+                                                      Text(
+                                                        "${category.name}",
+                                                        style: TextStyle(
+                                                          color: select1 ==
+                                                                  index
+                                                              ? theamcolore
+                                                              : notifier
+                                                                  .textColor,
+                                                          fontSize: 12,
+                                                          fontWeight: select1 ==
+                                                                  index
+                                                              ? FontWeight.bold
+                                                              : FontWeight
+                                                                  .normal,
+                                                        ),
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        maxLines: 2,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Text(
+                                        "No vehicles available",
+                                        style: TextStyle(
+                                            color: notifier.textColor),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
 
-                                                          if (value["Result"] ==
-                                                              false) {
-                                                            setState(() {
-                                                              vihicallocationsbiddingon
-                                                                  .clear();
-                                                              markers.clear();
-                                                              _addMarkers2();
-                                                              print(
-                                                                  "***if condition+++:---  $vihicallocationsbiddingon");
-                                                            });
-                                                          } else {
-                                                            setState(() {});
-                                                            for (int i = 0;
-                                                                i <
-                                                                    homeMapController
-                                                                        .homeMapApiModel!
-                                                                        .list!
-                                                                        .length;
-                                                                i++) {
-                                                              vihicallocationsbiddingon.add(LatLng(
-                                                                  double.parse(homeMapController
-                                                                      .homeMapApiModel!
-                                                                      .list![i]
-                                                                      .latitude
-                                                                      .toString()),
-                                                                  double.parse(homeMapController
-                                                                      .homeMapApiModel!
-                                                                      .list![i]
-                                                                      .longitude
-                                                                      .toString())));
-                                                              _iconPathsbiddingon
-                                                                  .add(
-                                                                      "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                                                            }
-                                                            _addMarkers2();
-                                                          }
+                                  const SizedBox(height: 20),
 
-                                                          print(
-                                                              "******-**:::::------$vihicallocationsbiddingon");
-                                                        },
-                                                      );
-
-                                                calculateController
-                                                    .calculateApi(
+                                  // ✅ FIND DRIVER BUTTON (conditional)
+                                  if (appController
+                                          .pickupController.text.isNotEmpty &&
+                                      appController
+                                          .dropController.text.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: GetBuilder<CalculateController>(
+                                        builder: (calculateController) {
+                                          return calculateController.isLoading
+                                              ? Container(
+                                                  height: 50,
+                                                  decoration: BoxDecoration(
+                                                    color: theamcolore
+                                                        .withOpacity(0.5),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            15),
+                                                  ),
+                                                  child: Center(
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                )
+                                              : ElevatedButton(
+                                                  onPressed: () {
+                                                    if (calculateController
+                                                            .calCulateModel
+                                                            ?.driverId !=
+                                                        null) {
+                                                      // Price calculation is done, show booking dialog
+                                                      Buttonpresebottomshhet();
+                                                    } else {
+                                                      // Need to calculate price first
+                                                      calculateController
+                                                          .calculateApi(
                                                         context: context,
                                                         uid: appController
                                                             .globalUserId.value,
@@ -1947,683 +2373,297 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                         drop_lat_lon:
                                                             "${appController.dropLat.value},${appController.dropLng.value}",
                                                         drop_lat_lon_list:
-                                                            onlypass)
-                                                    .then(
-                                                  (value) {
-                                                    dropprice = 0;
-                                                    minimumfare = 0;
-                                                    maximumfare = 0;
-
-                                                    if (value["Result"] ==
-                                                        true) {
-                                                      amountresponse = "true";
-                                                      dropprice =
-                                                          value["drop_price"];
-                                                      minimumfare =
-                                                          value["vehicle"]
+                                                            onlypass,
+                                                      )
+                                                          .then((value) {
+                                                        if (value["Result"] ==
+                                                            true) {
+                                                          dropprice = value[
+                                                              "drop_price"];
+                                                          minimumfare = value[
+                                                                  "vehicle"]
                                                               ["minimum_fare"];
-                                                      maximumfare =
-                                                          value["vehicle"]
+                                                          maximumfare = value[
+                                                                  "vehicle"]
                                                               ["maximum_fare"];
-                                                      responsemessage =
-                                                          value["message"];
+                                                          responsemessage =
+                                                              value["message"];
+                                                          amountresponse =
+                                                              "true";
 
-                                                      tot_hour =
-                                                          value["tot_hour"]
-                                                              .toString();
-                                                      tot_time =
-                                                          value["tot_minute"]
-                                                              .toString();
-                                                      vehicle_id =
-                                                          value["vehicle"]["id"]
-                                                              .toString();
-                                                      vihicalrice =
-                                                          double.parse(value[
-                                                                  "drop_price"]
-                                                              .toString());
-                                                      totalkm = double.parse(
-                                                          value["tot_km"]
-                                                              .toString());
-                                                      tot_secound = "0";
-
-                                                      vihicalimage =
-                                                          value["vehicle"]
-                                                                  ["map_img"]
-                                                              .toString();
-                                                      vihicalname =
-                                                          value["vehicle"]
-                                                                  ["name"]
-                                                              .toString();
-
-                                                      setState(() {});
-                                                    } else {
-                                                      amountresponse = "false";
-                                                      print(
-                                                          "jojojojojojojojojojojojojojojojojojojojojojojojo");
-                                                      setState(() {});
+                                                          // Now show booking dialog
+                                                          Buttonpresebottomshhet();
+                                                        } else {
+                                                          amountresponse =
+                                                              "false";
+                                                          responsemessage =
+                                                              value["message"];
+                                                          Fluttertoast.showToast(
+                                                              msg:
+                                                                  responsemessage);
+                                                        }
+                                                      });
                                                     }
-
-                                                    print(
-                                                        "********** dropprice **********:----- $dropprice");
-                                                    print(
-                                                        "********** minimumfare **********:----- $minimumfare");
-                                                    print(
-                                                        "********** maximumfare **********:----- $maximumfare");
                                                   },
-                                                );
-                                                // Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen()));
-                                              });
-                                            },
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(4),
-                                              child: Container(
-                                                constraints: BoxConstraints(
-                                                  minWidth: 80,
-                                                  maxWidth: 120,
-                                                  minHeight: 80,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: select1 == index
-                                                      ? theamcolore
-                                                          .withOpacity(0.08)
-                                                      : notifier
-                                                          .containercolore,
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: Column(
-                                                    mainAxisSize: MainAxisSize
-                                                        .min, // Important: prevents overflow
-                                                    crossAxisAlignment:
-                                                        select1 == index
-                                                            ? CrossAxisAlignment
-                                                                .start
-                                                            : CrossAxisAlignment
-                                                                .center,
-                                                    children: [
-                                                      Flexible(
-                                                        // Wrap the Row with Flexible
-                                                        child: Row(
-                                                          mainAxisSize: MainAxisSize
-                                                              .min, // Important: prevents overflow
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            Flexible(
-                                                              // Make image flexible
-                                                              child: SizedBox(
-                                                                height:
-                                                                    30, // Reduced from 40
-                                                                width:
-                                                                    30, // Reduced from 40
-                                                                child: Image(
-                                                                  image: NetworkImage(
-                                                                      "${Config.imageurl}${homeApiController.homeapimodel!.categoryList![index].image}"),
-                                                                  height: 30,
-                                                                  fit: BoxFit
-                                                                      .contain, // Ensure proper scaling
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            if (select1 ==
-                                                                index) ...[
-                                                              const SizedBox(
-                                                                  width: 5),
-                                                              Flexible(
-                                                                // Make info icon flexible
-                                                                child: InkWell(
-                                                                  onTap: () {
-                                                                    // Vehicle info logic here
-                                                                  },
-                                                                  child: Image(
-                                                                    image: const AssetImage(
-                                                                        "assets/info-circle.png"),
-                                                                    height:
-                                                                        16, // Reduced from 20
-                                                                    color:
-                                                                        theamcolore,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      const SizedBox(
-                                                          height:
-                                                              8), // Reduced spacing
-                                                      Flexible(
-                                                        // Make text flexible
-                                                        child: Text(
-                                                          "${homeApiController.homeapimodel!.categoryList![index].name}",
-                                                          style: TextStyle(
-                                                            color: notifier
-                                                                .textColor,
-                                                            fontSize:
-                                                                12, // Smaller font
-                                                          ),
-                                                          maxLines: 2,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ));
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                InkWell(
-                                  onTap: () {
-                                    // _navigateAndRefresh();
-                                    showModalBottomSheet(
-                                      isScrollControlled: true,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.only(
-                                            topRight: Radius.circular(15),
-                                            topLeft: Radius.circular(15)),
-                                      ),
-                                      context: context,
-                                      builder: (context) {
-                                        return Container(
-                                          height: 750,
-                                          decoration: const BoxDecoration(
-                                              color: Colors.pinkAccent,
-                                              borderRadius: BorderRadius.only(
-                                                topRight: Radius.circular(15),
-                                                topLeft: Radius.circular(15),
-                                              )),
-                                          child: Column(
-                                            children: [
-                                              // _navigateAndRefresh();
-                                              Expanded(
-                                                  child: PickupDropPoint(
-                                                pagestate: false,
-                                                bidding: homeApiController
-                                                    .homeapimodel!
-                                                    .categoryList![select1]
-                                                    .bidding
-                                                    .toString(),
-                                              )),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 20, right: 20),
-                                    child: Container(
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.withOpacity(0.05),
-                                        // color: Colors.red,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: ListTile(
-                                        // contentPadding: EdgeInsets.zero,
-                                        contentPadding:
-                                            const EdgeInsets.only(left: 10),
-                                        leading: Container(
-                                          height: 20,
-                                          width: 20,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                                color: Colors.green, width: 4),
-                                          ),
-                                        ),
-                                        title: appController
-                                                .pickupController.text.isEmpty
-                                            ? Transform.translate(
-                                                offset: const Offset(-20, 0),
-                                                child: Text(
-                                                  "${addresshome ?? "Searching for you on the map...".tr}",
-                                                  style: TextStyle(
-                                                      color:
-                                                          notifier.textColor),
-                                                ))
-                                            : Transform.translate(
-                                                offset: const Offset(-20, 0),
-                                                child: Text(
-                                                  appController
-                                                      .pickupController.text,
-                                                  style: TextStyle(
-                                                      color:
-                                                          notifier.textColor),
-                                                )),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                textfieldlist.isNotEmpty
-                                    ? const SizedBox(height: 0)
-                                    : const SizedBox(height: 10),
-                                textfieldlist.isNotEmpty
-                                    ? InkWell(
-                                        onTap: () {
-                                          // _navigateAndRefresh();
-                                          showModalBottomSheet(
-                                            isScrollControlled: true,
-                                            shape: const RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.only(
-                                                  topRight: Radius.circular(15),
-                                                  topLeft: Radius.circular(15)),
-                                            ),
-                                            context: context,
-                                            builder: (context) {
-                                              return SizedBox(
-                                                height: 750,
-                                                child: Column(
-                                                  children: [
-                                                    // _navigateAndRefresh();
-                                                    Expanded(
-                                                        child: PickupDropPoint(
-                                                      pagestate: false,
-                                                      bidding: homeApiController
-                                                          .homeapimodel!
-                                                          .categoryList![
-                                                              select1]
-                                                          .bidding
-                                                          .toString(),
-                                                    )),
-                                                  ],
-                                                ),
-                                              );
-                                            },
-                                          );
-                                          // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
-                                        },
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                              left: 20, right: 20, top: 10),
-                                          child: Container(
-                                            height: 50,
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  Colors.grey.withOpacity(0.05),
-                                              // color: Colors.red,
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: ListTile(
-                                              contentPadding:
-                                                  const EdgeInsets.only(
-                                                      left: 10, right: 10),
-                                              leading: Container(
-                                                height: 20,
-                                                width: 20,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  shape: BoxShape.circle,
-                                                  border: Border.all(
-                                                      color: Colors.red,
-                                                      width: 4),
-                                                ),
-                                              ),
-                                              title: Transform.translate(
-                                                  offset: const Offset(-20, 0),
-                                                  child: Text(
-                                                    "${textfieldlist.length + 1} route stops",
-                                                    style: TextStyle(
-                                                        color:
-                                                            notifier.textColor),
-                                                  )),
-                                              trailing: Icon(
-                                                Icons.add,
-                                                color: notifier.textColor,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    : Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 20, right: 20),
-                                        child: InkWell(
-                                          onTap: () {
-                                            // _navigateAndRefresh();
-                                            showModalBottomSheet(
-                                              isScrollControlled: true,
-                                              shape:
-                                                  const RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.only(
-                                                    topRight:
-                                                        Radius.circular(15),
-                                                    topLeft:
-                                                        Radius.circular(15)),
-                                              ),
-                                              context: context,
-                                              builder: (context) {
-                                                return SizedBox(
-                                                  height: 750,
-                                                  // color: Colors.red,
-                                                  child: Column(
-                                                    children: [
-                                                      // _navigateAndRefresh();
-                                                      Expanded(
-                                                          child:
-                                                              PickupDropPoint(
-                                                        pagestate: false,
-                                                        bidding:
-                                                            homeApiController
-                                                                .homeapimodel!
-                                                                .categoryList![
-                                                                    select1]
-                                                                .bidding
-                                                                .toString(),
-                                                      )),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
-                                            );
-                                            // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
-                                          },
-                                          child: Container(
-                                            height: 50,
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  Colors.grey.withOpacity(0.05),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 10, right: 10),
-                                              child: Row(
-                                                // crossAxisAlignment: CrossAxisAlignment.start,
-                                                // mainAxisAlignment: MainAxisAlignment.start,
-                                                children: [
-                                                  Image(
-                                                    image: const AssetImage(
-                                                        "assets/search.png"),
-                                                    height: 20,
-                                                    color: notifier.textColor,
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 15,
-                                                  ),
-                                                  Flexible(
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              top: 2),
-                                                      child: appController
-                                                              .dropController
-                                                              .text
-                                                              .isEmpty
-                                                          ? Text(
-                                                              "To",
-                                                              style: TextStyle(
-                                                                  color: notifier
-                                                                      .textColor,
-                                                                  fontSize: 16),
-                                                            )
-                                                          : Text(
-                                                              appController
-                                                                  .dropController
-                                                                  .text,
-                                                              style: TextStyle(
-                                                                  color: notifier
-                                                                      .textColor,
-                                                                  fontSize: 16),
-                                                              maxLines: 2,
-                                                            ),
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        theamcolore,
+                                                    minimumSize: const Size(
+                                                        double.infinity, 50),
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              15),
                                                     ),
                                                   ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
+                                                  child: Text(
+                                                    calculateController
+                                                                .calCulateModel
+                                                                ?.driverId !=
+                                                            null
+                                                        ? "Set your price".tr
+                                                        : "Calculate price".tr,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                );
+                                        },
                                       ),
-                                (homeApiController.homeapimodel?.categoryList
-                                                ?.isNotEmpty ==
-                                            true &&
-                                        select1 <
-                                            homeApiController.homeapimodel!
-                                                .categoryList!.length &&
-                                        homeApiController
-                                                .homeapimodel!
-                                                .categoryList![select1]
-                                                .bidding ==
-                                            "1")
-                                    ? const SizedBox(height: 10)
-                                    : const SizedBox(),
-                                (homeApiController.homeapimodel?.categoryList
-                                                ?.isNotEmpty ==
-                                            true &&
-                                        select1 <
-                                            homeApiController.homeapimodel!
-                                                .categoryList!.length &&
-                                        homeApiController
-                                                .homeapimodel!
-                                                .categoryList![select1]
-                                                .bidding ==
-                                            "1")
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 20, right: 20),
-                                        child: InkWell(
-                                          onTap: () {
-                                            // bottomshhetopen = true;
-                                            // if(isLoad){
-                                            //   return;
-                                            // }else{
-                                            //   isLoad = true;
-                                            // }
-                                            // homeApiController.homeApi(uid: userid.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
-                                            //   if(value["Result"] == true){
-                                            //     setState(() {
-                                            //       Buttonpresebottomshhet();
-                                            //       isLoad = false;
-                                            //     });
-                                            //   }else{
-                                            //
-                                            //   }
-                                            // },);
-                                            Buttonpresebottomshhet();
-                                          },
-                                          child: Container(
-                                            height: 50,
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  Colors.grey.withOpacity(0.05),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 10, right: 10),
-                                              child: Row(
-                                                children: [
-                                                  (pickupcontroller
-                                                              .text.isEmpty ||
-                                                          dropcontroller
-                                                              .text.isEmpty)
-                                                      ? Text(
-                                                          "${currencyy ?? globalcurrency}",
-                                                          style: TextStyle(
-                                                              color: notifier
-                                                                  .textColor,
-                                                              fontSize: 16),
-                                                        )
-                                                      : Text(
-                                                          "${currencyy ?? globalcurrency} ${dropprice ?? ""}",
-                                                          style: TextStyle(
-                                                              color: notifier
-                                                                  .textColor,
-                                                              fontSize: 16),
-                                                        ),
-                                                  const SizedBox(
-                                                    width: 8,
-                                                  ),
-                                                  Text(
-                                                    "Offer your fare".tr,
-                                                    style: TextStyle(
-                                                        color:
-                                                            notifier.textColor,
-                                                        fontSize: 16),
-                                                  ),
-                                                  const Spacer(),
-                                                ],
-                                              ),
+                                    ),
+
+                                  // ✅ QUICK ACTIONS (Add home, work shortcuts, etc.)
+                                  if (appController
+                                          .pickupController.text.isEmpty ||
+                                      appController.dropController.text.isEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.all(15),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Quick actions".tr,
+                                            style: TextStyle(
+                                              color: notifier.textColor,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                        ),
-                                      )
-                                    : const SizedBox(),
-                                // const SizedBox(height: 20,),
-                                appController.pickupController.text.isEmpty ||
-                                        appController
-                                            .dropController.text.isEmpty
-                                    ? Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: CommonButton(
-                                            containcolore:
-                                                theamcolore.withOpacity(0.2),
-                                            onPressed1: () {},
-                                            context: context,
-                                            txt1: "Find a driver".tr),
-                                      )
-                                    : Padding(
-                                        padding: const EdgeInsets.all(10),
-                                        child: CommonButton(
-                                            containcolore: theamcolore,
-                                            onPressed1: homeApiController
-                                                        .homeapimodel!
-                                                        .categoryList![select1]
-                                                        .bidding ==
-                                                    "1"
-                                                ? () {
-                                                    Buttonpresebottomshhet();
-                                                  }
-                                                : () {
-                                                    print("222222222222");
-
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) => HomeScreen(
-                                                              latpic: appController
-                                                                  .pickupLat
-                                                                  .value,
-                                                              longpic:
-                                                                  appController
-                                                                      .pickupLng
-                                                                      .value,
-                                                              latdrop:
-                                                                  appController
-                                                                      .dropLat
-                                                                      .value,
-                                                              longdrop:
-                                                                  appController
-                                                                      .dropLng
-                                                                      .value,
-                                                              destinationlat:
-                                                                  destinationlat)),
-                                                    );
-                                                    modual_calculateController
-                                                        .modualcalculateApi(
-                                                            context: context,
-                                                            uid: userid
-                                                                .toString(),
-                                                            mid: mid,
-                                                            mrole: mroal,
-                                                            pickup_lat_lon:
-                                                                "$latitudepick,$longitudepick",
-                                                            drop_lat_lon:
-                                                                "$latitudedrop,$longitudedrop",
-                                                            drop_lat_lon_list:
-                                                                onlypass)
-                                                        .then(
-                                                      (value) {
-                                                        midseconde =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .id!;
-                                                        vihicalrice = double.parse(
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropPrice!
-                                                                .toString());
-                                                        totalkm = double.parse(
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropKm!
-                                                                .toString());
-                                                        tot_time =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropTime!
-                                                                .toString();
-                                                        tot_hour =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropHour!
-                                                                .toString();
-                                                        vihicalname =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .name!
-                                                                .toString();
-                                                        vihicalimage =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .image!
-                                                                .toString();
-                                                        vehicle_id =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .id!
-                                                                .toString();
-
-                                                        print(
-                                                            "GOGOGOGOGOGOGOGOGOGOGOGOG:- $midseconde");
-                                                        print(
-                                                            "GOGOGOGOGOGOGOGOGOGOGOGOG:- $vihicalrice");
-                                                        // setState((){});
-                                                      },
-                                                    );
+                                          const SizedBox(height: 15),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: InkWell(
+                                                  onTap: () {
+                                                    // Navigate to add home address
+                                                    _navigateAndRefresh();
                                                   },
-                                            context: context,
-                                            txt1: "Find a driver".tr),
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            15),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          notifier.background,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                    ),
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(Icons.home,
+                                                            color: theamcolore),
+                                                        const SizedBox(
+                                                            width: 10),
+                                                        Text(
+                                                          "Add Home".tr,
+                                                          style: TextStyle(
+                                                              color: notifier
+                                                                  .textColor),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: InkWell(
+                                                  onTap: () {
+                                                    // Navigate to add work address
+                                                    _navigateAndRefresh();
+                                                  },
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            15),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          notifier.background,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                    ),
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(Icons.work,
+                                                            color: theamcolore),
+                                                        const SizedBox(
+                                                            width: 10),
+                                                        Text(
+                                                          "Add Work".tr,
+                                                          style: TextStyle(
+                                                              color: notifier
+                                                                  .textColor),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                              ])
-                            ],
-                          ),
-                        );
-                      },
-                    )
+                                    ),
+
+                                  const SizedBox(height: 20),
+                                ])
+                              ],
+                            ),
+                          );
+                        },
+                      )
+                    ],
+                  );
+      },
+    );
+  }
+
+  Widget _buildLoadingOverlay() {
+    return Container(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      color: notifier.background,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // App logo
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: notifier.containercolore,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.map_outlined,
+                size: 50,
+                color: theamcolore,
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // Loading indicator
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(theamcolore),
+              strokeWidth: 3,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Status text
+            Text(
+              _initializationStatus,
+              style: TextStyle(
+                color: notifier.textColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 10),
+
+            // Secondary text
+            Text(
+              "Please wait...".tr,
+              style: TextStyle(
+                color: notifier.textColor?.withOpacity(0.7),
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            // Debug info (only in debug mode)
+            if (kDebugMode) ...[
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(10),
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      "DEBUG INFO:",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "Initializing: $_isInitializing",
+                      style: TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                    Text(
+                      "Status: $_initializationStatus",
+                      style: TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                    Text(
+                      "UserId: $userid",
+                      style: TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                    Text(
+                      "LatHome: $lathome",
+                      style: TextStyle(color: Colors.white, fontSize: 10),
+                    ),
                   ],
-                );
-        },
+                ),
+              ),
+            ],
+
+            // Force refresh button for debugging
+            if (kDebugMode) ...[
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  if (mounted) {
+                    setState(() {
+                      _isInitializing = false;
+                    });
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theamcolore,
+                ),
+                child: Text(
+                  "Force Skip Loading",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

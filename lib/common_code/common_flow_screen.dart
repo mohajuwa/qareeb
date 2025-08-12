@@ -38,6 +38,7 @@ Future commonbottomsheetrequestsend({required context}) {
   RemoveRequest removeRequest = Get.put(RemoveRequest());
   VihicalCalculateController vihicalCalculateController =
       Get.put(VihicalCalculateController());
+
   return Get.bottomSheet(enableDrag: false, isDismissible: false,
       StatefulBuilder(
     builder: (context, setState) {
@@ -131,7 +132,7 @@ Future commonbottomsheetrequestsend({required context}) {
                             onPressed1: () {
                               cancelloader = true;
                               removeRequest
-                                  .removeApi(uid: useridgloable.toString())
+                                  .removeApi(uid: userId.toString())
                                   .then(
                                 (value) {
                                   socket.emit('AcceRemoveOther', {
@@ -169,7 +170,7 @@ Future commonbottomsheetrequestsend({required context}) {
           //     onTap: () {
           //
           //         print("vvvvvvv");
-          //         removeRequest.removeApi(uid: useridgloable.toString()).then((value) {
+          //         removeRequest.removeApi(uid: userId.toString()).then((value) {
           //           socket.emit('AcceRemoveOther',{
           //             'requestid': request_id,
           //             'driverid' : vihicalCalculateController.vihicalCalculateModel!.driverId!,
@@ -856,10 +857,10 @@ Future commonbottomsheetcancelflow({required context}) {
                                                                                 CommonButton(
                                                                                     containcolore: theamcolore,
                                                                                     onPressed1: () {
-                                                                                      vihicalCancelRideApiController.vihicalcancelapi(uid: useridgloable.toString(), lat: lathomecurrent.toString(), lon: longhomecurrent.toString(), cancel_id: cancel_id.toString(), request_id: request_id.toString()).then(
+                                                                                      vihicalCancelRideApiController.vihicalcancelapi(uid: userId.toString(), lat: lathomecurrent.toString(), lon: longhomecurrent.toString(), cancel_id: cancel_id.toString(), request_id: request_id.toString()).then(
                                                                                         (value) {
                                                                                           socket.emit('Vehicle_Ride_Cancel', {
-                                                                                            'uid': "$useridgloable",
+                                                                                            'uid': "$userId",
                                                                                             'driverid': value["driverid"],
                                                                                           });
                                                                                           Get.close(2);
@@ -1042,6 +1043,7 @@ num additionaltime = 0.00;
 
 List<PointLatLng> droppointstartscreen = [];
 List listdrop = [];
+var userId;
 
 class GlobalDriverAcceptClass extends GetxController implements GetxService {
   driverdetailfunction(
@@ -1070,12 +1072,12 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
 
     socket.connect();
 
-    // socket.on('Vehicle_Ride_Start_End$useridgloable', (Vehicle_Ride_Start_End) {
+    // socket.on('Vehicle_Ride_Start_End$userId', (Vehicle_Ride_Start_End) {
     //
     //   print("++++++ /Vehicle_Ride_Start_End/ ++++ :---  $Vehicle_Ride_Start_End");
     //   print("Vehicle_Ride_Start_End is of type: ${Vehicle_Ride_Start_End.runtimeType}");
     //   print("Vehicle_Ride_Start_End keys: ${Vehicle_Ride_Start_End.keys}");
-    //   print("++++Vehicle_Ride_Start_End userid+++++: $useridgloable");
+    //   print("++++Vehicle_Ride_Start_End userid+++++: $userId");
     //   print("++++Vehicle_Ride_Start_End gggg +++++: ${Vehicle_Ride_Start_End["uid"].toString()}");
     //   print("++++driver_id gggg +++++: $driver_id");
     //
@@ -1142,7 +1144,7 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
 
     print("object@@@@@@@2");
 
-    socket.on('Vehicle_Ride_Payment$useridgloable', (Vehicle_Ride_Payment) {
+    socket.on('Vehicle_Ride_Payment$userId', (Vehicle_Ride_Payment) {
       print("++++++ /Vehicle_Ride_Payment1/ ++++ :---  $Vehicle_Ride_Payment");
       print(
           "Vehicle_Ride_Payment1 is of type: ${Vehicle_Ride_Payment.runtimeType}");
@@ -1178,11 +1180,11 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
       print("++++++ /Vehicle_Ride_OTP/ ++++ :---  $Vehicle_Ride_OTP");
       print("Vehicle_Ride_OTP is of type: ${Vehicle_Ride_OTP.runtimeType}");
       print("Vehicle_Ride_OTP keys: ${Vehicle_Ride_OTP.keys}");
-      print("++++userid+++++: $useridgloable");
+      print("++++userid+++++: $userId");
 
       print("++++otpstatus+++++:- $otpstatus");
 
-      if (useridgloable.toString() == Vehicle_Ride_OTP["c_id"].toString()) {
+      if (userId.toString() == Vehicle_Ride_OTP["c_id"].toString()) {
         otpstatus = Vehicle_Ride_OTP["status"];
       } else {
         otpstatus = false;
@@ -1190,7 +1192,7 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
       }
     });
 
-    // socket.on('Vehicle_Time_update$useridgloable', (Vehicle_Time_update) {
+    // socket.on('Vehicle_Time_update$userId', (Vehicle_Time_update) {
     //
     //   print("++++++ /Vehicle_Time_update/ ++++ :---  $Vehicle_Time_update");
     //   print("Vehicle_Time_update is of type: ${Vehicle_Time_update.runtimeType}");
@@ -1217,10 +1219,10 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
 
     print("object@@@@@@@4");
 
-    // vihicalDriverDetailApiController.vihicaldriverdetailapi(driver_list: vihicalCalculateController.vihicalCalculateModel!.driverId!,uid: useridgloable.toString(), d_id: d_id, request_id: request_id).then((value) {
+    // vihicalDriverDetailApiController.vihicaldriverdetailapi(driver_list: vihicalCalculateController.vihicalCalculateModel!.driverId!,uid: userId.toString(), d_id: d_id, request_id: request_id).then((value) {
     vihicalDriverDetailApiController
         .vihicaldriverdetailapi(
-            uid: useridgloable.toString(), d_id: d_id, request_id: request_id)
+            uid: userId.toString(), d_id: d_id, request_id: request_id)
         .then((value) {
       print("object@@@@@@@5");
       if (value["Result"] == true) {
@@ -1557,7 +1559,7 @@ Future rateBottomSheet() {
                               CommonButton(
                                   txt1: "Done",
                                   onPressed1: () {
-                                    print("userid:-- ($useridgloable)");
+                                    print("userid:-- ($userId)");
                                     print("driver_id:-- ($driver_id)");
                                     print(
                                         "reviewtextcontroller.text:-- (${reviewtextcontroller.text})");
@@ -1566,7 +1568,7 @@ Future rateBottomSheet() {
                                         "ridecompleterequestid:-- ($ridecompleterequestid)");
                                     driverReviewDetailApiController.reviewapi(
                                         def_review: reviewid,
-                                        uid: useridgloable.toString(),
+                                        uid: userId.toString(),
                                         d_id: "$driver_id",
                                         review: reviewtextcontroller.text,
                                         tot_star: "$tRate",

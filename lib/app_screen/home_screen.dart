@@ -75,6 +75,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<PointLatLng> _dropOffPoints = [];
+  var userId;
 
   var decodeUid;
 
@@ -86,8 +87,8 @@ class _HomeScreenState extends State<HomeScreen> {
     decodeUid = jsonDecode(uid!);
     currencyy = jsonDecode(currency!);
 
-    useridgloable = decodeUid['id'];
-    print("****home screen*****:--- ($useridgloable)");
+    userId = decodeUid['id'];
+    print("****home screen*****:--- ($userId)");
     print("*********:--- ($currencyy)");
 
     setState(() {});
@@ -117,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print("*********midsecounde*********:--  ($vihicalrice)");
     vihicalCalculateController
         .vihicalcalculateApi(
-            uid: useridgloable.toString(),
+            uid: userId.toString(),
             mid: "$midseconde",
             pickup_lat_lon: "$latitudepick,$longitudepick",
             drop_lat_lon: "$latitudedrop,$longitudedrop",
@@ -153,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _iconPathsbiddingoff.clear();
       vihicalCalculateController
           .vihicalcalculateApi(
-              uid: useridgloable.toString(),
+              uid: userId.toString(),
               mid: "$midseconde",
               pickup_lat_lon: "$latitudepick,$longitudepick",
               drop_lat_lon: "$latitudedrop,$longitudedrop",
@@ -178,13 +179,13 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     });
 
-    socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
+    socket.on('acceptvehrequest$userId', (acceptvehrequest) {
       socket.close();
 
       print("++++++ /acceptvehrequest/ ++++ :---  $acceptvehrequest");
       print("acceptvehrequest is of type: ${acceptvehrequest.runtimeType}");
       print("acceptvehrequest keys: ${acceptvehrequest.keys}");
-      print("++++userid+++++: $useridgloable");
+      print("++++userid+++++: $userId");
       print(
           "++++hjhhhhhhhhhhhhhhhhhh+++++: ${acceptvehrequest["uid"].toString()}");
       print(
@@ -194,9 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appController.requestId.value = acceptvehrequest["request_id"].toString();
       driver_id = acceptvehrequest["uid"].toString();
 
-      if (acceptvehrequest["c_id"]
-          .toString()
-          .contains(useridgloable.toString())) {
+      if (acceptvehrequest["c_id"].toString().contains(userId.toString())) {
         print("condition done");
         driveridloader == false;
         print("condition done1");
@@ -218,26 +217,22 @@ class _HomeScreenState extends State<HomeScreen> {
     socket.emit('vehiclerequest', {
       'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
       'driverid': vihicalCalculateController.vihicalCalculateModel!.driverId,
-      'c_id': useridgloable
+      'c_id': userId
     });
   }
 
   String themeForMap = "";
 
-  mapThemeStyle({required context}) {
-    if (darkMode == true) {
+  mapThemeStyle({required BuildContext context}) {
+    final stylePath = darkMode == true
+        ? "assets/map_styles/dark_style.json"
+        : "assets/map_styles/light_style.json";
+
+    DefaultAssetBundle.of(context).loadString(stylePath).then((value) {
       setState(() {
-        DefaultAssetBundle.of(context)
-            .loadString("assets/map_styles/dark_style.json")
-            .then(
-          (value) {
-            setState(() {
-              themeForMap = value;
-            });
-          },
-        );
+        themeForMap = value;
       });
-    }
+    });
   }
 
   @override
@@ -771,7 +766,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                           vihicalCalculateController
                                               .vihicalcalculateApi(
-                                                  uid: useridgloable.toString(),
+                                                  uid: userId.toString(),
                                                   mid: midseconde.toString(),
                                                   pickup_lat_lon:
                                                       "$latitudepick,$longitudepick",
@@ -1613,7 +1608,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     onPressed1: () {
                                       homeWalletApiController
                                           .homwwalleteApi(
-                                              uid: useridgloable.toString(),
+                                              uid: userId.toString(),
                                               context: context)
                                           .then(
                                         (value) {
@@ -1661,7 +1656,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               },
                                               droplistadd: droptitlelist,
                                               context: context,
-                                              uid: useridgloable.toString(),
+                                              uid: userId.toString(),
                                               tot_km: "$totalkm",
                                               vehicle_id: vehicle_id,
                                               tot_minute: tot_time,

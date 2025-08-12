@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
@@ -245,40 +247,45 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildPhoneField(ColorNotifier notifier) {
     return SizedBox(
       height: 60,
-      child: IntlPhoneField(
-        controller: _phoneController,
-        decoration: InputDecoration(
-          counterText: "",
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.grey.withOpacity(0.4)),
-            borderRadius: BorderRadius.circular(15),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: IntlPhoneField(
+          searchText: 'بحث',
+          controller: _phoneController,
+          decoration: InputDecoration(
+            counterText: "",
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.withOpacity(0.4)),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            labelText: 'Phone Number'.tr,
+            labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+            border: OutlineInputBorder(
+              borderSide: const BorderSide(color: Colors.grey),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: theamcolore),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
-          labelText: 'Phone Number'.tr,
-          labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-          border: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.grey),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: theamcolore),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          style: TextStyle(color: notifier.textColor),
+          flagsButtonPadding: EdgeInsets.zero,
+          showCountryFlag: false,
+          showDropdownIcon: false,
+          initialCountryCode: 'YE',
+          languageCode: "ar",
+          dropdownTextStyle: TextStyle(color: notifier.textColor, fontSize: 15),
+          onCountryChanged: (value) => setState(() {}),
+          onChanged: (number) {
+            setState(() {
+              _countryCode = number.countryCode;
+              ccode = number.countryCode; // Sync with global variable
+            });
+          },
         ),
-        style: TextStyle(color: notifier.textColor),
-        flagsButtonPadding: EdgeInsets.zero,
-        showCountryFlag: false,
-        showDropdownIcon: false,
-        initialCountryCode: 'YE',
-        dropdownTextStyle: TextStyle(color: notifier.textColor, fontSize: 15),
-        onCountryChanged: (value) => setState(() {}),
-        onChanged: (number) {
-          setState(() {
-            _countryCode = number.countryCode;
-            ccode = number.countryCode; // Sync with global variable
-          });
-        },
       ),
     );
   }
@@ -426,8 +433,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       });
     } else {
       _showSnackbar(_passwordController.text.isEmpty
-          ? "Enter Password"
-          : "All fields are required.");
+          ? "Enter Password".tr
+          : "All fields are required.".tr);
     }
   }
 
@@ -522,36 +529,41 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildForgotPhoneField(ColorNotifier notifier) {
     return SizedBox(
       height: 60,
-      child: IntlPhoneField(
-        controller: _forgotPhoneController,
-        decoration: InputDecoration(
-          counterText: "",
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.grey.withOpacity(0.4)),
-            borderRadius: BorderRadius.circular(15),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: IntlPhoneField(
+          // ignore: deprecated_member_use
+          searchText: 'بحث',
+          controller: _forgotPhoneController,
+          decoration: InputDecoration(
+            counterText: "",
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.withOpacity(0.4)),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            labelText: 'Phone Number'.tr,
+            labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+            border: OutlineInputBorder(
+              borderSide: const BorderSide(color: Colors.grey),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: theamcolore),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
-          labelText: 'Phone Number'.tr,
-          labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-          border: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.grey),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: theamcolore),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          style: TextStyle(color: notifier.textColor),
+          flagsButtonPadding: EdgeInsets.zero,
+          showCountryFlag: false,
+          showDropdownIcon: false,
+          initialCountryCode: 'YE',
+          dropdownTextStyle: TextStyle(color: notifier.textColor, fontSize: 15),
+          onCountryChanged: (value) {},
+          onChanged: (number) =>
+              setState(() => _forgotCountryCode = number.countryCode),
         ),
-        style: TextStyle(color: notifier.textColor),
-        flagsButtonPadding: EdgeInsets.zero,
-        showCountryFlag: false,
-        showDropdownIcon: false,
-        initialCountryCode: 'YE',
-        dropdownTextStyle: TextStyle(color: notifier.textColor, fontSize: 15),
-        onCountryChanged: (value) {},
-        onChanged: (number) =>
-            setState(() => _forgotCountryCode = number.countryCode),
       ),
     );
   }

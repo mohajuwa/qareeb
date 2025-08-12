@@ -47,7 +47,7 @@ class _DriverListScreenState extends State<DriverListScreen>
   _connectSocket() async {
     print("DATADATADATADATADATADATDATADTADLOADLOAD");
 
-    // socket.on("removecustomerdata${useridgloable}", (removecustomerdata) async {
+    // socket.on("removecustomerdata${appController.globalUserId}", (removecustomerdata) async {
     //   print("++++++ removecustomerdata ++++++ :---  $removecustomerdata");
     //   print("++++++ request_id running ride ++++++ :---  $request_id");
     //
@@ -64,7 +64,7 @@ class _DriverListScreenState extends State<DriverListScreen>
 
   acceptsocate() {
     socket.emit('Accept_Bidding', {
-      'uid': useridgloable,
+      'uid': appController.globalUserId,
       'd_id': d_id,
       // 'request_id' : addVihicalCalculateController.addVihicalCalculateModel!.id,
       'request_id': request_id,
@@ -418,12 +418,13 @@ class _DriverListScreenState extends State<DriverListScreen>
                                       child: CommonOutLineButton(
                                           bordercolore: Colors.red,
                                           onPressed1: () {
-                                            print("www:-- ${useridgloable}");
+                                            print(
+                                                "www:-- ${appController.globalUserId}");
                                             print(
                                                 "www:-- ${vehicle_bidding_driver[index]["id"]}");
                                             // print("www:-- ${addVihicalCalculateController.addVihicalCalculateModel!.id}");
                                             socket.emit('Bidding_decline', {
-                                              'uid': useridgloable,
+                                              'uid': appController.globalUserId,
                                               'id':
                                                   vehicle_bidding_driver[index]
                                                       ["id"],

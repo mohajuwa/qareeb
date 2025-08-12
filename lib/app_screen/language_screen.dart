@@ -1,10 +1,8 @@
-// lib/app_screen/language_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/controllers/language_controller.dart';
 import '../common_code/colore_screen.dart';
-
-bool rtl = false;
 
 class LanguageScreen extends StatefulWidget {
   const LanguageScreen({super.key});
@@ -15,39 +13,43 @@ class LanguageScreen extends StatefulWidget {
 
 class _LanguageScreenState extends State<LanguageScreen> {
   int value = 0;
+  final LanguageController languageController = Get.find();
 
-  List languageimage = [
+  final List<String> languageImages = [
     'assets/L-English.png',
     'assets/L-Arabic.png',
   ];
 
-  List languagetext = [
+  final List<String> languageText = [
     'English',
     'Arabic',
   ];
 
-  List languagetext1 = [
-    'en_English',
-    'ur_arabic',
+  final List<String> languageCodes = [
+    'en',
+    'ar',
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    // Set current language selection
-    String currentLocale = Get.locale.toString();
-    if (currentLocale.contains('ur') || currentLocale.contains('arabic')) {
-      value = 1; // Arabic
-    } else {
-      value = 0; // English
-    }
-  }
 
   ColorNotifier notifier = ColorNotifier();
 
   @override
+  void initState() {
+    super.initState();
+    _loadSelectedLanguage();
+  }
+
+  Future<void> _loadSelectedLanguage() async {
+    await languageController.loadLocale();
+    setState(() {
+      String currentLang = languageController.locale.languageCode;
+      value = (currentLang == 'ar') ? 1 : 0;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     notifier = Provider.of<ColorNotifier>(context, listen: true);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: notifier.background,
@@ -64,113 +66,65 @@ class _LanguageScreenState extends State<LanguageScreen> {
         ),
       ),
       backgroundColor: notifier.background,
-      body: Column(
-        children: [
-          Container(
-            height: 300,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(15),
-                topLeft: Radius.circular(15),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
-              child: ListView.builder(
-                itemCount: 2, // Only English and Arabic
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        value = index;
-                      });
-
-                      if (index == 1) {
-                        // Arabic selected
-                        setState(() {
-                          rtl = true;
-                        });
-                        Get.updateLocale(const Locale('ur', 'arabic'));
-                        Get.changeTheme(ThemeData(
-                          fontFamily: 'Khebrat',
-                          useMaterial3: false,
-                          splashColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          dividerColor: Colors.transparent,
-                        ));
-                      } else {
-                        // English selected
-                        setState(() {
-                          rtl = false;
-                        });
-                        Get.updateLocale(const Locale('en', 'English'));
-                        Get.changeTheme(ThemeData(
-                          fontFamily: 'Khebrat',
-                          useMaterial3: false,
-                          splashColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          dividerColor: Colors.transparent,
-                        ));
-                      }
-                      Get.back();
-                    },
-                    child: Container(
-                      height: 60,
-                      width: Get.width,
-                      margin: const EdgeInsets.symmetric(vertical: 7),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: value == index
-                              ? Colors.blue
-                              : Colors.grey.withOpacity(0.4),
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(15),
-                        color: notifier.containercolore,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        child: Row(
-                          children: [
-                            Container(
-                              height: 35,
-                              width: 35,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                image: DecorationImage(
-                                  image: AssetImage(languageimage[index]),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 15),
-                            Text(
-                              languagetext[index],
-                              style: TextStyle(
-                                color: notifier.textColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const Spacer(),
-                            if (value == index)
-                              const Icon(
-                                Icons.check_circle,
-                                color: Colors.blue,
-                                size: 24,
-                              ),
-                          ],
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        child: ListView.builder(
+          itemCount: languageText.length,
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onTap: () async {
+                setState(() => value = index);
+                await languageController.changeLocale(languageCodes[index]);
+                Get.back();
+              },
+              child: Container(
+                height: 60,
+                width: Get.width,
+                margin: const EdgeInsets.symmetric(vertical: 7),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: value == index
+                        ? theamcolore
+                        : Colors.grey.withOpacity(0.4),
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                  color: notifier.containercolore,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 35,
+                        width: 35,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: AssetImage(languageImages[index]),
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                      const SizedBox(width: 15),
+                      Text(
+                        languageText[index],
+                        style: TextStyle(
+                          color: notifier.textColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (value == index)
+                        Icon(Icons.check_circle, color: theamcolore, size: 24),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }

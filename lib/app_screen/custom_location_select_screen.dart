@@ -42,29 +42,26 @@ class _CustomLocationSelectScreenState
     extends State<CustomLocationSelectScreen> {
   String themeForMap = "";
 
-  mapThemeStyle({required context}) {
-    if (darkMode == true) {
+  mapThemeStyle({required BuildContext context}) {
+    final stylePath = darkMode == true
+        ? "assets/map_styles/dark_style.json"
+        : "assets/map_styles/light_style.json";
+
+    DefaultAssetBundle.of(context).loadString(stylePath).then((value) {
       setState(() {
-        DefaultAssetBundle.of(context)
-            .loadString("assets/map_styles/dark_style.json")
-            .then(
-          (value) {
-            setState(() {
-              themeForMap = value;
-            });
-          },
-        );
+        themeForMap = value;
       });
-    }
+    });
   }
 
   bool isLoadingLocation = true;
-
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     // datagetfunction();
+    Get.put(LocationController());
+
     Get.find<LocationController>().clearDestinations();
     // destination longs cleared via LocationController
     mapThemeStyle(context: context);
@@ -108,12 +105,45 @@ class _CustomLocationSelectScreenState
     lat = latitude;
     long = longitude;
 
-    await placemarkFromCoordinates(lat, long)
-        .then((List<Placemark> placemarks) {
+    try {
+      // Add timeout and error handling for geocoding
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, long)
+          .timeout(const Duration(seconds: 10));
+
+      if (placemarks.isNotEmpty) {
+        address =
+            '${placemarks.first.name ?? ''}, ${placemarks.first.locality ?? ''}, ${placemarks.first.country ?? ''}';
+        if (kDebugMode) {
+          print("✅ Geocoding successful: $address");
+        }
+      } else {
+        // Fallback if no address found
+        address =
+            'Location: ${latitude.toStringAsFixed(4)}, ${longitude.toStringAsFixed(4)}';
+        if (kDebugMode) {
+          print("⚠️ No address found, using coordinates");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Geocoding error: $e");
+      }
+
+      // Fallback address when geocoding fails
       address =
-          '${placemarks.first.name}, ${placemarks.first.locality}, ${placemarks.first.country}';
-      print("FIRST USER CURRENT LOCATION :-- $address");
-    });
+          'Location: ${latitude.toStringAsFixed(4)}, ${longitude.toStringAsFixed(4)}';
+
+      // Show user-friendly message
+      if (e.toString().contains('TimeoutException')) {
+        if (kDebugMode) {
+          print("Geocoding timeout - using coordinates as fallback");
+        }
+      }
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _moveToUserLocation(GoogleMapController controller) async {
@@ -122,7 +152,7 @@ class _CustomLocationSelectScreenState
     try {
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.medium,
-        timeLimit: const Duration(seconds: 5), // optional timeout
+        timeLimit: const Duration(seconds: 10), // Increased timeout
       );
 
       final userLatLng = LatLng(position.latitude, position.longitude);
@@ -131,11 +161,25 @@ class _CustomLocationSelectScreenState
         CameraPosition(target: userLatLng, zoom: 14),
       ));
 
-      getCurrentLatAndLong(position.latitude, position.longitude);
+      // Use the improved getCurrentLatAndLong method
+      await getCurrentLatAndLong(position.latitude, position.longitude);
 
       _onAddMarkerButtonPressed(position.latitude, position.longitude);
     } catch (e) {
-      print("Error: $e");
+      if (kDebugMode) {
+        print("Location error: $e");
+      }
+
+      // Fallback to default location (Sana'a) if current location fails
+      const fallbackLocation = LatLng(15.3694, 44.1910);
+      controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: fallbackLocation, zoom: 14),
+      ));
+
+      await getCurrentLatAndLong(
+          fallbackLocation.latitude, fallbackLocation.longitude);
+      _onAddMarkerButtonPressed(
+          fallbackLocation.latitude, fallbackLocation.longitude);
     }
 
     setState(() => isLoadingLocation = false);
@@ -261,7 +305,7 @@ class _CustomLocationSelectScreenState
                       ? calculateController
                           .calculateApi(
                               context: context,
-                              uid: useridgloable.toString(),
+                              uid: appController.globalUserId.toString(),
                               mid: mid,
                               mrole: mroal,
                               pickup_lat_lon:
@@ -318,7 +362,7 @@ class _CustomLocationSelectScreenState
                       : modual_calculateController
                           .modualcalculateApi(
                               context: context,
-                              uid: useridgloable.toString(),
+                              uid: appController.globalUserId.toString(),
                               mid: mid,
                               mrole: mroal,
                               pickup_lat_lon:
@@ -389,7 +433,7 @@ class _CustomLocationSelectScreenState
                       ? calculateController
                           .calculateApi(
                               context: context,
-                              uid: useridgloable.toString(),
+                              uid: appController.globalUserId.toString(),
                               mid: mid,
                               mrole: mroal,
                               pickup_lat_lon:
@@ -460,7 +504,7 @@ class _CustomLocationSelectScreenState
                       : modual_calculateController
                           .modualcalculateApi(
                               context: context,
-                              uid: useridgloable.toString(),
+                              uid: appController.globalUserId.toString(),
                               mid: mid,
                               mrole: mroal,
                               pickup_lat_lon:

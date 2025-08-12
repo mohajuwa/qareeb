@@ -276,17 +276,19 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
     _addMarker(LatLng(widget.lat, widget.long), "origin",
         BitmapDescriptor.defaultMarker);
 
-    print("999999:-- ${useridgloable}");
+    print("999999:-- ${appController.globalUserId}");
 
-    // socket.on('test_Driver_Location$useridgloable', (test_Driver_Location) {
+    // socket.on('test_Driver_Location$appController.globalUserId', (test_Driver_Location) {
     //   print("++++++ /test_Driver_Location/ ++++ :---  $test_Driver_Location");
     // });
-    socket.on('V_Driver_Location$useridgloable', (V_Driver_Location) {
+    socket.on('V_Driver_Location$appController.globalUserId',
+        (V_Driver_Location) {
       print("++++++ /V_Driver_Location111/ ++++ :---  $V_Driver_Location");
       print(
           "V_Driver_Location111 is of type: ${V_Driver_Location.runtimeType}");
       print("V_Driver_Location111 keys: ${V_Driver_Location.keys}");
-      print("+++++V_Driver_Location111 userid+++++: $useridgloable");
+      print(
+          "+++++V_Driver_Location111 userid+++++: $appController.globalUserId");
       print("++++driver_id hhhh111 +++++: $driver_id");
       print(
           "++++ooooooooooooooooooooooooo111 +++++: ${V_Driver_Location["driver_location"]["image"]}");
@@ -326,7 +328,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       print("Vehicle_D_IAmHere is of type: ${Vehicle_D_IAmHere.runtimeType}");
       print("Vehicle_D_IAmHere keys: ${Vehicle_D_IAmHere.keys}");
       print("Vehicle_D_IAmHere id: ${Vehicle_D_IAmHere["c_id"]}");
-      print("userid: $useridgloable");
+      print("userid: $appController.globalUserId");
       tot_time = Vehicle_D_IAmHere["pickuptime"].toString();
       extratime = Vehicle_D_IAmHere["pickuptime"].toString();
       tot_secound = "0";
@@ -334,7 +336,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       print("Vehicle_D_IAmHere_pickuptime tot_time: ${tot_time}");
       print("Vehicle_D_IAmHere_pickuptime tot_time: ${extratime}");
 
-      if (Vehicle_D_IAmHere["c_id"] == useridgloable.toString()) {
+      if (Vehicle_D_IAmHere["c_id"] == appController.globalUserId.toString()) {
         print("Done Done");
         driveridloader == false;
         globalDriverAcceptClass.driverdetailfunction(
@@ -349,7 +351,8 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       }
     });
 
-    socket.on('Vehicle_Accept_Cancel${useridgloable}', (Vehicle_Accept_Cancel) {
+    socket.on('Vehicle_Accept_Cancel${appController.globalUserId}',
+        (Vehicle_Accept_Cancel) {
       print("++++++ /Vehicle_Accept_Cancel/ ++++ :---  $Vehicle_Accept_Cancel");
       print("++++++ /request_id accpt/ ++++ :---  ${request_id.toString()}");
       print(
@@ -437,20 +440,16 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
 
   String themeForMap = "";
 
-  mapThemeStyle({required context}) {
-    if (darkMode == true) {
+  mapThemeStyle({required BuildContext context}) {
+    final stylePath = darkMode == true
+        ? "assets/map_styles/dark_style.json"
+        : "assets/map_styles/light_style.json";
+
+    DefaultAssetBundle.of(context).loadString(stylePath).then((value) {
       setState(() {
-        DefaultAssetBundle.of(context)
-            .loadString("assets/map_styles/dark_style.json")
-            .then(
-          (value) {
-            setState(() {
-              themeForMap = value;
-            });
-          },
-        );
+        themeForMap = value;
       });
-    }
+    });
   }
 
   @override
