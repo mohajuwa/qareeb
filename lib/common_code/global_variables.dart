@@ -83,7 +83,7 @@ String responsemessage = "";
 // Map data (safe collections)
 Set<Marker> markers = {};
 Set<Marker> markers11 = {};
-Set<Polyline> polylines = {};
+Map<PolylineId, Polyline> polylines = {};
 Set<Polyline> polylines11 = {};
 List<LatLng> polylineCoordinates = [];
 

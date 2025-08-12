@@ -172,7 +172,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Animation<Color?>? _colorAnimation;
   bool _isAnimationRunning = false;
   // bool timeout = false;
+  Map<PolylineId, Polyline> polylines = {};
+  List<LatLng> polylineCoordinates = [];
+  PolylinePoints polylinePoints = PolylinePoints();
 
+  // You already have these (keep them):
+  late GoogleMapController mapController11;
+  Map<MarkerId, Marker> markers11 = {};
+  Map<PolylineId, Polyline> polylines11 = {};
+  List<LatLng> polylineCoordinates11 = [];
+  PolylinePoints polylinePoints11 = PolylinePoints();
   String themeForMap = "";
 
   mapThemeStyle({required BuildContext context}) {
@@ -520,106 +529,137 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    if (kDebugMode) {
-      print("DURATION SECONDS: $_durationInSeconds");
-    }
+    // Initialize animation controller
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
 
-    // ✅ KEEP: Map theme
+    _colorAnimation = ColorTween(
+      begin: Colors.green,
+      end: Colors.red,
+    ).animate(_animationController!);
 
-    mapThemeStyle(context: context);
-
-    // ✅ KEEP: Initialize drop off points
-
-    _dropOffPoints = [];
-
-    _dropOffPoints = destinationlat;
-
-    if (kDebugMode) {
-      print("****////***:-----  $_dropOffPoints");
-    }
-
-    // ✅ KEEP: Load user data FIRST, then call APIs
-
-    initializeApp();
+    // ✅ CRITICAL: Load user data first, then initialize app
+    _initializeAppWithUserData();
   }
 
-  // ✅ FIXED: Add proper state management and error handling
+  Future<void> _initializeAppWithUserData() async {
+    if (kDebugMode) {
+      print("🚀 Starting MapScreen initialization with user data...");
+    }
 
-  Future<void> initializeApp() async {
+    try {
+      setState(() {
+        _isInitializing = true;
+
+        _initializationStatus = "Loading user data...";
+      });
+
+      // Step 1: Load user data from SharedPreferences first
+      mapThemeStyle(context: context);
+      await loadUserData();
+
+      // Step 2: Get current location if needed
+
+      setState(() {
+        _initializationStatus = "Getting location...";
+      });
+
+      if (lathome == null || longhome == null) {
+        await _getCurrentLocation();
+      }
+
+      // Step 3: Load home API data with current location and user ID
+
+      setState(() {
+        _initializationStatus = "Loading vehicles...";
+      });
+
+      if (userid != null) {
+        await homeApiController.homeApi(
+          uid: userid.toString(),
+          lat: lathome.toString(),
+          lon: longhome.toString(),
+        );
+
+        // Step 4: Set default vehicle category
+
+        if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
+          final firstCategory =
+              homeApiController.homeapimodel!.categoryList![0];
+
+          setState(() {
+            select1 = 0;
+
+            vehicle_id = firstCategory.id.toString();
+
+            vihicalname = firstCategory.name.toString();
+
+            vihicalimage = firstCategory.image.toString();
+
+            mid = firstCategory.id.toString();
+
+            mroal = firstCategory.role.toString();
+          });
+
+          // Step 5: Load vehicles for default category
+
+          await loadVehiclesForCategory(mid);
+        }
+      }
+
+      // Initialization complete
+
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+
+          _initializationStatus = "Ready";
+        });
+      }
+
+      if (kDebugMode) {
+        print("✅ MapScreen initialization completed successfully");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error in initializeAppWithUserData: $e");
+      }
+
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+
+          _initializationStatus = "Error: $e";
+        });
+      }
+    }
+  }
+
+  Future<void> _initializeApp() async {
     if (kDebugMode) {
       print("🚀 Starting MapScreen initialization...");
     }
 
     try {
-      // Ensure we start in loading state
+      setState(() {
+        _isInitializing = true;
 
-      if (mounted) {
-        setState(() {
-          _isInitializing = true;
+        _initializationStatus = "Loading location...";
+      });
 
-          _initializationStatus = "Loading user data...";
-        });
+      // Step 1: Get current location if needed
+
+      if (lathome == null || longhome == null) {
+        await _getCurrentLocation();
       }
 
-      _debugState();
+      setState(() {
+        _initializationStatus = "Loading vehicles...";
+      });
 
-      // Step 1: Load user data first
-
-      await loadUserData();
-
-      if (userid == null) {
-        if (kDebugMode) {
-          print("❌ User not logged in, redirecting to login");
-        }
-
-        Get.offAll(() => const OnboardingScreen());
-
-        return;
-      }
-
-      if (mounted) {
-        setState(() {
-          _initializationStatus = "Getting location...";
-        });
-      }
-
-      _debugState();
-
-      // Step 2: Initialize location
-
-      await fun();
-
-      if (mounted) {
-        setState(() {
-          _initializationStatus = "Connecting to server...";
-        });
-      }
-
-      _debugState();
-
-      // Step 3: Initialize socket with user data
-
-      await socketConnect();
-
-      if (mounted) {
-        setState(() {
-          _initializationStatus = "Loading map data...";
-        });
-      }
-
-      _debugState();
-
-      // Step 4: Now make API calls that need user data
-
-      await makeInitialAPICalls();
-
-      // ✅ CRITICAL: Load home API and set default vehicle category
-
-      if (mounted) {
-        setState(() {
-          _initializationStatus = "Loading vehicles...";
-        });
-      }
+      // Step 2: Load home API data with current location
 
       await homeApiController.homeApi(
         uid: userid.toString(),
@@ -627,7 +667,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         lon: longhome.toString(),
       );
 
-      // ✅ Set default vehicle category (index 0)
+      // Step 3: Set default vehicle category (CRITICAL FIX)
 
       if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
         final firstCategory = homeApiController.homeapimodel!.categoryList![0];
@@ -646,16 +686,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           mroal = firstCategory.role.toString();
         });
 
-        // ✅ Load vehicles for default category
+        // Step 4: Load vehicles for default category
 
         await loadVehiclesForCategory(mid);
       }
 
-      // ✅ CRITICAL: Add a small delay to ensure everything is loaded
-
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // ✅ CRITICAL: Set initialization complete
+      // Initialization complete
 
       if (mounted) {
         setState(() {
@@ -665,8 +701,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         });
       }
 
-      _debugState();
-
       if (kDebugMode) {
         print("✅ MapScreen initialization completed successfully");
       }
@@ -675,8 +709,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         print("❌ Error in initializeApp: $e");
       }
 
-      // ✅ Show error but don't block UI
-
       if (mounted) {
         setState(() {
           _isInitializing = false;
@@ -684,24 +716,123 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           _initializationStatus = "Error: $e";
         });
       }
+    }
+  }
 
-      _debugState();
+  Future<void> _getCurrentLocation() async {
+    if (kDebugMode) {
+      print("🌍 Getting current location...");
+    }
 
-      // Show error to user
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Initialization error: ${e.toString()}"),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permissions are denied');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('Location permissions are permanently denied');
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      setState(() {
+        lathome = position.latitude;
+
+        longhome = position.longitude;
+      });
+
+      await getCurrentLatAndLong(position.latitude, position.longitude);
+
+      if (kDebugMode) {
+        print("✅ Current location: $lathome, $longhome");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error getting location: $e");
+      }
+
+      // Use default location if unable to get current location
+
+      setState(() {
+        lathome = 15.3694; // Default to Sana'a, Yemen
+
+        longhome = 44.1910;
+      });
+
+      await getCurrentLatAndLong(lathome!, longhome!);
+    }
+  }
+
+  Future getDirections(
+      {required PointLatLng lat1,
+      required PointLatLng lat2,
+      required List<PointLatLng> dropOffPoints}) async {
+    if (kDebugMode) {
+      print(
+          "🗺️ Getting directions from ${lat1.latitude},${lat1.longitude} to ${lat2.latitude},${lat2.longitude}");
+    }
+
+    try {
+      polylines.clear(); // ✅ Use polylines NOT polylines11
+
+      List<LatLng> polylineCoordinates = [];
+
+      List<PointLatLng> allPoints = [lat1, lat2, ...dropOffPoints];
+
+      for (int i = 0; i < allPoints.length - 1; i++) {
+        PointLatLng point1 = allPoints[i];
+
+        PointLatLng point2 = allPoints[i + 1];
+
+        // ✅ Use polylinePoints NOT polylinePoints11
+
+        PolylineResult result =
+            await polylinePoints11.getRouteBetweenCoordinates(
+          Config.mapkey,
+          point1,
+          point2,
+          travelMode: TravelMode.driving,
         );
+
+        if (result.points.isNotEmpty) {
+          for (var point in result.points) {
+            polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+          }
+        }
+      }
+
+      if (polylineCoordinates.isNotEmpty) {
+        addPolyLine(polylineCoordinates);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error getting directions: $e");
       }
     }
   }
 
-// ✅ FIX 2: Improved loadVehiclesForCategory with debugging
+  addPolyLine(List<LatLng> polylineCoordinates) {
+    PolylineId id = const PolylineId("poly");
+
+    Polyline polyline = Polyline(
+      polylineId: id,
+      color: theamcolore,
+      points: polylineCoordinates,
+      width: 3,
+    );
+
+    polylines[id] = polyline; // Use base polylines
+
+    setState(() {});
+  }
 
   Future<void> loadVehiclesForCategory(String categoryId) async {
     if (kDebugMode) {
@@ -726,9 +857,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (homeMapController.homeMapApiModel?.list?.isNotEmpty == true) {
         if (mounted) {
           setState(() {
+            // Clear old vehicle data
+
             vihicallocations.clear();
 
             _iconPaths.clear();
+
+            // Populate new vehicle data
 
             for (int i = 0;
                 i < homeMapController.homeMapApiModel!.list!.length;
@@ -959,62 +1094,90 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
-  void setupMapMarkers() {
+  Future<void> setupMapMarkers() async {
+    if (kDebugMode) {
+      print("🗺️ Setting up map markers...");
+    }
+
     try {
-      // Clear existing pickup/drop markers
+      // ✅ DON'T clear all markers - this removes vehicles!
+
+      // Only clear pickup/drop markers if they exist
 
       setState(() {
-        markers11.removeWhere((key, value) =>
-            key.value == "origin" ||
-            key.value == "destination" ||
-            key.value.startsWith("destination"));
+        markers.removeWhere(
+            (key, value) => key.value == "pickup" || key.value == "drop");
       });
 
-      // Add pickup marker
+      // Add user location marker
 
-      if (appController.pickupLat.value != 0.0 &&
-          appController.pickupLng.value != 0.0) {
-        _addMarker11(
-            LatLng(
-                appController.pickupLat.value, appController.pickupLng.value),
-            "origin",
-            BitmapDescriptor.defaultMarker);
+      if (lathome != null && longhome != null) {
+        final userIcon = await BitmapDescriptor.fromAssetImage(
+          const ImageConfiguration(size: Size(48, 48)),
+          'assets/your_location_icon.png',
+        ).catchError((_) =>
+            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue));
+
+        setState(() {
+          markers[const MarkerId("my_1")] = Marker(
+            markerId: const MarkerId("my_1"),
+            position: LatLng(lathome!, longhome!),
+            icon: userIcon,
+          );
+        });
       }
 
-      // Add drop marker
+      // Add pickup marker if available
 
-      if (appController.dropLat.value != 0.0 &&
-          appController.dropLng.value != 0.0) {
-        _addMarker2(
-            LatLng(appController.dropLat.value, appController.dropLng.value),
-            "destination",
-            BitmapDescriptor.defaultMarkerWithHue(90));
+      if (latitudepick != 0.0 && longitudepick != 0.0) {
+        setState(() {
+          markers[const MarkerId("pickup")] = Marker(
+            markerId: const MarkerId("pickup"),
+            position: LatLng(latitudepick, longitudepick),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueGreen),
+            infoWindow: const InfoWindow(title: "Pickup Location"),
+          );
+        });
       }
 
-      // Add multiple drop-off points
+      // Add drop marker if available
 
-      for (int a = 0; a < _dropOffPoints.length; a++) {
-        _addMarker3("destination$a");
+      if (latitudedrop != 0.0 && longitudedrop != 0.0) {
+        setState(() {
+          markers[const MarkerId("drop")] = Marker(
+            markerId: const MarkerId("drop"),
+            position: LatLng(latitudedrop, longitudedrop),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            infoWindow: const InfoWindow(title: "Drop Location"),
+          );
+        });
+
+        // ✅ CRITICAL: Draw route when both points exist
+
+        if (latitudepick != 0.0 && longitudepick != 0.0) {
+          // Clear existing route first
+
+          setState(() {
+            polylines11.clear();
+          });
+
+          await getDirections11(
+              lat1: PointLatLng(latitudepick, longitudepick),
+              lat2: PointLatLng(latitudedrop, longitudedrop),
+              dropOffPoints: _dropOffPoints);
+
+          // Calculate price for selected route and vehicle
+
+          await _calculateRoutePrice();
+        }
       }
 
-      // Get directions
-
-      if (appController.pickupLat.value != 0.0 &&
-          appController.pickupLng.value != 0.0 &&
-          appController.dropLat.value != 0.0 &&
-          appController.dropLng.value != 0.0) {
-        getDirections11(
-            lat1: PointLatLng(
-                appController.pickupLat.value, appController.pickupLng.value),
-            lat2: PointLatLng(
-                appController.dropLat.value, appController.dropLng.value),
-            dropOffPoints: _dropOffPoints);
-      }
-
-      // ✅ CRITICAL: Keep vehicle markers visible after setting pickup/drop
+      // ✅ KEEP vehicles visible
 
       if (mid.isNotEmpty && lathome != null && longhome != null) {
-        loadVehiclesForCategory(mid);
+        await loadVehiclesForCategory(mid);
       }
 
       if (kDebugMode) {
@@ -1026,16 +1189,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       }
     }
   }
-  // Poliline Map Code
-
   //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-  late GoogleMapController mapController11;
-
-  Map<MarkerId, Marker> markers11 = {};
-  Map<PolylineId, Polyline> polylines11 = {};
-  List<LatLng> polylineCoordinates11 = [];
-  PolylinePoints polylinePoints11 = PolylinePoints();
 
   void _onMapCreated11(GoogleMapController controller) async {
     mapController11 = controller;
@@ -1312,19 +1466,15 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       print("   Selected category: $mid");
     }
 
-    // ✅ SAFETY CHECK: Ensure we have data
-
     if (homeMapController.homeMapApiModel?.list == null ||
         homeMapController.homeMapApiModel!.list!.isEmpty) {
       if (kDebugMode) {
         print("❌ No vehicle data available for markers");
       }
 
-      // ✅ CRITICAL: Clear existing vehicle markers when no data
+      // Clear only vehicle markers, keep pickup/drop markers
 
       setState(() {
-        // Remove only vehicle markers, keep pickup/drop markers
-
         markers.removeWhere((key, value) =>
             key.value.startsWith('vehicle_') || key.value.contains('driver'));
       });
@@ -1334,39 +1484,132 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     final vehicleList = homeMapController.homeMapApiModel!.list!;
 
-    // ✅ CRITICAL: Clear previous vehicle markers before adding new ones
+    // CRITICAL FIX: Clear only vehicle markers, preserve pickup/drop markers
 
     setState(() {
-      // Remove only vehicle markers, keep user location and pickup/drop markers
-
       markers.removeWhere((key, value) =>
-              key.value.startsWith('vehicle_') ||
-              key.value.contains('driver') ||
-              key.value != "my_1" // Keep user location marker
+          key.value.startsWith('vehicle_') ||
+          key.value.contains('driver') ||
+          (key.value != "my_1" && // Keep user location
 
-          );
+              key.value != "pickup" && // Keep pickup marker
+
+              key.value != "drop")); // Keep drop marker
     });
 
-    // ✅ SAFETY CHECK: Ensure lists match
+    // Helper function to load icons safely
 
-    if (vihicallocations.length != vehicleList.length ||
-        _iconPaths.length != vehicleList.length) {
+    Future<BitmapDescriptor> loadIcon(String url,
+        {int targetWidth = 30, int targetHeight = 50}) async {
+      try {
+        if (url.isEmpty || url.contains("undefined") || url.contains("null")) {
+          if (kDebugMode) {
+            print("⚠️ Invalid icon URL: $url - using default");
+          }
+
+          return BitmapDescriptor.defaultMarker;
+        }
+
+        final http.Response response =
+            await http.get(Uri.parse(url)).timeout(Duration(seconds: 10));
+
+        if (response.statusCode == 200) {
+          final Uint8List bytes = response.bodyBytes;
+
+          final ui.Codec codec = await ui.instantiateImageCodec(bytes,
+              targetWidth: targetWidth, targetHeight: targetHeight);
+
+          final ui.FrameInfo frameInfo = await codec.getNextFrame();
+
+          final ByteData? byteData =
+              await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+
+          return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+        } else {
+          if (kDebugMode) {
+            print(
+                "⚠️ Failed to load image from $url - HTTP ${response.statusCode}");
+          }
+
+          return BitmapDescriptor.defaultMarker;
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print("❌ Error loading icon from $url: $e");
+        }
+
+        return BitmapDescriptor.defaultMarker;
+      }
+    }
+
+    try {
+      // Load all icons with error handling
+
+      final List<BitmapDescriptor> icons = await Future.wait(
+        _iconPaths.map((path) => loadIcon(path)),
+      );
+
       if (kDebugMode) {
-        print("⚠️ List length mismatch - rebuilding data");
+        print("✅ Loaded ${icons.length} icons successfully");
       }
 
-      // Rebuild the data to ensure consistency
+      // Check if widget is still mounted before setState
 
-      vihicallocations.clear();
+      if (!mounted) return;
 
-      _iconPaths.clear();
+      setState(() {
+        // Safe iteration using minimum count
 
-      for (int i = 0; i < vehicleList.length; i++) {
-        vihicallocations.add(LatLng(
-            double.parse(vehicleList[i].latitude.toString()),
-            double.parse(vehicleList[i].longitude.toString())));
+        final itemCount = math.min(vihicallocations.length,
+            math.min(icons.length, vehicleList.length));
 
-        _iconPaths.add("${Config.imageurl}${vehicleList[i].image}");
+        if (kDebugMode) {
+          print("🎯 Adding $itemCount vehicle markers for category: $mid");
+        }
+
+        for (int i = 0; i < itemCount; i++) {
+          try {
+            final vehicleId =
+                "vehicle_${vehicleList[i].id}_$mid"; // Include category in ID
+
+            if (kDebugMode) {
+              print("   Adding marker $i - Vehicle ID: $vehicleId");
+            }
+
+            MarkerId markerId = MarkerId(vehicleId);
+
+            Marker marker = Marker(
+              markerId: markerId,
+              icon: icons[i],
+              position: vihicallocations[i],
+              onTap: () {
+                if (kDebugMode) {
+                  print("🚗 Tapped vehicle: $vehicleId");
+                }
+
+                showVehicleInfo(vehicleList[i]);
+              },
+            );
+
+            markers[markerId] = marker;
+          } catch (e) {
+            if (kDebugMode) {
+              print("❌ Error adding marker $i: $e");
+            }
+
+            // Continue with next marker instead of failing completely
+          }
+        }
+
+        if (kDebugMode) {
+          print("✅ Successfully added ${itemCount} vehicle markers to map");
+
+          print("📍 Total markers on map: ${markers.length}");
+        }
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error in _addMarkers: $e");
       }
     }
   }
@@ -1809,8 +2052,22 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                       .homeapimodel!.categoryList![select1].bidding
                       .toString(),
                 )));
+
     if (result != null && result.shouldRefresh) {
       _refreshPage();
+
+      // ✅ CRITICAL: Redraw route after coming back
+
+      if (latitudepick != 0.0 &&
+          longitudepick != 0.0 &&
+          latitudedrop != 0.0 &&
+          longitudedrop != 0.0) {
+        await setupMapMarkers(); // This will redraw the route
+
+        if (kDebugMode) {
+          print("🔄 Route redrawn after location selection");
+        }
+      }
     }
   }
 
@@ -2266,7 +2523,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 SliverList.list(children: [
                                   const SizedBox(height: 10),
 
-                                  // ✅ PICKUP AND DROP SELECTION
+                                  // Pickup and drop selection - KEEP YOUR EXISTING CODE HERE
+
                                   Padding(
                                     padding: const EdgeInsets.only(
                                         left: 15, right: 15),
@@ -2297,10 +2555,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                   ),
                                                 ),
                                                 Container(
-                                                  height: 30,
-                                                  width: 1,
-                                                  color: Colors.grey,
-                                                ),
+                                                    height: 30,
+                                                    width: 1,
+                                                    color: Colors.grey),
                                                 Container(
                                                   height: 10,
                                                   width: 10,
@@ -2378,9 +2635,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
                                   const SizedBox(height: 20),
 
-                                  // Debug info for vehicle categories - only in debug mode
+                                  // Vehicle selection - KEEP YOUR EXISTING CODE HERE
 
-                                  // ✅ VEHICLE SELECTION HORIZONTAL LIST
                                   if (homeApiController.homeapimodel
                                           ?.categoryList?.isNotEmpty ==
                                       true)
@@ -2398,20 +2654,23 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
                                   const SizedBox(height: 20),
 
-                                  // ✅ FIND DRIVER BUTTON (conditional)
-                                  if (appController
-                                          .pickupController.text.isNotEmpty &&
-                                      appController
-                                          .dropController.text.isNotEmpty)
-                                    buildCalculationDisplay(),
+                                  // ✅ NEW: Single calculation display
+
+                                  buildConditionalCalculationPanel(),
+
                                   const SizedBox(height: 20),
+
+                                  // Find driver button - KEEP YOUR EXISTING CODE HERE
+
                                   buildFindDriverButton(),
+
+                                  const SizedBox(height: 20),
                                 ])
                               ],
                             ),
                           );
                         },
-                      )
+                      ),
                     ],
                   );
       },
@@ -3088,544 +3347,591 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
 // STEP 7: Replace your Buttonpresebottomshhet() method with this COMPLETE function
 
+// ✅ FIX 1: Type error - API returns strings, need to parse them
+
   Buttonpresebottomshhet() {
-    // ✅ FIX: Use AppController instead of global controllers
     if (appController.pickupController.text.isEmpty ||
         appController.dropController.text.isEmpty) {
+      Fluttertoast.showToast(msg: "Select Pickup and Drop");
+
+      return;
+    }
+
+    if (amountresponse == "false") {
+      Fluttertoast.showToast(msg: "Address is not in the zone!");
+
+      return;
+    }
+
+    // ✅ FIXED: Parse strings to double properly
+
+    double currentPrice =
+        calculateController.calCulateModel?.dropPrice ?? dropprice;
+
+    // ✅ API returns strings, need to parse them
+
+    double currentMinFare = calculateController
+                .calCulateModel?.vehicle?.minimumFare !=
+            null
+        ? double.parse(
+            calculateController.calCulateModel!.vehicle!.minimumFare.toString())
+        : minimumfare;
+
+    double currentMaxFare = calculateController
+                .calCulateModel?.vehicle?.maximumFare !=
+            null
+        ? double.parse(
+            calculateController.calCulateModel!.vehicle!.maximumFare.toString())
+        : maximumfare;
+
+    if (currentPrice == 0) {
       Fluttertoast.showToast(
-        msg: "Select Pickup and Drop",
-      );
-    } else if (amountresponse == "false") {
-      Fluttertoast.showToast(
-        msg: "Address is not in the zone!",
-      );
-    } else if (dropprice == 0) {
-      Fluttertoast.showToast(
-        msg: responsemessage,
-      );
-    } else {
-      toast = 0;
-      amountcontroller.text = dropprice.toString();
+          msg: responsemessage.isEmpty
+              ? "Price calculation failed"
+              : responsemessage);
 
-      int maxprice = maximumfare.toInt();
-      int minprice = minimumfare.toInt();
-      if (kDebugMode) {
-        print("**maxprice**:-- $maxprice");
-        print("**minprice**:-- $minprice");
-      }
+      return;
+    }
 
-      Get.bottomSheet(
-        enableDrag: false,
-        isDismissible: false,
-        isScrollControlled: true,
-        StatefulBuilder(
-          builder: (context, setState) {
-            return Container(
-              width: Get.width,
-              decoration: BoxDecoration(
-                color: notifier.containercolore,
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(15),
-                    topRight: Radius.circular(15)),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 15, right: 15),
-                    child: Column(
-                      children: [
-                        // ✅ FIX: Use local animation state instead of global isanimation
-                        _isAnimationRunning == false
-                            ? const SizedBox()
-                            : lottie.Lottie.asset("assets/lottie/loading.json",
-                                height: 30),
+    toast = 0;
 
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Spacer(),
-                            SizedBox(width: 40),
-                            Text(
-                              "Set your price".tr,
-                              style: TextStyle(
-                                  color: notifier.textColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 22),
-                            ),
-                            Spacer(),
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  // ✅ FIX: Use local animation controller
-                                  if (_animationController != null &&
-                                      _animationController!.isAnimating) {
-                                    Fluttertoast.showToast(
-                                      msg:
-                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                    );
-                                  } else {
-                                    Get.back();
-                                  }
-                                });
-                              },
-                              child: Container(
-                                height: 40,
-                                width: 40,
-                                decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(0.1),
-                                    shape: BoxShape.circle),
-                                child: Center(
-                                  child: Image(
-                                    image: AssetImage("assets/close.png"),
-                                    color: notifier.textColor,
-                                    height: 20,
-                                  ),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: 10),
+    amountcontroller.text = currentPrice.toString();
 
-                        // Price adjustment controls...
-                        Row(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  // ✅ FIX: Use local animation controller
-                                  if (_animationController != null &&
-                                      _animationController!.isAnimating) {
-                                    Fluttertoast.showToast(
-                                      msg:
-                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                    );
-                                  } else {
-                                    if (double.parse(dropprice.toString()) >
-                                        minprice) {
-                                      dropprice -= 1;
-                                      amountcontroller.text =
-                                          dropprice.toString();
-                                      mainamount = dropprice.toString();
-                                      offerpluse = true;
+    int maxprice = currentMaxFare.toInt();
 
-                                      if (couponindex != null) {
-                                        if (couponadd[couponindex!] == true) {
-                                          couponadd[couponindex!] = false;
-                                        }
-                                      }
+    int minprice = currentMinFare.toInt();
 
-                                      couponname = "";
-                                      couponId = "";
-                                    }
-                                  }
-                                });
-                              },
-                              child: Container(
-                                height: 40,
-                                width: 40,
-                                decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(0.1),
-                                    shape: BoxShape.circle),
-                                child: Center(
-                                  child: Image(
-                                    image: AssetImage("assets/minus.png"),
-                                    color: notifier.textColor,
-                                    height: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const Spacer(),
-                            Center(
-                              child: SizedBox(
-                                width: 150,
-                                child: TextField(
-                                  keyboardType: TextInputType.number,
-                                  controller: amountcontroller,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontSize: 30, color: notifier.textColor),
-                                  // ✅ FIX: Use local animation controller
-                                  readOnly: _animationController != null &&
-                                          _animationController!.isAnimating
-                                      ? true
-                                      : false,
-                                  onTap: () {
-                                    // ✅ FIX: Use local animation controller
-                                    _animationController != null &&
-                                            _animationController!.isAnimating
-                                        ? Fluttertoast.showToast(
-                                            msg:
-                                                "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                          )
-                                        : "";
-                                  },
-                                  onSubmitted: (value) {
-                                    setState(() {
-                                      if (int.parse(amountcontroller.text) >
-                                          maxprice) {
-                                        amountcontroller.clear();
-                                        toast = 1;
-                                      } else if (int.parse(
-                                              amountcontroller.text) <
-                                          minprice) {
-                                        amountcontroller.clear();
-                                        toast = 2;
-                                      } else {
-                                        toast = 0;
-                                        dropprice =
-                                            int.parse(amountcontroller.text);
-                                        mainamount = amountcontroller.text;
-                                      }
-                                    });
-                                  },
-                                ),
-                              ),
-                            ),
-                            const Spacer(),
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  // ✅ FIX: Use local animation controller
-                                  if (_animationController != null &&
-                                      _animationController!.isAnimating) {
-                                    Fluttertoast.showToast(
-                                      msg:
-                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                    );
-                                  } else {
-                                    if (double.parse(dropprice.toString()) <
-                                        maxprice) {
-                                      dropprice += 1;
-                                      amountcontroller.text =
-                                          dropprice.toString();
-                                      mainamount = dropprice.toString();
-                                      offerpluse = true;
-                                      if (couponindex != null) {
-                                        if (couponadd[couponindex!] == true) {
-                                          couponadd[couponindex!] = false;
-                                        }
-                                      }
+    if (kDebugMode) {
+      print("**Updated maxprice**: $maxprice");
 
-                                      couponname = "";
-                                      couponId = "";
-                                    }
-                                  }
-                                });
-                              },
-                              child: Container(
-                                height: 40,
-                                width: 40,
-                                decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(0.1),
-                                    shape: BoxShape.circle),
-                                child: Center(
-                                  child: Image(
-                                    image: AssetImage("assets/plus.png"),
-                                    color: notifier.textColor,
-                                    height: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
+      print("**Updated minprice**: $minprice");
 
-                        // Error messages
-                        toast == 1
-                            ? Text(
-                                "Maximum fare is $currencyy$maxprice",
-                                style: const TextStyle(color: Colors.red),
-                              )
-                            : toast == 2
-                                ? Text(
-                                    "Minimum fare is $currencyy$minprice",
-                                    style: const TextStyle(color: Colors.red),
-                                  )
-                                : const SizedBox(),
-                        const SizedBox(height: 10),
+      print("**Current vehicle price**: $currentPrice");
+    }
 
-                        // Auto booking switch
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Image(
-                            image: AssetImage("assets/automatically.png"),
-                            height: 30,
-                            width: 30,
-                          ),
-                          title: Text(
-                            "Automatically book the nearest driver for (${amountcontroller.text} ${globalcurrency})"
-                                .tr,
+    Get.bottomSheet(
+      enableDrag: false,
+      isDismissible: false,
+      isScrollControlled: true,
+      StatefulBuilder(
+        builder: (context, setState) {
+          return Container(
+            width: Get.width,
+            decoration: BoxDecoration(
+              color: notifier.containercolore,
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(15), topRight: Radius.circular(15)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 15, right: 15),
+                  child: Column(
+                    children: [
+                      _isAnimationRunning == false
+                          ? const SizedBox()
+                          : lottie.Lottie.asset("assets/lottie/loading.json",
+                              height: 30),
+
+                      const SizedBox(height: 20),
+
+                      Row(
+                        children: [
+                          Spacer(),
+                          SizedBox(width: 40),
+                          Text(
+                            "Set your price".tr,
                             style: TextStyle(
-                                color: notifier.textColor, fontSize: 16),
+                                color: notifier.textColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 22),
                           ),
-                          trailing: SizedBox(
-                            height: 30,
-                            width: 40,
-                            child: Transform.scale(
-                              scale: 0.9,
-                              child: CupertinoSwitch(
-                                value: light,
-                                activeColor: theamcolore,
-                                // ✅ FIX: Use local animation controller
-                                onChanged: _animationController != null &&
-                                        _animationController!.isAnimating
-                                    ? (bool value) {
-                                        Fluttertoast.showToast(
+                          Spacer(),
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                if (_animationController != null &&
+                                    _animationController!.isAnimating) {
+                                  Fluttertoast.showToast(
+                                    msg:
+                                        "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                  );
+                                } else {
+                                  Get.back();
+                                }
+                              });
+                            },
+                            child: Container(
+                              height: 40,
+                              width: 40,
+                              decoration: BoxDecoration(
+                                  color: Colors.grey.withOpacity(0.1),
+                                  shape: BoxShape.circle),
+                              child: Center(
+                                child: Image(
+                                  image: AssetImage("assets/close.png"),
+                                  color: notifier.textColor,
+                                  height: 20,
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // ✅ UPDATED: Price adjustment controls with current prices
+
+                      Row(
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                if (_animationController != null &&
+                                    _animationController!.isAnimating) {
+                                  Fluttertoast.showToast(
+                                    msg:
+                                        "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                  );
+                                } else {
+                                  if (double.parse(amountcontroller.text) >
+                                      minprice) {
+                                    // ✅ Update the displayed price AND the global variables
+
+                                    double newPrice =
+                                        double.parse(amountcontroller.text) - 1;
+
+                                    amountcontroller.text = newPrice.toString();
+
+                                    dropprice = newPrice; // ✅ Update global
+
+                                    mainamount = newPrice.toString();
+
+                                    offerpluse = true;
+
+                                    if (couponindex != null &&
+                                        couponadd[couponindex!] == true) {
+                                      couponadd[couponindex!] = false;
+                                    }
+
+                                    couponname = "";
+
+                                    couponId = "";
+                                  }
+                                }
+                              });
+                            },
+                            child: Container(
+                              height: 40,
+                              width: 40,
+                              decoration: BoxDecoration(
+                                  color: Colors.grey.withOpacity(0.1),
+                                  shape: BoxShape.circle),
+                              child: Center(
+                                child: Image(
+                                  image: AssetImage("assets/minus.png"),
+                                  color: notifier.textColor,
+                                  height: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          Center(
+                            child: SizedBox(
+                              width: 150,
+                              child: TextField(
+                                keyboardType: TextInputType.number,
+                                controller: amountcontroller,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 30, color: notifier.textColor),
+                                readOnly: _animationController != null &&
+                                    _animationController!.isAnimating,
+                                onTap: () {
+                                  _animationController != null &&
+                                          _animationController!.isAnimating
+                                      ? Fluttertoast.showToast(
                                           msg:
                                               "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                        );
-                                      }
-                                    : (bool value) {
-                                        setState(() {
-                                          light = value;
-                                          offerpluse = true;
-                                          biddautostatus = value.toString();
-                                        });
-                                      },
+                                        )
+                                      : "";
+                                },
+                                onSubmitted: (value) {
+                                  setState(() {
+                                    if (int.parse(amountcontroller.text) >
+                                        maxprice) {
+                                      amountcontroller.text =
+                                          maxprice.toString();
+
+                                      toast = 1;
+                                    } else if (int.parse(
+                                            amountcontroller.text) <
+                                        minprice) {
+                                      amountcontroller.text =
+                                          minprice.toString();
+
+                                      toast = 2;
+                                    } else {
+                                      toast = 0;
+
+                                      dropprice = double.parse(amountcontroller
+                                          .text); // ✅ Update global
+
+                                      mainamount = amountcontroller.text;
+                                    }
+                                  });
+                                },
                               ),
                             ),
                           ),
+                          const Spacer(),
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                if (_animationController != null &&
+                                    _animationController!.isAnimating) {
+                                  Fluttertoast.showToast(
+                                    msg:
+                                        "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                  );
+                                } else {
+                                  if (double.parse(amountcontroller.text) <
+                                      maxprice) {
+                                    // ✅ Update the displayed price AND the global variables
+
+                                    double newPrice =
+                                        double.parse(amountcontroller.text) + 1;
+
+                                    amountcontroller.text = newPrice.toString();
+
+                                    dropprice = newPrice; // ✅ Update global
+
+                                    mainamount = newPrice.toString();
+
+                                    offerpluse = true;
+
+                                    if (couponindex != null &&
+                                        couponadd[couponindex!] == true) {
+                                      couponadd[couponindex!] = false;
+                                    }
+
+                                    couponname = "";
+
+                                    couponId = "";
+                                  }
+                                }
+                              });
+                            },
+                            child: Container(
+                              height: 40,
+                              width: 40,
+                              decoration: BoxDecoration(
+                                  color: Colors.grey.withOpacity(0.1),
+                                  shape: BoxShape.circle),
+                              child: Center(
+                                child: Image(
+                                  image: AssetImage("assets/plus.png"),
+                                  color: notifier.textColor,
+                                  height: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Error messages with updated prices
+
+                      toast == 1
+                          ? Text(
+                              "Maximum fare is $globalcurrency$maxprice",
+                              style: const TextStyle(color: Colors.red),
+                            )
+                          : toast == 2
+                              ? Text(
+                                  "Minimum fare is $globalcurrency$minprice",
+                                  style: const TextStyle(color: Colors.red),
+                                )
+                              : const SizedBox(),
+
+                      const SizedBox(height: 10),
+
+                      // Auto booking switch
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Image(
+                          image: AssetImage("assets/automatically.png"),
+                          height: 30,
+                          width: 30,
+                        ),
+                        title: Text(
+                          "Automatically book the nearest driver for (${amountcontroller.text} ${globalcurrency})"
+                              .tr,
+                          style: TextStyle(
+                              color: notifier.textColor, fontSize: 16),
+                        ),
+                        trailing: SizedBox(
+                          height: 30,
+                          width: 40,
+                          child: Transform.scale(
+                            scale: 0.9,
+                            child: CupertinoSwitch(
+                              value: light,
+                              activeColor: theamcolore,
+                              // ✅ FIX: Use local animation controller
+                              onChanged: _animationController != null &&
+                                      _animationController!.isAnimating
+                                  ? (bool value) {
+                                      Fluttertoast.showToast(
+                                        msg:
+                                            "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                      );
+                                    }
+                                  : (bool value) {
+                                      setState(() {
+                                        light = value;
+                                        offerpluse = true;
+                                        biddautostatus = value.toString();
+                                      });
+                                    },
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                ),
+
+                // Bottom section with payment/coupon and buttons
+                Container(
+                  decoration: BoxDecoration(
+                      color: notifier.containercolore,
+                      boxShadow: const [
+                        BoxShadow(
+                            color: Colors.grey,
+                            offset: Offset(0, -0.4),
+                            blurRadius: 5),
+                      ]),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 10, right: 10),
+                    child: Column(
+                      children: [
+                        // Payment and coupon row here...
+
+                        // ✅ FIX: Main booking button
+                        _isAnimationRunning == false
+                            ? CommonButton(
+                                containcolore: theamcolore,
+                                onPressed1: () {
+                                  setState(() {
+                                    if (double.parse(amountcontroller.text) >
+                                        maxprice) {
+                                      amountcontroller.clear();
+                                      toast = 1;
+                                    } else if (double.parse(
+                                            amountcontroller.text) <
+                                        minprice) {
+                                      amountcontroller.clear();
+                                      toast = 2;
+                                    } else {
+                                      _isAnimationRunning = true;
+                                      loadertimer = true;
+                                      offerpluse = false;
+                                      requesttime();
+                                      orderfunction();
+                                    }
+                                  });
+                                },
+                                context: context,
+                                txt1:
+                                    "Book for A ${amountcontroller.text} ${globalcurrency}")
+                            : AnimatedBuilder(
+                                // ✅ FIX: Use local animation controller
+                                animation: _animationController!,
+                                builder: (context, child) {
+                                  return SizedBox(
+                                    height: 49,
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      style: ButtonStyle(
+                                        padding: const WidgetStatePropertyAll(
+                                            EdgeInsets.zero),
+                                        elevation:
+                                            const WidgetStatePropertyAll(0),
+                                        overlayColor:
+                                            const WidgetStatePropertyAll(
+                                                Colors.transparent),
+                                        backgroundColor: WidgetStatePropertyAll(
+                                            theamcolore.withOpacity(0.4)),
+                                        shape: WidgetStatePropertyAll(
+                                          RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(15),
+                                          ),
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          if (double.parse(
+                                                  amountcontroller.text) >
+                                              maxprice) {
+                                            amountcontroller.clear();
+                                            toast = 1;
+                                          } else if (double.parse(
+                                                  amountcontroller.text) <
+                                              minprice) {
+                                            amountcontroller.clear();
+                                            toast = 2;
+                                          } else {
+                                            if (offerpluse == true) {
+                                              // ✅ FIX: Use local animation controller
+                                              if (_animationController !=
+                                                      null &&
+                                                  _animationController!
+                                                      .isAnimating) {
+                                                _animationController!.dispose();
+                                              }
+                                              requesttime();
+                                              orderfunction();
+                                              offerpluse = false;
+                                            }
+                                          }
+
+                                          if (double.parse(
+                                                  amountcontroller.text) >
+                                              maxprice) {
+                                            amountcontroller.clear();
+                                            amountcontroller.text =
+                                                maxprice.toString();
+                                            toast = 1;
+                                          } else if (double.parse(
+                                                  amountcontroller.text) <
+                                              minprice) {
+                                            amountcontroller.clear();
+                                            amountcontroller.text =
+                                                minprice.toString();
+                                            toast = 2;
+                                          } else {
+                                            toast = 0;
+                                            dropprice = double.parse(
+                                                amountcontroller.text);
+                                            mainamount = amountcontroller.text;
+                                          }
+                                        });
+                                      },
+                                      child: Stack(
+                                        alignment: Alignment.center,
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(15),
+                                            child: LinearProgressIndicator(
+                                              minHeight: 49,
+                                              // ✅ FIX: Use local animation controller
+                                              value: 1.0 -
+                                                  _animationController!.value,
+                                              backgroundColor:
+                                                  theamcolore.withOpacity(0.1),
+                                              color: theamcolore,
+                                            ),
+                                          ),
+                                          offerpluse == true
+                                              ? Text(
+                                                  "Raise fare to ${globalcurrency}${amountcontroller.text}",
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Colors.white,
+                                                    letterSpacing: 0.4,
+                                                  ),
+                                                )
+                                              : Text(
+                                                  "Book for  AfterRise${globalcurrency}${amountcontroller.text}",
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Colors.white,
+                                                    letterSpacing: 0.4,
+                                                  ),
+                                                ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                        const SizedBox(height: 10),
+
+                        // Cancel button
+                        StatefulBuilder(
+                          builder: (context, setState) {
+                            return cancelloader
+                                ? Center(
+                                    child: CircularProgressIndicator(
+                                      color: theamcolore,
+                                    ),
+                                  )
+                                : CommonOutLineButton(
+                                    bordercolore: theamcolore,
+                                    onPressed1: () {
+                                      setState(() {
+                                        _isAnimationRunning = false;
+                                        cancelloader = true;
+
+                                        removeRequest
+                                            .removeApi(
+                                                uid: appController
+                                                    .globalUserId.value)
+                                            .then((value) {
+                                          appController.socketService
+                                              .emit('AcceRemoveOther', {
+                                            'requestid':
+                                                appController.requestId.value,
+                                            'driverid': calculateController
+                                                .calCulateModel!.driverId!,
+                                          });
+
+                                          Get.back();
+                                          cancelloader = false;
+                                        });
+
+                                        // ✅ FIX: Use local animation controller
+                                        if (_animationController != null &&
+                                            _animationController!.isAnimating) {
+                                          if (kDebugMode) {
+                                            print(
+                                                "🔄 Stopping controller and resetting data");
+                                          }
+                                          _animationController!.stop();
+                                          _animationController!.reset();
+                                          appController.resetAllRideData();
+                                        }
+                                      });
+                                    },
+                                    context: context,
+                                    txt1: "Cancel Request".tr);
+                          },
                         ),
                         const SizedBox(height: 10),
                       ],
                     ),
                   ),
-
-                  // Bottom section with payment/coupon and buttons
-                  Container(
-                    decoration: BoxDecoration(
-                        color: notifier.containercolore,
-                        boxShadow: const [
-                          BoxShadow(
-                              color: Colors.grey,
-                              offset: Offset(0, -0.4),
-                              blurRadius: 5),
-                        ]),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      child: Column(
-                        children: [
-                          // Payment and coupon row here...
-
-                          // ✅ FIX: Main booking button
-                          _isAnimationRunning == false
-                              ? CommonButton(
-                                  containcolore: theamcolore,
-                                  onPressed1: () {
-                                    setState(() {
-                                      if (double.parse(amountcontroller.text) >
-                                          maxprice) {
-                                        amountcontroller.clear();
-                                        toast = 1;
-                                      } else if (double.parse(
-                                              amountcontroller.text) <
-                                          minprice) {
-                                        amountcontroller.clear();
-                                        toast = 2;
-                                      } else {
-                                        _isAnimationRunning = true;
-                                        loadertimer = true;
-                                        offerpluse = false;
-                                        requesttime();
-                                        orderfunction();
-                                      }
-                                    });
-                                  },
-                                  context: context,
-                                  txt1:
-                                      "Book for A ${amountcontroller.text} ${globalcurrency}")
-                              : AnimatedBuilder(
-                                  // ✅ FIX: Use local animation controller
-                                  animation: _animationController!,
-                                  builder: (context, child) {
-                                    return SizedBox(
-                                      height: 49,
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        style: ButtonStyle(
-                                          padding: const WidgetStatePropertyAll(
-                                              EdgeInsets.zero),
-                                          elevation:
-                                              const WidgetStatePropertyAll(0),
-                                          overlayColor:
-                                              const WidgetStatePropertyAll(
-                                                  Colors.transparent),
-                                          backgroundColor:
-                                              WidgetStatePropertyAll(
-                                                  theamcolore.withOpacity(0.4)),
-                                          shape: WidgetStatePropertyAll(
-                                            RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            if (double.parse(
-                                                    amountcontroller.text) >
-                                                maxprice) {
-                                              amountcontroller.clear();
-                                              toast = 1;
-                                            } else if (double.parse(
-                                                    amountcontroller.text) <
-                                                minprice) {
-                                              amountcontroller.clear();
-                                              toast = 2;
-                                            } else {
-                                              if (offerpluse == true) {
-                                                // ✅ FIX: Use local animation controller
-                                                if (_animationController !=
-                                                        null &&
-                                                    _animationController!
-                                                        .isAnimating) {
-                                                  _animationController!
-                                                      .dispose();
-                                                }
-                                                requesttime();
-                                                orderfunction();
-                                                offerpluse = false;
-                                              }
-                                            }
-
-                                            if (double.parse(
-                                                    amountcontroller.text) >
-                                                maxprice) {
-                                              amountcontroller.clear();
-                                              amountcontroller.text =
-                                                  maxprice.toString();
-                                              toast = 1;
-                                            } else if (double.parse(
-                                                    amountcontroller.text) <
-                                                minprice) {
-                                              amountcontroller.clear();
-                                              amountcontroller.text =
-                                                  minprice.toString();
-                                              toast = 2;
-                                            } else {
-                                              toast = 0;
-                                              dropprice = double.parse(
-                                                  amountcontroller.text);
-                                              mainamount =
-                                                  amountcontroller.text;
-                                            }
-                                          });
-                                        },
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          clipBehavior: Clip.none,
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                              child: LinearProgressIndicator(
-                                                minHeight: 49,
-                                                // ✅ FIX: Use local animation controller
-                                                value: 1.0 -
-                                                    _animationController!.value,
-                                                backgroundColor: theamcolore
-                                                    .withOpacity(0.1),
-                                                color: theamcolore,
-                                              ),
-                                            ),
-                                            offerpluse == true
-                                                ? Text(
-                                                    "Raise fare to ${globalcurrency}${amountcontroller.text}",
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: Colors.white,
-                                                      letterSpacing: 0.4,
-                                                    ),
-                                                  )
-                                                : Text(
-                                                    "Book for  AfterRise${globalcurrency}${amountcontroller.text}",
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: Colors.white,
-                                                      letterSpacing: 0.4,
-                                                    ),
-                                                  ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                          const SizedBox(height: 10),
-
-                          // Cancel button
-                          StatefulBuilder(
-                            builder: (context, setState) {
-                              return cancelloader
-                                  ? Center(
-                                      child: CircularProgressIndicator(
-                                        color: theamcolore,
-                                      ),
-                                    )
-                                  : CommonOutLineButton(
-                                      bordercolore: theamcolore,
-                                      onPressed1: () {
-                                        setState(() {
-                                          _isAnimationRunning = false;
-                                          cancelloader = true;
-
-                                          removeRequest
-                                              .removeApi(
-                                                  uid: appController
-                                                      .globalUserId.value)
-                                              .then((value) {
-                                            appController.socketService
-                                                .emit('AcceRemoveOther', {
-                                              'requestid':
-                                                  appController.requestId.value,
-                                              'driverid': calculateController
-                                                  .calCulateModel!.driverId!,
-                                            });
-
-                                            Get.back();
-                                            cancelloader = false;
-                                          });
-
-                                          // ✅ FIX: Use local animation controller
-                                          if (_animationController != null &&
-                                              _animationController!
-                                                  .isAnimating) {
-                                            if (kDebugMode) {
-                                              print(
-                                                  "🔄 Stopping controller and resetting data");
-                                            }
-                                            _animationController!.stop();
-                                            _animationController!.reset();
-                                            appController.resetAllRideData();
-                                          }
-                                        });
-                                      },
-                                      context: context,
-                                      txt1: "Cancel Request".tr);
-                            },
-                          ),
-                          const SizedBox(height: 10),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      );
-    }
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
 // STEP 8: Replace your orderfunction() method with this COMPLETE function
@@ -3753,12 +4059,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   void handleMapTap(LatLng tappedPoint) {
     setState(() {
       _onAddMarkerButtonPressed(tappedPoint.latitude, tappedPoint.longitude);
+
       lathome = tappedPoint.latitude;
+
       longhome = tappedPoint.longitude;
+
       getCurrentLatAndLong(lathome, longhome);
     });
 
-    // ✅ Load vehicles at new location
+    // Load vehicles at new location
+
     if (mid.isNotEmpty) {
       loadVehiclesForCategory(mid);
     }
@@ -3812,20 +4122,77 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     mroal = category.role.toString();
                   });
 
-                  // ✅ CRITICAL: Clear existing markers and load new category
+                  // Clear existing vehicle markers before loading new category
+
+                  setState(() {
+                    markers.removeWhere((key, value) =>
+                        key.value.startsWith('vehicle_') ||
+                        key.value.contains('driver'));
+                  });
+
+                  // Load vehicles for new category
 
                   if (lathome != null && longhome != null) {
-                    // Clear previous vehicle markers immediately
-
-                    setState(() {
-                      markers.removeWhere((key, value) =>
-                          key.value.startsWith('vehicle_') ||
-                          key.value.contains('driver'));
-                    });
-
-                    // Load vehicles for new category
-
                     await loadVehiclesForCategory(mid);
+                  }
+
+                  // ✅ RECALCULATE price when vehicle changes
+
+                  if (latitudepick != 0.0 &&
+                      longitudepick != 0.0 &&
+                      latitudedrop != 0.0 &&
+                      longitudedrop != 0.0) {
+                    try {
+                      final result = await calculateController.calculateApi(
+                        context: context,
+                        uid: userid.toString(),
+                        mid: mid,
+                        mrole: mroal,
+                        pickup_lat_lon: "${latitudepick},${longitudepick}",
+                        drop_lat_lon: "${latitudedrop},${longitudedrop}",
+                        drop_lat_lon_list: appController.onlypass,
+                      );
+
+                      if (result["Result"] == true) {
+                        setState(() {
+                          // ✅ PARSE API strings to doubles properly
+
+                          dropprice = (result["drop_price"] as num).toDouble();
+
+                          minimumfare = double.parse(
+                              result["vehicle"]["minimum_fare"].toString());
+
+                          maximumfare = double.parse(
+                              result["vehicle"]["maximum_fare"].toString());
+
+                          responsemessage = result["message"]?.toString() ?? "";
+
+                          amountresponse = "true";
+
+                          // Update other calculation data
+
+                          totalkm =
+                              (result["tot_km"] as num?)?.toDouble() ?? 0.0;
+
+                          tot_time = result["tot_minute"]?.toString() ?? "0";
+
+                          tot_hour = result["tot_hour"]?.toString() ?? "0";
+
+                          // Update vehicle info
+
+                          vihicalrice = dropprice;
+                        });
+
+                        if (kDebugMode) {
+                          print(
+                              "✅ Vehicle price updated: $dropprice $globalcurrency");
+                        }
+                      }
+                    } catch (e) {
+                      if (kDebugMode) {
+                        print("❌ Error updating price for vehicle change: $e");
+                      }
+                    }
                   }
                 },
                 child: Container(
@@ -3837,22 +4204,33 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     borderRadius: BorderRadius.circular(10),
                     border: select1 == index
                         ? Border.all(color: theamcolore, width: 2)
-                        : null,
+                        : Border.all(color: Colors.grey.withOpacity(0.2)),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.network(
-                        "${Config.imageurl}${category.image}",
-                        height: 30,
-                        width: 30,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(Icons.directions_car, size: 30);
-                        },
+                      Container(
+                        height: 40,
+                        width: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            "${Config.imageurl}${category.image}",
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(Icons.directions_car,
+                                  color: theamcolore, size: 24);
+                            },
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        "${category.name}",
+                        category.name ?? "",
                         style: TextStyle(
                           color: select1 == index
                               ? theamcolore
@@ -3863,8 +4241,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                               : FontWeight.normal,
                         ),
                         textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -3876,6 +4252,107 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       ),
     );
   }
+
+  Widget buildConditionalTripPanel() {
+    // Only show if we have a complete trip calculation
+    if (appController.pickupController.text.isEmpty ||
+        appController.dropController.text.isEmpty ||
+        calculateController.calCulateModel == null ||
+        loadertimer) {
+      return SizedBox.shrink(); // Don't show panel
+    }
+
+    return buildTripCalculationPanel();
+  }
+// ✅ FIX 1: Corrected _calculateRoutePrice method
+
+  Future<void> _calculateRoutePrice() async {
+    if (kDebugMode) {
+      print("💰 Calculating price for route with vehicle category: $mid");
+    }
+
+    try {
+      // Only calculate if we have pickup and drop points
+
+      if (latitudepick == 0.0 ||
+          longitudepick == 0.0 ||
+          latitudedrop == 0.0 ||
+          longitudedrop == 0.0) {
+        if (kDebugMode) {
+          print("⚠️ Missing pickup or drop coordinates for price calculation");
+        }
+
+        return;
+      }
+
+      setState(() {
+        loadertimer = true;
+      });
+
+      await calculateController.calculateApi(
+        context: context,
+        uid: userid.toString(),
+        mid: mid,
+        mrole: mroal,
+        pickup_lat_lon: "${latitudepick},${longitudepick}",
+        drop_lat_lon: "${latitudedrop},${longitudedrop}",
+        drop_lat_lon_list: appController.onlypass,
+      );
+
+      if (calculateController.calCulateModel?.result == "true") {
+        final result = calculateController.calCulateModel!;
+
+        setState(() {
+          // ✅ FIXED: Proper type handling for API response
+
+          vihicalrice = result.dropPrice ?? 0.0;
+
+          totalkm = result.totKm ?? 0.0;
+
+          tot_time = result.totMinute?.toString() ?? "0";
+
+          tot_hour = result.totHour?.toString() ?? "0";
+
+          // Update vehicle information from response
+
+          if (result.vehicle != null) {
+            vihicalname = result.vehicle!.name ?? vihicalname;
+
+            vehicle_id = result.vehicle!.id?.toString() ?? vehicle_id;
+          }
+
+          loadertimer = false;
+        });
+
+        if (kDebugMode) {
+          print("✅ Price calculated: $vihicalrice ${globalcurrency}");
+
+          print("📏 Distance: $totalkm km");
+
+          print("⏱️ Time: $tot_hour hours $tot_time minutes");
+        }
+      } else {
+        setState(() {
+          loadertimer = false;
+        });
+
+        if (kDebugMode) {
+          print(
+              "❌ Price calculation failed: ${calculateController.calCulateModel?.message}");
+        }
+      }
+    } catch (e) {
+      setState(() {
+        loadertimer = false;
+      });
+
+      if (kDebugMode) {
+        print("❌ Error calculating price: $e");
+      }
+    }
+  }
+
+// ✅ FIX 2: Corrected buildCalculationDisplay method
 
   Widget buildCalculationDisplay() {
     if (calculateController.calCulateModel == null) {
@@ -3889,8 +4366,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         }
 
         final calculation = calculateController.calCulateModel!;
-
-        // ✅ Use proper currency from shared preferences
 
         String currency = globalcurrency.isNotEmpty
             ? globalcurrency
@@ -3930,7 +4405,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   Text("Distance:",
                       style: TextStyle(color: notifier.textColor)),
                   Text(
+                    // ✅ FIXED: Direct use of double values
+
                     "${calculation.totKm ?? totalkm} km",
+
                     style: TextStyle(
                         color: notifier.textColor, fontWeight: FontWeight.w600),
                   ),
@@ -3942,7 +4420,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   Text("Duration:",
                       style: TextStyle(color: notifier.textColor)),
                   Text(
-                    "${calculation.totHour ?? tot_hour}h ${calculation.totMinute ?? tot_time}m",
+                    // ✅ FIXED: Direct use of int values, convert to string only for display
+
+                    "${calculation.totHour ?? int.tryParse(tot_hour) ?? 0}h ${calculation.totMinute ?? int.tryParse(tot_time) ?? 0}m",
+
                     style: TextStyle(
                         color: notifier.textColor, fontWeight: FontWeight.w600),
                   ),
@@ -3954,7 +4435,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   Text("Estimated Fare:",
                       style: TextStyle(color: notifier.textColor)),
                   Text(
+                    // ✅ FIXED: Direct use of double value
+
                     "${calculation.dropPrice ?? dropprice} $currency",
+
                     style: TextStyle(
                       color: theamcolore,
                       fontWeight: FontWeight.bold,
@@ -3966,7 +4450,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               if (minimumfare > 0 && maximumfare > 0) ...[
                 SizedBox(height: 5),
                 Text(
-                  "{Range}.tr: ${minimumfare.toInt()} $currency - ${maximumfare.toInt()} $currency",
+                  "Range: ${minimumfare.toInt()} $currency - ${maximumfare.toInt()} $currency",
                   style: TextStyle(
                     color: notifier.textColor?.withOpacity(0.7),
                     fontSize: 12,
@@ -3980,15 +4464,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-// ✅ FIX 4: Fixed button loading state and position
+// ✅ FIX 3: Corrected buildFindDriverButton method
 
   Widget buildFindDriverButton() {
     if (appController.pickupController.text.isEmpty ||
         appController.dropController.text.isEmpty) {
       return SizedBox.shrink();
     }
-
-    // ✅ Use proper currency
 
     String currency = globalcurrency.isNotEmpty
         ? globalcurrency
@@ -4031,12 +4513,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               : ElevatedButton(
                   onPressed: () async {
                     if (calculateController.calCulateModel?.driverId != null) {
-                      // Price calculation is done, show booking dialog
-
                       Buttonpresebottomshhet();
                     } else {
-                      // Need to calculate price first
-
                       if (kDebugMode) {
                         print("🔄 Calculating trip price...");
                       }
@@ -4056,19 +4534,28 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
                         if (result["Result"] == true) {
                           setState(() {
-                            dropprice = result["drop_price"];
+                            // ✅ FIXED: Proper type casting from API response
 
-                            minimumfare = result["vehicle"]["minimum_fare"];
+                            dropprice =
+                                (result["drop_price"] as num).toDouble();
 
-                            maximumfare = result["vehicle"]["maximum_fare"];
+                            minimumfare =
+                                (result["vehicle"]["minimum_fare"] as num)
+                                    .toDouble();
 
-                            responsemessage = result["message"];
+                            maximumfare =
+                                (result["vehicle"]["maximum_fare"] as num)
+                                    .toDouble();
+
+                            responsemessage = result["message"]?.toString() ??
+                                "Calculation failed";
 
                             amountresponse = "true";
 
-                            // Update other calculation data
+                            // ✅ FIXED: Proper type handling for numeric values
 
-                            totalkm = result["tot_km"] ?? 0.0;
+                            totalkm =
+                                (result["tot_km"] as num?)?.toDouble() ?? 0.0;
 
                             tot_time = result["tot_minute"]?.toString() ?? "0";
 
@@ -4080,15 +4567,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 "✅ Calculation completed: $dropprice $currency");
                           }
 
-                          // Show booking dialog
-
                           Buttonpresebottomshhet();
                         } else {
                           setState(() {
                             amountresponse = "false";
 
-                            responsemessage =
-                                result["message"] ?? "Calculation failed";
+                            responsemessage = result["message"]?.toString() ??
+                                "Calculation failed";
                           });
 
                           Fluttertoast.showToast(msg: responsemessage);
@@ -4112,7 +4597,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   ),
                   child: Text(
                     calculateController.calCulateModel?.driverId != null
-                        ? "Set your price -   ${dropprice.toInt()} $currency".tr
+                        ? "Set your price - ${(calculateController.calCulateModel?.dropPrice ?? dropprice).toInt()} $currency"
+                            .tr
                         : "Calculate price".tr,
                     style: const TextStyle(
                       color: Colors.white,
@@ -4122,6 +4608,167 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   ),
                 );
         },
+      ),
+    );
+  }
+
+// ✅ STEP 1: First, add this method to your _MapScreenState class (anywhere in the class, maybe after buildTripCalculationPanel):
+
+  Widget buildConditionalCalculationPanel() {
+    bool hasPickupAndDrop = appController.pickupController.text.isNotEmpty &&
+        appController.dropController.text.isNotEmpty;
+
+    if (!hasPickupAndDrop) {
+      return SizedBox.shrink();
+    }
+
+    // Check if we have calculation data
+
+    bool hasCalculation = calculateController.calCulateModel != null;
+
+    bool isNotLoading = !loadertimer && !calculateController.isLoading;
+
+    if (isNotLoading && hasCalculation) {
+      return buildTripCalculationPanel();
+    }
+
+    if (!isNotLoading) {
+      // Show loading state
+
+      return Container(
+        margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: notifier.containercolore,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theamcolore.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                color: theamcolore,
+                strokeWidth: 2,
+              ),
+            ),
+            SizedBox(width: 15),
+            Text(
+              "Calculating trip details...",
+              style: TextStyle(
+                color: notifier.textColor,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SizedBox.shrink();
+  }
+
+  Widget buildTripCalculationPanel() {
+    if (latitudepick == 0.0 || latitudedrop == 0.0 || loadertimer) {
+      return Container();
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: notifier.containercolore,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.route, color: theamcolore, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                "Trip Details",
+                style: TextStyle(
+                  color: notifier.textColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.straighten, color: Colors.grey, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      "Distance: ${totalkm.toStringAsFixed(1)} km",
+                      style: TextStyle(color: notifier.textColor, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.access_time, color: Colors.grey, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      "Duration: ${tot_hour}h ${tot_time}m",
+                      style: TextStyle(color: notifier.textColor, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.directions_car, color: Colors.grey, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      "Vehicle: $vihicalname",
+                      style: TextStyle(color: notifier.textColor, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  Icon(Icons.attach_money, color: theamcolore, size: 16),
+                  Text(
+                    "${vihicalrice.toStringAsFixed(0)} $globalcurrency",
+                    style: TextStyle(
+                      color: theamcolore,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
