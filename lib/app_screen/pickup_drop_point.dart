@@ -848,7 +848,7 @@ class _PickupDropPointState extends State<PickupDropPoint> {
                               },
                               child: Container(
                                 height: 40,
-                                width: 150,
+                                width: 160,
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                       color: Colors.grey.withOpacity(0.4)),

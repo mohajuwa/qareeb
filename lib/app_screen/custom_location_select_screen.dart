@@ -53,7 +53,6 @@ class _CustomLocationSelectScreenState
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     // datagetfunction();
     destinationlat = [];
@@ -68,6 +67,41 @@ class _CustomLocationSelectScreenState
         },
       );
     });
+  }
+
+  void _moveToUserLocation(GoogleMapController controller) async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium,
+        timeLimit: const Duration(seconds: 10), // Increased timeout
+      );
+
+      final userLatLng = LatLng(position.latitude, position.longitude);
+
+      controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: userLatLng, zoom: 14),
+      ));
+
+      // Use the improved getCurrentLatAndLong method
+      await getCurrentLatAndLong(position.latitude, position.longitude);
+
+      _onAddMarkerButtonPressed(position.latitude, position.longitude);
+    } catch (e) {
+      if (kDebugMode) {
+        print("Location error: $e");
+      }
+
+      // Fallback to default location (Sana'a) if current location fails
+      const fallbackLocation = LatLng(15.3694, 44.1910);
+      controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: fallbackLocation, zoom: 14),
+      ));
+
+      await getCurrentLatAndLong(
+          fallbackLocation.latitude, fallbackLocation.longitude);
+      _onAddMarkerButtonPressed(
+          fallbackLocation.latitude, fallbackLocation.longitude);
+    }
   }
 
   Set<Marker> markers = Set();
@@ -454,7 +488,7 @@ class _CustomLocationSelectScreenState
           Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())
         },
         initialCameraPosition:
-            const CameraPosition(target: LatLng(21.2408, 72.8806), zoom: 13),
+            const CameraPosition(target: LatLng(15.3694, 44.1910), zoom: 13),
         mapType: MapType.normal,
         markers: Set<Marker>.of(markers),
         onTap: (argument) {
@@ -480,6 +514,7 @@ class _CustomLocationSelectScreenState
             controller.setMapStyle(themeForMap);
             mapController1 = controller;
           });
+          _moveToUserLocation(controller);
         },
       ),
     );
