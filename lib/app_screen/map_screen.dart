@@ -5,8 +5,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -21,9 +19,6 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
-import 'package:qareeb/common_code/global_variables.dart';
-import 'package:qareeb/controllers/app_controller.dart';
-import 'package:qareeb/services/socket_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:qareeb/api_code/coupon_payment_api_contoller.dart';
@@ -54,6 +49,7 @@ import '../api_code/vihical_calculate_api_controller.dart';
 import '../api_code/vihical_information.dart';
 import '../auth_screen/onbording_screen.dart';
 import 'package:http/http.dart' as http;
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import '../common_code/push_notification.dart';
 import 'counter_bottom_sheet.dart';
@@ -64,6 +60,30 @@ import 'language_screen.dart';
 import 'my_ride_screen.dart';
 import 'notification_screen.dart';
 
+// bool bottomshhetopen = false;
+
+bool buttontimer = false;
+
+bool darkMode = false;
+num priceyourfare = 0;
+bool isControllerDisposed = false;
+bool isanimation = false;
+String mid = "";
+String mroal = "";
+int select1 = 0;
+String globalcurrency = "";
+List vehicle_bidding_driver = [];
+List vehicle_bidding_secounde = [];
+num walleteamount = 0.00;
+late IO.Socket socket;
+var lathomecurrent;
+var longhomecurrent;
+
+AnimationController? controller;
+late Animation<Color?> colorAnimation;
+
+int durationInSeconds = 0;
+
 class MapScreen extends StatefulWidget {
   final bool selectvihical;
   const MapScreen({super.key, required this.selectvihical});
@@ -73,115 +93,15 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
-  final appController = AppController.instance;
-
-  Map<MarkerId, Marker> markers = {};
-
-  bool _isInitializing = true;
-
-  String _initializationStatus = "Loading...";
-
-  int get _durationInSeconds => appController.durationInSeconds.value;
-
-  set _durationInSeconds(int value) =>
-      appController.durationInSeconds.value = value;
-
-  String get tot_hour => appController.totalHour.value;
-
-  set tot_hour(String value) => appController.totalHour.value = value;
-
-  String get tot_time => appController.totalTime.value;
-
-  set tot_time(String value) => appController.totalTime.value = value;
-
-  String get vehicle_id => appController.vehicleId.value;
-
-  set vehicle_id(String value) => appController.vehicleId.value = value;
-
-  double get vihicalrice => appController.vehiclePrice.value;
-
-  set vihicalrice(double value) => appController.vehiclePrice.value = value;
-
-  double get totalkm => appController.totalKm.value;
-
-  set totalkm(double value) => appController.totalKm.value = value;
-
-  String get tot_secound => appController.totalSecond.value;
-
-  set tot_secound(String value) => appController.totalSecond.value = value;
-
-  String get vihicalimage => appController.vehicleImage.value;
-
-  set vihicalimage(String value) => appController.vehicleImage.value = value;
-
-  String get vihicalname => appController.vehicleName.value;
-
-  set vihicalname(String value) => appController.vehicleName.value = value;
-
-  bool get loadertimer => appController.loadingTimer.value;
-
-  set loadertimer(bool value) => appController.loadingTimer.value = value;
-
-  String get globalcurrency => appController.globalCurrency.value;
-
-  set globalcurrency(String value) =>
-      appController.globalCurrency.value = value;
-
-  num get priceyourfare => appController.priceYourFare.value;
-
-  set priceyourfare(num value) =>
-      appController.priceYourFare.value = value.toDouble();
-
-  String get extratime => appController.extraTime.value;
-
-  set extratime(String value) => appController.extraTime.value = value;
-
-  String get timeincressstatus => appController.timeIncreaseStatus.value;
-
-  set timeincressstatus(String value) =>
-      appController.timeIncreaseStatus.value = value;
-
-  String get request_id => appController.requestId.value;
-
-  set request_id(String value) => appController.requestId.value = value;
-
-  String get driver_id => appController.driverId.value;
-
-  set driver_id(String value) => appController.driverId.value = value;
-
-  bool get otpstatus => appController.otpStatus.value;
-
-  set otpstatus(bool value) => appController.otpStatus.value = value;
-
-  int get select => appController.selectedVehicleIndex.value;
-
-  set select(int value) => appController.selectedVehicleIndex.value = value;
-
-  int get midseconde => appController.midSecond.value;
-
-  set midseconde(int value) => appController.midSecond.value = value;
-
   final List<LatLng> vihicallocations = [];
-
   final List<String> _iconPaths = [];
   final List<String> _iconPathsbiddingon = [];
   final List<LatLng> vihicallocationsbiddingon = [];
   List<PointLatLng> _dropOffPoints = [];
   List<bool> couponadd = [];
-  AnimationController? _animationController;
-  Animation<Color?>? _colorAnimation;
-  bool _isAnimationRunning = false;
-  // bool timeout = false;
-  Map<PolylineId, Polyline> polylines = {};
-  List<LatLng> polylineCoordinates = [];
-  PolylinePoints polylinePoints = PolylinePoints();
 
-  // You already have these (keep them):
-  late GoogleMapController mapController11;
-  Map<MarkerId, Marker> markers11 = {};
-  Map<PolylineId, Polyline> polylines11 = {};
-  List<LatLng> polylineCoordinates11 = [];
-  PolylinePoints polylinePoints11 = PolylinePoints();
+  // bool timeout = false;
+
   String themeForMap = "";
 
   mapThemeStyle({required BuildContext context}) {
@@ -218,8 +138,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   var decodeUid;
   var userid;
   var currencyy;
-  bool socketInitialized = false;
-
   String username = "";
 
   final DraggableScrollableController sheetController =
@@ -253,943 +171,1209 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   // late AnimationController controller;
   // late Animation<Color?> colorAnimation;
 
-  Future<void> socketConnect() async {
-    try {
-      final socketService = SocketService.instance;
+  // socate code
 
-      if (!socketService.isConnected) {
-        if (kDebugMode) {
-          print("Socket not connected, connecting...");
-        }
-        await socketService.connect();
-      } else {
-        if (kDebugMode) {
-          print("Socket already connected");
-        }
-      }
+  socketConnect() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    var uid = preferences.getString("userLogin");
 
-      // Set up event listeners
-      socketService.on('home', (data) {
-        if (kDebugMode) {
-          print("Received 'home' event: $data");
-        }
-        // Handle home event
-      });
+    decodeUid = jsonDecode(uid!);
 
-      socketService.on('acceptvehrequest', (data) {
-        if (kDebugMode) {
-          print("Received 'acceptvehrequest' event: $data");
-        }
-        // Handle vehicle request acceptance
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print("Socket connection error: $e");
-      }
-      // Don't throw - allow app to continue without socket
-    }
-  }
+    userid = decodeUid['id'];
+    username = decodeUid["name"];
+    useridgloable = decodeUid['id'];
 
-  void _debugState() {
-    if (kDebugMode) {
-      print("🔍 DEBUG STATE:");
+    print("++++:---  $userid");
+    print("++ currencyy ++:---  $currencyy");
 
-      print("   _isInitializing: $_isInitializing");
+    setState(() {});
 
-      print("   _initializationStatus: $_initializationStatus");
+    socket = IO.io(Config.imageurl, <String, dynamic>{
+      'autoConnect': false,
+      'transports': ['websocket'],
+    });
+    socket.connect();
 
-      print("   lathome: $lathome");
-
-      print("  userid: $userid");
-    }
-  }
-
-  void _setupSocketListeners() {
-    final socketService = appController.socketService;
-
-    // Home event listener
-    socketService.on('home', (data) {
-      if (kDebugMode) {
-        print("🏠 Home event: $data");
-      }
-      // Handle home event
+    socket.onConnect((_) {
+      print('Connected');
+      socket.emit('message', 'Hello from Flutter');
     });
 
-    // Vehicle request acceptance
-    socketService.on('acceptvehrequest${appController.userId.value}', (data) {
-      if (kDebugMode) {
-        print("🚗 Accept vehicle request: $data");
-      }
-      // Handle acceptance
-    });
+    _connectSocket();
   }
 
   _connectSocket() async {
-    final appController = AppController.instance;
-
-    // ✅ REPLACE: useridgloable with appController
-
-    if (appController.globalUserId.value.isEmpty) {
-      if (kDebugMode) {
-        print("Error: userid is null in _connectSocket");
-      }
-
-      return;
-    }
-
-    // ✅ REPLACE: All global variables with AppController
+    setState(() {});
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    socket.onConnect(
+        (data) => print('Connection established Connected map screen'));
+    socket.onConnectError(
+        (data) => print('Connect Error11111 map screen: $data'));
+    socket.onDisconnect(
+        (data) => print('Socket.IO server disconnected map screen'));
 
     homeWalletApiController
-        .homwwalleteApi(uid: appController.globalUserId.value, context: context)
+        .homwwalleteApi(uid: userid.toString(), context: context)
+        .then(
+      (value) {
+        print("{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
+        walleteamount = double.parse(value["wallet_amount"]);
+        print("[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
+      },
+    );
+
+    homeApiController
+        .homeApi(
+            uid: userid.toString(),
+            lat: lathome.toString(),
+            lon: longhome.toString())
         .then((value) {
-      try {
-        if (value != null && value["wallet_amount"] != null) {
-          walleteamount = double.parse(value["wallet_amount"].toString());
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print("Error parsing wallet amount: $e");
-        }
+      mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+      mroal = homeApiController.homeapimodel!.categoryList![0].role.toString();
+      var currency = preferences.getString("currenci");
+      currencyy = jsonDecode(currency!);
+      globalcurrency = currencyy;
+
+      pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
+          ? homeMapController
+              .homemapApi(
+                  mid: mid, lat: lathome.toString(), lon: longhome.toString())
+              .then(
+              (value) {
+                setState(() {});
+                print("///:---  ${value["Result"]}");
+
+                if (value["Result"] == false) {
+                  setState(() {
+                    vihicallocations.clear();
+                    markers.clear();
+                    _addMarkers();
+                    print("***if condition+++:---  $vihicallocations");
+                  });
+                } else {
+                  setState(() {});
+                  for (int i = 0;
+                      i < homeMapController.homeMapApiModel!.list!.length;
+                      i++) {
+                    vihicallocations.add(LatLng(
+                        double.parse(homeMapController
+                            .homeMapApiModel!.list![i].latitude
+                            .toString()),
+                        double.parse(homeMapController
+                            .homeMapApiModel!.list![i].longitude
+                            .toString())));
+                    _iconPaths.add(
+                        "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                  }
+                  _addMarkers();
+                }
+
+                print("******-**:::::------$vihicallocations");
+              },
+            )
+          : homeMapController
+              .homemapApi(
+                  mid: mid, lat: lathome.toString(), lon: longhome.toString())
+              .then(
+              (value) {
+                setState(() {});
+                print("///:---  ${value["Result"]}");
+
+                if (value["Result"] == false) {
+                  setState(() {
+                    vihicallocationsbiddingon.clear();
+                    markers.clear();
+                    _addMarkers2();
+                    // _addMarkers();
+                    print("***if condition+++:---  $vihicallocationsbiddingon");
+                  });
+                } else {
+                  setState(() {});
+                  for (int i = 0;
+                      i < homeMapController.homeMapApiModel!.list!.length;
+                      i++) {
+                    vihicallocationsbiddingon.add(LatLng(
+                        double.parse(homeMapController
+                            .homeMapApiModel!.list![i].latitude
+                            .toString()),
+                        double.parse(homeMapController
+                            .homeMapApiModel!.list![i].longitude
+                            .toString())));
+                    _iconPathsbiddingon.add(
+                        "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                  }
+                  _addMarkers2();
+                }
+
+                print("******-**:::::------$vihicallocationsbiddingon");
+              },
+            );
+
+      if (homeApiController.homeapimodel!.runnigRide!.isEmpty) {
+      } else {
+        pickupcontroller.text = homeApiController
+            .homeapimodel!.runnigRide![0].pickAdd!.title
+            .toString();
+        dropcontroller.text = homeApiController
+            .homeapimodel!.runnigRide![0].dropAdd!.title
+            .toString();
+        latitudepick = double.parse(homeApiController
+            .homeapimodel!.runnigRide![0].pickLatlon!.latitude
+            .toString());
+        longitudepick = double.parse(homeApiController
+            .homeapimodel!.runnigRide![0].pickLatlon!.longitude
+            .toString());
+        latitudedrop = double.parse(homeApiController
+            .homeapimodel!.runnigRide![0].dropLatlon!.latitude
+            .toString());
+        longitudedrop = double.parse(homeApiController
+            .homeapimodel!.runnigRide![0].dropLatlon!.longitude
+            .toString());
+        maximumfare =
+            homeApiController.homeapimodel!.runnigRide![0].maximumFare;
+        minimumfare =
+            homeApiController.homeapimodel!.runnigRide![0].minimumFare;
+        dropprice =
+            homeApiController.homeapimodel!.runnigRide![0].price.toString();
+        priceyourfare = homeApiController.homeapimodel!.runnigRide![0].price!;
+        request_id =
+            homeApiController.homeapimodel!.runnigRide![0].id.toString();
+
+        picktitle = homeApiController
+            .homeapimodel!.runnigRide![0].pickAdd!.title
+            .toString();
+        picksubtitle = homeApiController
+            .homeapimodel!.runnigRide![0].pickAdd!.subtitle
+            .toString();
+
+        droptitle = homeApiController
+            .homeapimodel!.runnigRide![0].dropAdd!.title
+            .toString();
+        dropsubtitle = homeApiController
+            .homeapimodel!.runnigRide![0].dropAdd!.subtitle
+            .toString();
+
+        tot_hour =
+            homeApiController.homeapimodel!.runnigRide![0].totHour.toString();
+        tot_time =
+            homeApiController.homeapimodel!.runnigRide![0].totMinute.toString();
+        tot_secound = "0";
+
+        calculateController
+            .calculateApi(
+                context: context,
+                uid: useridgloable.toString(),
+                mid: mid,
+                mrole: mroal,
+                pickup_lat_lon: "$latitudepick,$longitudepick",
+                drop_lat_lon: "$latitudedrop,$longitudedrop",
+                drop_lat_lon_list: onlypass)
+            .then(
+          (value) {
+            print("CALCULATE DATA LOAD");
+            calculateController.calCulateModel!.offerExpireTime = int.parse(
+                homeApiController.homeapimodel!.runnigRide![0].increasedTime
+                    .toString());
+            calculateController.calCulateModel!.driverId =
+                homeApiController.homeapimodel!.runnigRide![0].dId;
+            isanimation = true;
+            loadertimer = true;
+            offerpluse = false;
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            mid =
+                homeApiController.homeapimodel!.categoryList![0].id.toString();
+            mroal = homeApiController.homeapimodel!.categoryList![0].role
+                .toString();
+            print("*****mid*-**:::::------$mid");
+            _iconPaths.clear();
+            vihicallocations.clear();
+            _iconPathsbiddingon.clear();
+            vihicallocationsbiddingon.clear();
+
+            pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
+                ? markers.clear()
+                : "";
+            pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
+                ? fun().then((value) {
+                    setState(() {});
+                    getCurrentLatAndLong(lathome, longhome);
+                    // _loadMapStyles();
+                    // socketConnect();
+                  })
+                : "";
+
+            pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
+                ? homeMapController
+                    .homemapApi(
+                        mid: mid,
+                        lat: lathome.toString(),
+                        lon: longhome.toString())
+                    .then(
+                    (value) {
+                      setState(() {});
+                      print("///:---  ${value["Result"]}");
+
+                      if (value["Result"] == false) {
+                        setState(() {
+                          vihicallocations.clear();
+                          markers.clear();
+                          _addMarkers();
+                          fun().then((value) {
+                            setState(() {});
+                            getCurrentLatAndLong(lathome, longhome);
+                            // socketConnect();
+                          });
+                          print("***if condition+++:---  $vihicallocations");
+                        });
+                      } else {
+                        setState(() {});
+                        for (int i = 0;
+                            i < homeMapController.homeMapApiModel!.list!.length;
+                            i++) {
+                          vihicallocations.add(LatLng(
+                              double.parse(homeMapController
+                                  .homeMapApiModel!.list![i].latitude
+                                  .toString()),
+                              double.parse(homeMapController
+                                  .homeMapApiModel!.list![i].longitude
+                                  .toString())));
+                          _iconPaths.add(
+                              "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                        }
+                        _addMarkers();
+                      }
+
+                      print("******-**:::::------$vihicallocations");
+                    },
+                  )
+                : homeMapController
+                    .homemapApi(
+                        mid: mid,
+                        lat: lathome.toString(),
+                        lon: longhome.toString())
+                    .then(
+                    (value) {
+                      setState(() {});
+                      print("///:---  ${value["Result"]}");
+
+                      if (value["Result"] == false) {
+                        setState(() {
+                          vihicallocationsbiddingon.clear();
+                          markers.clear();
+                          _addMarkers2();
+                          print(
+                              "***if condition+++:---  $vihicallocationsbiddingon");
+                        });
+                      } else {
+                        setState(() {});
+                        for (int i = 0;
+                            i < homeMapController.homeMapApiModel!.list!.length;
+                            i++) {
+                          vihicallocationsbiddingon.add(LatLng(
+                              double.parse(homeMapController
+                                  .homeMapApiModel!.list![i].latitude
+                                  .toString()),
+                              double.parse(homeMapController
+                                  .homeMapApiModel!.list![i].longitude
+                                  .toString())));
+                          _iconPathsbiddingon.add(
+                              "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                        }
+                      }
+
+                      print("******-**:::::------$vihicallocationsbiddingon");
+                    },
+                  );
+
+            calculateController
+                .calculateApi(
+                    context: context,
+                    uid: userid.toString(),
+                    mid: mid,
+                    mrole: mroal,
+                    pickup_lat_lon: "$latitudepick,$longitudepick",
+                    drop_lat_lon: "$latitudedrop,$longitudedrop",
+                    drop_lat_lon_list: onlypass)
+                .then(
+              (value) {
+                dropprice = 0;
+                minimumfare = 0;
+                maximumfare = 0;
+
+                if (value["Result"] == true) {
+                  tot_hour = value["tot_hour"].toString();
+                  tot_time = value["tot_minute"].toString();
+
+                  vihicalimage = value["vehicle"]["map_img"].toString();
+                  vihicalname = value["vehicle"]["name"].toString();
+
+                  setState(() {});
+                } else {
+                  amountresponse = "false";
+
+                  setState(() {});
+                }
+              },
+            );
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            requesttime();
+            Buttonpresebottomshhet();
+            print(
+                "11111(calculateController.calCulateModel!.offerExpireTime)22222:- ${calculateController.calCulateModel!.offerExpireTime}");
+            print(
+                "11111(calculateController.calCulateModel!.driverId)22222:- ${calculateController.calCulateModel!.driverId}");
+          },
+        );
       }
     });
 
-    // Continue with other API calls using appController.globalUserId.value...
+    socket.on('home', (messaj) {
+      print("++++++++++ :---  $messaj");
+      print("Vehicle is of type: ${messaj.runtimeType}");
+      print("Vehicle keys: ${messaj.keys}");
+      // select1 = 0;
+      homeApiController
+          .homeApi(
+              uid: messaj['uid'].toString(),
+              lat: messaj['lat'].toString(),
+              lon: messaj['lon'].toString())
+          .then(
+        (value) {
+          mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+          mroal =
+              homeApiController.homeapimodel!.categoryList![0].role.toString();
+        },
+      );
+    });
+
+    List zonelist = [];
+
+    socket.on("Driver_location_On", (Driver_location_On) async {
+      print("++++++ Driver_location_On ++++ :---  $Driver_location_On");
+
+      zonelist = Driver_location_On["zone_list"];
+
+      if (zonelist.contains(homeMapController.homeMapApiModel!.zoneId)) {
+        LatLng postion = LatLng(double.parse(Driver_location_On["latitude"]),
+            double.parse(Driver_location_On["longitude"]));
+        final Uint8List markIcon = await getNetworkImage(
+            "${Config.imageurl}${Driver_location_On["image"]}");
+        MarkerId markerId = MarkerId(Driver_location_On["id"].toString());
+        Marker marker = Marker(
+          markerId: markerId,
+          icon: BitmapDescriptor.fromBytes(markIcon),
+          // icon: _loadIcon,
+          position: postion,
+        );
+        markers[markerId] = marker;
+        // markers11[markerId] = marker;
+        setState(() {});
+
+        // Poline Marker Update Code
+
+        final markerId1 = MarkerId(Driver_location_On["id"].toString());
+        final marker1 = Marker(
+          markerId: markerId1,
+          // position: vihicallocationsbiddingon[i],
+          // position: LatLng(double.parse(homeMapController.homeMapApiModel!.list![i].latitude.toString()),double.parse(homeMapController.homeMapApiModel!.list![i].longitude.toString())),
+          position: postion,
+          icon: BitmapDescriptor.fromBytes(markIcon),
+        );
+        markers11[markerId1] = marker1;
+      } else {
+        print("<<<<<<<<<<else>>>>>>>>>>>> $zonelist");
+      }
+    });
+
+    socket.on("Drive_location_Off", (Drive_location_Off) {
+      print("++++++ Drive_location_Off ++++ :---  $Drive_location_Off");
+
+      zonelist = Drive_location_Off["zone_list"];
+      MarkerId markerId = MarkerId(Drive_location_Off["id"].toString());
+    });
+
+    socket.on("Driver_location_Update", (Driver_location_Update) async {
+      print("++++++ Driver_location_Update ++++ :---  $Driver_location_Update");
+
+      LatLng postion = LatLng(double.parse(Driver_location_Update["latitude"]),
+          double.parse(Driver_location_Update["longitude"]));
+      final Uint8List markIcon = await getNetworkImage(
+          "${Config.imageurl}${Driver_location_Update["image"]}");
+
+      MarkerId markerId = MarkerId(Driver_location_Update["id"].toString());
+      Marker marker = Marker(
+        markerId: markerId,
+        icon: BitmapDescriptor.fromBytes(markIcon),
+        position: postion,
+      );
+      markers[markerId] = marker;
+      if (markers.containsKey(markerId)) {
+        final Marker oldMarker = markers[markerId]!;
+        final Marker updatedMarker = oldMarker.copyWith(
+          positionParam: postion,
+        );
+        markers[markerId] = updatedMarker;
+        setState(() {});
+      }
+
+      // Poline Marker Update Code
+
+      final markerId1 = MarkerId(Driver_location_Update["id"].toString());
+      final marker1 = Marker(
+        markerId: markerId1,
+        // position: vihicallocationsbiddingon[i],
+        // position: LatLng(double.parse(homeMapController.homeMapApiModel!.list![i].latitude.toString()),double.parse(homeMapController.homeMapApiModel!.list![i].longitude.toString())),
+        position: postion,
+        icon: BitmapDescriptor.fromBytes(markIcon),
+      );
+      markers11[markerId1] = marker1;
+      if (markers11.containsKey(markerId1)) {
+        final Marker oldMarker = markers11[markerId1]!;
+        final Marker updatedMarker = oldMarker.copyWith(
+          positionParam: postion,
+        );
+        markers11[markerId1] = updatedMarker;
+        setState(() {});
+      }
+    });
+
+    // {id: 14, profile_image: uploads/driver/17278697000221000029659.jpg, first_name: Pratik, last_name: Navapara, latitude: 21.2381916, longitude: 72.8879854, car_name: Bike, tot_review: 2, avg_star: 4, request_id: 1600, price: 500, tot_min: 0.07, tot_km: 2.1, diff_second: 59}
+    // {id: 3, profile_image: uploads/driver/1723093000931chris-benson-w8, first_name: test, last_name: patel, latitude: 21.2381972, longitude: 72.8880312, car_name: Bike, tot_review: 0, avg_star: 0, request_id: 1600, price: 23, tot_min: 0.07, tot_km: 2.11, diff_second: 48}
+    // {id: 14, profile_image: uploads/driver/17278697000221000029659.jpg, first_name: Pratik, last_name: Navapara, latitude: 21.2381916, longitude: 72.8879854, car_name: Bike, tot_review: 2, avg_star: 4, request_id: 1600, price: 500, tot_min: 0.07, tot_km: 2.1, diff_second: 10}
+
+    socket.on("Vehicle_Bidding$userid", (Vehicle_Bidding) {
+      print("++++++ Vehicle_Bidding ++++ :---  $Vehicle_Bidding");
+
+      vehicle_bidding_driver = Vehicle_Bidding["bidding_list"];
+      vehicle_bidding_secounde = [];
+
+      for (int i = 0; i < vehicle_bidding_driver.length; i++) {
+        vehicle_bidding_secounde
+            .add(Vehicle_Bidding["bidding_list"][i]["diff_second"]);
+      }
+
+      Get.back();
+      // controller.dispose();
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const DriverListScreen()));
+      vehicle_bidding_driver.isEmpty ? Get.back() : "";
+      vehicle_bidding_driver.isEmpty ? Buttonpresebottomshhet() : "";
+      // vehicle_bidding_driver.isEmpty ? Navigator.push(context, MaterialPageRoute(builder: (context) => const MapScreen())) : "";
+    });
+
+    socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
+      socket.close();
+
+      print("++++++ /acceptvehrequest map/ ++++ :---  $acceptvehrequest");
+      print("acceptvehrequest is of type map: ${acceptvehrequest.runtimeType}");
+      isanimation = false;
+      isControllerDisposed = true;
+      if (controller != null && controller!.isAnimating) {
+        print("vgvgvgvgvgvgvgvgvgvgv");
+        controller!.dispose();
+      }
+
+      loadertimer = true;
+
+      // amountcontroller.text.isEmpty ? "" :
+      try {
+        vihicalrice = double.parse(amountcontroller.text);
+      } catch (a) {
+        print("opopo:-- ${a}");
+      }
+
+      if (acceptvehrequest["c_id"]
+          .toString()
+          .contains(useridgloable.toString())) {
+        print("condition done");
+        driveridloader == false;
+        print("condition done1");
+        print("condition done0 ${context}");
+        globalDriverAcceptClass.driverdetailfunction(
+            context: context,
+            lat: latitudepick,
+            long: longitudepick,
+            d_id: acceptvehrequest["uid"].toString(),
+            request_id: acceptvehrequest["request_id"].toString());
+        print("condition done2");
+      } else {
+        print("condition not done");
+      }
+    });
+  }
+
+  late Timer timer;
+
+  bool isTimerRunning = false;
+
+  void startTimer() {
+    if (isTimerRunning) return; // Prevent multiple timers from starting
+
+    isTimerRunning = true;
+  }
+
+  void cancelTimer() {
+    print("object hjhjhjhjjhjhhjhjhj");
+    // cancelloader = false;
+    if (isTimerRunning) {
+      timer.cancel();
+      isTimerRunning = false; // Mark timer as not running
+      print("Timer canceled");
+    }
   }
 
   requesttime() {
-    _durationInSeconds = int.parse(
-        calculateController.calCulateModel!.offerExpireTime.toString());
+    // timeout = false;
+    // timeoutsecound = int.parse(calculateController.calCulateModel!.offerExpireTime.toString());
 
-    _animationController = AnimationController(
+    // calculateController.calCulateModel!.offerExpireTime = 2;
+    // print("DATA TIME:- ${calculateController.calCulateModel!.offerExpireTime}");
+    durationInSeconds = int.parse(
+        calculateController.calCulateModel!.offerExpireTime.toString());
+    print("DURATION IN SECOUNDE : - ${durationInSeconds}");
+
+    startTimer();
+
+    controller = AnimationController(
       vsync: this,
-      duration: Duration(seconds: _durationInSeconds),
+      duration: Duration(
+        seconds: int.parse(
+          calculateController.calCulateModel!.offerExpireTime.toString(),
+        ),
+      ),
     );
 
-    _colorAnimation = ColorTween(
+    colorAnimation = ColorTween(
       begin: Colors.blue,
       end: Colors.green,
-    ).animate(_animationController!);
+    ).animate(controller!);
 
-    _animationController!.addStatusListener((status) {
+    print('Animation Duration: ${durationInSeconds} seconds');
+
+    controller!.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        if (_animationController == null || !mounted) return;
+        print("Timer finished!");
 
-        _isAnimationRunning = false;
+        if (isControllerDisposed) {
+          print(
+              "Controller has already been disposed. Skipping further actions.");
+          return; // Avoid executing further actions if the controller is disposed
+        }
+        // Use post-frame callback to safely access the context
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            // Open bottom sheet when animation is completed
+            cancelTimer();
+            print("Timer finished 111 !");
+            isanimation = false;
+            // bottomshhetopen = false;
 
-        setState(() {});
+            setState(() {
+              // timeout = true;
+              // print("****dsbkbsb:-  ${timeout}");
+            });
+            Get.back();
+            timeoutRequestApiController
+                .timeoutrequestApi(
+                    uid: userid.toString(), request_id: request_id.toString())
+                .then(
+              (value) {
+                print("*****value data******:--- $value");
+                print("*****value data******:--- ${value["driverid"]}");
 
-        Get.back();
+                // socateemptrequesttimeout();
+                Get.bottomSheet(isDismissible: false, enableDrag: false,
+                    StatefulBuilder(
+                  builder: (context, setState) {
+                    return Container(
+                      // height: 400,
+                      // width: Get.width,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(15),
+                            topRight: Radius.circular(15)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 15, right: 15),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            Row(
+                              children: [
+                                SvgPicture.asset(
+                                  "assets/svgpicture/exclamation-circle.svg",
+                                  height: 25,
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  "Captains are busy".tr,
+                                  style: const TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 30,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 1,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: 16, bottom: 20, left: 0),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            height: 15,
+                                            width: 15,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                  color: Colors.green,
+                                                  width: 4),
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            height: 4,
+                                          ),
+                                          Container(
+                                            height: 10,
+                                            width: 3,
+                                            decoration: BoxDecoration(
+                                                color: Colors.grey
+                                                    .withOpacity(0.4),
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
+                                          ),
+                                          const SizedBox(
+                                            height: 4,
+                                          ),
+                                          Container(
+                                            height: 10,
+                                            width: 3,
+                                            decoration: BoxDecoration(
+                                                color: Colors.grey
+                                                    .withOpacity(0.4),
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
+                                          ),
+                                          const SizedBox(
+                                            height: 4,
+                                          ),
+                                          textfieldlist.isNotEmpty
+                                              ? const SizedBox()
+                                              : Container(
+                                                  height: 10,
+                                                  width: 3,
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.grey
+                                                          .withOpacity(0.4),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10)),
+                                                ),
+                                          const SizedBox(
+                                            height: 4,
+                                          ),
+                                          Container(
+                                            height: 15,
+                                            width: 15,
+                                            decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                    color: Colors.red,
+                                                    width: 4)),
+                                          ),
+                                          const SizedBox(
+                                            height: 4,
+                                          ),
+                                          textfieldlist.isEmpty
+                                              ? const SizedBox()
+                                              : Container(
+                                                  height: 10,
+                                                  width: 3,
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.grey
+                                                          .withOpacity(0.4),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10)),
+                                                ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    flex: 12,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 10),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Transform.translate(
+                                            offset: picktitle == ""
+                                                ? const Offset(0, 0)
+                                                : const Offset(0, -10),
+                                            child: ListTile(
+                                              // isThreeLine: true,
+                                              contentPadding: EdgeInsets.zero,
+                                              title: Text(
+                                                  "${picktitle == "" ? addresspickup : picktitle}"),
+                                              subtitle: Text(
+                                                picksubtitle,
+                                                style: const TextStyle(
+                                                    color: Colors.grey),
+                                                maxLines: 1,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            height: 5,
+                                          ),
+                                          Transform.translate(
+                                            offset: const Offset(0, -30),
+                                            child: ListTile(
+                                              // isThreeLine: true,
+                                              contentPadding: EdgeInsets.zero,
+                                              title: Text(droptitle),
+                                              subtitle: Text(
+                                                dropsubtitle,
+                                                style: const TextStyle(
+                                                    color: Colors.grey),
+                                                maxLines: 1,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            textfieldlist.isEmpty
+                                ? const SizedBox()
+                                : Transform.translate(
+                                    offset: const Offset(0, -30),
+                                    child: ListView.builder(
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      padding: EdgeInsets.zero,
+                                      shrinkWrap: true,
+                                      itemCount: textfieldlist.length,
+                                      itemBuilder: (context, index) {
+                                        return Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 1,
+                                              child: ListView.builder(
+                                                padding: EdgeInsets.zero,
+                                                clipBehavior: Clip.none,
+                                                shrinkWrap: true,
+                                                itemCount: 1,
+                                                itemBuilder: (context, index) {
+                                                  return Transform.translate(
+                                                    offset:
+                                                        const Offset(-5, -25),
+                                                    child: Column(
+                                                      children: [
+                                                        // const SizedBox(height: 4,),
+                                                        Container(
+                                                          height: 10,
+                                                          width: 3,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.grey
+                                                                .withOpacity(
+                                                                    0.4),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 4,
+                                                        ),
+                                                        Container(
+                                                          height: 10,
+                                                          width: 3,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.grey
+                                                                .withOpacity(
+                                                                    0.4),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 4,
+                                                        ),
+                                                        Container(
+                                                          height: 15,
+                                                          width: 15,
+                                                          decoration: BoxDecoration(
+                                                              color:
+                                                                  Colors.white,
+                                                              shape: BoxShape
+                                                                  .circle,
+                                                              border: Border.all(
+                                                                  color: Colors
+                                                                      .red,
+                                                                  width: 4)),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 4,
+                                                        ),
+                                                        Container(
+                                                          height: 10,
+                                                          width: 3,
+                                                          decoration: BoxDecoration(
+                                                              color: Colors.grey
+                                                                  .withOpacity(
+                                                                      0.4),
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          10)),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 9,
+                                              child: Transform.translate(
+                                                offset: const Offset(0, -15),
+                                                child: Column(
+                                                  children: [
+                                                    // Transform.translate(
+                                                    //   offset: const Offset(0, -7),
+                                                    //   child: Text("${droptitlelist[index]["title"]}"),
+                                                    // ),
+                                                    // const SizedBox(height: 5,),
+                                                    ListTile(
+                                                      // isThreeLine: true,
+                                                      contentPadding:
+                                                          EdgeInsets.zero,
+                                                      title: Text(
+                                                          "${droptitlelist[index]["title"]}"),
+                                                      subtitle: Text(
+                                                        "${droptitlelist[index]["subt"]}",
+                                                        style: const TextStyle(
+                                                            color: Colors.grey),
+                                                        maxLines: 1,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ),
+                            // SizedBox(height: 30,),
+                            CommonButton(
+                                containcolore: theamcolore,
+                                onPressed1: () {
+                                  Get.back();
 
-        timeoutRequestApiController
-            .timeoutrequestApi(
-                uid: appController.globalUserId.value,
-                request_id: request_id) // ✅ Uses getter automatically
+                                  // removeRequest.removeApi(uid: userid.toString()).then((value) {
+                                  //   Get.back();
+                                  //   print("+++ removeApi +++:- ${value["driver_list"]}");
+                                  //   socket.emit('Vehicle_Ride_Cancel',{
+                                  //     'uid': "$useridgloable",
+                                  //     'driverid' : value["driver_list"],
+                                  //   });
+                                  // },);
 
-            .then((value) {
-          // Handle timeout...
+                                  // isanimation = true;
+                                  // resendRequestApiController.resendrequestApi(uid: userid.toString(), driverid: calculateController.calCulateModel!.driverId!).then((value) {
+                                  //   print("+++ resendrequestApi +++ :- ${value["driver_list"]}");
+                                  //   Get.back();
+                                  //   socket.emit('vehiclerequest',{
+                                  //     'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
+                                  //     'driverid' : value["driver_list"],
+                                  //   });
+                                  //   if (controller != null && controller.isAnimating) {
+                                  //     controller.dispose();
+                                  //   }
+                                  //   requesttime();
+                                  // },);
+                                },
+                                txt1: "Try Again".tr,
+                                context: context),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            CommonOutLineButton(
+                                bordercolore: theamcolore,
+                                onPressed1: () {
+                                  removeRequest
+                                      .removeApi(uid: userid.toString())
+                                      .then(
+                                    (value) {
+                                      Get.back();
+                                      print(
+                                          "+++ removeApi +++:- ${value["driver_list"]}");
+
+                                      socket.emit('Vehicle_Ride_Cancel', {
+                                        'uid': "$useridgloable",
+                                        'driverid': value["driver_list"],
+                                      });
+                                    },
+                                  );
+                                },
+                                txt1: "Cancel".tr,
+                                context: context),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ));
+              },
+            );
+          }
         });
+      } else {
+        print("jhvjhjhjhjjhavsjhaks");
       }
     });
 
-    _animationController!.forward();
+    controller!.forward();
   }
-
-// Helper methods for socket management and other files:
-  bool isSocketInitialized() {
-    return socketInitialized;
-  }
-
-// Safe socket emit method for other files to use
-  void emitSocketEvent(String event, dynamic data) {
-    if (!isSocketInitialized()) {
-      if (kDebugMode) {
-        print("Socket not initialized, cannot emit: $event");
-      }
-      return;
-    }
-
-    if (socket.connected) {
-      socket.emit(event, data);
-    } else {
-      if (kDebugMode) {
-        print("Socket not connected, cannot emit: $event");
-      }
-    }
-  }
-
-// Methods that other files are using - keep them working:
-  void socateempt() {
-    appController.socketService.emit('vehiclerequest', {
-      'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
-      'driverid': calculateController.calCulateModel!.driverId!,
-    });
-  }
-
-// STEP 5: Replace globals in socateemptrequesttimeout() method
-
-  void socateemptrequesttimeout() {
-    appController.socketService.emitVehicleRideCancel(
-      appController.globalUserId.value,
-      calculateController.calCulateModel!.driverId!,
-    );
-  }
-
-  Timer? _vehicleRefreshTimer;
-
-  void startVehicleRefreshTimer() {
-    _vehicleRefreshTimer = Timer.periodic(Duration(seconds: 30), (timer) {
-      if (mounted && mid.isNotEmpty && lathome != null && longhome != null) {
-        loadVehiclesForCategory(mid);
-      }
-    });
-  }
-
-  void stopVehicleRefreshTimer() {
-    _vehicleRefreshTimer?.cancel();
-
-    _vehicleRefreshTimer = null;
-  }
-
-// Add this to your dispose method:
-  @override
-  void dispose() {
-    if (kDebugMode) {
-      print("🗑️ MapScreen disposing...");
-    }
-
-    _animationController?.dispose();
-
-    _animationController = null;
-
-    stopVehicleRefreshTimer();
-
-    super.dispose();
-  }
-
-// For other files that need to emit socket events, create helper methods:
-// These methods can be called from other files safely
-
-  void emitVehicleRideCancel(String uid, dynamic driverid) {
-    final appController = AppController.instance;
-    appController.socketService.emitVehicleRideCancel(uid, driverid);
-  }
-
-  void emitVehiclePaymentChange(String userid, String dId, int paymentId) {
-    final appController = AppController.instance;
-    appController.socketService.emit('Vehicle_P_Change', {
-      'userid': userid,
-      'd_id': dId,
-      'payment_id': paymentId,
-    });
-  }
-
-  void emitVehicleRideComplete(String dId, String requestId) {
-    final appController = AppController.instance;
-    appController.socketService.emit('Vehicle_Ride_Complete', {
-      'd_id': dId,
-      'request_id': requestId,
-    });
-  }
-
-  void emitSendChat(
-      String senderId, String receiverId, String message, String status) {
-    final appController = AppController.instance;
-    appController.socketService.emit('Send_Chat', {
-      'sender_id': senderId,
-      'recevier_id': receiverId,
-      'message': message,
-      'status': status,
-    });
-  }
-
-  void emitAcceptBidding(
-      String uid, String dId, String requestId, String price) {
-    final appController = AppController.instance;
-    appController.socketService.emitAcceptBidding(uid, dId, requestId, price);
-  }
-
-  void emitVehicleRequest(String requestId, List driverId, String cId) {
-    final appController = AppController.instance;
-    appController.socketService.emitVehicleRequest(requestId, driverId, cId);
-  }
-
-  void emitVehicleTimeRequest(String uid, String dId) {
-    final appController = AppController.instance;
-    appController.socketService.emit('Vehicle_Time_Request', {
-      'uid': uid,
-      'd_id': dId,
-    });
-  }
-
-  bool isTimerRunning = false;
 
   pagelistApiController pagelistcontroller = Get.put(pagelistApiController());
 
   @override
   void initState() {
+    // TODO: implement initState
     super.initState();
+    // initPlatformState(context: context);
+    // Buttonpresebottomshhet();
 
-    // Initialize animation controller
-    _animationController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
+    if (widget.selectvihical == true) {
+      print("TRUETRUETRUTRUETRUETRUETRUETRUEWTRUWEUETEWUETRUETR");
+      select1 = 0;
+      homeApiController
+          .homeApi(
+              uid: userid.toString(),
+              lat: lathome.toString(),
+              lon: longhome.toString())
+          .then(
+        (value) {
+          mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+          mroal =
+              homeApiController.homeapimodel!.categoryList![0].role.toString();
 
-    _colorAnimation = ColorTween(
-      begin: Colors.green,
-      end: Colors.red,
-    ).animate(_animationController!);
+          calculateController
+              .calculateApi(
+                  context: context,
+                  uid: userid.toString(),
+                  mid: mid,
+                  mrole: mroal,
+                  pickup_lat_lon: "$latitudepick,$longitudepick",
+                  drop_lat_lon: "$latitudedrop,$longitudedrop",
+                  drop_lat_lon_list: onlypass)
+              .then(
+            (value) {
+              dropprice = 0;
+              minimumfare = 0;
+              maximumfare = 0;
 
-    // ✅ CRITICAL: Load user data first, then initialize app
-    _initializeAppWithUserData();
-  }
+              if (value["Result"] == true) {
+                amountresponse = "true";
+                dropprice = value["drop_price"];
+                minimumfare = value["vehicle"]["minimum_fare"];
+                maximumfare = value["vehicle"]["maximum_fare"];
+                responsemessage = value["message"];
 
-  Future<void> _initializeAppWithUserData() async {
-    if (kDebugMode) {
-      print("🚀 Starting MapScreen initialization with user data...");
-    }
+                tot_hour = value["tot_hour"].toString();
+                tot_time = value["tot_minute"].toString();
+                vehicle_id = value["vehicle"]["id"].toString();
+                vihicalrice = double.parse(value["drop_price"].toString());
+                totalkm = double.parse(value["tot_km"].toString());
+                tot_secound = "0";
 
-    try {
-      setState(() {
-        _isInitializing = true;
+                vihicalimage = value["vehicle"]["map_img"].toString();
+                vihicalname = value["vehicle"]["name"].toString();
 
-        _initializationStatus = "Loading user data...";
-      });
+                setState(() {});
+              } else {
+                amountresponse = "false";
+                print("jojojojojojojojojojojojojojojojojojojojojojojojo");
+                setState(() {});
+              }
 
-      // Step 1: Load user data from SharedPreferences first
-      mapThemeStyle(context: context);
-      await loadUserData();
-
-      // Step 2: Get current location if needed
-
-      setState(() {
-        _initializationStatus = "Getting location...";
-      });
-
-      if (lathome == null || longhome == null) {
-        await _getCurrentLocation();
-      }
-
-      // Step 3: Load home API data with current location and user ID
-
-      setState(() {
-        _initializationStatus = "Loading vehicles...";
-      });
-
-      if (userid != null) {
-        await homeApiController.homeApi(
-          uid: userid.toString(),
-          lat: lathome.toString(),
-          lon: longhome.toString(),
-        );
-
-        // Step 4: Set default vehicle category
-
-        if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
-          final firstCategory =
-              homeApiController.homeapimodel!.categoryList![0];
-
-          setState(() {
-            select1 = 0;
-
-            vehicle_id = firstCategory.id.toString();
-
-            vihicalname = firstCategory.name.toString();
-
-            vihicalimage = firstCategory.image.toString();
-
-            mid = firstCategory.id.toString();
-
-            mroal = firstCategory.role.toString();
-          });
-
-          // Step 5: Load vehicles for default category
-
-          await loadVehiclesForCategory(mid);
-        }
-      }
-
-      // Initialization complete
-
-      if (mounted) {
-        setState(() {
-          _isInitializing = false;
-
-          _initializationStatus = "Ready";
-        });
-      }
-
-      if (kDebugMode) {
-        print("✅ MapScreen initialization completed successfully");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error in initializeAppWithUserData: $e");
-      }
-
-      if (mounted) {
-        setState(() {
-          _isInitializing = false;
-
-          _initializationStatus = "Error: $e";
-        });
-      }
-    }
-  }
-
-  Future<void> _initializeApp() async {
-    if (kDebugMode) {
-      print("🚀 Starting MapScreen initialization...");
-    }
-
-    try {
-      setState(() {
-        _isInitializing = true;
-
-        _initializationStatus = "Loading location...";
-      });
-
-      // Step 1: Get current location if needed
-
-      if (lathome == null || longhome == null) {
-        await _getCurrentLocation();
-      }
-
-      setState(() {
-        _initializationStatus = "Loading vehicles...";
-      });
-
-      // Step 2: Load home API data with current location
-
-      await homeApiController.homeApi(
-        uid: userid.toString(),
-        lat: lathome.toString(),
-        lon: longhome.toString(),
+              print("********** dropprice **********:----- $dropprice");
+              print("********** minimumfare **********:----- $minimumfare");
+              print("********** maximumfare **********:----- $maximumfare");
+            },
+          );
+        },
       );
-
-      // Step 3: Set default vehicle category (CRITICAL FIX)
-
-      if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
-        final firstCategory = homeApiController.homeapimodel!.categoryList![0];
-
-        setState(() {
-          select1 = 0;
-
-          vehicle_id = firstCategory.id.toString();
-
-          vihicalname = firstCategory.name.toString();
-
-          vihicalimage = firstCategory.image.toString();
-
-          mid = firstCategory.id.toString();
-
-          mroal = firstCategory.role.toString();
-        });
-
-        // Step 4: Load vehicles for default category
-
-        await loadVehiclesForCategory(mid);
-      }
-
-      // Initialization complete
-
-      if (mounted) {
-        setState(() {
-          _isInitializing = false;
-
-          _initializationStatus = "Ready";
-        });
-      }
-
-      if (kDebugMode) {
-        print("✅ MapScreen initialization completed successfully");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error in initializeApp: $e");
-      }
-
-      if (mounted) {
-        setState(() {
-          _isInitializing = false;
-
-          _initializationStatus = "Error: $e";
-        });
-      }
-    }
-  }
-
-  Future<void> _getCurrentLocation() async {
-    if (kDebugMode) {
-      print("🌍 Getting current location...");
     }
 
-    try {
-      LocationPermission permission = await Geolocator.checkPermission();
-
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-
-        if (permission == LocationPermission.denied) {
-          throw Exception('Location permissions are denied');
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        throw Exception('Location permissions are permanently denied');
-      }
-
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+    if (controller == null || !controller!.isAnimating) {
+      print("DURATION SECOUNDE : - ${durationInSeconds}");
+      controller = AnimationController(
+        duration: Duration(seconds: durationInSeconds),
+        vsync: this,
       );
-
-      setState(() {
-        lathome = position.latitude;
-
-        longhome = position.longitude;
-      });
-
-      await getCurrentLatAndLong(position.latitude, position.longitude);
-
-      if (kDebugMode) {
-        print("✅ Current location: $lathome, $longhome");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error getting location: $e");
-      }
-
-      // Use default location if unable to get current location
-
-      setState(() {
-        lathome = 15.3694; // Default to Sana'a, Yemen
-
-        longhome = 44.1910;
-      });
-
-      await getCurrentLatAndLong(lathome!, longhome!);
-    }
-  }
-
-  Future getDirections(
-      {required PointLatLng lat1,
-      required PointLatLng lat2,
-      required List<PointLatLng> dropOffPoints}) async {
-    if (kDebugMode) {
-      print(
-          "🗺️ Getting directions from ${lat1.latitude},${lat1.longitude} to ${lat2.latitude},${lat2.longitude}");
     }
 
-    try {
-      polylines.clear(); // ✅ Use polylines NOT polylines11
+    // if(backbottomshet == true){
+    //   Buttonpresebottomshhet();
+    //   backbottomshet = false;
+    // }
 
-      List<LatLng> polylineCoordinates = [];
+    // latitudepick = -13.1730189;
+    // longitudepick = -74.2070853;
+    // latitudedrop = -13.165876;
+    // longitudedrop = -74.21582719999999;
+    // pickupcontroller.text = "Ministerio de Agricultura, Avenida 9 de Diciembre, Miraflores, San Juan Bautista 05002, Peru";
+    // dropcontroller.text = "Ministerio de Agricultura, Avenida 9 de Diciembre, Miraflores, San Juan Bautista 05002, Peru";
+    // minimumfare = "20";
+    // maximumfare = "20";
+    // amountcontroller.text = "30";
+    // print("PICKUP LAT :- ${latitudepick}");
+    // print("PICKUP LONG :- ${longitudepick}");
+    // print("DROP LAT :- ${latitudedrop}");
+    // print("DROP LONG :- ${longitudedrop}");
+    // print("dropcontroller :- ${pickupcontroller}");
+    // print("dropcontroller :- ${dropcontroller}");
+    // print("minimumfare :- ${minimumfare}");
+    // print("maximumfare :- ${maximumfare}");
+    // print("amountcontroller.text :- ${amountcontroller.text}");
 
-      List<PointLatLng> allPoints = [lat1, lat2, ...dropOffPoints];
+    mapThemeStyle(context: context);
+    isControllerDisposed = false;
+    plusetimer = "";
 
-      for (int i = 0; i < allPoints.length - 1; i++) {
-        PointLatLng point1 = allPoints[i];
-
-        PointLatLng point2 = allPoints[i + 1];
-
-        // ✅ Use polylinePoints NOT polylinePoints11
-
-        PolylineResult result =
-            await polylinePoints11.getRouteBetweenCoordinates(
-          Config.mapkey,
-          point1,
-          point2,
-          travelMode: TravelMode.driving,
-        );
-
-        if (result.points.isNotEmpty) {
-          for (var point in result.points) {
-            polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-          }
-        }
-      }
-
-      if (polylineCoordinates.isNotEmpty) {
-        addPolyLine(polylineCoordinates);
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error getting directions: $e");
-      }
-    }
-  }
-
-  addPolyLine(List<LatLng> polylineCoordinates) {
-    PolylineId id = const PolylineId("poly");
-
-    Polyline polyline = Polyline(
-      polylineId: id,
-      color: theamcolore,
-      points: polylineCoordinates,
-      width: 3,
+    calculateController
+        .calculateApi(
+            context: context,
+            uid: useridgloable.toString(),
+            mid: mid,
+            mrole: mroal,
+            pickup_lat_lon: "$latitudepick,$longitudepick",
+            drop_lat_lon: "$latitudedrop,$longitudedrop",
+            drop_lat_lon_list: onlypass)
+        .then(
+      (value) {
+        print("eeeeeeeeeeeeee");
+      },
     );
-
-    polylines[id] = polyline; // Use base polylines
 
     setState(() {});
-  }
 
-  Future<void> loadVehiclesForCategory(String categoryId) async {
-    if (kDebugMode) {
-      print(
-          "🔄 Loading vehicles for category: $categoryId at location: $lathome, $longhome");
-    }
+    fun().then((value) {
+      setState(() {});
+      getCurrentLatAndLong(lathome, longhome);
+      // _loadMapStyles();
+      socketConnect();
+    });
 
-    try {
-      await homeMapController.homemapApi(
-        mid: categoryId,
-        lat: lathome.toString(),
-        lon: longhome.toString(),
-      );
-
-      if (kDebugMode) {
-        print("📡 API Response received for category $categoryId");
-
-        print(
-            "📊 Vehicles found: ${homeMapController.homeMapApiModel?.list?.length ?? 0}");
-      }
-
-      if (homeMapController.homeMapApiModel?.list?.isNotEmpty == true) {
-        if (mounted) {
-          setState(() {
-            // Clear old vehicle data
-
-            vihicallocations.clear();
-
-            _iconPaths.clear();
-
-            // Populate new vehicle data
-
-            for (int i = 0;
-                i < homeMapController.homeMapApiModel!.list!.length;
-                i++) {
-              final vehicle = homeMapController.homeMapApiModel!.list![i];
-
-              vihicallocations.add(LatLng(
-                  double.parse(vehicle.latitude.toString()),
-                  double.parse(vehicle.longitude.toString())));
-
-              _iconPaths.add("${Config.imageurl}${vehicle.image}");
-
-              if (kDebugMode) {
-                print(
-                    "🚗 Vehicle $i: Lat ${vehicle.latitude}, Lng ${vehicle.longitude}");
-              }
-            }
-
-            if (kDebugMode) {
-              print(
-                  "🎯 About to call _addMarkers with ${vihicallocations.length} vehicles");
-            }
-
-            // Add markers to map
-
-            _addMarkers();
-          });
-        }
-
-        if (kDebugMode) {
-          print(
-              "✅ Successfully loaded ${homeMapController.homeMapApiModel!.list!.length} vehicles for category $categoryId");
-        }
-      } else {
-        if (kDebugMode) {
-          print("⚠️ No vehicles found for category: $categoryId");
-        }
-
-        // Clear existing vehicle markers if no vehicles found
-
-        if (mounted) {
-          setState(() {
-            vihicallocations.clear();
-
-            _iconPaths.clear();
-
-            markers.removeWhere((key, value) =>
-                key.value.startsWith('vehicle_') ||
-                key.value.contains('driver'));
-          });
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error loading vehicles for category $categoryId: $e");
-      }
-    }
-  }
-
-  // ✅ ADD: Load initial vehicles when app starts
-  Future<void> loadInitialVehicles() async {
-    if (kDebugMode) {
-      print("🚗 Loading initial vehicles...");
-    }
-
-    try {
-      // Load home API data first
-      await homeApiController.homeApi(
-        uid: userid.toString(),
-        lat: lathome.toString(),
-        lon: longhome.toString(),
-      );
-
-      if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
-        // Set default vehicle category (first one)
-        final firstCategory = homeApiController.homeapimodel!.categoryList![0];
-        select1 = 0;
-        vehicle_id = firstCategory.id.toString();
-        vihicalname = firstCategory.name.toString();
-        vihicalimage = firstCategory.image.toString();
-        mid = firstCategory.id.toString();
-        mroal = firstCategory.role.toString();
-
-        // Load vehicles for the selected category
-        await loadVehiclesForCategory(mid);
-      }
-
-      if (kDebugMode) {
-        print("✅ Initial vehicles loaded successfully");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error loading initial vehicles: $e");
-      }
-    }
-  }
-
-  void displayVehicleCount() {
-    if (kDebugMode && homeMapController.homeMapApiModel?.list != null) {
-      print(
-          "📍 Displaying ${homeMapController.homeMapApiModel!.list!.length} vehicles on map");
-
-      print("🚗 Vehicle category: $vihicalname");
-
-      print("📡 Vehicles online and available");
-    }
-  }
-
-  Future<void> loadUserData() async {
-    try {
-      SharedPreferences preferences = await SharedPreferences.getInstance();
-
-      var uid = preferences.getString("userLogin");
-      var currency = preferences.getString("currenci");
-
-      if (uid == null) {
-        throw Exception("No user data");
-      }
-
-      // ✅ FIX: Safer JSON parsing
-      try {
-        decodeUid = jsonDecode(uid);
-      } catch (e) {
-        if (kDebugMode) {
-          print("Error parsing user JSON: $e");
-          print("Raw uid data: $uid");
-        }
-        throw Exception("Invalid user data format");
-      }
-
-      // ✅ FIX: Safer currency parsing
-      if (currency != null && currency.isNotEmpty) {
-        try {
-          currencyy = jsonDecode(currency);
-          globalcurrency = currencyy['symbol']?.toString() ?? "YER";
-        } catch (e) {
-          if (kDebugMode) {
-            print("Error parsing currency JSON: $e");
+    paymentGetApiController.paymentlistApi(context).then(
+      (value) {
+        for (int i = 1;
+            i < paymentGetApiController.paymentgetwayapi!.paymentList!.length;
+            i++) {
+          if (int.parse(paymentGetApiController.paymentgetwayapi!.defaultPayment
+                  .toString()) ==
+              paymentGetApiController.paymentgetwayapi!.paymentList![i].id) {
+            setState(() {
+              payment =
+                  paymentGetApiController.paymentgetwayapi!.paymentList![i].id!;
+              paymentname = paymentGetApiController
+                  .paymentgetwayapi!.paymentList![i].name!;
+              print("+++++$payment");
+              print("+++++$i");
+            });
           }
-          currencyy = {};
-          globalcurrency = "YER";
         }
-      } else {
-        currencyy = {};
-        globalcurrency = "YER";
-      }
+      },
+    );
 
-      // ✅ FIX: Safer user ID extraction
-      if (decodeUid != null && decodeUid is Map) {
-        userid = decodeUid['id'];
-        username = decodeUid["name"]?.toString() ?? "User";
+    _dropOffPoints = [];
+    // _pickupPoint = LatLng(widget.latpic, widget.longpic);
+    // _dropPoint = LatLng(widget.latdrop, widget.longdrop);
+    _dropOffPoints = destinationlat;
+    print("****////***:-----  $_dropOffPoints");
 
-        // ✅ FIX: Ensure userid is properly typed
-        if (userid != null) {
-          userid = userid is String ? int.tryParse(userid) ?? userid : userid;
-        }
-      } else {
-        throw Exception("Invalid user data structure");
-      }
+    /// origin marker
+    _addMarker11(LatLng(latitudepick, longitudepick), "origin",
+        BitmapDescriptor.defaultMarker);
 
-      if (kDebugMode) {
-        print("✅ User data loaded: userid=$userid, username=$username");
-        print("   Currency: $globalcurrency");
-        print("   User data type: ${decodeUid.runtimeType}");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error loading user data: $e");
-      }
-      throw e;
+    /// destination marker
+    _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
+        BitmapDescriptor.defaultMarkerWithHue(90));
+
+    for (int a = 0; a < _dropOffPoints.length; a++) {
+      _addMarker3("destination");
     }
+
+    getDirections11(
+        lat1: PointLatLng(latitudepick, longitudepick),
+        lat2: PointLatLng(latitudedrop, longitudedrop),
+        dropOffPoints: _dropOffPoints);
+
+    pagelistcontroller.pagelistttApi(context);
   }
 
-  Future<void> makeInitialAPICalls() async {
-    try {
-      if (userid == null) {
-        throw Exception("User ID not available");
-      }
-
-      if (kDebugMode) {
-        print("Making initial API calls with userid: $userid");
-      }
-
-      // Make API calls concurrently for better performance
-
-      await Future.wait([
-        _makePaymentAPICall(),
-        _makePageListAPICall(),
-      ]);
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error in makeInitialAPICalls: $e");
-      }
-
-      // Don't throw - allow app to continue with partial data
-    }
+  @override
+  void dispose() {
+    socket.dispose();
+    super.dispose();
   }
 
-  Future<void> _makePageListAPICall() async {
-    try {
-      await pagelistcontroller.pagelistttApi(context);
+  // Poliline Map Code
 
-      if (kDebugMode) {
-        print("✅ PageList API call completed");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("PageList API error: $e");
-      }
-    }
-  }
-
-  // ✅ ADD: Method to show loading overlay
-
-  Future<void> _makePaymentAPICall() async {
-    try {
-      final paymentController = Get.find<PaymentGetApiController>();
-
-      await paymentController.paymentlistApi(context);
-
-      if (kDebugMode) {
-        print("✅ Payment API call completed");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Payment API error: $e");
-      }
-    }
-  }
-
-  Future<void> setupMapMarkers() async {
-    if (kDebugMode) {
-      print("🗺️ Setting up map markers...");
-    }
-
-    try {
-      // ✅ DON'T clear all markers - this removes vehicles!
-
-      // Only clear pickup/drop markers if they exist
-
-      setState(() {
-        markers.removeWhere(
-            (key, value) => key.value == "pickup" || key.value == "drop");
-      });
-
-      // Add user location marker
-
-      if (lathome != null && longhome != null) {
-        final userIcon = await BitmapDescriptor.fromAssetImage(
-          const ImageConfiguration(size: Size(48, 48)),
-          'assets/your_location_icon.png',
-        ).catchError((_) =>
-            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue));
-
-        setState(() {
-          markers[const MarkerId("my_1")] = Marker(
-            markerId: const MarkerId("my_1"),
-            position: LatLng(lathome!, longhome!),
-            icon: userIcon,
-          );
-        });
-      }
-
-      // Add pickup marker if available
-
-      if (latitudepick != 0.0 && longitudepick != 0.0) {
-        setState(() {
-          markers[const MarkerId("pickup")] = Marker(
-            markerId: const MarkerId("pickup"),
-            position: LatLng(latitudepick, longitudepick),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueGreen),
-            infoWindow: const InfoWindow(title: "Pickup Location"),
-          );
-        });
-      }
-
-      // Add drop marker if available
-
-      if (latitudedrop != 0.0 && longitudedrop != 0.0) {
-        setState(() {
-          markers[const MarkerId("drop")] = Marker(
-            markerId: const MarkerId("drop"),
-            position: LatLng(latitudedrop, longitudedrop),
-            icon:
-                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-            infoWindow: const InfoWindow(title: "Drop Location"),
-          );
-        });
-
-        // ✅ CRITICAL: Draw route when both points exist
-
-        if (latitudepick != 0.0 && longitudepick != 0.0) {
-          // Clear existing route first
-
-          setState(() {
-            polylines11.clear();
-          });
-
-          await getDirections11(
-              lat1: PointLatLng(latitudepick, longitudepick),
-              lat2: PointLatLng(latitudedrop, longitudedrop),
-              dropOffPoints: _dropOffPoints);
-
-          // Calculate price for selected route and vehicle
-
-          await _calculateRoutePrice();
-        }
-      }
-
-      // ✅ KEEP vehicles visible
-
-      if (mid.isNotEmpty && lathome != null && longhome != null) {
-        await loadVehiclesForCategory(mid);
-      }
-
-      if (kDebugMode) {
-        print("✅ Map markers setup completed");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error setting up map markers: $e");
-      }
-    }
-  }
   //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  late GoogleMapController mapController11;
+
+  Map<MarkerId, Marker> markers11 = {};
+  Map<PolylineId, Polyline> polylines11 = {};
+  List<LatLng> polylineCoordinates11 = [];
+  PolylinePoints polylinePoints11 = PolylinePoints();
 
   void _onMapCreated11(GoogleMapController controller) async {
     mapController11 = controller;
@@ -1239,9 +1423,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          appController.pickupTitle.value.isEmpty
-                              ? appController.pickupController.text
-                              : appController.pickupTitle.value,
+                          picktitle == "" ? pickupcontroller.text : picktitle,
                           maxLines: 1,
                           style: const TextStyle(
                             color: Colors.black,
@@ -1249,10 +1431,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        appController.pickupSubtitle.value == ""
+                        picksubtitle == ""
                             ? const SizedBox()
                             : Text(
-                                appController.pickupSubtitle.value,
+                                picksubtitle,
                                 maxLines: 3,
                                 style: const TextStyle(
                                   color: Colors.grey,
@@ -1306,7 +1488,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          appController.dropTitle.value,
+                          droptitle,
                           maxLines: 1,
                           style: const TextStyle(
                             color: Colors.black,
@@ -1315,7 +1497,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         Text(
-                          appController.dropSubtitle.value,
+                          dropsubtitle,
                           maxLines: 3,
                           style: const TextStyle(
                             color: Colors.grey,
@@ -1374,7 +1556,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "${appController.dropTitleList[a]["title"]}",
+                            "${droptitlelist[a]["title"]}",
                             maxLines: 1,
                             style: const TextStyle(
                               color: Colors.black,
@@ -1383,7 +1565,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             ),
                           ),
                           Text(
-                            "${appController.dropTitleList[a]["subt"]}",
+                            "${droptitlelist[a]["subt"]}",
                             maxLines: 3,
                             style: const TextStyle(
                               color: Colors.grey,
@@ -1456,403 +1638,172 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   void _addMarkers() async {
-    if (kDebugMode) {
-      print("🔍 _addMarkers called");
+    // Future<BitmapDescriptor> _loadIcon(String url) async {
+    //   try {
+    //     if (url.isEmpty || url.contains("undefined")) {
+    //       // Fallback to a default icon if the URL is invalid
+    //       return BitmapDescriptor.defaultMarker;
+    //     }
+    //
+    //     final http.Response response = await http.get(Uri.parse(url));
+    //     if (response.statusCode == 200) {
+    //       final Uint8List bytes = response.bodyBytes;
+    //
+    //       // Decode image and resize it
+    //       final ui.Codec codec = await ui.instantiateImageCodec(bytes, targetWidth: 30,targetHeight: 50);
+    //       final ui.FrameInfo frameInfo = await codec.getNextFrame();
+    //       final ByteData? byteData = await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+    //
+    //       return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+    //     } else {
+    //       throw Exception('Failed to load image from $url');
+    //     }
+    //   } catch (e) {
+    //     // Log the error and return a default icon
+    //     print("Error loading icon from $url: $e");
+    //     return BitmapDescriptor.defaultMarker;
+    //   }
+    // }
 
-      print("   Vehicle locations: ${vihicallocations.length}");
+    Future<BitmapDescriptor> _loadIcon(String url,
+        {int targetWidth = 30, int targetHeight = 50}) async {
+      try {
+        if (url.isEmpty || url.contains("undefined")) {
+          // Fallback to a default icon if the URL is invalid
+          return BitmapDescriptor.defaultMarker;
+        }
 
-      print("   Icon paths: ${_iconPaths.length}");
+        final http.Response response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final Uint8List bytes = response.bodyBytes;
 
-      print("   Selected category: $mid");
-    }
+          // Decode image and resize it
+          final ui.Codec codec = await ui.instantiateImageCodec(bytes,
+              targetWidth: targetWidth, targetHeight: targetHeight);
+          final ui.FrameInfo frameInfo = await codec.getNextFrame();
+          final ByteData? byteData =
+              await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
 
-    if (homeMapController.homeMapApiModel?.list == null ||
-        homeMapController.homeMapApiModel!.list!.isEmpty) {
-      if (kDebugMode) {
-        print("❌ No vehicle data available for markers");
+          return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+        } else {
+          throw Exception('Failed to load image from $url');
+        }
+      } catch (e) {
+        // Log the error and return a default icon
+        print("Error loading icon from $url: $e");
+        return BitmapDescriptor.defaultMarker;
       }
-
-      // Clear only vehicle markers, keep pickup/drop markers
-
-      setState(() {
-        markers.removeWhere((key, value) =>
-            key.value.startsWith('vehicle_') || key.value.contains('driver'));
-      });
-
-      return;
     }
 
-    final vehicleList = homeMapController.homeMapApiModel!.list!;
-
-    // CRITICAL FIX: Clear only vehicle markers, preserve pickup/drop markers
+    // Load all icons
+    final List<BitmapDescriptor> _icons = await Future.wait(
+      _iconPaths.map((path) => _loadIcon(path)),
+    );
 
     setState(() {
-      markers.removeWhere((key, value) =>
-          key.value.startsWith('vehicle_') ||
-          key.value.contains('driver') ||
-          (key.value != "my_1" && // Keep user location
+      pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
+          ? setState(() {
+              polylines11.clear();
+            })
+          : "";
 
-              key.value != "pickup" && // Keep pickup marker
-
-              key.value != "drop")); // Keep drop marker
+      // vihicallocations = [];
+      for (var i = 0; i < vihicallocations.length; i++) {
+        print("qqqqqqqqq:-- ${homeMapController.homeMapApiModel!.list![i].id}");
+        print("aaaaaaaaa:-- ${vihicallocations.length}");
+        MarkerId markerId =
+            MarkerId("${homeMapController.homeMapApiModel!.list![i].id}");
+        Marker marker = Marker(
+          markerId: markerId,
+          icon: _icons[i],
+          position: LatLng(
+              double.parse(homeMapController.homeMapApiModel!.list![i].latitude
+                  .toString()),
+              double.parse(homeMapController.homeMapApiModel!.list![i].longitude
+                  .toString())),
+        );
+        markers[markerId] = marker;
+        setState(() {});
+      }
     });
-
-    // Helper function to load icons safely
-
-    Future<BitmapDescriptor> loadIcon(String url,
-        {int targetWidth = 30, int targetHeight = 50}) async {
-      try {
-        if (url.isEmpty || url.contains("undefined") || url.contains("null")) {
-          if (kDebugMode) {
-            print("⚠️ Invalid icon URL: $url - using default");
-          }
-
-          return BitmapDescriptor.defaultMarker;
-        }
-
-        final http.Response response =
-            await http.get(Uri.parse(url)).timeout(Duration(seconds: 10));
-
-        if (response.statusCode == 200) {
-          final Uint8List bytes = response.bodyBytes;
-
-          final ui.Codec codec = await ui.instantiateImageCodec(bytes,
-              targetWidth: targetWidth, targetHeight: targetHeight);
-
-          final ui.FrameInfo frameInfo = await codec.getNextFrame();
-
-          final ByteData? byteData =
-              await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-
-          return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-        } else {
-          if (kDebugMode) {
-            print(
-                "⚠️ Failed to load image from $url - HTTP ${response.statusCode}");
-          }
-
-          return BitmapDescriptor.defaultMarker;
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          print("❌ Error loading icon from $url: $e");
-        }
-
-        return BitmapDescriptor.defaultMarker;
-      }
-    }
-
-    try {
-      // Load all icons with error handling
-
-      final List<BitmapDescriptor> icons = await Future.wait(
-        _iconPaths.map((path) => loadIcon(path)),
-      );
-
-      if (kDebugMode) {
-        print("✅ Loaded ${icons.length} icons successfully");
-      }
-
-      // Check if widget is still mounted before setState
-
-      if (!mounted) return;
-
-      setState(() {
-        // Safe iteration using minimum count
-
-        final itemCount = math.min(vihicallocations.length,
-            math.min(icons.length, vehicleList.length));
-
-        if (kDebugMode) {
-          print("🎯 Adding $itemCount vehicle markers for category: $mid");
-        }
-
-        for (int i = 0; i < itemCount; i++) {
-          try {
-            final vehicleId =
-                "vehicle_${vehicleList[i].id}_$mid"; // Include category in ID
-
-            if (kDebugMode) {
-              print("   Adding marker $i - Vehicle ID: $vehicleId");
-            }
-
-            MarkerId markerId = MarkerId(vehicleId);
-
-            Marker marker = Marker(
-              markerId: markerId,
-              icon: icons[i],
-              position: vihicallocations[i],
-              onTap: () {
-                if (kDebugMode) {
-                  print("🚗 Tapped vehicle: $vehicleId");
-                }
-
-                showVehicleInfo(vehicleList[i]);
-              },
-            );
-
-            markers[markerId] = marker;
-          } catch (e) {
-            if (kDebugMode) {
-              print("❌ Error adding marker $i: $e");
-            }
-
-            // Continue with next marker instead of failing completely
-          }
-        }
-
-        if (kDebugMode) {
-          print("✅ Successfully added ${itemCount} vehicle markers to map");
-
-          print("📍 Total markers on map: ${markers.length}");
-        }
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error in _addMarkers: $e");
-      }
-    }
   }
 
-  // ✅ COMPLETE _addMarkers2() METHOD:
   void _addMarkers2() async {
-    if (kDebugMode) {
-      print("🔍 _addMarkers2 called");
-      print(
-          "   Vehicle locations bidding: ${vihicallocationsbiddingon.length}");
-      print("   Icon paths bidding: ${_iconPathsbiddingon.length}");
-    }
-
-    // ✅ SAFETY CHECK: Ensure we have data
-    if (homeMapController.homeMapApiModel?.list == null ||
-        homeMapController.homeMapApiModel!.list!.isEmpty) {
-      if (kDebugMode) {
-        print("❌ No vehicle data available for markers2");
-      }
-      return;
-    }
-
-    final vehicleList = homeMapController.homeMapApiModel!.list!;
-
-    // ✅ HELPER: Load icons safely
-    Future<BitmapDescriptor> loadIcon(String url,
-        {int targetWidth = 30, int targetHeight = 50}) async {
+    Future<BitmapDescriptor> _loadIcon(String url) async {
       try {
-        if (url.isEmpty || url.contains("undefined") || url.contains("null")) {
-          if (kDebugMode) {
-            print("⚠️ Invalid icon URL: $url - using default");
-          }
-
+        if (url.isEmpty || url.contains("undefined")) {
+          // Fallback to a default icon if the URL is invalid
           return BitmapDescriptor.defaultMarker;
         }
 
-        final http.Response response =
-            await http.get(Uri.parse(url)).timeout(Duration(seconds: 10));
-
+        final http.Response response = await http.get(Uri.parse(url));
         if (response.statusCode == 200) {
           final Uint8List bytes = response.bodyBytes;
 
+          // Decode image and resize it
           final ui.Codec codec = await ui.instantiateImageCodec(bytes,
-              targetWidth: targetWidth, targetHeight: targetHeight);
-
+              targetWidth: 30, targetHeight: 50);
           final ui.FrameInfo frameInfo = await codec.getNextFrame();
-
           final ByteData? byteData =
               await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
 
           return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
         } else {
-          if (kDebugMode) {
-            print(
-                "⚠️ Failed to load image from $url - HTTP ${response.statusCode}");
-          }
-
-          return BitmapDescriptor.defaultMarker;
+          throw Exception('Failed to load image from $url');
         }
       } catch (e) {
-        if (kDebugMode) {
-          print("❌ Error loading icon from $url: $e");
-        }
-
+        // Log the error and return a default icon
+        print("Error loading icon from $url: $e");
         return BitmapDescriptor.defaultMarker;
       }
     }
 
-    try {
-      // Load all icons with error handling
+    // Load all icons
+    final List<BitmapDescriptor> _icons = await Future.wait(
+      _iconPathsbiddingon.map((path) => _loadIcon(path)),
+    );
 
-      final List<BitmapDescriptor> icons = await Future.wait(
-        _iconPaths.map((path) => loadIcon(path)),
-      );
+    setState(() {
+      markers11.clear();
 
-      if (kDebugMode) {
-        print("✅ Loaded ${icons.length} icons successfully");
+      _addMarker11(LatLng(latitudepick, longitudepick), "origin",
+          BitmapDescriptor.defaultMarker);
+
+      /// destination marker
+      _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
+          BitmapDescriptor.defaultMarkerWithHue(90));
+
+      for (int a = 0; a < _dropOffPoints.length; a++) {
+        _addMarker3("destination");
       }
 
-      // ✅ CHECK: Widget still mounted before setState
+      getDirections11(
+          lat1: PointLatLng(latitudepick, longitudepick),
+          lat2: PointLatLng(latitudedrop, longitudedrop),
+          dropOffPoints: _dropOffPoints);
 
-      if (!mounted) return;
-
-      setState(() {
-        // ✅ SAFE ITERATION: Use the actual data length, not assumptions
-
-        final itemCount = math.min(vihicallocations.length,
-            math.min(icons.length, vehicleList.length));
-
-        if (kDebugMode) {
-          print("🎯 Adding $itemCount vehicle markers for category: $mid");
-        }
-
-        for (int i = 0; i < itemCount; i++) {
-          try {
-            final vehicleId =
-                "vehicle_${vehicleList[i].id}_$mid"; // Include category in ID
-
-            if (kDebugMode) {
-              print("   Adding marker $i - Vehicle ID: $vehicleId");
-            }
-
-            MarkerId markerId = MarkerId(vehicleId);
-
-            Marker marker = Marker(
-              markerId: markerId,
-              icon: icons[i],
-              position: vihicallocations[i],
-              onTap: () {
-                if (kDebugMode) {
-                  print("🚗 Tapped vehicle: $vehicleId");
-                }
-
-                // Show vehicle info dialog
-
-                showVehicleInfo(vehicleList[i]);
-              },
-            );
-
-            markers[markerId] = marker;
-          } catch (e) {
-            if (kDebugMode) {
-              print("❌ Error adding marker $i: $e");
-            }
-
-            // Continue with next marker instead of failing completely
-          }
-        }
-
-        if (kDebugMode) {
-          print("✅ Successfully added ${itemCount} vehicle markers to map");
-
-          print("📍 Total markers on map: ${markers.length}");
-        }
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error in _addMarkers: $e");
+      for (var i = 0; i < vihicallocationsbiddingon.length; i++) {
+        // final markerId = MarkerId('marker_$i');
+        final markerId =
+            MarkerId('${homeMapController.homeMapApiModel!.list![i].id}');
+        final marker = Marker(
+          markerId: markerId,
+          // position: vihicallocationsbiddingon[i],
+          position: LatLng(
+              double.parse(homeMapController.homeMapApiModel!.list![i].latitude
+                  .toString()),
+              double.parse(homeMapController.homeMapApiModel!.list![i].longitude
+                  .toString())),
+          icon: _icons[i],
+        );
+        markers11[markerId] = marker; // Add marker to the map
       }
-
-      // Don't crash the app, just log the error
-    }
-
-    try {
-      // Load all icons with error handling
-      final List<BitmapDescriptor> icons = await Future.wait(
-        _iconPathsbiddingon.map((path) => loadIcon(path)),
-      );
-
-      // ✅ CHECK: Widget still mounted
-      if (!mounted) return;
-
-      setState(() {
-        markers11.clear();
-
-        // Add pickup/drop markers
-        if (latitudepick != 0.0 && longitudepick != 0.0) {
-          _addMarker11(LatLng(latitudepick, longitudepick), "origin",
-              BitmapDescriptor.defaultMarker);
-        }
-
-        if (latitudedrop != 0.0 && longitudedrop != 0.0) {
-          _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
-              BitmapDescriptor.defaultMarkerWithHue(90));
-        }
-
-        // Add drop-off points
-        if (_dropOffPoints.isNotEmpty) {
-          for (int a = 0; a < _dropOffPoints.length; a++) {
-            _addMarker3("destination");
-          }
-        }
-
-        // Add directions
-        if (latitudepick != 0.0 &&
-            longitudepick != 0.0 &&
-            latitudedrop != 0.0 &&
-            longitudedrop != 0.0) {
-          getDirections11(
-              lat1: PointLatLng(latitudepick, longitudepick),
-              lat2: PointLatLng(latitudedrop, longitudedrop),
-              dropOffPoints: _dropOffPoints);
-        }
-
-        // ✅ SAFE ITERATION: Use minimum length
-        final itemCount = math.min(vihicallocationsbiddingon.length,
-            math.min(icons.length, vehicleList.length));
-
-        for (int i = 0; i < itemCount; i++) {
-          try {
-            final vehicleId =
-                vehicleList[i].id?.toString() ?? "vehicle_bidding_$i";
-            final markerId = MarkerId(vehicleId);
-            final marker = Marker(
-              markerId: markerId,
-              position: vihicallocationsbiddingon[i],
-              icon: icons[i], // Safe because of itemCount calculation
-            );
-            markers11[markerId] = marker;
-          } catch (e) {
-            if (kDebugMode) {
-              print("❌ Error adding bidding marker $i: $e");
-            }
-          }
-        }
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Error in _addMarkers2: $e");
-      }
-    }
+    });
   }
+
+  Map<MarkerId, Marker> markers = {};
 
   late GoogleMapController mapController1;
-  void showVehicleInfo(dynamic vehicle) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        child: Container(
-          padding: EdgeInsets.all(15),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "Driver Information",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              SizedBox(height: 10),
-              Text("Driver ID: ${vehicle.id}"),
-              Text("Distance: ${vehicle.distance ?? 'N/A'} km"),
-              Text("Rating: ${vehicle.rating ?? 'N/A'} ⭐"),
-              SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("Close"),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Future fun() async {
     LocationPermission permission;
@@ -1878,58 +1829,24 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   Future getCurrentLatAndLong(double latitude, double longitude) async {
     lathome = latitude;
-
     longhome = longitude;
-
     lathomecurrent = latitude;
-
     longhomecurrent = longitude;
 
-    try {
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(lathome, longhome)
-              .timeout(const Duration(seconds: 10));
-
+    await placemarkFromCoordinates(lathome, longhome)
+        .then((List<Placemark> placemarks) {
       addresshome =
           '${placemarks.first.name}, ${placemarks.first.locality}, ${placemarks.first.country}';
 
-      // ✅ FIX: Use AppController instead of global pickupcontroller
+      if (pickupcontroller.text.isEmpty) {
+        pickupcontroller.text = addresshome.toString();
+      } else {}
 
-      if (appController.pickupController.text.isEmpty) {
-        appController.pickupController.text = addresshome.toString();
-      }
-
-      if (kDebugMode) {
-        print("FIRST USER CURRENT LOCATION :-- $addresshome");
-
-        print("FIRST USER CURRENT LOCATION :-- $lathome");
-
-        print("FIRST USER CURRENT LOCATION :-- $longhome");
-      }
-    } catch (e) {
-      addresshome = 'Location: $latitude, $longitude';
-
-      // ✅ FIX: Use AppController instead of global pickupcontroller
-
-      if (appController.pickupController.text.isEmpty) {
-        appController.pickupController.text = addresshome;
-      }
-
-      if (kDebugMode) print("Geocoding error: $e");
-    }
-
+      print("FIRST USER CURRENT LOCATION :-- $addresshome");
+      print("FIRST USER CURRENT LOCATION :-- $lathome");
+      print("FIRST USER CURRENT LOCATION :-- $longhome");
+    });
     setState(() {});
-  }
-
-// Simple network check without external plugin
-  Future<bool> _hasNetworkConnection() async {
-    try {
-      final result = await InternetAddress.lookup('google.com')
-          .timeout(Duration(seconds: 3));
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } catch (e) {
-      return false;
-    }
   }
 
   Future<Uint8List> getImages(String path, int width) async {
@@ -2052,22 +1969,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                       .homeapimodel!.categoryList![select1].bidding
                       .toString(),
                 )));
-
     if (result != null && result.shouldRefresh) {
       _refreshPage();
-
-      // ✅ CRITICAL: Redraw route after coming back
-
-      if (latitudepick != 0.0 &&
-          longitudepick != 0.0 &&
-          latitudedrop != 0.0 &&
-          longitudedrop != 0.0) {
-        await setupMapMarkers(); // This will redraw the route
-
-        if (kDebugMode) {
-          print("🔄 Route redrawn after location selection");
-        }
-      }
     }
   }
 
@@ -2075,20 +1978,28 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     setState(() {});
   }
 
+  socateempt() {
+    print("SOCATE SCOCATDFJH");
+    socket.emit('vehiclerequest', {
+      // 'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
+      'requestid': request_id,
+      'driverid': calculateController.calCulateModel!.driverId,
+      'c_id': useridgloable
+    });
+    print("datadatatdatadtad:- ${socket}");
+  }
+
   socatloadbidinfdata() {
-    appController.socketService.emit('load_bidding_data', {
-      'uid': appController.globalUserId.value,
-      'request_id': appController.requestId.value,
+    socket.emit('load_bidding_data', {
+      'uid': useridgloable,
+      'request_id': request_id,
       'd_id': calculateController.calCulateModel!.driverId
     });
   }
 
-// ✅ FIX: refreshAnimation() method
-
   void refreshAnimation() {
-    _animationController?.reset();
-
-    _animationController?.repeat(reverse: false);
+    controller!.reset();
+    controller!.repeat(reverse: false);
   }
 
   bool offerpluse = false;
@@ -2124,287 +2035,176 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     notifier = Provider.of<ColorNotifier>(context, listen: true);
-
-    // Debug the current state
-    _debugState();
-
     return Scaffold(
       key: _key,
       drawer: draweropen(context),
-      body: _isInitializing
-          ? _buildLoadingOverlay() // Show loading when initializing
-          : _buildMainContent(), // Show main content when ready
-    );
-  }
-
-  Widget _buildMainContent() {
-    if (kDebugMode) {
-      print("🎯 _buildMainContent called");
-    }
-
-    return GetBuilder<HomeApiController>(
-      builder: (homeApiController) {
-        if (kDebugMode) {
-          print("🏠 HomeApiController state:");
-          print("   isLoading: ${homeApiController.isLoading}");
-          print(
-              "   homeapimodel: ${homeApiController.homeapimodel != null ? 'exists' : 'null'}");
-          if (homeApiController.homeapimodel != null) {
-            print(
-                "   categoryList length: ${homeApiController.homeapimodel!.categoryList?.length ?? 0}");
-          }
-        }
-
-        // ✅ Check if HomeApiController needs to load data
-        if (homeApiController.homeapimodel == null &&
-            !homeApiController.isLoading) {
-          if (kDebugMode) {
-            print(
-                "🔄 HomeApiController has no data and not loading - triggering API call");
-          }
-
-          // ✅ FORCE load vehicles after map is created
-
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (lathome != null && longhome != null) {
-              if (mid.isEmpty &&
-                  homeApiController.homeapimodel?.categoryList?.isNotEmpty ==
-                      true) {
-                // Set default category if not set
-
-                final firstCategory =
-                    homeApiController.homeapimodel!.categoryList![0];
-
-                setState(() {
-                  select1 = 0;
-
-                  vehicle_id = firstCategory.id.toString();
-
-                  vihicalname = firstCategory.name.toString();
-
-                  vihicalimage = firstCategory.image.toString();
-
-                  mid = firstCategory.id.toString();
-
-                  mroal = firstCategory.role.toString();
-                });
-              }
-
-              if (mid.isNotEmpty) {
-                loadVehiclesForCategory(mid);
-              }
-            }
-          });
-        }
-
-        return homeApiController.isLoading
-            ? Container(
-                color: notifier.background,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(color: theamcolore),
-                      const SizedBox(height: 20),
-                      Text(
-                        "Loading vehicles...".tr,
-                        style: TextStyle(color: notifier.textColor),
-                      ),
-                      // Debug info - only show in debug mode
-                      if (kDebugMode) ...[
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          margin: const EdgeInsets.symmetric(horizontal: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                "HOME API DEBUG:",
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                "Loading: ${homeApiController.isLoading}",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 10),
-                              ),
-                              Text(
-                                "UserId: $userid",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 10),
-                              ),
-                              Text(
-                                "Lat: $lathome",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 10),
-                              ),
-                              Text(
-                                "Lon: $longhome",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 10),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (userid != null &&
-                                lathome != null &&
-                                longhome != null) {
-                              homeApiController.homeApi(
-                                uid: userid.toString(),
-                                lat: lathome.toString(),
-                                lon: longhome.toString(),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: theamcolore),
-                          child: Text("Force Load Home API",
-                              style: TextStyle(color: Colors.white)),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              )
-            : homeApiController.homeapimodel == null
-                ? Container(
-                    color: notifier.background,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.error_outline,
-                              size: 50, color: Colors.red),
-                          const SizedBox(height: 20),
-                          Text(
-                            "No vehicle data available".tr,
-                            style: TextStyle(
-                                color: notifier.textColor, fontSize: 16),
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () {
-                              if (userid != null &&
-                                  lathome != null &&
-                                  longhome != null) {
-                                homeApiController.homeApi(
-                                  uid: userid.toString(),
-                                  lat: lathome.toString(),
-                                  lon: longhome.toString(),
-                                );
-                              }
+      body: GetBuilder<HomeApiController>(
+        builder: (homeApiController) {
+          return homeApiController.isLoading
+              ? Center(
+                  child: CircularProgressIndicator(
+                  color: theamcolore,
+                ))
+              : Stack(
+                  children: [
+                    // pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty ? lathome == null ? Center(child: CircularProgressIndicator(color: theamcolore,)) :
+                    lathome == null
+                        ? Center(
+                            child: CircularProgressIndicator(
+                            color: theamcolore,
+                          ))
+                        : GoogleMap(
+                            gestureRecognizers: {
+                              Factory<OneSequenceGestureRecognizer>(
+                                  () => EagerGestureRecognizer())
                             },
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: theamcolore),
-                            child: Text("Retry",
-                                style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : Stack(
-                    children: [
-                      // ✅ MAIN MAP
-                      lathome == null
-                          ? Center(
-                              child:
-                                  CircularProgressIndicator(color: theamcolore))
-                          : GoogleMap(
-                              gestureRecognizers: {
-                                Factory<OneSequenceGestureRecognizer>(
-                                    () => EagerGestureRecognizer())
-                              },
-                              initialCameraPosition: appController
-                                          .pickupController.text.isEmpty ||
-                                      appController.dropController.text.isEmpty
-                                  ? CameraPosition(
-                                      target: LatLng(lathome, longhome),
-                                      zoom: 13)
-                                  : CameraPosition(
-                                      target: LatLng(
-                                          appController.pickupLat.value,
-                                          appController.pickupLng.value),
-                                      zoom: 13),
-                              mapType: MapType.normal,
-                              markers: appController
-                                          .pickupController.text.isEmpty ||
-                                      appController.dropController.text.isEmpty
-                                  ? Set<Marker>.of(markers.values)
-                                  : Set<Marker>.of(markers11.values),
-                              onTap: (argument) {
-                                handleMapTap(argument);
-                              },
-                              myLocationEnabled: false,
-                              zoomGesturesEnabled: true,
-                              tiltGesturesEnabled: true,
-                              zoomControlsEnabled: true,
-                              onMapCreated: (controller) {
-                                setState(() {
-                                  controller.setMapStyle(themeForMap);
-                                  mapController1 = controller;
+                            initialCameraPosition: pickupcontroller
+                                        .text.isEmpty ||
+                                    dropcontroller.text.isEmpty
+                                ? CameraPosition(
+                                    target: LatLng(lathome, longhome), zoom: 13)
+                                : CameraPosition(
+                                    target: LatLng(latitudepick, longitudepick),
+                                    zoom: 13),
+                            // initialCameraPosition:  CameraPosition(target: LatLng(21.2408,72.8806), zoom: 13),
+                            mapType: MapType.normal,
+                            // markers: markers.,
+                            markers: pickupcontroller.text.isEmpty ||
+                                    dropcontroller.text.isEmpty
+                                ? Set<Marker>.of(markers.values)
+                                : Set<Marker>.of(markers11.values),
+                            // markers: Set<Marker>.of(markers.values),
+                            onTap: (argument) {
+                              setState(() {
+                                _onAddMarkerButtonPressed(
+                                    argument.latitude, argument.longitude);
+                                lathome = argument.latitude;
+                                longhome = argument.longitude;
+                                getCurrentLatAndLong(
+                                  lathome,
+                                  longhome,
+                                );
+                                homeMapController
+                                    .homemapApi(
+                                        mid: mid,
+                                        lat: lathome.toString(),
+                                        lon: longhome.toString())
+                                    .then((value) {
+                                  setState(() {});
+                                  print("///:---  ${value["Result"]}");
 
-                                  if (appController
-                                          .pickupController.text.isNotEmpty &&
-                                      appController
-                                          .dropController.text.isNotEmpty) {
-                                    setupMapMarkers();
+                                  if (value["Result"] == false) {
+                                    setState(() {
+                                      vihicallocations.clear();
+                                      markers.clear();
+                                      _addMarkers();
+                                      print(
+                                          "***if condition+++:---  $vihicallocations");
+                                    });
+                                  } else {
+                                    setState(() {});
+                                    vihicallocations.clear();
+                                    for (int i = 0;
+                                        i <
+                                            homeMapController
+                                                .homeMapApiModel!.list!.length;
+                                        i++) {
+                                      vihicallocations.add(LatLng(
+                                          double.parse(homeMapController
+                                              .homeMapApiModel!
+                                              .list![i]
+                                              .latitude
+                                              .toString()),
+                                          double.parse(homeMapController
+                                              .homeMapApiModel!
+                                              .list![i]
+                                              .longitude
+                                              .toString())));
+                                      _iconPaths.add(
+                                          "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                                    }
+                                    _addMarkers();
                                   }
+
+                                  print(
+                                      "******-**:::::------$vihicallocations");
+                                });
+                              });
+
+                              // print("***lato****:--- $lathome");
+                              // print("+++longo+++:--- $longhome");
+                              // print("--------------------------------------");
+                              // print("hfgjhvhjwfvhjuyfvf:-=---  $addresshome");
+                            },
+                            myLocationEnabled: false,
+                            zoomGesturesEnabled: true,
+                            tiltGesturesEnabled: true,
+                            zoomControlsEnabled: true,
+                            onMapCreated: (controller) {
+                              setState(() {
+                                controller.setMapStyle(themeForMap);
+                                mapController1 = controller;
+                              });
+                            },
+                            polylines: Set<Polyline>.of(polylines11.values),
+                          ),
+                    //   : GoogleMap(
+                    //   initialCameraPosition: CameraPosition(
+                    //     target: LatLng(latitudepick, longitudepick),
+                    //     zoom: 15,
+                    //   ),
+                    //   myLocationEnabled: true,
+                    //   tiltGesturesEnabled: true,
+                    //   compassEnabled: true,
+                    //   scrollGesturesEnabled: true,
+                    //   zoomGesturesEnabled: true,
+                    //   onMapCreated: _onMapCreated11,
+                    //   markers: Set<Marker>.of(markers11.values),
+                    //   polylines: Set<Polyline>.of(polylines11.values),
+                    // ),
+
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(top: 60, left: 10, right: 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _key.currentState!.openDrawer();
                                 });
                               },
-                              polylines: Set<Polyline>.of(polylines11.values),
-                            ),
-
-                      // ✅ TOP UI BAR (Menu + Search)
-                      Padding(
-                        padding:
-                            const EdgeInsets.only(top: 60, left: 10, right: 10),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 1,
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    _key.currentState!.openDrawer();
-                                  });
-                                },
-                                child: Container(
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                      color: notifier.containercolore,
-                                      shape: BoxShape.circle),
-                                  child: Center(
-                                      child: Image(
-                                    image: const AssetImage("assets/menu.png"),
-                                    height: 20,
-                                    color: notifier.textColor,
-                                  )),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 5,
                               child: Container(
+                                height: 50,
+                                // width: 50,
                                 decoration: BoxDecoration(
                                     color: notifier.containercolore,
-                                    borderRadius: BorderRadius.circular(25)),
-                                child: TextField(
-                                  onTap: () {
-                                    _addMarkers();
-                                    fun().then((value) {
-                                      setState(() {});
-                                      getCurrentLatAndLong(lathome, longhome)
-                                          .then((value) {
+                                    shape: BoxShape.circle),
+                                child: Center(
+                                    child: Image(
+                                  image: const AssetImage("assets/menu.png"),
+                                  height: 20,
+                                  color: notifier.textColor,
+                                )),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 5,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  color: notifier.containercolore,
+                                  borderRadius: BorderRadius.circular(25)),
+                              child: TextField(
+                                onTap: () {
+                                  _addMarkers();
+                                  fun().then((value) {
+                                    setState(() {});
+                                    getCurrentLatAndLong(lathome, longhome)
+                                        .then(
+                                      (value) {
                                         mapController1.animateCamera(
                                           CameraUpdate.newCameraPosition(
                                             CameraPosition(
@@ -2413,56 +2213,74 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                             ),
                                           ),
                                         );
-                                      });
-                                    });
-                                  },
-                                  readOnly: true,
-                                  style: const TextStyle(color: Colors.black),
-                                  decoration: InputDecoration(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              vertical: 15, horizontal: 15),
-                                      border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(25)),
-                                          borderSide: BorderSide(
-                                              color: notifier.background)),
-                                      enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(25)),
-                                          borderSide: BorderSide(
-                                              color: notifier.background)),
-                                      hintText: "Your Current Location".tr,
-                                      hintStyle: const TextStyle(
-                                          color: Colors.grey,
-                                          fontFamily: "SofiaProBold",
-                                          fontSize: 14),
-                                      focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(25)),
-                                          borderSide: BorderSide(
-                                              color: notifier.containercolore)),
-                                      prefixIcon: Padding(
-                                        padding: const EdgeInsets.all(15),
-                                        child: Container(
-                                          height: 20,
-                                          width: 20,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                                color: Colors.green, width: 6),
-                                          ),
+                                      },
+                                    );
+                                    // socketConnect();
+                                  });
+                                  // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
+                                },
+                                // controller: controller,
+                                readOnly: true,
+                                style: const TextStyle(color: Colors.black),
+                                decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        vertical: 15, horizontal: 15),
+                                    border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(25)),
+                                        borderSide: BorderSide(
+                                            color: notifier.background)),
+                                    enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(25)),
+                                        borderSide: BorderSide(
+                                            color: notifier.background)),
+                                    hintText: "Your Current Location".tr,
+                                    hintStyle: const TextStyle(
+                                        color: Colors.grey,
+                                        fontFamily: "SofiaProBold",
+                                        fontSize: 14),
+                                    focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(25)),
+                                        borderSide: BorderSide(
+                                            color: notifier.containercolore)),
+                                    prefixIcon: Padding(
+                                      padding: const EdgeInsets.all(15),
+                                      child: Container(
+                                        height: 20,
+                                        width: 20,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                              color: Colors.green, width: 6),
                                         ),
                                       ),
-                                      suffixIcon: InkWell(
-                                          onTap: () {
-                                            _addMarkers();
-                                            fun().then((value) {
-                                              setState(() {});
-                                              getCurrentLatAndLong(
-                                                      lathome, longhome)
-                                                  .then((value) {
+                                    ),
+                                    suffixIcon: InkWell(
+                                        onTap: () {
+                                          // fun().then((value) {
+                                          //   setState(() {
+                                          //   });
+                                          //   getCurrentLatAndLong(lathome, longhome);
+                                          //   mapController1.animateCamera(
+                                          //     CameraUpdate.newCameraPosition(
+                                          //       CameraPosition(
+                                          //         target: LatLng(lathome, longhome),
+                                          //         zoom: 14.0,
+                                          //       ),
+                                          //     ),
+                                          //   );
+                                          // });
+
+                                          _addMarkers();
+                                          fun().then((value) {
+                                            setState(() {});
+                                            getCurrentLatAndLong(
+                                                    lathome, longhome)
+                                                .then(
+                                              (value) {
                                                 mapController1.animateCamera(
                                                   CameraUpdate
                                                       .newCameraPosition(
@@ -2473,328 +2291,953 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                     ),
                                                   ),
                                                 );
-                                              });
-                                            });
-                                          },
-                                          child: SvgPicture.asset(
-                                            "assets/svgpicture/gpsicon.svg",
-                                          ))),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-
-                      // ✅ BOTTOM DRAGGABLE SHEET - Complete with all features
-                      DraggableScrollableSheet(
-                        initialChildSize: 0.45,
-                        minChildSize: 0.2,
-                        maxChildSize: 1.0,
-                        controller: sheetController,
-                        builder: (BuildContext context, scrollController) {
-                          return Container(
-                            clipBehavior: Clip.hardEdge,
-                            decoration: BoxDecoration(
-                              color: notifier.containercolore,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(25),
-                                topRight: Radius.circular(25),
+                                              },
+                                            );
+                                            // socketConnect();
+                                          });
+                                        },
+                                        child: SvgPicture.asset(
+                                          "assets/svgpicture/gpsicon.svg",
+                                        ))),
                               ),
                             ),
-                            child: CustomScrollView(
-                              controller: scrollController,
-                              slivers: [
-                                SliverToBoxAdapter(
-                                  child: Center(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: notifier.textColor,
-                                        borderRadius: const BorderRadius.all(
-                                            Radius.circular(10)),
-                                      ),
-                                      height: 4,
-                                      width: 40,
-                                      margin: const EdgeInsets.symmetric(
-                                          vertical: 10),
+                          )
+                        ],
+                      ),
+                    ),
+                    DraggableScrollableSheet(
+                      // initialChildSize:  homeApiController.homeapimodel!.categoryList![select1].bidding == "1" ? 0.37 : 0.30, // Set the default height to 50% of the screen
+                      initialChildSize:
+                          0.45, // Set the default height to 50% of the screen
+                      minChildSize: 0.2, // Minimum height
+                      maxChildSize: 1.0,
+                      controller: sheetController,
+                      builder: (BuildContext context, scrollController) {
+                        return Container(
+                          // height: 100,
+                          clipBehavior: Clip.hardEdge,
+                          decoration: BoxDecoration(
+                            // color: Colors.white,
+                            color: notifier.containercolore,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(25),
+                              topRight: Radius.circular(25),
+                            ),
+                          ),
+                          child: CustomScrollView(
+                            controller: scrollController,
+                            slivers: [
+                              SliverToBoxAdapter(
+                                child: Center(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: notifier.textColor,
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(10)),
+                                    ),
+                                    height: 4,
+                                    width: 40,
+                                    margin: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                  ),
+                                ),
+                              ),
+                              SliverList.list(children: [
+                                const SizedBox(height: 10),
+
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 10, right: 10),
+                                  child: SizedBox(
+                                    height: 90,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      clipBehavior: Clip.none,
+                                      itemCount: homeApiController
+                                          .homeapimodel!.categoryList!.length,
+                                      shrinkWrap: true,
+                                      itemBuilder: (context, index) {
+                                        return InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              select1 = index;
+                                              // dropcontroller.clear();
+                                              mid = homeApiController
+                                                  .homeapimodel!
+                                                  .categoryList![index]
+                                                  .id
+                                                  .toString();
+                                              mroal = homeApiController
+                                                  .homeapimodel!
+                                                  .categoryList![index]
+                                                  .role
+                                                  .toString();
+                                              print(
+                                                  "*****mid*-**:::::------$mid");
+                                              _iconPaths.clear();
+                                              vihicallocations.clear();
+                                              _iconPathsbiddingon.clear();
+                                              vihicallocationsbiddingon.clear();
+
+                                              pickupcontroller.text.isEmpty ||
+                                                      dropcontroller
+                                                          .text.isEmpty
+                                                  ? markers.clear()
+                                                  : "";
+                                              pickupcontroller.text.isEmpty ||
+                                                      dropcontroller
+                                                          .text.isEmpty
+                                                  ? fun().then((value) {
+                                                      setState(() {});
+                                                      getCurrentLatAndLong(
+                                                          lathome, longhome);
+                                                      // _loadMapStyles();
+                                                      // socketConnect();
+                                                    })
+                                                  : "";
+
+                                              // vihicallocations.clear();
+                                              // markers.clear();
+                                              // _addMarkers();
+
+                                              pickupcontroller.text.isEmpty ||
+                                                      dropcontroller
+                                                          .text.isEmpty
+                                                  ? homeMapController
+                                                      .homemapApi(
+                                                          mid: mid,
+                                                          lat: lathome
+                                                              .toString(),
+                                                          lon: longhome
+                                                              .toString())
+                                                      .then(
+                                                      (value) {
+                                                        setState(() {});
+                                                        print(
+                                                            "///:---  ${value["Result"]}");
+
+                                                        if (value["Result"] ==
+                                                            false) {
+                                                          setState(() {
+                                                            vihicallocations
+                                                                .clear();
+                                                            markers.clear();
+                                                            _addMarkers();
+                                                            fun().then((value) {
+                                                              setState(() {});
+                                                              getCurrentLatAndLong(
+                                                                  lathome,
+                                                                  longhome);
+                                                              // socketConnect();
+                                                            });
+                                                            print(
+                                                                "***if condition+++:---  $vihicallocations");
+                                                          });
+                                                        } else {
+                                                          setState(() {});
+                                                          for (int i = 0;
+                                                              i <
+                                                                  homeMapController
+                                                                      .homeMapApiModel!
+                                                                      .list!
+                                                                      .length;
+                                                              i++) {
+                                                            vihicallocations.add(LatLng(
+                                                                double.parse(homeMapController
+                                                                    .homeMapApiModel!
+                                                                    .list![i]
+                                                                    .latitude
+                                                                    .toString()),
+                                                                double.parse(homeMapController
+                                                                    .homeMapApiModel!
+                                                                    .list![i]
+                                                                    .longitude
+                                                                    .toString())));
+                                                            _iconPaths.add(
+                                                                "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                                                          }
+                                                          _addMarkers();
+                                                        }
+
+                                                        print(
+                                                            "******-**:::::------$vihicallocations");
+                                                      },
+                                                    )
+                                                  : homeMapController
+                                                      .homemapApi(
+                                                          mid: mid,
+                                                          lat: lathome
+                                                              .toString(),
+                                                          lon: longhome
+                                                              .toString())
+                                                      .then(
+                                                      (value) {
+                                                        setState(() {});
+                                                        print(
+                                                            "///:---  ${value["Result"]}");
+
+                                                        if (value["Result"] ==
+                                                            false) {
+                                                          setState(() {
+                                                            vihicallocationsbiddingon
+                                                                .clear();
+                                                            markers.clear();
+                                                            _addMarkers2();
+                                                            print(
+                                                                "***if condition+++:---  $vihicallocationsbiddingon");
+                                                          });
+                                                        } else {
+                                                          setState(() {});
+                                                          for (int i = 0;
+                                                              i <
+                                                                  homeMapController
+                                                                      .homeMapApiModel!
+                                                                      .list!
+                                                                      .length;
+                                                              i++) {
+                                                            vihicallocationsbiddingon.add(LatLng(
+                                                                double.parse(homeMapController
+                                                                    .homeMapApiModel!
+                                                                    .list![i]
+                                                                    .latitude
+                                                                    .toString()),
+                                                                double.parse(homeMapController
+                                                                    .homeMapApiModel!
+                                                                    .list![i]
+                                                                    .longitude
+                                                                    .toString())));
+                                                            _iconPathsbiddingon.add(
+                                                                "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                                                          }
+                                                          _addMarkers2();
+                                                        }
+
+                                                        print(
+                                                            "******-**:::::------$vihicallocationsbiddingon");
+                                                      },
+                                                    );
+
+                                              calculateController
+                                                  .calculateApi(
+                                                      context: context,
+                                                      uid: userid.toString(),
+                                                      mid: mid,
+                                                      mrole: mroal,
+                                                      pickup_lat_lon:
+                                                          "$latitudepick,$longitudepick",
+                                                      drop_lat_lon:
+                                                          "$latitudedrop,$longitudedrop",
+                                                      drop_lat_lon_list:
+                                                          onlypass)
+                                                  .then(
+                                                (value) {
+                                                  dropprice = 0;
+                                                  minimumfare = 0;
+                                                  maximumfare = 0;
+
+                                                  if (value["Result"] == true) {
+                                                    amountresponse = "true";
+                                                    dropprice =
+                                                        value["drop_price"];
+                                                    minimumfare =
+                                                        value["vehicle"]
+                                                            ["minimum_fare"];
+                                                    maximumfare =
+                                                        value["vehicle"]
+                                                            ["maximum_fare"];
+                                                    responsemessage =
+                                                        value["message"];
+
+                                                    tot_hour = value["tot_hour"]
+                                                        .toString();
+                                                    tot_time =
+                                                        value["tot_minute"]
+                                                            .toString();
+                                                    vehicle_id =
+                                                        value["vehicle"]["id"]
+                                                            .toString();
+                                                    vihicalrice = double.parse(
+                                                        value["drop_price"]
+                                                            .toString());
+                                                    totalkm = double.parse(
+                                                        value["tot_km"]
+                                                            .toString());
+                                                    tot_secound = "0";
+
+                                                    vihicalimage =
+                                                        value["vehicle"]
+                                                                ["map_img"]
+                                                            .toString();
+                                                    vihicalname =
+                                                        value["vehicle"]["name"]
+                                                            .toString();
+
+                                                    setState(() {});
+                                                  } else {
+                                                    amountresponse = "false";
+                                                    print(
+                                                        "jojojojojojojojojojojojojojojojojojojojojojojojo");
+                                                    setState(() {});
+                                                  }
+
+                                                  print(
+                                                      "********** dropprice **********:----- $dropprice");
+                                                  print(
+                                                      "********** minimumfare **********:----- $minimumfare");
+                                                  print(
+                                                      "********** maximumfare **********:----- $maximumfare");
+                                                },
+                                              );
+                                              // Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen()));
+                                            });
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(4),
+                                            child: Container(
+                                              height: 50,
+                                              // width: 100,
+                                              decoration: BoxDecoration(
+                                                color: select1 == index
+                                                    ? theamcolore
+                                                        .withOpacity(0.08)
+                                                    : notifier.containercolore,
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Column(
+                                                  crossAxisAlignment: select1 ==
+                                                          index
+                                                      ? CrossAxisAlignment.start
+                                                      : CrossAxisAlignment
+                                                          .center,
+                                                  children: [
+                                                    Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        SizedBox(
+                                                          height: 40,
+                                                          width: 40,
+                                                          child: Image(
+                                                            image: NetworkImage(
+                                                                "${Config.imageurl}${homeApiController.homeapimodel!.categoryList![index].image}"),
+                                                            height: 40,
+                                                          ),
+                                                        ),
+                                                        select1 == index
+                                                            ? const SizedBox(
+                                                                width: 5,
+                                                              )
+                                                            : const SizedBox(),
+                                                        select1 == index
+                                                            ? InkWell(
+                                                                onTap: () {
+                                                                  setState(() {
+                                                                    vihicalInformationApiController
+                                                                        .vihicalinformationApi(
+                                                                            vehicle_id:
+                                                                                homeApiController.homeapimodel!.categoryList![index].id.toString())
+                                                                        .then(
+                                                                      (value) {
+                                                                        Get.bottomSheet(
+                                                                          // isScrollControlled: true,
+                                                                          // isDismissible: false,
+                                                                          // enableDrag: false,
+                                                                          StatefulBuilder(
+                                                                            builder:
+                                                                                (context, setState) {
+                                                                              return Container(
+                                                                                clipBehavior: Clip.hardEdge,
+                                                                                // height: 260,
+                                                                                width: Get.width,
+                                                                                // padding: const EdgeInsets.all(12),
+                                                                                decoration: BoxDecoration(
+                                                                                  color: notifier.containercolore,
+                                                                                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+                                                                                ),
+                                                                                child: Padding(
+                                                                                  padding: const EdgeInsets.all(15),
+                                                                                  child: Column(
+                                                                                    mainAxisSize: MainAxisSize.min,
+                                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                    mainAxisAlignment: MainAxisAlignment.start,
+                                                                                    children: [
+                                                                                      Image.network(
+                                                                                        "${Config.imageurl}${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.image}",
+                                                                                        height: 60,
+                                                                                      ),
+                                                                                      Text(
+                                                                                        "${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.name}",
+                                                                                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: notifier.textColor),
+                                                                                      ),
+                                                                                      const SizedBox(
+                                                                                        height: 10,
+                                                                                      ),
+                                                                                      Text(
+                                                                                        "${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.description}",
+                                                                                        style: TextStyle(fontSize: 16, color: notifier.textColor),
+                                                                                      ),
+                                                                                      const SizedBox(
+                                                                                        height: 20,
+                                                                                      ),
+                                                                                      CommonOutLineButton(
+                                                                                          bordercolore: theamcolore,
+                                                                                          onPressed1: () {
+                                                                                            Get.back();
+                                                                                          },
+                                                                                          txt1: "Close".tr,
+                                                                                          context: context)
+                                                                                    ],
+                                                                                  ),
+                                                                                ),
+                                                                              );
+                                                                            },
+                                                                          ),
+                                                                        );
+                                                                      },
+                                                                    );
+                                                                  });
+                                                                },
+                                                                child: Image(
+                                                                  image: const AssetImage(
+                                                                      "assets/info-circle.png"),
+                                                                  height: 20,
+                                                                  color:
+                                                                      theamcolore,
+                                                                ))
+                                                            : const SizedBox(),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(
+                                                      height: 10,
+                                                    ),
+                                                    Text(
+                                                      "${homeApiController.homeapimodel!.categoryList![index].name}",
+                                                      style: TextStyle(
+                                                          color: notifier
+                                                              .textColor),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),
-                                SliverList.list(children: [
-                                  const SizedBox(height: 10),
-
-                                  // Pickup and drop selection - KEEP YOUR EXISTING CODE HERE
-
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 15, right: 15),
-                                    child: InkWell(
-                                      onTap: () {
-                                        _navigateAndRefresh();
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                InkWell(
+                                  onTap: () {
+                                    // _navigateAndRefresh();
+                                    showModalBottomSheet(
+                                      isScrollControlled: true,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.only(
+                                            topRight: Radius.circular(15),
+                                            topLeft: Radius.circular(15)),
+                                      ),
+                                      context: context,
+                                      builder: (context) {
+                                        return Container(
+                                          height: 750,
+                                          decoration: const BoxDecoration(
+                                              color: Colors.pinkAccent,
+                                              borderRadius: BorderRadius.only(
+                                                topRight: Radius.circular(15),
+                                                topLeft: Radius.circular(15),
+                                              )),
+                                          child: Column(
+                                            children: [
+                                              // _navigateAndRefresh();
+                                              Expanded(
+                                                  child: PickupDropPoint(
+                                                pagestate: false,
+                                                bidding: homeApiController
+                                                    .homeapimodel!
+                                                    .categoryList![select1]
+                                                    .bidding
+                                                    .toString(),
+                                              )),
+                                            ],
+                                          ),
+                                        );
                                       },
-                                      child: Container(
-                                        padding: const EdgeInsets.all(15),
-                                        decoration: BoxDecoration(
-                                          color: notifier.background,
-                                          borderRadius:
-                                              BorderRadius.circular(15),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 20, right: 20),
+                                    child: Container(
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.withOpacity(0.05),
+                                        // color: Colors.red,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: ListTile(
+                                        // contentPadding: EdgeInsets.zero,
+                                        contentPadding:
+                                            const EdgeInsets.only(left: 10),
+                                        leading: Container(
+                                          height: 20,
+                                          width: 20,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                                color: Colors.green, width: 4),
+                                          ),
                                         ),
-                                        child: Row(
-                                          children: [
-                                            Column(
-                                              children: [
-                                                Container(
-                                                  height: 10,
-                                                  width: 10,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white,
-                                                    shape: BoxShape.circle,
-                                                    border: Border.all(
-                                                        color: Colors.green,
-                                                        width: 3),
-                                                  ),
-                                                ),
-                                                Container(
-                                                    height: 30,
-                                                    width: 1,
-                                                    color: Colors.grey),
-                                                Container(
-                                                  height: 10,
-                                                  width: 10,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.red,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                ),
-                                              ],
+                                        title: pickupcontroller.text.isEmpty
+                                            ? Transform.translate(
+                                                offset: const Offset(-20, 0),
+                                                child: Text(
+                                                  "${addresshome ?? "Searching for you on the map...".tr}",
+                                                  style: TextStyle(
+                                                      color:
+                                                          notifier.textColor),
+                                                ))
+                                            : Transform.translate(
+                                                offset: const Offset(-20, 0),
+                                                child: Text(
+                                                  pickupcontroller.text,
+                                                  style: TextStyle(
+                                                      color:
+                                                          notifier.textColor),
+                                                )),
+                                        // trailing: InkWell(
+                                        //   onTap: () {
+                                        //     // Navigator.push(context, MaterialPageRoute(builder: (context) => DriverListScreen(),));
+                                        //   },
+                                        //   child: Container(
+                                        //     padding: const EdgeInsets.all(10),
+                                        //     decoration: BoxDecoration(
+                                        //       color: theamcolore.withOpacity(0.05),
+                                        //       borderRadius: BorderRadius.circular(35),
+                                        //     ),
+                                        //     child: Text("Entrance",style: TextStyle(color: theamcolore)),
+                                        //   ),
+                                        // ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                textfieldlist.length > 0
+                                    ? const SizedBox(height: 0)
+                                    : const SizedBox(height: 10),
+                                textfieldlist.length > 0
+                                    ? InkWell(
+                                        onTap: () {
+                                          // _navigateAndRefresh();
+                                          showModalBottomSheet(
+                                            isScrollControlled: true,
+                                            shape: const RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.only(
+                                                  topRight: Radius.circular(15),
+                                                  topLeft: Radius.circular(15)),
                                             ),
-                                            const SizedBox(width: 15),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                            context: context,
+                                            builder: (context) {
+                                              return SizedBox(
+                                                height: 750,
+                                                child: Column(
+                                                  children: [
+                                                    // _navigateAndRefresh();
+                                                    Expanded(
+                                                        child: PickupDropPoint(
+                                                      pagestate: false,
+                                                      bidding: homeApiController
+                                                          .homeapimodel!
+                                                          .categoryList![
+                                                              select1]
+                                                          .bidding
+                                                          .toString(),
+                                                    )),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          );
+                                          // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                              left: 20, right: 20, top: 10),
+                                          child: Container(
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.grey.withOpacity(0.05),
+                                              // color: Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: ListTile(
+                                              contentPadding:
+                                                  const EdgeInsets.only(
+                                                      left: 10, right: 10),
+                                              leading: Container(
+                                                height: 20,
+                                                width: 20,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(
+                                                      color: Colors.red,
+                                                      width: 4),
+                                                ),
+                                              ),
+                                              title: Transform.translate(
+                                                  offset: const Offset(-20, 0),
+                                                  child: Text(
+                                                    "${textfieldlist.length + 1} route stops",
+                                                    style: TextStyle(
+                                                        color:
+                                                            notifier.textColor),
+                                                  )),
+                                              trailing: Icon(
+                                                Icons.add,
+                                                color: notifier.textColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 20, right: 20),
+                                        child: InkWell(
+                                          onTap: () {
+                                            // _navigateAndRefresh();
+                                            showModalBottomSheet(
+                                              isScrollControlled: true,
+                                              shape:
+                                                  const RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.only(
+                                                    topRight:
+                                                        Radius.circular(15),
+                                                    topLeft:
+                                                        Radius.circular(15)),
+                                              ),
+                                              context: context,
+                                              builder: (context) {
+                                                return SizedBox(
+                                                  height: 750,
+                                                  // color: Colors.red,
+                                                  child: Column(
+                                                    children: [
+                                                      // _navigateAndRefresh();
+                                                      Expanded(
+                                                          child:
+                                                              PickupDropPoint(
+                                                        pagestate: false,
+                                                        bidding:
+                                                            homeApiController
+                                                                .homeapimodel!
+                                                                .categoryList![
+                                                                    select1]
+                                                                .bidding
+                                                                .toString(),
+                                                      )),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                            // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
+                                          },
+                                          child: Container(
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.grey.withOpacity(0.05),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 10, right: 10),
+                                              child: Row(
+                                                // crossAxisAlignment: CrossAxisAlignment.start,
+                                                // mainAxisAlignment: MainAxisAlignment.start,
                                                 children: [
-                                                  Text(
-                                                    appController
-                                                            .pickupController
-                                                            .text
-                                                            .isEmpty
-                                                        ? "Select pickup location"
-                                                            .tr
-                                                        : appController
-                                                            .pickupController
-                                                            .text,
-                                                    style: TextStyle(
-                                                      color: notifier.textColor,
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
+                                                  Image(
+                                                    image: const AssetImage(
+                                                        "assets/search.png"),
+                                                    height: 20,
+                                                    color: notifier.textColor,
                                                   ),
-                                                  const SizedBox(height: 5),
-                                                  Container(
-                                                    height: 1,
-                                                    color: Colors.grey
-                                                        .withOpacity(0.3),
+                                                  const SizedBox(
+                                                    width: 15,
                                                   ),
-                                                  const SizedBox(height: 5),
-                                                  Text(
-                                                    appController.dropController
-                                                            .text.isEmpty
-                                                        ? "Where to go?".tr
-                                                        : appController
-                                                            .dropController
-                                                            .text,
-                                                    style: TextStyle(
-                                                      color: appController
-                                                              .dropController
-                                                              .text
-                                                              .isEmpty
-                                                          ? Colors.grey
-                                                          : notifier.textColor,
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.w500,
+                                                  Flexible(
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 2),
+                                                      child: dropcontroller
+                                                              .text.isEmpty
+                                                          ? Text(
+                                                              "To",
+                                                              style: TextStyle(
+                                                                  color: notifier
+                                                                      .textColor,
+                                                                  fontSize: 16),
+                                                            )
+                                                          : Text(
+                                                              dropcontroller
+                                                                  .text,
+                                                              style: TextStyle(
+                                                                  color: notifier
+                                                                      .textColor,
+                                                                  fontSize: 16),
+                                                              maxLines: 2,
+                                                            ),
                                                     ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
                                                   ),
                                                 ],
                                               ),
                                             ),
-                                            const Icon(Icons.add),
-                                          ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
+                                homeApiController.homeapimodel!
+                                            .categoryList![select1].bidding ==
+                                        "1"
+                                    ? const SizedBox(
+                                        height: 10,
+                                      )
+                                    : const SizedBox(),
+                                homeApiController.homeapimodel!
+                                            .categoryList![select1].bidding ==
+                                        "1"
+                                    ? Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 20, right: 20),
+                                        child: InkWell(
+                                          onTap: () {
+                                            // bottomshhetopen = true;
+                                            // if(isLoad){
+                                            //   return;
+                                            // }else{
+                                            //   isLoad = true;
+                                            // }
+                                            // homeApiController.homeApi(uid: userid.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
+                                            //   if(value["Result"] == true){
+                                            //     setState(() {
+                                            //       Buttonpresebottomshhet();
+                                            //       isLoad = false;
+                                            //     });
+                                            //   }else{
+                                            //
+                                            //   }
+                                            // },);
+                                            Buttonpresebottomshhet();
+                                          },
+                                          child: Container(
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.grey.withOpacity(0.05),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 10, right: 10),
+                                              child: Row(
+                                                children: [
+                                                  (pickupcontroller
+                                                              .text.isEmpty ||
+                                                          dropcontroller
+                                                              .text.isEmpty)
+                                                      ? Text(
+                                                          "${currencyy ?? globalcurrency}",
+                                                          style: TextStyle(
+                                                              color: notifier
+                                                                  .textColor,
+                                                              fontSize: 16),
+                                                        )
+                                                      : Text(
+                                                          "${currencyy ?? globalcurrency} ${dropprice == null ? "" : dropprice}",
+                                                          style: TextStyle(
+                                                              color: notifier
+                                                                  .textColor,
+                                                              fontSize: 16),
+                                                        ),
+                                                  const SizedBox(
+                                                    width: 8,
+                                                  ),
+                                                  Text(
+                                                    "Offer your fare".tr,
+                                                    style: TextStyle(
+                                                        color:
+                                                            notifier.textColor,
+                                                        fontSize: 16),
+                                                  ),
+                                                  const Spacer(),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox(),
+                                // const SizedBox(height: 20,),
+                                pickupcontroller.text.isEmpty ||
+                                        dropcontroller.text.isEmpty
+                                    ? Padding(
+                                        padding: const EdgeInsets.all(10),
+                                        child: CommonButton(
+                                            containcolore:
+                                                theamcolore.withOpacity(0.2),
+                                            onPressed1: () {
+                                              // rateBottomSheet();
+                                              // rateBottomSheet();
+                                              // Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen()));
+                                            },
+                                            context: context,
+                                            txt1: "Find a driver".tr),
+                                      )
+                                    : Padding(
+                                        padding: const EdgeInsets.all(10),
+                                        child: CommonButton(
+                                            containcolore: theamcolore,
+                                            onPressed1: homeApiController
+                                                        .homeapimodel!
+                                                        .categoryList![select1]
+                                                        .bidding ==
+                                                    "1"
+                                                ? () {
+                                                    // if(isLoad){
+                                                    //   return;
+                                                    // }else{
+                                                    //   isLoad = true;
+                                                    // }
+                                                    // homeApiController.homeApi(uid: userid.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
+                                                    //   if(value["Result"] == true){
+                                                    //    setState(() {
+                                                    //      Buttonpresebottomshhet();
+                                                    //      isLoad = false;
+                                                    //    });
+                                                    //   }else{
+                                                    //
+                                                    //   }
+                                                    // },);
 
-                                  const SizedBox(height: 20),
+                                                    Buttonpresebottomshhet();
+                                                  }
+                                                : () {
+                                                    print("222222222222");
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (context) => HomeScreen(
+                                                              latpic:
+                                                                  latitudepick,
+                                                              longpic:
+                                                                  longitudepick,
+                                                              latdrop:
+                                                                  latitudedrop,
+                                                              longdrop:
+                                                                  longitudedrop,
+                                                              destinationlat:
+                                                                  destinationlat)),
+                                                    );
+                                                    modual_calculateController
+                                                        .modualcalculateApi(
+                                                            context: context,
+                                                            uid: userid
+                                                                .toString(),
+                                                            mid: mid,
+                                                            mrole: mroal,
+                                                            pickup_lat_lon:
+                                                                "$latitudepick,$longitudepick",
+                                                            drop_lat_lon:
+                                                                "$latitudedrop,$longitudedrop",
+                                                            drop_lat_lon_list:
+                                                                onlypass)
+                                                        .then(
+                                                      (value) {
+                                                        midseconde =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![0]
+                                                                .id!;
+                                                        vihicalrice = double.parse(
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![0]
+                                                                .dropPrice!
+                                                                .toString());
+                                                        totalkm = double.parse(
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![0]
+                                                                .dropKm!
+                                                                .toString());
+                                                        tot_time =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![0]
+                                                                .dropTime!
+                                                                .toString();
+                                                        tot_hour =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![0]
+                                                                .dropHour!
+                                                                .toString();
+                                                        vihicalname =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![0]
+                                                                .name!
+                                                                .toString();
+                                                        vihicalimage =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![0]
+                                                                .image!
+                                                                .toString();
+                                                        vehicle_id =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![0]
+                                                                .id!
+                                                                .toString();
 
-                                  // Vehicle selection - KEEP YOUR EXISTING CODE HERE
-
-                                  if (homeApiController.homeapimodel
-                                          ?.categoryList?.isNotEmpty ==
-                                      true)
-                                    buildVehicleSelection(homeApiController)
-                                  else
-                                    Padding(
-                                      padding: const EdgeInsets.all(20),
-                                      child: Text(
-                                        "No vehicles available",
-                                        style: TextStyle(
-                                            color: notifier.textColor),
-                                        textAlign: TextAlign.center,
+                                                        print(
+                                                            "GOGOGOGOGOGOGOGOGOGOGOGOG:- $midseconde");
+                                                        print(
+                                                            "GOGOGOGOGOGOGOGOGOGOGOGOG:- $vihicalrice");
+                                                        // setState((){});
+                                                      },
+                                                    );
+                                                  },
+                                            context: context,
+                                            txt1: "Find a driver".tr),
                                       ),
-                                    ),
-
-                                  const SizedBox(height: 20),
-
-                                  // ✅ NEW: Single calculation display
-
-                                  buildConditionalCalculationPanel(),
-
-                                  const SizedBox(height: 20),
-
-                                  // Find driver button - KEEP YOUR EXISTING CODE HERE
-
-                                  buildFindDriverButton(),
-
-                                  const SizedBox(height: 20),
-                                ])
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  );
-      },
-    );
-  }
-
-  Widget _buildLoadingOverlay() {
-    return Container(
-      height: MediaQuery.of(context).size.height,
-      width: MediaQuery.of(context).size.width,
-      color: notifier.background,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // App logo
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: notifier.containercolore,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.map_outlined,
-                size: 50,
-                color: theamcolore,
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Loading indicator
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(theamcolore),
-              strokeWidth: 3,
-            ),
-
-            const SizedBox(height: 20),
-
-            // Status text
-            Text(
-              _initializationStatus,
-              style: TextStyle(
-                color: notifier.textColor,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: 10),
-
-            // Secondary text
-            Text(
-              "Please wait...".tr,
-              style: TextStyle(
-                color: notifier.textColor?.withOpacity(0.7),
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-            // Debug info (only in debug mode)
-            if (kDebugMode) ...[
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(10),
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      "DEBUG INFO:",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      "Initializing: $_isInitializing",
-                      style: TextStyle(color: Colors.white, fontSize: 10),
-                    ),
-                    Text(
-                      "Status: $_initializationStatus",
-                      style: TextStyle(color: Colors.white, fontSize: 10),
-                    ),
-                    Text(
-                      "UserId: $userid",
-                      style: TextStyle(color: Colors.white, fontSize: 10),
-                    ),
-                    Text(
-                      "LatHome: $lathome",
-                      style: TextStyle(color: Colors.white, fontSize: 10),
-                    ),
+                              ])
+                            ],
+                          ),
+                        );
+                      },
+                    )
                   ],
-                ),
-              ),
-            ],
-
-            // Force refresh button for debugging
-            if (kDebugMode) ...[
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (mounted) {
-                    setState(() {
-                      _isInitializing = false;
-                    });
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theamcolore,
-                ),
-                child: Text(
-                  "Force Skip Loading",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ],
-        ),
+                );
+        },
       ),
     );
   }
@@ -2951,76 +3394,52 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     return InkWell(
                       onTap: () {
                         switch (index) {
-                          case 0: // Home
-
-                            // ✅ FIX: Use AppController reset instead of individual globals
-
-                            appController.resetAllRideData();
-
-                            Get.offAll(const MapScreen(selectvihical: false));
-
-                            break;
-
-                          case 1: // My Ride
-
+                          case 0:
+                            // Get.back();
+                            pickupcontroller.text = "";
+                            dropcontroller.text = "";
+                            latitudepick = 0.00;
+                            longitudepick = 0.00;
+                            latitudedrop = 0.00;
+                            longitudedrop = 0.00;
+                            picktitle = "";
+                            picksubtitle = "";
+                            droptitle = "";
+                            dropsubtitle = "";
+                            droptitlelist = [];
+                            Get.offAll(const MapScreen(
+                              selectvihical: false,
+                            ));
+                          case 1:
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => const MyRideScreen(),
                             ));
-
-                            break;
-
-                          case 2: // Wallet
-
+                          case 2:
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => const TopUpScreen(),
                             ));
-
-                            break;
-
-                          case 3: // Profile
-
+                          case 3:
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => const ProfileScreen(),
                             ));
-
-                            break;
-
-                          case 4: // Language
-
+                          case 4:
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => const LanguageScreen(),
                             ));
-
-                            break;
-
-                          case 5: // Refer and earn
-
+                          case 5:
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => const ReferAndEarn(),
                             ));
-
-                            break;
-
-                          case 6: // FAQ
-
+                          case 6:
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => const FaqScreen(),
                             ));
-
-                            break;
-
-                          case 7: // Notifications
-
+                          case 7:
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => const NotificationScreen(),
                             ));
-
-                            break;
-
-                          case 8: // Dark Mode - no action needed, handled by switch
-
+                          case 8:
                             return;
-
                           case 9:
                             return;
                         }
@@ -3037,7 +3456,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                   height: 25,
                                   color: notifier.textColor,
                                 ),
-                                const SizedBox(width: 15),
+                                // const Image(image: AssetImage("assets/info-circle.png"),height: 25,),
+                                const SizedBox(
+                                  width: 15,
+                                ),
                                 Text(
                                   "${drowertitle[index]}".tr,
                                   style: TextStyle(
@@ -3051,32 +3473,30 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                         child: Transform.scale(
                                           scale: 0.8,
                                           child: CupertinoSwitch(
+                                            // This bool value toggles the switch.
                                             value: notifier.isDark,
                                             activeColor: theamcolore,
-                                            onChanged: (bool value) async {
-                                              SharedPreferences prefs =
-                                                  await SharedPreferences
-                                                      .getInstance();
-
-                                              await prefs.setBool(
-                                                  "isDark", value);
-
-                                              if (mounted) {
-                                                setState(() {
-                                                  notifier.isAvailable(value);
-
-                                                  darkMode = value;
-                                                });
-                                              }
-
-                                              Get.offAll(const MapScreen(
-                                                  selectvihical: false));
+                                            onChanged: (bool value) {
+                                              setState(() async {
+                                                SharedPreferences prefs =
+                                                    await SharedPreferences
+                                                        .getInstance();
+                                                prefs.setBool("isDark", value);
+                                                notifier.isAvailable(value);
+                                                darkMode = value;
+                                                Get.offAll(MapScreen(
+                                                  selectvihical: false,
+                                                ));
+                                              });
+                                              // mapThemeStyle(context: context);
                                             },
                                           ),
                                         ),
                                       )
                                     : const SizedBox(),
-                                const SizedBox(width: 10),
+                                const SizedBox(
+                                  width: 10,
+                                ),
                               ],
                             ),
                           ],
@@ -3164,13 +3584,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 //   padding: const EdgeInsets.only(left: 10,top: 15,right: 10),
                 //   child: CommonOutLineButton(bordercolore: theamcolore, onPressed1: () {
                 //     loginSharedPreferencesSet(true);
-                //     Get.offAll(const OnboardingScreen());
+                //     Get.offAll(const OnbordingScreen());
                 //   },context: context,txt1: "Log Out"),
                 // ),
                 InkWell(
                   onTap: () {
                     loginSharedPreferencesSet(true);
-                    Get.offAll(const OnboardingScreen());
+                    Get.offAll(const OnbordingScreen());
                   },
                   child: Padding(
                     padding:
@@ -3291,15 +3711,22 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                               WidgetStatePropertyAll(
                                                   theamcolore)),
                                       onPressed: () => {
+                                        // resetNew(),
                                         loginSharedPreferencesSet(true),
                                         deleteAccount
                                             .deleteaccountApi(
-                                                id: appController.globalUserId
-                                                    .value) // ✅ FIX: Use AppController
-
-                                            .then((value) {
-                                          Get.offAll(OnboardingScreen());
-                                        }),
+                                                id: useridgloable.toString())
+                                            .then(
+                                          (value) {
+                                            Get.offAll(OnbordingScreen());
+                                          },
+                                        ),
+                                        // Delete_Api_Class(uid: userData["id"]).then((value) {
+                                        //   ScaffoldMessenger.of(context).showSnackBar(
+                                        //     SnackBar(content: Text(value["ResponseMsg"]),behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),),
+                                        //   );
+                                        // }),
+                                        // Navigator.push(context, MaterialPageRoute(builder: (context) => const Login_Screen(),))
                                       },
                                       child: Text('Yes,Remove'.tr,
                                           style: const TextStyle(
@@ -3345,624 +3772,1357 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   int? couponindex;
 
-// STEP 7: Replace your Buttonpresebottomshhet() method with this COMPLETE function
-
-// ✅ FIX 1: Type error - API returns strings, need to parse them
-
   Buttonpresebottomshhet() {
-    if (appController.pickupController.text.isEmpty ||
-        appController.dropController.text.isEmpty) {
-      Fluttertoast.showToast(msg: "Select Pickup and Drop");
-
-      return;
-    }
-
-    if (amountresponse == "false") {
-      Fluttertoast.showToast(msg: "Address is not in the zone!");
-
-      return;
-    }
-
-    // ✅ FIXED: Parse strings to double properly
-
-    double currentPrice =
-        calculateController.calCulateModel?.dropPrice ?? dropprice;
-
-    // ✅ API returns strings, need to parse them
-
-    double currentMinFare = calculateController
-                .calCulateModel?.vehicle?.minimumFare !=
-            null
-        ? double.parse(
-            calculateController.calCulateModel!.vehicle!.minimumFare.toString())
-        : minimumfare;
-
-    double currentMaxFare = calculateController
-                .calCulateModel?.vehicle?.maximumFare !=
-            null
-        ? double.parse(
-            calculateController.calCulateModel!.vehicle!.maximumFare.toString())
-        : maximumfare;
-
-    if (currentPrice == 0) {
+    if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
       Fluttertoast.showToast(
-          msg: responsemessage.isEmpty
-              ? "Price calculation failed"
-              : responsemessage);
+        msg: "Select Pickup and Drop",
+      );
+    } else if (amountresponse == "false") {
+      Fluttertoast.showToast(
+        msg: "Address is not in the zone!",
+      );
+    } else if (dropprice == 0) {
+      Fluttertoast.showToast(
+        msg: responsemessage,
+      );
+    } else {
+      toast = 0;
+      amountcontroller.text = dropprice.toString();
+      // var maxprice =  dropprice + (dropprice * int.parse(maximumfare) / 100);
+      // var minprice =  dropprice - (dropprice * int.parse(minimumfare) / 100);
+      int maxprice = int.parse(maximumfare);
+      int minprice = int.parse(minimumfare);
+      print("**maxprice**:-- $maxprice");
+      print("**maxprice**:-- $minprice");
+      // controller.reset();
+      // controller.dispose();
 
-      return;
-    }
-
-    toast = 0;
-
-    amountcontroller.text = currentPrice.toString();
-
-    int maxprice = currentMaxFare.toInt();
-
-    int minprice = currentMinFare.toInt();
-
-    if (kDebugMode) {
-      print("**Updated maxprice**: $maxprice");
-
-      print("**Updated minprice**: $minprice");
-
-      print("**Current vehicle price**: $currentPrice");
-    }
-
-    Get.bottomSheet(
-      enableDrag: false,
-      isDismissible: false,
-      isScrollControlled: true,
-      StatefulBuilder(
-        builder: (context, setState) {
-          return Container(
-            width: Get.width,
-            decoration: BoxDecoration(
-              color: notifier.containercolore,
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(15), topRight: Radius.circular(15)),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 15, right: 15),
-                  child: Column(
-                    children: [
-                      _isAnimationRunning == false
-                          ? const SizedBox()
-                          : lottie.Lottie.asset("assets/lottie/loading.json",
-                              height: 30),
-
-                      const SizedBox(height: 20),
-
-                      Row(
-                        children: [
-                          Spacer(),
-                          SizedBox(width: 40),
-                          Text(
-                            "Set your price".tr,
-                            style: TextStyle(
-                                color: notifier.textColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22),
-                          ),
-                          Spacer(),
-                          InkWell(
-                            onTap: () {
-                              setState(() {
-                                if (_animationController != null &&
-                                    _animationController!.isAnimating) {
-                                  Fluttertoast.showToast(
-                                    msg:
-                                        "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                  );
-                                } else {
-                                  Get.back();
-                                }
-                              });
-                            },
-                            child: Container(
-                              height: 40,
-                              width: 40,
-                              decoration: BoxDecoration(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  shape: BoxShape.circle),
-                              child: Center(
-                                child: Image(
-                                  image: AssetImage("assets/close.png"),
-                                  color: notifier.textColor,
-                                  height: 20,
-                                ),
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      // ✅ UPDATED: Price adjustment controls with current prices
-
-                      Row(
-                        children: [
-                          InkWell(
-                            onTap: () {
-                              setState(() {
-                                if (_animationController != null &&
-                                    _animationController!.isAnimating) {
-                                  Fluttertoast.showToast(
-                                    msg:
-                                        "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                  );
-                                } else {
-                                  if (double.parse(amountcontroller.text) >
-                                      minprice) {
-                                    // ✅ Update the displayed price AND the global variables
-
-                                    double newPrice =
-                                        double.parse(amountcontroller.text) - 1;
-
-                                    amountcontroller.text = newPrice.toString();
-
-                                    dropprice = newPrice; // ✅ Update global
-
-                                    mainamount = newPrice.toString();
-
-                                    offerpluse = true;
-
-                                    if (couponindex != null &&
-                                        couponadd[couponindex!] == true) {
-                                      couponadd[couponindex!] = false;
-                                    }
-
-                                    couponname = "";
-
-                                    couponId = "";
-                                  }
-                                }
-                              });
-                            },
-                            child: Container(
-                              height: 40,
-                              width: 40,
-                              decoration: BoxDecoration(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  shape: BoxShape.circle),
-                              child: Center(
-                                child: Image(
-                                  image: AssetImage("assets/minus.png"),
-                                  color: notifier.textColor,
-                                  height: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          Center(
-                            child: SizedBox(
-                              width: 150,
-                              child: TextField(
-                                keyboardType: TextInputType.number,
-                                controller: amountcontroller,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 30, color: notifier.textColor),
-                                readOnly: _animationController != null &&
-                                    _animationController!.isAnimating,
-                                onTap: () {
-                                  _animationController != null &&
-                                          _animationController!.isAnimating
-                                      ? Fluttertoast.showToast(
-                                          msg:
-                                              "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                        )
-                                      : "";
-                                },
-                                onSubmitted: (value) {
-                                  setState(() {
-                                    if (int.parse(amountcontroller.text) >
-                                        maxprice) {
-                                      amountcontroller.text =
-                                          maxprice.toString();
-
-                                      toast = 1;
-                                    } else if (int.parse(
-                                            amountcontroller.text) <
-                                        minprice) {
-                                      amountcontroller.text =
-                                          minprice.toString();
-
-                                      toast = 2;
-                                    } else {
-                                      toast = 0;
-
-                                      dropprice = double.parse(amountcontroller
-                                          .text); // ✅ Update global
-
-                                      mainamount = amountcontroller.text;
-                                    }
-                                  });
-                                },
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          InkWell(
-                            onTap: () {
-                              setState(() {
-                                if (_animationController != null &&
-                                    _animationController!.isAnimating) {
-                                  Fluttertoast.showToast(
-                                    msg:
-                                        "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                  );
-                                } else {
-                                  if (double.parse(amountcontroller.text) <
-                                      maxprice) {
-                                    // ✅ Update the displayed price AND the global variables
-
-                                    double newPrice =
-                                        double.parse(amountcontroller.text) + 1;
-
-                                    amountcontroller.text = newPrice.toString();
-
-                                    dropprice = newPrice; // ✅ Update global
-
-                                    mainamount = newPrice.toString();
-
-                                    offerpluse = true;
-
-                                    if (couponindex != null &&
-                                        couponadd[couponindex!] == true) {
-                                      couponadd[couponindex!] = false;
-                                    }
-
-                                    couponname = "";
-
-                                    couponId = "";
-                                  }
-                                }
-                              });
-                            },
-                            child: Container(
-                              height: 40,
-                              width: 40,
-                              decoration: BoxDecoration(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  shape: BoxShape.circle),
-                              child: Center(
-                                child: Image(
-                                  image: AssetImage("assets/plus.png"),
-                                  color: notifier.textColor,
-                                  height: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Error messages with updated prices
-
-                      toast == 1
-                          ? Text(
-                              "Maximum fare is $globalcurrency$maxprice",
-                              style: const TextStyle(color: Colors.red),
-                            )
-                          : toast == 2
-                              ? Text(
-                                  "Minimum fare is $globalcurrency$minprice",
-                                  style: const TextStyle(color: Colors.red),
-                                )
-                              : const SizedBox(),
-
-                      const SizedBox(height: 10),
-
-                      // Auto booking switch
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Image(
-                          image: AssetImage("assets/automatically.png"),
-                          height: 30,
-                          width: 30,
-                        ),
-                        title: Text(
-                          "Automatically book the nearest driver for (${amountcontroller.text} ${globalcurrency})"
-                              .tr,
-                          style: TextStyle(
-                              color: notifier.textColor, fontSize: 16),
-                        ),
-                        trailing: SizedBox(
-                          height: 30,
-                          width: 40,
-                          child: Transform.scale(
-                            scale: 0.9,
-                            child: CupertinoSwitch(
-                              value: light,
-                              activeColor: theamcolore,
-                              // ✅ FIX: Use local animation controller
-                              onChanged: _animationController != null &&
-                                      _animationController!.isAnimating
-                                  ? (bool value) {
-                                      Fluttertoast.showToast(
-                                        msg:
-                                            "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                      );
-                                    }
-                                  : (bool value) {
-                                      setState(() {
-                                        light = value;
-                                        offerpluse = true;
-                                        biddautostatus = value.toString();
-                                      });
-                                    },
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
-                ),
-
-                // Bottom section with payment/coupon and buttons
-                Container(
-                  decoration: BoxDecoration(
-                      color: notifier.containercolore,
-                      boxShadow: const [
-                        BoxShadow(
-                            color: Colors.grey,
-                            offset: Offset(0, -0.4),
-                            blurRadius: 5),
-                      ]),
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10, right: 10),
+      Get.bottomSheet(
+        enableDrag: false,
+        isDismissible: false,
+        isScrollControlled: true,
+        StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              // height: 460,
+              width: Get.width,
+              decoration: BoxDecoration(
+                color: notifier.containercolore,
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(15),
+                    topRight: Radius.circular(15)),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 15, right: 15),
                     child: Column(
                       children: [
-                        // Payment and coupon row here...
+                        isanimation == false
+                            ? const SizedBox()
+                            : lottie.Lottie.asset("assets/lottie/loading.json",
+                                height: 30),
 
-                        // ✅ FIX: Main booking button
-                        _isAnimationRunning == false
-                            ? CommonButton(
-                                containcolore: theamcolore,
-                                onPressed1: () {
-                                  setState(() {
-                                    if (double.parse(amountcontroller.text) >
-                                        maxprice) {
-                                      amountcontroller.clear();
-                                      toast = 1;
-                                    } else if (double.parse(
-                                            amountcontroller.text) <
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Row(
+                          children: [
+                            // Spacer(),
+                            // homeApiController.homeapimodel!.runnigRide!.isEmpty ? SizedBox() :
+                            // InkWell(
+                            //   onTap: () {
+                            //     setState((){
+                            //       socatloadbidinfdata();
+                            //     });
+                            //   },
+                            //   child: Container(
+                            //     padding: EdgeInsets.all(10),
+                            //     decoration: BoxDecoration(
+                            //       borderRadius: BorderRadius.all(Radius.circular(10)),
+                            //       border: Border.all(color: theamcolore),
+                            //     ),
+                            //     child: Center(child: Text("Driver Bid",style: TextStyle(color: theamcolore,fontSize: 12),),),
+                            //   ),
+                            // ),
+                            Spacer(),
+                            SizedBox(
+                              width: 40,
+                            ),
+                            Text(
+                              "Set your price".tr,
+                              style: TextStyle(
+                                  color: notifier.textColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 22),
+                            ),
+                            Spacer(),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  if (controller != null &&
+                                      controller!.isAnimating) {
+                                    Fluttertoast.showToast(
+                                      msg:
+                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                    );
+                                  } else {
+                                    Get.back();
+                                  }
+                                });
+                              },
+                              child: Container(
+                                height: 40,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    shape: BoxShape.circle),
+                                child: Center(
+                                  child: Image(
+                                    image: AssetImage("assets/close.png"),
+                                    color: notifier.textColor,
+                                    height: 20,
+                                  ),
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        Text("💡Raise the fare, increase your chances.".tr,
+                            style: const TextStyle(color: Colors.grey)),
+                        // const SizedBox(height: 2,),
+                        // const Text("amount goes to the captain",style: TextStyle(color: Colors.grey)),
+                        // SizedBox(height: 30,),
+                        Row(
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  if (controller != null &&
+                                      controller!.isAnimating) {
+                                    Fluttertoast.showToast(
+                                      msg:
+                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                    );
+                                  } else {
+                                    if (double.parse(dropprice.toString()) >
                                         minprice) {
-                                      amountcontroller.clear();
-                                      toast = 2;
-                                    } else {
-                                      _isAnimationRunning = true;
-                                      loadertimer = true;
-                                      offerpluse = false;
-                                      requesttime();
-                                      orderfunction();
-                                    }
-                                  });
-                                },
-                                context: context,
-                                txt1:
-                                    "Book for A ${amountcontroller.text} ${globalcurrency}")
-                            : AnimatedBuilder(
-                                // ✅ FIX: Use local animation controller
-                                animation: _animationController!,
-                                builder: (context, child) {
-                                  return SizedBox(
-                                    height: 49,
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      style: ButtonStyle(
-                                        padding: const WidgetStatePropertyAll(
-                                            EdgeInsets.zero),
-                                        elevation:
-                                            const WidgetStatePropertyAll(0),
-                                        overlayColor:
-                                            const WidgetStatePropertyAll(
-                                                Colors.transparent),
-                                        backgroundColor: WidgetStatePropertyAll(
-                                            theamcolore.withOpacity(0.4)),
-                                        shape: WidgetStatePropertyAll(
-                                          RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(15),
-                                          ),
-                                        ),
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          if (double.parse(
-                                                  amountcontroller.text) >
-                                              maxprice) {
-                                            amountcontroller.clear();
-                                            toast = 1;
-                                          } else if (double.parse(
-                                                  amountcontroller.text) <
-                                              minprice) {
-                                            amountcontroller.clear();
-                                            toast = 2;
-                                          } else {
-                                            if (offerpluse == true) {
-                                              // ✅ FIX: Use local animation controller
-                                              if (_animationController !=
-                                                      null &&
-                                                  _animationController!
-                                                      .isAnimating) {
-                                                _animationController!.dispose();
-                                              }
-                                              requesttime();
-                                              orderfunction();
-                                              offerpluse = false;
-                                            }
-                                          }
+                                      dropprice -= 1;
+                                      amountcontroller.text =
+                                          dropprice.toString();
+                                      mainamount = dropprice.toString();
+                                      offerpluse = true;
 
-                                          if (double.parse(
-                                                  amountcontroller.text) >
-                                              maxprice) {
-                                            amountcontroller.clear();
-                                            amountcontroller.text =
-                                                maxprice.toString();
-                                            toast = 1;
-                                          } else if (double.parse(
-                                                  amountcontroller.text) <
-                                              minprice) {
-                                            amountcontroller.clear();
-                                            amountcontroller.text =
-                                                minprice.toString();
-                                            toast = 2;
-                                          } else {
-                                            toast = 0;
-                                            dropprice = double.parse(
-                                                amountcontroller.text);
-                                            mainamount = amountcontroller.text;
-                                          }
+                                      if (couponindex != null) {
+                                        if (couponadd[couponindex!] == true) {
+                                          couponadd[couponindex!] = false;
+                                        }
+                                      }
+
+                                      // couponadd[couponindex!] = false;
+                                      couponname = "";
+                                      couponId = "";
+                                      // if (controller != null && controller.isAnimating) {
+                                      //   controller.dispose();
+                                      // }
+                                      // controller.reset();
+                                      // controller.dispose();
+                                    }
+                                  }
+                                });
+                              },
+                              child: Container(
+                                height: 40,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    shape: BoxShape.circle),
+                                child: Center(
+                                  child: Image(
+                                    image: AssetImage("assets/minus.png"),
+                                    color: notifier.textColor,
+                                    height: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            Center(
+                              child: SizedBox(
+                                width: 150,
+                                child: TextField(
+                                  // focusNode: _focusNode,
+                                  keyboardType: TextInputType.number,
+                                  controller: amountcontroller,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontSize: 30, color: notifier.textColor),
+                                  readOnly: controller != null &&
+                                          controller!.isAnimating
+                                      ? true
+                                      : false,
+                                  onTap: () {
+                                    controller != null &&
+                                            controller!.isAnimating
+                                        ? Fluttertoast.showToast(
+                                            msg:
+                                                "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                          )
+                                        : "";
+                                  },
+                                  onSubmitted: (value) {
+                                    setState(() {
+                                      if (int.parse(amountcontroller.text) >
+                                          maxprice) {
+                                        amountcontroller.clear();
+                                        toast = 1;
+                                        print("fffff");
+                                      } else if (int.parse(
+                                              amountcontroller.text) <
+                                          minprice) {
+                                        amountcontroller.clear();
+                                        toast = 2;
+                                        print("hhhhh");
+                                      } else {
+                                        toast = 0;
+                                        dropprice =
+                                            int.parse(amountcontroller.text);
+                                        mainamount = amountcontroller.text;
+                                        // dropprice = amountcontroller.text;
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  if (controller != null &&
+                                      controller!.isAnimating) {
+                                    Fluttertoast.showToast(
+                                      msg:
+                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                    );
+                                  } else {
+                                    if (double.parse(dropprice.toString()) <
+                                        maxprice) {
+                                      // dropprice = amountcontroller.text;
+                                      dropprice += 1;
+                                      amountcontroller.text =
+                                          dropprice.toString();
+                                      mainamount = dropprice.toString();
+                                      offerpluse = true;
+                                      if (couponindex != null) {
+                                        if (couponadd[couponindex!] == true) {
+                                          couponadd[couponindex!] = false;
+                                        }
+                                      }
+
+                                      couponname = "";
+                                      couponId = "";
+                                      // if (controller != null && controller.isAnimating) {
+                                      //   controller.dispose();
+                                      // }
+                                      // controller.reset();
+                                      // controller.dispose();
+                                    }
+                                  }
+
+                                  print("////:--- $dropprice");
+                                });
+                              },
+                              child: Container(
+                                height: 40,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    shape: BoxShape.circle),
+                                child: Center(
+                                  child: Image(
+                                    image: AssetImage("assets/plus.png"),
+                                    color: notifier.textColor,
+                                    height: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        toast == 1
+                            ? Text(
+                                "Maximum fare is $currencyy$maxprice",
+                                style: const TextStyle(color: Colors.red),
+                              )
+                            : toast == 2
+                                ? Text(
+                                    "Minimum fare is $currencyy$minprice",
+                                    style: const TextStyle(color: Colors.red),
+                                  )
+                                : const SizedBox(),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          // leading: const Padding(
+                          //   padding: EdgeInsets.only(left: 10),
+                          //   child: Icon(Icons.telegram,size: 30,),
+                          // ),
+                          leading: const Image(
+                            image: AssetImage("assets/automatically.png"),
+                            height: 30,
+                            width: 30,
+                          ),
+                          title: Text(
+                            "Automatically book the nearest driver for (${globalcurrency}${amountcontroller.text})"
+                                .tr,
+                            style: TextStyle(
+                                color: notifier.textColor, fontSize: 16),
+                          ),
+                          trailing: SizedBox(
+                            height: 30,
+                            width: 40,
+                            child: Transform.scale(
+                              scale: 0.9,
+                              child: CupertinoSwitch(
+                                // This bool value toggles the switch.
+                                value: light,
+                                activeColor: theamcolore,
+                                onChanged: controller != null &&
+                                        controller!.isAnimating
+                                    ? (bool value) {
+                                        Fluttertoast.showToast(
+                                          msg:
+                                              "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                        );
+                                      }
+                                    : (bool value) {
+                                        setState(() {
+                                          light = value;
+                                          offerpluse = true;
+                                          biddautostatus = value.toString();
+                                          print("****:-- (${biddautostatus})");
                                         });
                                       },
-                                      child: Stack(
-                                        alignment: Alignment.center,
-                                        clipBehavior: Clip.none,
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(15),
-                                            child: LinearProgressIndicator(
-                                              minHeight: 49,
-                                              // ✅ FIX: Use local animation controller
-                                              value: 1.0 -
-                                                  _animationController!.value,
-                                              backgroundColor:
-                                                  theamcolore.withOpacity(0.1),
-                                              color: theamcolore,
-                                            ),
-                                          ),
-                                          offerpluse == true
-                                              ? Text(
-                                                  "Raise fare to ${globalcurrency}${amountcontroller.text}",
-                                                  style: const TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Colors.white,
-                                                    letterSpacing: 0.4,
-                                                  ),
-                                                )
-                                              : Text(
-                                                  "Book for  AfterRise${globalcurrency}${amountcontroller.text}",
-                                                  style: const TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Colors.white,
-                                                    letterSpacing: 0.4,
-                                                  ),
-                                                ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
                               ),
-                        const SizedBox(height: 10),
-
-                        // Cancel button
-                        StatefulBuilder(
-                          builder: (context, setState) {
-                            return cancelloader
-                                ? Center(
-                                    child: CircularProgressIndicator(
-                                      color: theamcolore,
-                                    ),
-                                  )
-                                : CommonOutLineButton(
-                                    bordercolore: theamcolore,
-                                    onPressed1: () {
-                                      setState(() {
-                                        _isAnimationRunning = false;
-                                        cancelloader = true;
-
-                                        removeRequest
-                                            .removeApi(
-                                                uid: appController
-                                                    .globalUserId.value)
-                                            .then((value) {
-                                          appController.socketService
-                                              .emit('AcceRemoveOther', {
-                                            'requestid':
-                                                appController.requestId.value,
-                                            'driverid': calculateController
-                                                .calCulateModel!.driverId!,
-                                          });
-
-                                          Get.back();
-                                          cancelloader = false;
-                                        });
-
-                                        // ✅ FIX: Use local animation controller
-                                        if (_animationController != null &&
-                                            _animationController!.isAnimating) {
-                                          if (kDebugMode) {
-                                            print(
-                                                "🔄 Stopping controller and resetting data");
-                                          }
-                                          _animationController!.stop();
-                                          _animationController!.reset();
-                                          appController.resetAllRideData();
-                                        }
-                                      });
-                                    },
-                                    context: context,
-                                    txt1: "Cancel Request".tr);
-                          },
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(
+                          height: 10,
+                        ),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+                  // Spacer(),
+
+                  Container(
+                    // height: 190,
+                    decoration: BoxDecoration(
+                        color: notifier.containercolore,
+                        // border: Border.all(color: Colors.grey.withOpacity(0.4))
+                        boxShadow: const [
+                          BoxShadow(
+                              color: Colors.grey,
+                              offset: Offset(0, -0.4),
+                              blurRadius: 5),
+                        ]),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 10, right: 10),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    // for(int i=1; i<paymentGetApiController.paymentgetwayapi!.paymentList!.length; i++){
+                                    //   if(int.parse(paymentGetApiController.paymentgetwayapi!.defaultPayment.toString()) == paymentGetApiController.paymentgetwayapi!.paymentList![i].id){
+                                    //     setState((){
+                                    //       payment = paymentGetApiController.paymentgetwayapi!.paymentList![i].id!;
+                                    //       print("+++++$payment");
+                                    //       print("+++++$i");
+                                    //     });
+                                    //   }
+                                    // }
+
+                                    showModalBottomSheet(
+                                      // isDismissible: false,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(15),
+                                            topRight: Radius.circular(15)),
+                                      ),
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return StatefulBuilder(
+                                            builder: (context, setState) {
+                                          return ClipRRect(
+                                            borderRadius:
+                                                const BorderRadius.only(
+                                                    topLeft:
+                                                        Radius.circular(15),
+                                                    topRight:
+                                                        Radius.circular(15)),
+                                            child: Scaffold(
+                                              backgroundColor:
+                                                  notifier.containercolore,
+                                              floatingActionButtonLocation:
+                                                  FloatingActionButtonLocation
+                                                      .centerDocked,
+                                              floatingActionButton: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    bottom: 10,
+                                                    left: 10,
+                                                    right: 10),
+                                                child: CommonButton(
+                                                    containcolore: theamcolore,
+                                                    onPressed1: () {
+                                                      Get.back();
+                                                      Get.back();
+                                                      Buttonpresebottomshhet();
+                                                      // Get.back();
+                                                    },
+                                                    txt1: "CONTINUE".tr,
+                                                    context: context),
+                                              ),
+                                              body: Container(
+                                                // height: 450,
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      notifier.containercolore,
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                  15),
+                                                          topRight:
+                                                              Radius.circular(
+                                                                  15)),
+                                                ),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          left: 10,
+                                                          right: 10,
+                                                          bottom: 50),
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: <Widget>[
+                                                      const SizedBox(
+                                                        height: 13,
+                                                      ),
+                                                      Text(
+                                                          'Payment Getway Method'
+                                                              .tr,
+                                                          style: TextStyle(
+                                                              fontFamily:
+                                                                  "SofiaProBold",
+                                                              fontSize: 18,
+                                                              color: notifier
+                                                                  .textColor)),
+                                                      const SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      walleteamount == 0
+                                                          ? const SizedBox()
+                                                          : Row(
+                                                              children: [
+                                                                SvgPicture
+                                                                    .asset(
+                                                                  "assets/svgpicture/wallet.svg",
+                                                                  height: 30,
+                                                                  color:
+                                                                      theamcolore,
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 10,
+                                                                ),
+                                                                Text(
+                                                                  "My Wallet (${globalcurrency}${walleteamount})",
+                                                                  style: TextStyle(
+                                                                      color: notifier
+                                                                          .textColor),
+                                                                ),
+                                                                const Spacer(),
+                                                                Transform.scale(
+                                                                  scale: 0.8,
+                                                                  child:
+                                                                      CupertinoSwitch(
+                                                                    value:
+                                                                        switchValue,
+                                                                    activeColor:
+                                                                        theamcolore,
+                                                                    onChanged: (bool
+                                                                        value) {
+                                                                      setState(
+                                                                          () {
+                                                                        switchValue =
+                                                                            value;
+                                                                      });
+                                                                    },
+                                                                  ),
+                                                                )
+                                                              ],
+                                                            ),
+                                                      const SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      Expanded(
+                                                        child:
+                                                            ListView.separated(
+                                                                separatorBuilder:
+                                                                    (context,
+                                                                        index) {
+                                                                  return const SizedBox(
+                                                                      width: 0);
+                                                                },
+                                                                shrinkWrap:
+                                                                    true,
+                                                                scrollDirection:
+                                                                    Axis
+                                                                        .vertical,
+                                                                itemCount: paymentGetApiController
+                                                                    .paymentgetwayapi!
+                                                                    .paymentList!
+                                                                    .length,
+                                                                itemBuilder:
+                                                                    (BuildContext
+                                                                            context,
+                                                                        int index) {
+                                                                  return InkWell(
+                                                                    onTap: () {
+                                                                      setState(
+                                                                          () {
+                                                                        // payment = index;
+                                                                        payment = paymentGetApiController
+                                                                            .paymentgetwayapi!
+                                                                            .paymentList![index]
+                                                                            .id!;
+                                                                        paymentname = paymentGetApiController
+                                                                            .paymentgetwayapi!
+                                                                            .paymentList![index]
+                                                                            .name!;
+                                                                        // paymentmethodId = paymentGetApiController.paymentgetwayapi!.paymentdata[index].id;
+                                                                      });
+                                                                    },
+                                                                    child: paymentGetApiController.paymentgetwayapi!.paymentList![index].status ==
+                                                                            "0"
+                                                                        ? const SizedBox()
+                                                                        : Container(
+                                                                            height:
+                                                                                90,
+                                                                            margin: const EdgeInsets.only(
+                                                                                left: 10,
+                                                                                right: 10,
+                                                                                top: 6,
+                                                                                bottom: 6),
+                                                                            padding:
+                                                                                const EdgeInsets.all(5),
+                                                                            decoration:
+                                                                                BoxDecoration(
+                                                                              // color: Colors.yellowAccent,
+                                                                              border: Border.all(color: payment == paymentGetApiController.paymentgetwayapi!.paymentList![index].id! ? theamcolore : Colors.grey.withOpacity(0.4)),
+                                                                              borderRadius: BorderRadius.circular(15),
+                                                                            ),
+                                                                            child:
+                                                                                Center(
+                                                                              child: ListTile(
+                                                                                leading: Transform.translate(
+                                                                                  offset: const Offset(-5, 0),
+                                                                                  child: Container(
+                                                                                    height: 100,
+                                                                                    width: 60,
+                                                                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.withOpacity(0.4)), image: DecorationImage(image: NetworkImage('${Config.imageurl}${paymentGetApiController.paymentgetwayapi!.paymentList![index].image}'))),
+                                                                                  ),
+                                                                                ),
+                                                                                title: Padding(
+                                                                                  padding: const EdgeInsets.only(bottom: 4),
+                                                                                  child: Text(
+                                                                                    paymentGetApiController.paymentgetwayapi!.paymentList![index].name.toString(),
+                                                                                    style: TextStyle(fontSize: 16, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                    maxLines: 2,
+                                                                                  ),
+                                                                                ),
+                                                                                subtitle: Padding(
+                                                                                  padding: const EdgeInsets.only(bottom: 4),
+                                                                                  child: Text(
+                                                                                    paymentGetApiController.paymentgetwayapi!.paymentList![index].subTitle.toString(),
+                                                                                    style: TextStyle(fontSize: 12, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                    maxLines: 2,
+                                                                                  ),
+                                                                                ),
+                                                                                trailing: Radio(
+                                                                                  value: payment == paymentGetApiController.paymentgetwayapi!.paymentList![index].id! ? true : false,
+                                                                                  fillColor: MaterialStatePropertyAll(theamcolore),
+                                                                                  groupValue: true,
+                                                                                  onChanged: (value) {
+                                                                                    print(value);
+                                                                                    setState(() {
+                                                                                      selectedOption = value.toString();
+                                                                                      selectBoring = paymentGetApiController.paymentgetwayapi!.paymentList![index].image.toString();
+                                                                                    });
+                                                                                  },
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                  );
+                                                                }),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        });
+                                      },
+                                    );
+                                  },
+                                  child: ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    // leading: const Icon(Icons.card_giftcard_sharp),
+                                    leading: const Image(
+                                      image: AssetImage("assets/payment.png"),
+                                      height: 30,
+                                      width: 30,
+                                    ),
+                                    title: Transform.translate(
+                                        offset: const Offset(-15, 0),
+                                        child: Text(
+                                          paymentname,
+                                          style: TextStyle(
+                                              color: notifier.textColor),
+                                        )),
+                                    trailing: Image(
+                                      image: AssetImage(
+                                          "assets/angle-right-small.png"),
+                                      height: 30,
+                                      color: notifier.textColor,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 3,
+                              ),
+                              Container(
+                                height: 40,
+                                width: 1,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.withOpacity(0.4),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    {
+                                      setState(() {
+                                        mainamount = dropprice.toString();
+                                        if (couponadd.isEmpty) {
+                                          for (int i = 0;
+                                              i <
+                                                  paymentGetApiController
+                                                      .paymentgetwayapi!
+                                                      .couponList!
+                                                      .length;
+                                              i++) {
+                                            couponadd.add(false);
+                                          }
+                                        }
+                                      });
+
+                                      showModalBottomSheet(
+                                        isScrollControlled: true,
+                                        // isDismissible: true,
+                                        shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(15),
+                                              topRight: Radius.circular(15)),
+                                        ),
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return StatefulBuilder(
+                                              builder: (context, setState) {
+                                            return Scaffold(
+                                              backgroundColor:
+                                                  notifier.containercolore,
+                                              appBar: AppBar(
+                                                elevation: 0,
+                                                toolbarHeight: 90,
+                                                backgroundColor:
+                                                    notifier.containercolore,
+                                                automaticallyImplyLeading:
+                                                    false,
+                                                leading: Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 40,
+                                                          left: 18,
+                                                          right: 18),
+                                                  child: InkWell(
+                                                      onTap: () {
+                                                        Get.back();
+                                                      },
+                                                      child: Image(
+                                                        image: AssetImage(
+                                                            "assets/arrow-left.png"),
+                                                        color:
+                                                            notifier.textColor,
+                                                      )),
+                                                ),
+                                                title: Transform.translate(
+                                                    offset:
+                                                        const Offset(-10, 0),
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 40),
+                                                      child: Text(
+                                                        "All coupons".tr,
+                                                        style: TextStyle(
+                                                            color: notifier
+                                                                .textColor,
+                                                            fontSize: 18),
+                                                      ),
+                                                    )),
+                                              ),
+                                              body: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(15),
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
+                                                  children: [
+                                                    Text(
+                                                      "Best Coupon".tr,
+                                                      style: TextStyle(
+                                                          color: notifier
+                                                              .textColor,
+                                                          fontSize: 20),
+                                                    ),
+                                                    const SizedBox(
+                                                      height: 20,
+                                                    ),
+                                                    Expanded(
+                                                      child: ListView.builder(
+                                                        shrinkWrap: true,
+                                                        itemCount:
+                                                            paymentGetApiController
+                                                                .paymentgetwayapi!
+                                                                .couponList!
+                                                                .length,
+                                                        itemBuilder:
+                                                            (context, index) {
+                                                          return Container(
+                                                            // height: 230,
+                                                            margin:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    bottom: 10),
+                                                            decoration: BoxDecoration(
+                                                                color: notifier
+                                                                    .containercolore,
+                                                                borderRadius: BorderRadius
+                                                                    .all(Radius
+                                                                        .circular(
+                                                                            15)),
+                                                                border: Border.all(
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .withOpacity(
+                                                                            0.4))),
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(15),
+                                                              child: Row(
+                                                                children: [
+                                                                  Column(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Text(
+                                                                        "${paymentGetApiController.paymentgetwayapi!.couponList![index].title}",
+                                                                        style: TextStyle(
+                                                                            color:
+                                                                                notifier.textColor,
+                                                                            fontWeight: FontWeight.bold,
+                                                                            fontSize: 18),
+                                                                      ),
+                                                                      const SizedBox(
+                                                                        height:
+                                                                            5,
+                                                                      ),
+                                                                      Text(
+                                                                        "${paymentGetApiController.paymentgetwayapi!.couponList![index].subTitle}",
+                                                                        style: const TextStyle(
+                                                                            color:
+                                                                                Colors.grey),
+                                                                      ),
+                                                                      const SizedBox(
+                                                                        height:
+                                                                            10,
+                                                                      ),
+                                                                      Row(
+                                                                        children: [
+                                                                          Text(
+                                                                            "Coupon Code: ".tr,
+                                                                            style:
+                                                                                TextStyle(color: notifier.textColor),
+                                                                          ),
+                                                                          Text(
+                                                                            "${paymentGetApiController.paymentgetwayapi!.couponList![index].code}",
+                                                                            style:
+                                                                                TextStyle(color: theamcolore, fontWeight: FontWeight.bold),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                      const SizedBox(
+                                                                        height:
+                                                                            5,
+                                                                      ),
+                                                                      Row(
+                                                                        children: [
+                                                                          Text(
+                                                                            "Coupon Amount: ".tr,
+                                                                            style:
+                                                                                TextStyle(color: notifier.textColor),
+                                                                          ),
+                                                                          Text(
+                                                                            "${globalcurrency}${paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount}",
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold, color: notifier.textColor),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                      const SizedBox(
+                                                                        height:
+                                                                            5,
+                                                                      ),
+                                                                      Row(
+                                                                        children: [
+                                                                          Text(
+                                                                            "Minimum Amount: ".tr,
+                                                                            style:
+                                                                                TextStyle(color: notifier.textColor),
+                                                                          ),
+                                                                          Text(
+                                                                            "${globalcurrency}${paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount}",
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold, color: notifier.textColor),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                      const SizedBox(
+                                                                        height:
+                                                                            5,
+                                                                      ),
+                                                                      Row(
+                                                                        children: [
+                                                                          Text(
+                                                                            "Ex Date: ".tr,
+                                                                            style:
+                                                                                TextStyle(color: notifier.textColor),
+                                                                          ),
+                                                                          Text(
+                                                                            paymentGetApiController.paymentgetwayapi!.couponList![index].endDate.toString().split(" ").first,
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold, color: notifier.textColor),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                      const SizedBox(
+                                                                          height:
+                                                                              15),
+                                                                      couponadd[index] ==
+                                                                              true
+                                                                          ? InkWell(
+                                                                              onTap: () {
+                                                                                setState(() {
+                                                                                  // couponindex = index;
+                                                                                  couponadd[index] = false;
+                                                                                  dropprice = mainamount;
+                                                                                  amountcontroller.text = mainamount;
+                                                                                  couponname = "";
+                                                                                  couponId = "";
+                                                                                  Get.back(result: {
+                                                                                    "coupAdded": "",
+                                                                                    "couponid": "",
+                                                                                  });
+                                                                                  Get.back(result: {
+                                                                                    "coupAdded": "",
+                                                                                    "couponid": "",
+                                                                                  });
+                                                                                  Buttonpresebottomshhet();
+                                                                                });
+                                                                              },
+                                                                              child: Container(
+                                                                                  height: 45,
+                                                                                  width: 130,
+                                                                                  decoration: BoxDecoration(
+                                                                                    border: Border.all(color: Colors.red),
+                                                                                    borderRadius: BorderRadius.circular(30),
+                                                                                  ),
+                                                                                  child: const Center(
+                                                                                      child: Text(
+                                                                                    "Remove",
+                                                                                    style: TextStyle(color: Colors.red),
+                                                                                  ))))
+                                                                          : InkWell(
+                                                                              onTap: () {
+                                                                                if (double.parse(amountcontroller.text.toString()) >= double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount.toString())) {
+                                                                                  // cartController.checkCouponDataApi(cid: cartController.cartDataInfo?.couponList[index].id);
+
+                                                                                  setState(() {
+                                                                                    couponAmt = int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString());
+                                                                                    // couponadd[index] = true;
+                                                                                    couponindex = index;
+                                                                                    if (couponadd[index] == false) {
+                                                                                      for (int i = 0; i < couponadd.length; i++) {
+                                                                                        if (couponadd.contains(true)) {
+                                                                                          couponadd[i] = false;
+                                                                                        }
+                                                                                      }
+                                                                                      couponadd[index] = true;
+                                                                                    } else {
+                                                                                      couponadd[index] = false;
+                                                                                    }
+                                                                                  });
+
+                                                                                  // amountcontroller.text = "${double.parse(amountcontroller.text) - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString())}";
+                                                                                  // amountcontroller.text = "${double.parse(amountcontroller.text) - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString())}";
+
+                                                                                  print("----------------------------------------${double.parse(amountcontroller.text.toString())}");
+                                                                                  couponname = paymentGetApiController.paymentgetwayapi!.couponList![index].title.toString();
+                                                                                  couponId = paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString();
+
+                                                                                  print("xjsbchjscvsgchsvcscsc  $couponId");
+
+                                                                                  // Get.back(result: paymentGetApiController.paymentgetwayapi!.couponList![index].code);
+                                                                                  Get.back(result: {
+                                                                                    "coupAdded": paymentGetApiController.paymentgetwayapi!.couponList![index].title,
+                                                                                    "couponid": paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString(),
+                                                                                  });
+                                                                                  Get.back(result: {
+                                                                                    "coupAdded": paymentGetApiController.paymentgetwayapi!.couponList![index].title,
+                                                                                    "couponid": paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString(),
+                                                                                  });
+                                                                                  Buttonpresebottomshhet();
+                                                                                }
+                                                                              },
+                                                                              child: Container(
+                                                                                  height: 45,
+                                                                                  width: 130,
+                                                                                  decoration: BoxDecoration(
+                                                                                    border: Border.all(color: int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount!) < int.parse(mainamount) ? theamcolore : Colors.grey.withOpacity(0.2)),
+                                                                                    borderRadius: BorderRadius.circular(30),
+                                                                                  ),
+                                                                                  child: Center(
+                                                                                      child: Text(
+                                                                                    "Apply coupons".tr,
+                                                                                    style: TextStyle(color: int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount!) < int.parse(mainamount) ? theamcolore : Colors.grey),
+                                                                                  ))),
+                                                                            ),
+                                                                    ],
+                                                                  ),
+                                                                  const Spacer(),
+                                                                  Column(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .center,
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .center,
+                                                                    children: [
+                                                                      SvgPicture
+                                                                          .asset(
+                                                                        "assets/svgpicture/offerIcon.svg",
+                                                                        height:
+                                                                            50,
+                                                                      )
+                                                                    ],
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    )
+                                                    // Listview
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          });
+                                        },
+                                      );
+                                    }
+                                  },
+                                  child: ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    // leading: const Padding(
+                                    //   padding: EdgeInsets.only(top: 8),
+                                    //   child: Icon(Icons.circle_notifications_sharp),
+                                    // ),
+                                    leading: const Padding(
+                                      padding: EdgeInsets.only(top: 6),
+                                      child: Image(
+                                        image: AssetImage("assets/coupon.png"),
+                                        height: 30,
+                                        width: 30,
+                                      ),
+                                    ),
+
+                                    title: couponname == ""
+                                        ? Transform.translate(
+                                            offset: const Offset(-15, 10),
+                                            child: Text(
+                                              "Coupon".tr,
+                                              style: TextStyle(
+                                                  color: notifier.textColor),
+                                            ))
+                                        : Transform.translate(
+                                            offset: const Offset(-15, 0),
+                                            child: Text(
+                                              couponname,
+                                              style: TextStyle(
+                                                  color: notifier.textColor),
+                                            )),
+                                    subtitle: couponname == ""
+                                        ? const Text("")
+                                        : Transform.translate(
+                                            offset: const Offset(-15, 0),
+                                            child: Text(
+                                              "Coupon applied".tr,
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: notifier.textColor),
+                                            )),
+                                    trailing: Image(
+                                      image: AssetImage(
+                                          "assets/angle-right-small.png"),
+                                      height: 30,
+                                      color: notifier.textColor,
+                                    ),
+
+                                    // title: Transform.translate(offset: const Offset(-15, 0),child: const Text("BIKE50")),
+                                    // subtitle: Transform.translate(offset: const Offset(-15, 0),child: const Text("Coupon applied",style: TextStyle(fontSize: 12),)),
+                                    // trailing: const Image(image: AssetImage("assets/angle-right-small.png"),height: 30,),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          isanimation == false
+                              ? CommonButton(
+                                  containcolore: theamcolore,
+                                  onPressed1: () {
+                                    setState(() {
+                                      if (double.parse(amountcontroller.text) >
+                                          maxprice) {
+                                        amountcontroller.clear();
+                                        toast = 1;
+                                        print("fffff");
+                                      } else if (double.parse(
+                                              amountcontroller.text) <
+                                          minprice) {
+                                        amountcontroller.clear();
+                                        toast = 2;
+                                        print("hhhhh");
+                                      } else {
+                                        isanimation = true;
+                                        loadertimer = true;
+                                        offerpluse = false;
+                                        requesttime();
+                                        orderfunction();
+                                        // dropprice = amountcontroller.text;
+                                      }
+                                    });
+                                  },
+                                  context: context,
+                                  txt1:
+                                      "Book for ${currencyy ?? globalcurrency}${amountcontroller.text}")
+                              : AnimatedBuilder(
+                                  animation: controller!,
+                                  builder: (context, child) {
+                                    return SizedBox(
+                                      height: 49,
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        style: ButtonStyle(
+                                          padding: const WidgetStatePropertyAll(
+                                              EdgeInsets.zero),
+                                          elevation:
+                                              const WidgetStatePropertyAll(0),
+                                          overlayColor:
+                                              const WidgetStatePropertyAll(
+                                                  Colors.transparent),
+                                          backgroundColor:
+                                              WidgetStatePropertyAll(
+                                                  theamcolore.withOpacity(0.4)),
+                                          shape: WidgetStatePropertyAll(
+                                            RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
+                                            ),
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            setState(() {
+                                              if (double.parse(
+                                                      amountcontroller.text) >
+                                                  maxprice) {
+                                                amountcontroller.clear();
+                                                toast = 1;
+                                                print("fffff");
+                                              } else if (double.parse(
+                                                      amountcontroller.text) <
+                                                  minprice) {
+                                                amountcontroller.clear();
+                                                toast = 2;
+                                                print("hhhhh");
+                                              } else {
+                                                if (offerpluse == true) {
+                                                  // refreshAnimation();
+                                                  if (controller != null &&
+                                                      controller!.isAnimating) {
+                                                    controller!.dispose();
+                                                  }
+                                                  print(
+                                                      "fgvjgfsvjhsgfvjhbfgvjhafgbvhjkafgv");
+                                                  requesttime();
+                                                  orderfunction();
+
+                                                  offerpluse = false;
+                                                } else {}
+                                                // dropprice = amountcontroller.text;
+                                              }
+
+                                              // refreshAnimation();
+
+                                              if (double.parse(
+                                                      amountcontroller.text) >
+                                                  maxprice) {
+                                                amountcontroller.clear();
+                                                amountcontroller.text =
+                                                    maxprice.toString();
+                                                toast = 1;
+                                                print("fffff");
+                                              } else if (double.parse(
+                                                      amountcontroller.text) <
+                                                  minprice) {
+                                                amountcontroller.clear();
+                                                amountcontroller.text =
+                                                    minprice.toString();
+                                                toast = 2;
+                                                print("hhhhh");
+                                              } else {
+                                                toast = 0;
+                                                // dropprice =
+                                                dropprice = double.parse(
+                                                    amountcontroller.text);
+                                                mainamount =
+                                                    amountcontroller.text;
+                                              }
+                                            });
+                                          });
+                                        },
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
+                                              child: LinearProgressIndicator(
+                                                minHeight: 49,
+                                                value: 1.0 - controller!.value,
+                                                backgroundColor: theamcolore
+                                                    .withOpacity(0.1),
+                                                color: theamcolore,
+                                              ),
+                                            ),
+                                            offerpluse == true
+                                                ? Text(
+                                                    "Raise fare to $currencyy${amountcontroller.text}",
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: Colors.white,
+                                                      letterSpacing: 0.4,
+                                                    ),
+                                                  )
+                                                : Text(
+                                                    "Book for $currencyy${amountcontroller.text}",
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: Colors.white,
+                                                      letterSpacing: 0.4,
+                                                    ),
+                                                  ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                          homeApiController.homeapimodel!.runnigRide!.isEmpty
+                              ? SizedBox()
+                              : homeApiController.homeapimodel!.runnigRide![0]
+                                          .biddingRunStatus ==
+                                      0
+                                  ? SizedBox()
+                                  : const SizedBox(
+                                      height: 10,
+                                    ),
+                          homeApiController.homeapimodel!.runnigRide!.isEmpty
+                              ? SizedBox()
+                              : homeApiController.homeapimodel!.runnigRide![0]
+                                          .biddingRunStatus ==
+                                      0
+                                  ? SizedBox()
+                                  : CommonOutLineButton(
+                                      bordercolore: theamcolore,
+                                      onPressed1: () {
+                                        setState(() {
+                                          // socket.connect();
+                                          homeApiController
+                                              .homeapimodel!
+                                              .runnigRide![0]
+                                              .biddingRunStatus = 0;
+                                          print(
+                                              "+++++ biddingRunStatus +++++ :- ${homeApiController.homeapimodel!.runnigRide![0].biddingRunStatus}");
+                                          socatloadbidinfdata();
+                                        });
+                                      },
+                                      context: context,
+                                      txt1: "Driver Offers"),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          StatefulBuilder(
+                            builder: (context, setState) {
+                              return cancelloader
+                                  ? Center(
+                                      child: CircularProgressIndicator(
+                                        color: theamcolore,
+                                      ),
+                                    )
+                                  : CommonOutLineButton(
+                                      bordercolore: theamcolore,
+                                      onPressed1: () {
+                                        setState(() {
+                                          isanimation = false;
+                                          cancelloader = true;
+                                          print(
+                                              "++CANCEL LOADER++:- ${cancelloader}");
+                                          removeRequest
+                                              .removeApi(
+                                                  uid: useridgloable.toString())
+                                              .then(
+                                            (value) {
+                                              socket.emit('AcceRemoveOther', {
+                                                'requestid': request_id,
+                                                'driverid': calculateController
+                                                    .calCulateModel!.driverId!,
+                                              });
+                                              // socket.emit('Vehicle_Ride_Cancel',{
+                                              //   'uid': "$useridgloable",
+                                              //   'driverid' : value["driver_list"],
+                                              // });
+                                              Future.delayed(
+                                                  Duration(microseconds: 500),
+                                                  () {
+                                                setState(() {
+                                                  setState(() {});
+                                                });
+                                              });
+                                              Get.back();
+                                              cancelloader = false;
+                                            },
+                                          );
+                                          if (controller != null &&
+                                              controller!.isAnimating) {
+                                            print("vgvgvgvgvgvgvgvgvgvgv");
+                                            controller!.dispose();
+                                          }
+                                          cancelTimer();
+                                        });
+                                      },
+                                      context: context,
+                                      txt1: "Cancel Request".tr);
+                            },
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // CommonButton(containcolore: theamcolore, onPressed1: () {
+                  //   Get.back();
+                  // },txt1: "Book Auto for \$45",context: context),
+                  // const SizedBox(height: 10,),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    }
   }
 
-// STEP 8: Replace your orderfunction() method with this COMPLETE function
-
   orderfunction() {
-    if (kDebugMode) {
-      print("DRIVER ID:- ${calculateController.calCulateModel!.driverId!}");
-      print("PICK LOCATION:- ${appController.pickupController.text}");
-      print("DROP LOCATION:- ${appController.dropController.text}");
-    }
+    print("DRIVER ID:- ${calculateController.calCulateModel!.driverId!}");
+    print("PICK LOCATION:- ${pickupcontroller.text}");
+    print("DROP LOCATION:- ${dropcontroller.text}");
+    socket.connect();
 
-    // ✅ FIX: Use AppController socket service
-    appController.socketService.connect();
-
-    // ✅ FIX: Use AppController for wallet API
     homeWalletApiController
-        .homwwalleteApi(uid: appController.globalUserId.value, context: context)
-        .then((value) {
-      if (kDebugMode) {
-        print("{{{{{[wallet}}}}}]:-- ${value["wallet_amount"]}");
-      }
-      walleteamount = double.parse(value["wallet_amount"]);
-      if (kDebugMode) {
+        .homwwalleteApi(uid: userid.toString(), context: context)
+        .then(
+      (value) {
+        print("{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
+        walleteamount = double.parse(value["wallet_amount"]);
         print("[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
-      }
-    });
+      },
+    );
+    // refreshAnimation();
 
-    if (kDebugMode) {
-      print(
-          "111111111 amountcontroller.text 111111111 ${amountcontroller.text}");
-    }
+    // print("111111111dd111111111 ${calculateController.calCulateModel!.driverId}");
+    print("111111111 amountcontroller.text 111111111 ${amountcontroller.text}");
 
     percentValue.clear();
     percentValue = [];
@@ -3971,805 +5131,84 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
     setState(() {
       currentStoryIndex = 0;
+      // loadertimer = false;
     });
 
     priceyourfare = double.parse(amountcontroller.text);
-    if (kDebugMode) {
-      print("***price***::-(${priceyourfare})");
-    }
+    print("***price***::-(${priceyourfare})");
 
-    // ✅ FIX: Use AppController for all location and user data
     addVihicalCalculateController.addvihicalcalculateApi(
       pickupadd: {
-        "title":
-            "${appController.pickupTitle.value.isEmpty ? addresspickup : appController.pickupTitle.value}",
-        "subt": appController.pickupSubtitle.value
+        "title": "${picktitle == "" ? addresspickup : picktitle}",
+        "subt": picksubtitle
       },
-      dropadd: {
-        "title": appController.dropTitle.value,
-        "subt": appController.dropSubtitle.value
-      },
+      dropadd: {"title": droptitle, "subt": dropsubtitle},
       droplistadd: droptitlelist,
       context: context,
-      uid: appController.globalUserId.value,
-      tot_km: "${appController.totalkm}",
-      vehicle_id: appController.vehicle_id,
-      tot_minute: appController.tot_time,
-      tot_hour: appController.tot_hour,
+      uid: useridgloable.toString(),
+      tot_km: "$totalkm",
+      vehicle_id: vehicle_id,
+      tot_minute: tot_time,
+      tot_hour: tot_hour,
       m_role: mroal,
-      coupon_id: appController.couponId.value,
+      coupon_id: couponId,
       payment_id: "$payment",
       driverid: calculateController.calCulateModel!.driverId!,
+      // driverid: [29,14],
       price: amountcontroller.text,
-      pickup:
-          "${appController.pickupLat.value},${appController.pickupLng.value}",
-      drop: "${appController.dropLat.value},${appController.dropLng.value}",
-      droplist: appController.onlypass,
+      pickup: "$latitudepick,$longitudepick",
+      drop: "$latitudedrop,$longitudedrop",
+      droplist: onlypass,
       bidd_auto_status: biddautostatus,
-    ).then((value) {
-      if (kDebugMode) {
-        print("+++++Request ID: ${value["id"]}");
-      }
-      setState(() {});
+    ).then(
+      (value) {
+        print("+++++${value["id"]}");
+        setState(() {});
+        request_id = value["id"].toString();
+        socateempt();
+      },
+    );
 
-      // ✅ FIX: Use AppController for request ID
-      appController.requestId.value = value["id"].toString();
-      socateempt();
-    });
-
-    // ✅ FIX: Use AppController for calculate API
     calculateController
         .calculateApi(
             context: context,
-            uid: appController.globalUserId.value,
+            uid: userid.toString(),
             mid: mid,
             mrole: mroal,
-            pickup_lat_lon:
-                "${appController.pickupLat.value},${appController.pickupLng.value}",
-            drop_lat_lon:
-                "${appController.dropLat.value},${appController.dropLng.value}",
-            drop_lat_lon_list: appController.onlypass)
-        .then((value) {
-      dropprice = 0;
-      minimumfare = 0;
-      maximumfare = 0;
+            pickup_lat_lon: "$latitudepick,$longitudepick",
+            drop_lat_lon: "$latitudedrop,$longitudedrop",
+            drop_lat_lon_list: onlypass)
+        .then(
+      (value) {
+        // print("********** value **********:----- ${value}");
+        // print("********** value **********:----- ${value["drop_price"]}");
+        // print("********** value **********:----- ${value["vehicle"]["minimum_fare"]}");
+        // print("********** value **********:----- ${value["vehicle"]["maximum_fare"]}");
 
-      if (value["Result"] == true) {
-        amountresponse = "true";
-        dropprice = value["drop_price"];
-        minimumfare = value["vehicle"]["minimum_fare"];
-        maximumfare = value["vehicle"]["maximum_fare"];
-        responsemessage = value["message"];
-      } else {
-        amountresponse = "false";
-        if (kDebugMode) {
-          print("Calculate API returned false result");
+        dropprice = 0;
+        minimumfare = 0;
+        maximumfare = 0;
+
+        if (value["Result"] == true) {
+          amountresponse = "true";
+          dropprice = value["drop_price"];
+          minimumfare = value["vehicle"]["minimum_fare"];
+          maximumfare = value["vehicle"]["maximum_fare"];
+          responsemessage = value["message"];
+        } else {
+          amountresponse = "false";
+          print("jojojojojojojojojojojojojojojojojojojojojojojojo");
         }
-      }
 
-      if (kDebugMode) {
         print("********** dropprice **********:----- $dropprice");
         print("********** minimumfare **********:----- $minimumfare");
         print("********** maximumfare **********:----- $maximumfare");
-      }
-    });
-  }
-
-  // ✅ IMPROVED: Map tap handler with vehicle loading
-  void handleMapTap(LatLng tappedPoint) {
-    setState(() {
-      _onAddMarkerButtonPressed(tappedPoint.latitude, tappedPoint.longitude);
-
-      lathome = tappedPoint.latitude;
-
-      longhome = tappedPoint.longitude;
-
-      getCurrentLatAndLong(lathome, longhome);
-    });
-
-    // Load vehicles at new location
-
-    if (mid.isNotEmpty) {
-      loadVehiclesForCategory(mid);
-    }
-  }
-
-  // ✅ IMPROVED: Vehicle selection with immediate map update
-
-  Widget buildVehicleSelection(HomeApiController homeApiController) {
-    if (homeApiController.homeapimodel?.categoryList?.isNotEmpty != true) {
-      return Padding(
-        padding: const EdgeInsets.all(20),
-        child: Text(
-          "No vehicles available",
-          style: TextStyle(color: notifier.textColor),
-          textAlign: TextAlign.center,
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 10, right: 10),
-      child: SizedBox(
-        height: 90,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: homeApiController.homeapimodel!.categoryList!.length,
-          itemBuilder: (context, index) {
-            final category =
-                homeApiController.homeapimodel!.categoryList![index];
-
-            return Padding(
-              padding: const EdgeInsets.all(4),
-              child: InkWell(
-                onTap: () async {
-                  if (kDebugMode) {
-                    print(
-                        "🚗 Selected vehicle category: ${category.name} (ID: ${category.id})");
-                  }
-
-                  setState(() {
-                    select1 = index;
-
-                    vehicle_id = category.id.toString();
-
-                    vihicalname = category.name.toString();
-
-                    vihicalimage = category.image.toString();
-
-                    mid = category.id.toString();
-
-                    mroal = category.role.toString();
-                  });
-
-                  // Clear existing vehicle markers before loading new category
-
-                  setState(() {
-                    markers.removeWhere((key, value) =>
-                        key.value.startsWith('vehicle_') ||
-                        key.value.contains('driver'));
-                  });
-
-                  // Load vehicles for new category
-
-                  if (lathome != null && longhome != null) {
-                    await loadVehiclesForCategory(mid);
-                  }
-
-                  // ✅ RECALCULATE price when vehicle changes
-
-                  if (latitudepick != 0.0 &&
-                      longitudepick != 0.0 &&
-                      latitudedrop != 0.0 &&
-                      longitudedrop != 0.0) {
-                    try {
-                      final result = await calculateController.calculateApi(
-                        context: context,
-                        uid: userid.toString(),
-                        mid: mid,
-                        mrole: mroal,
-                        pickup_lat_lon: "${latitudepick},${longitudepick}",
-                        drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                        drop_lat_lon_list: appController.onlypass,
-                      );
-
-                      if (result["Result"] == true) {
-                        setState(() {
-                          // ✅ PARSE API strings to doubles properly
-
-                          dropprice = (result["drop_price"] as num).toDouble();
-
-                          minimumfare = double.parse(
-                              result["vehicle"]["minimum_fare"].toString());
-
-                          maximumfare = double.parse(
-                              result["vehicle"]["maximum_fare"].toString());
-
-                          responsemessage = result["message"]?.toString() ?? "";
-
-                          amountresponse = "true";
-
-                          // Update other calculation data
-
-                          totalkm =
-                              (result["tot_km"] as num?)?.toDouble() ?? 0.0;
-
-                          tot_time = result["tot_minute"]?.toString() ?? "0";
-
-                          tot_hour = result["tot_hour"]?.toString() ?? "0";
-
-                          // Update vehicle info
-
-                          vihicalrice = dropprice;
-                        });
-
-                        if (kDebugMode) {
-                          print(
-                              "✅ Vehicle price updated: $dropprice $globalcurrency");
-                        }
-                      }
-                    } catch (e) {
-                      if (kDebugMode) {
-                        print("❌ Error updating price for vehicle change: $e");
-                      }
-                    }
-                  }
-                },
-                child: Container(
-                  width: 100,
-                  decoration: BoxDecoration(
-                    color: select1 == index
-                        ? theamcolore.withOpacity(0.08)
-                        : notifier.containercolore,
-                    borderRadius: BorderRadius.circular(10),
-                    border: select1 == index
-                        ? Border.all(color: theamcolore, width: 2)
-                        : Border.all(color: Colors.grey.withOpacity(0.2)),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: 40,
-                        width: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            "${Config.imageurl}${category.image}",
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(Icons.directions_car,
-                                  color: theamcolore, size: 24);
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        category.name ?? "",
-                        style: TextStyle(
-                          color: select1 == index
-                              ? theamcolore
-                              : notifier.textColor,
-                          fontSize: 12,
-                          fontWeight: select1 == index
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget buildConditionalTripPanel() {
-    // Only show if we have a complete trip calculation
-    if (appController.pickupController.text.isEmpty ||
-        appController.dropController.text.isEmpty ||
-        calculateController.calCulateModel == null ||
-        loadertimer) {
-      return SizedBox.shrink(); // Don't show panel
-    }
-
-    return buildTripCalculationPanel();
-  }
-// ✅ FIX 1: Corrected _calculateRoutePrice method
-
-  Future<void> _calculateRoutePrice() async {
-    if (kDebugMode) {
-      print("💰 Calculating price for route with vehicle category: $mid");
-    }
-
-    try {
-      // Only calculate if we have pickup and drop points
-
-      if (latitudepick == 0.0 ||
-          longitudepick == 0.0 ||
-          latitudedrop == 0.0 ||
-          longitudedrop == 0.0) {
-        if (kDebugMode) {
-          print("⚠️ Missing pickup or drop coordinates for price calculation");
-        }
-
-        return;
-      }
-
-      setState(() {
-        loadertimer = true;
-      });
-
-      await calculateController.calculateApi(
-        context: context,
-        uid: userid.toString(),
-        mid: mid,
-        mrole: mroal,
-        pickup_lat_lon: "${latitudepick},${longitudepick}",
-        drop_lat_lon: "${latitudedrop},${longitudedrop}",
-        drop_lat_lon_list: appController.onlypass,
-      );
-
-      if (calculateController.calCulateModel?.result == "true") {
-        final result = calculateController.calCulateModel!;
-
-        setState(() {
-          // ✅ FIXED: Proper type handling for API response
-
-          vihicalrice = result.dropPrice ?? 0.0;
-
-          totalkm = result.totKm ?? 0.0;
-
-          tot_time = result.totMinute?.toString() ?? "0";
-
-          tot_hour = result.totHour?.toString() ?? "0";
-
-          // Update vehicle information from response
-
-          if (result.vehicle != null) {
-            vihicalname = result.vehicle!.name ?? vihicalname;
-
-            vehicle_id = result.vehicle!.id?.toString() ?? vehicle_id;
-          }
-
-          loadertimer = false;
-        });
-
-        if (kDebugMode) {
-          print("✅ Price calculated: $vihicalrice ${globalcurrency}");
-
-          print("📏 Distance: $totalkm km");
-
-          print("⏱️ Time: $tot_hour hours $tot_time minutes");
-        }
-      } else {
-        setState(() {
-          loadertimer = false;
-        });
-
-        if (kDebugMode) {
-          print(
-              "❌ Price calculation failed: ${calculateController.calCulateModel?.message}");
-        }
-      }
-    } catch (e) {
-      setState(() {
-        loadertimer = false;
-      });
-
-      if (kDebugMode) {
-        print("❌ Error calculating price: $e");
-      }
-    }
-  }
-
-// ✅ FIX 2: Corrected buildCalculationDisplay method
-
-  Widget buildCalculationDisplay() {
-    if (calculateController.calCulateModel == null) {
-      return SizedBox.shrink();
-    }
-
-    return GetBuilder<CalculateController>(
-      builder: (calculateController) {
-        if (calculateController.calCulateModel == null) {
-          return SizedBox.shrink();
-        }
-
-        final calculation = calculateController.calCulateModel!;
-
-        String currency = globalcurrency.isNotEmpty
-            ? globalcurrency
-            : (currencyy != null && currencyy['symbol'] != null
-                ? currencyy['symbol']
-                : 'YER');
-
-        return Container(
-          margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-          padding: EdgeInsets.all(15),
-          decoration: BoxDecoration(
-            color: notifier.containercolore,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theamcolore.withOpacity(0.3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.calculate, color: theamcolore, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    "Trip Calculation",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: notifier.textColor,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Distance:",
-                      style: TextStyle(color: notifier.textColor)),
-                  Text(
-                    // ✅ FIXED: Direct use of double values
-
-                    "${calculation.totKm ?? totalkm} km",
-
-                    style: TextStyle(
-                        color: notifier.textColor, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Duration:",
-                      style: TextStyle(color: notifier.textColor)),
-                  Text(
-                    // ✅ FIXED: Direct use of int values, convert to string only for display
-
-                    "${calculation.totHour ?? int.tryParse(tot_hour) ?? 0}h ${calculation.totMinute ?? int.tryParse(tot_time) ?? 0}m",
-
-                    style: TextStyle(
-                        color: notifier.textColor, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Estimated Fare:",
-                      style: TextStyle(color: notifier.textColor)),
-                  Text(
-                    // ✅ FIXED: Direct use of double value
-
-                    "${calculation.dropPrice ?? dropprice} $currency",
-
-                    style: TextStyle(
-                      color: theamcolore,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-              if (minimumfare > 0 && maximumfare > 0) ...[
-                SizedBox(height: 5),
-                Text(
-                  "Range: ${minimumfare.toInt()} $currency - ${maximumfare.toInt()} $currency",
-                  style: TextStyle(
-                    color: notifier.textColor?.withOpacity(0.7),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
       },
     );
   }
+}
 
-// ✅ FIX 3: Corrected buildFindDriverButton method
-
-  Widget buildFindDriverButton() {
-    if (appController.pickupController.text.isEmpty ||
-        appController.dropController.text.isEmpty) {
-      return SizedBox.shrink();
-    }
-
-    String currency = globalcurrency.isNotEmpty
-        ? globalcurrency
-        : (currencyy != null && currencyy['symbol'] != null
-            ? currencyy['symbol']
-            : 'YER');
-
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: GetBuilder<CalculateController>(
-        builder: (calculateController) {
-          return calculateController.isLoading
-              ? Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: theamcolore.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          "Calculating trip...",
-                          style: TextStyle(color: Colors.white, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : ElevatedButton(
-                  onPressed: () async {
-                    if (calculateController.calCulateModel?.driverId != null) {
-                      Buttonpresebottomshhet();
-                    } else {
-                      if (kDebugMode) {
-                        print("🔄 Calculating trip price...");
-                      }
-
-                      try {
-                        final result = await calculateController.calculateApi(
-                          context: context,
-                          uid: appController.globalUserId.value,
-                          mid: mid,
-                          mrole: mroal,
-                          pickup_lat_lon:
-                              "${appController.pickupLat.value},${appController.pickupLng.value}",
-                          drop_lat_lon:
-                              "${appController.dropLat.value},${appController.dropLng.value}",
-                          drop_lat_lon_list: appController.onlypass,
-                        );
-
-                        if (result["Result"] == true) {
-                          setState(() {
-                            // ✅ FIXED: Proper type casting from API response
-
-                            dropprice =
-                                (result["drop_price"] as num).toDouble();
-
-                            minimumfare =
-                                (result["vehicle"]["minimum_fare"] as num)
-                                    .toDouble();
-
-                            maximumfare =
-                                (result["vehicle"]["maximum_fare"] as num)
-                                    .toDouble();
-
-                            responsemessage = result["message"]?.toString() ??
-                                "Calculation failed";
-
-                            amountresponse = "true";
-
-                            // ✅ FIXED: Proper type handling for numeric values
-
-                            totalkm =
-                                (result["tot_km"] as num?)?.toDouble() ?? 0.0;
-
-                            tot_time = result["tot_minute"]?.toString() ?? "0";
-
-                            tot_hour = result["tot_hour"]?.toString() ?? "0";
-                          });
-
-                          if (kDebugMode) {
-                            print(
-                                "✅ Calculation completed: $dropprice $currency");
-                          }
-
-                          Buttonpresebottomshhet();
-                        } else {
-                          setState(() {
-                            amountresponse = "false";
-
-                            responsemessage = result["message"]?.toString() ??
-                                "Calculation failed";
-                          });
-
-                          Fluttertoast.showToast(msg: responsemessage);
-                        }
-                      } catch (e) {
-                        if (kDebugMode) {
-                          print("❌ Calculation error: $e");
-                        }
-
-                        Fluttertoast.showToast(
-                            msg: "Failed to calculate trip price");
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theamcolore,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                  child: Text(
-                    calculateController.calCulateModel?.driverId != null
-                        ? "Set your price - ${(calculateController.calCulateModel?.dropPrice ?? dropprice).toInt()} $currency"
-                            .tr
-                        : "Calculate price".tr,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                );
-        },
-      ),
-    );
-  }
-
-// ✅ STEP 1: First, add this method to your _MapScreenState class (anywhere in the class, maybe after buildTripCalculationPanel):
-
-  Widget buildConditionalCalculationPanel() {
-    bool hasPickupAndDrop = appController.pickupController.text.isNotEmpty &&
-        appController.dropController.text.isNotEmpty;
-
-    if (!hasPickupAndDrop) {
-      return SizedBox.shrink();
-    }
-
-    // Check if we have calculation data
-
-    bool hasCalculation = calculateController.calCulateModel != null;
-
-    bool isNotLoading = !loadertimer && !calculateController.isLoading;
-
-    if (isNotLoading && hasCalculation) {
-      return buildTripCalculationPanel();
-    }
-
-    if (!isNotLoading) {
-      // Show loading state
-
-      return Container(
-        margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: notifier.containercolore,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theamcolore.withOpacity(0.3)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                color: theamcolore,
-                strokeWidth: 2,
-              ),
-            ),
-            SizedBox(width: 15),
-            Text(
-              "Calculating trip details...",
-              style: TextStyle(
-                color: notifier.textColor,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return SizedBox.shrink();
-  }
-
-  Widget buildTripCalculationPanel() {
-    if (latitudepick == 0.0 || latitudedrop == 0.0 || loadertimer) {
-      return Container();
-    }
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: notifier.containercolore,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.route, color: theamcolore, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                "Trip Details",
-                style: TextStyle(
-                  color: notifier.textColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.straighten, color: Colors.grey, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      "Distance: ${totalkm.toStringAsFixed(1)} km",
-                      style: TextStyle(color: notifier.textColor, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.access_time, color: Colors.grey, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      "Duration: ${tot_hour}h ${tot_time}m",
-                      style: TextStyle(color: notifier.textColor, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.directions_car, color: Colors.grey, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      "Vehicle: $vihicalname",
-                      style: TextStyle(color: notifier.textColor, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                children: [
-                  Icon(Icons.attach_money, color: theamcolore, size: 16),
-                  Text(
-                    "${vihicalrice.toStringAsFixed(0)} $globalcurrency",
-                    style: TextStyle(
-                      color: theamcolore,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+class RefreshData {
+  final bool shouldRefresh;
+  RefreshData(this.shouldRefresh);
 }

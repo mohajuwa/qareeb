@@ -1,16 +1,21 @@
-// lib/auth_screen/splase_screen.dart - FIXED VERSION
+// ignore_for_file: avoid_print
+// ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
+// ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
+// ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
+
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../app_screen/map_screen.dart';
 import '../app_screen/permisiion_scren.dart';
 import '../common_code/colore_screen.dart';
-import '../services/socket_service.dart';
 import 'onbording_screen.dart';
 
 class Splase_Screen extends StatefulWidget {
@@ -21,217 +26,85 @@ class Splase_Screen extends StatefulWidget {
 }
 
 class _Splase_ScreenState extends State<Splase_Screen> {
-  bool? isLoggedIn;
-  LocationPermission? permission;
-  ColorNotifier notifier = ColorNotifier();
+  bool? isLogin;
 
   @override
   void initState() {
     super.initState();
-    _initializeApp();
+    fun();
+    getColor();
   }
 
-  // ✅ MAIN INITIALIZATION METHOD
-  Future<void> _initializeApp() async {
-    try {
-      // Step 1: Get color theme
-      await _getColorTheme();
-
-      // Step 2: Check login status
-      await _checkLoginStatus();
-
-      // Step 3: Initialize socket if user is logged in
-      if (isLoggedIn == false) {
-        // User IS logged in (remember the logic is reversed)
-        await _initializeSocket();
-      }
-
-      // Step 4: Navigate after delay
-      Timer(const Duration(seconds: 3), () {
-        _navigateToNextScreen();
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error in splash initialization: $e");
-      }
-      // Fallback navigation after delay
-      Timer(const Duration(seconds: 3), () {
-        _navigateToNextScreen();
-      });
+  getColor() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? previusstate = prefs.getBool("isDark");
+    if (previusstate == null) {
+      notifier.isAvailable(false);
+    } else {
+      notifier.isAvailable(previusstate);
     }
   }
 
-  // ✅ GET COLOR THEME
-  Future<void> _getColorTheme() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      bool? previousState = prefs.getBool("isDark");
-
-      if (previousState == null) {
-        notifier.isAvailable(false);
+  LocationPermission? permission;
+  Future fun() async {
+    getDataFromLocal().then((value) async {
+      if (isLogin!) {
+        Timer(const Duration(seconds: 3), () {
+          Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OnbordingScreen(),
+              ),
+              (route) => false);
+        });
       } else {
-        notifier.isAvailable(previousState);
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error getting color theme: $e");
-      }
-      notifier.isAvailable(false); // Default to light mode
-    }
-  }
-
-  // ✅ CHECK LOGIN STATUS
-  Future<void> _checkLoginStatus() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-      // ⚠️ IMPORTANT: The logic is reversed in this app
-      // UserLogin = true means NOT logged in
-      // UserLogin = false means logged in
-      setState(() {
-        isLoggedIn =
-            prefs.getBool("UserLogin") ?? true; // Default to NOT logged in
-      });
-
-      if (kDebugMode) {
-        print(
-            "Login status check - isLoggedIn: $isLoggedIn (true = NOT logged in)");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error checking login status: $e");
-      }
-      setState(() {
-        isLoggedIn = true; // Default to NOT logged in on error
-      });
-    }
-  }
-
-  // ✅ INITIALIZE SOCKET FOR LOGGED IN USERS
-  Future<void> _initializeSocket() async {
-    try {
-      final socketService = Get.find<SocketService>();
-
-      if (kDebugMode) {
-        print("Initializing socket for logged in user...");
-      }
-
-      // Connect socket with timeout
-      await socketService.connect().timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          if (kDebugMode) {
-            print(
-                "Socket connection timeout during splash - proceeding anyway");
+        permission = await Geolocator.checkPermission();
+        Timer(const Duration(seconds: 3), () {
+          if (permission == LocationPermission.denied) {
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PermissionScreen(),
+                ),
+                (route) => false);
+          } else {
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MapScreen(
+                    selectvihical: false,
+                  ),
+                ),
+                (route) => false);
           }
-        },
-      );
+        });
+      }
+    });
 
-      if (kDebugMode) {
-        print("Socket initialization completed: ${socketService.isConnected}");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Socket initialization error: $e - proceeding anyway");
-      }
-      // Don't block navigation if socket fails
-    }
+    // Timer(const Duration(seconds: 3), () {
+    //   Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => OnbordingScreen(),), (route) => false);
+    // });
   }
 
-  // ✅ NAVIGATE TO APPROPRIATE SCREEN
-  Future<void> _navigateToNextScreen() async {
-    try {
-      if (isLoggedIn == true) {
-        // User is NOT logged in - go to onboarding
-        if (kDebugMode) {
-          print("User not logged in - navigating to onboarding");
-        }
-
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-          (route) => false,
-        );
-      } else {
-        // User IS logged in - check permissions then go to map
-        if (kDebugMode) {
-          print("User logged in - checking permissions");
-        }
-
-        await _checkPermissionsAndNavigate();
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Navigation error: $e");
-      }
-      // Fallback to onboarding
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-        (route) => false,
-      );
-    }
+  Future getDataFromLocal() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isLogin = prefs.getBool("UserLogin") ?? true;
+    });
   }
 
-  // ✅ CHECK LOCATION PERMISSIONS
-  Future<void> _checkPermissionsAndNavigate() async {
-    try {
-      permission = await Geolocator.checkPermission();
-
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        if (kDebugMode) {
-          print("Location permission denied - navigating to permission screen");
-        }
-
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const PermissionScreen()),
-          (route) => false,
-        );
-      } else {
-        if (kDebugMode) {
-          print("Location permission granted - navigating to map screen");
-        }
-
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const MapScreen(selectvihical: false),
-          ),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Permission check error: $e");
-      }
-
-      // Fallback to permission screen
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const PermissionScreen()),
-        (route) => false,
-      );
-    }
-  }
-
+  ColorNotifier notifier = ColorNotifier();
   @override
   Widget build(BuildContext context) {
     notifier = Provider.of<ColorNotifier>(context, listen: true);
-
     return Scaffold(
       backgroundColor: notifier.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Show loading indicator
-            if (isLoggedIn == null) const CircularProgressIndicator(),
-
-            // Show app logo
             AnimatedOpacity(
-              opacity: isLoggedIn != null ? 1.0 : 0.5,
+              opacity: 1.0,
               duration: const Duration(milliseconds: 500),
               child: notifier.isDark == true
                   ? SvgPicture.asset(
@@ -245,24 +118,17 @@ class _Splase_ScreenState extends State<Splase_Screen> {
                       width: 250,
                     ),
             ),
-
             const SizedBox(height: 20),
-
-            // Debug info (only in debug mode)
-            if (kDebugMode && isLoggedIn != null)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  "Login Status: ${isLoggedIn == true ? 'Not Logged In' : 'Logged In'}",
-                  style: TextStyle(
-                    color: notifier.textColor?.withOpacity(0.7),
-                    fontSize: 12,
-                  ),
-                ),
-              ),
           ],
         ),
       ),
     );
   }
+
+  // Future getDataFromLocal() async {
+  //   final SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   setState(() {
+  //     isLogin = prefs.getBool("UserLogin") ?? true;
+  //   });
+  // }
 }

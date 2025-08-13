@@ -29,14 +29,14 @@ TextEditingController signupmobilecontroller = TextEditingController();
 String ccode = "";
 String smscode = '';
 
-class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+class OnbordingScreen extends StatefulWidget {
+  const OnbordingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  State<OnbordingScreen> createState() => _OnbordingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnbordingScreenState extends State<OnbordingScreen> {
   // Form key for validation
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 

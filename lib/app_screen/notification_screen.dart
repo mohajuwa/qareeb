@@ -10,7 +10,6 @@ import 'package:qareeb/api_code/notification_api_controller.dart';
 import 'package:qareeb/app_screen/home_screen.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/config.dart';
-import 'package:qareeb/common_code/global_variables.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -23,8 +22,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   void initState() {
     // TODO: implement initState
-    notificationApiController.notificationApi(
-        uid: appController.globalUserId.toString());
+    notificationApiController.notificationApi(uid: useridgloable.toString());
     super.initState();
   }
 

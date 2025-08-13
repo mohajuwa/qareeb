@@ -1,13 +1,9 @@
-// lib/api_code/vihical_ride_complete_api_controller.dart
-
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
-import 'package:qareeb/common_code/global_variables.dart'
-   ;
 import '../api_model/vihical_ride_api_model.dart';
 import '../common_code/config.dart';
 
@@ -27,7 +23,7 @@ class VihicalRideCompleteOrderApiController extends GetxController
       required String request_id,
       required String wallet,
       context}) async {
-    print("vvvpayment_imgvvv:-- $payment_img");
+    print("vvvpayment_imgvvv:-- ${payment_img}");
 
     if (orederloader) {
       return;
@@ -46,27 +42,33 @@ class VihicalRideCompleteOrderApiController extends GetxController
       'payment_id': payment_id,
     });
 
-    if (payment_img.isNotEmpty) {
+    if (payment_img != "") {
       request.files
           .add(await http.MultipartFile.fromPath('payment_img', payment_img));
     } else {
-      print("Payment image is empty");
+      print("ffffffffffff");
     }
 
     http.StreamedResponse response = await request.send();
+
+    // var responsnessaj = jsonDecode(await response.stream.bytesToString());
+    // http.StreamedResponse response = await request.send();
     final responseString = await response.stream.bytesToString();
     final responsnessaj = jsonDecode(responseString);
 
     if (response.statusCode == 200) {
       orederloader = false;
 
+      // print("++++++body for request ++++++:--- ${await response.stream.bytesToString()}");
+      print("MMMMMMMMM (bar) MMMMMMMMM:- ${responsnessaj["review_list"]}");
+
       if (responsnessaj["Result"] == true) {
         isloadoing = false;
         ridecompleterequestid = responsnessaj["request_id"].toString();
+        // vihicalRideCompleteApiModel = jsonDecode(responsnessaj["review_list"]);
         vihicalRideCompleteApiModel =
             VihicalRideCompleteApiModel.fromJson(responsnessaj);
 
-        // ✅ FIX: Reset state correctly
         pickupcontroller.text = "";
         dropcontroller.text = "";
         latitudepick = 0.00;
@@ -77,14 +79,22 @@ class VihicalRideCompleteOrderApiController extends GetxController
         picksubtitle = "";
         droptitle = "";
         dropsubtitle = "";
+        droptitlelist = [];
+        destinationlat = [];
+        destinationlong = [];
+        textfieldlist = [];
 
-        // ✅ FIX: Changed assignments from '= []' to '.clear()'
-        droptitlelist.clear();
-        destinationlat.clear();
-        destinationlong.clear();
-        textfieldlist.clear(); // Using .clear() for consistency
-
-        print("State reset successfully.");
+        print("++hahaha++:- (${pickupcontroller.text})");
+        print("++hahaha++:- (${dropcontroller.text})");
+        print("++hahaha++:- (${latitudepick})");
+        print("++hahaha++:- (${longitudepick})");
+        print("++hahaha++:- (${latitudedrop})");
+        print("++hahaha++:- (${longitudedrop})");
+        print("++hahaha++:- (${picktitle})");
+        print("++hahaha++:- (${picksubtitle})");
+        print("++hahaha++:- (${droptitle})");
+        print("++hahaha++:- (${dropsubtitle})");
+        print("++hahaha++:- (${droptitlelist})");
 
         Fluttertoast.showToast(
           msg: responsnessaj["message"],

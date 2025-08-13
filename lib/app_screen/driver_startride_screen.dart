@@ -7,10 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/common_code/global_variables.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:qareeb/app_screen/driver_detail_screen.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
@@ -19,6 +19,7 @@ import '../common_code/common_flow_screen.dart';
 import '../common_code/config.dart';
 import 'dart:async';
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'dart:ui' as ui;
@@ -268,14 +269,12 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
   _connectSocket() async {
     setState(() {});
 
-    socket.on('V_Driver_Location${appController.globalUserId}',
-        (V_Driver_Location) {
+    socket.on('V_Driver_Location$useridgloable', (V_Driver_Location) {
       print("++++++ /V_Driver_Location111/ ++++ :---  $V_Driver_Location");
       print(
           "V_Driver_Location111 is of type: ${V_Driver_Location.runtimeType}");
       print("V_Driver_Location111 keys: ${V_Driver_Location.keys}");
-      print(
-          "+++++V_Driver_Location111 userid+++++: ${appController.globalUserId}");
+      print("+++++V_Driver_Location111 userid+++++: $useridgloable");
       print("++++driver_id hhhh111 +++++: $driver_id");
       print(
           "++++ooooooooooooooooooooooooo111 +++++: ${V_Driver_Location["driver_location"]["image"]}");
@@ -288,7 +287,7 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
         if (droppointstartscreen.isEmpty) {
           print("ififififi");
           socket.emit('drop_location_list', {
-            'c_id': {appController.globalUserId},
+            'c_id': useridgloable,
             'd_id': driver_id,
             'r_id': request_id,
           });
@@ -321,7 +320,7 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
       }
     });
 
-    socket.on('drop_location${appController.globalUserId}', (drop_location) {
+    socket.on('drop_location$useridgloable', (drop_location) {
       print("++++++ /drop_location_list/ ++++ :---  $drop_location");
 
       livelat = double.parse(drop_location["driver_location"]["latitude"]);

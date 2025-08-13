@@ -7,9 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/common_code/global_variables.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
@@ -25,6 +25,7 @@ import '../timer_screen.dart';
 import 'home_screen.dart';
 import 'dart:async';
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -250,18 +251,20 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
     addPolyLine(polylineCoordinates);
   }
 
+  // late IO.Socket socket;
   socketConnect() async {
     setState(() {});
-
-    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
-      'autoConnect': false,
-      'transports': ['websocket'],
-      'extraHeaders': {'Accept': '*/*'},
-      'timeout': 30000,
-      'forceNew': true,
-    });
-
+    // socket = IO.io(Config.imageurl,<String,dynamic>{
+    //   'autoConnect': false,
+    //   'transports': ['websocket'],
+    // });
     socket.connect();
+
+    // socket.onConnect((_) {
+    //   print('Connected');
+    //   socket.emit('message', 'Hello from Flutter');
+    // });
+
     _connectSocket();
   }
 
@@ -276,19 +279,17 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
     _addMarker(LatLng(widget.lat, widget.long), "origin",
         BitmapDescriptor.defaultMarker);
 
-    print("999999:-- ${appController.globalUserId}");
+    print("999999:-- ${useridgloable}");
 
-    // socket.on('test_Driver_Location$appController.globalUserId', (test_Driver_Location) {
+    // socket.on('test_Driver_Location$useridgloable', (test_Driver_Location) {
     //   print("++++++ /test_Driver_Location/ ++++ :---  $test_Driver_Location");
     // });
-    socket.on('V_Driver_Location$appController.globalUserId',
-        (V_Driver_Location) {
+    socket.on('V_Driver_Location$useridgloable', (V_Driver_Location) {
       print("++++++ /V_Driver_Location111/ ++++ :---  $V_Driver_Location");
       print(
           "V_Driver_Location111 is of type: ${V_Driver_Location.runtimeType}");
       print("V_Driver_Location111 keys: ${V_Driver_Location.keys}");
-      print(
-          "+++++V_Driver_Location111 userid+++++: $appController.globalUserId");
+      print("+++++V_Driver_Location111 userid+++++: $useridgloable");
       print("++++driver_id hhhh111 +++++: $driver_id");
       print(
           "++++ooooooooooooooooooooooooo111 +++++: ${V_Driver_Location["driver_location"]["image"]}");
@@ -328,7 +329,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       print("Vehicle_D_IAmHere is of type: ${Vehicle_D_IAmHere.runtimeType}");
       print("Vehicle_D_IAmHere keys: ${Vehicle_D_IAmHere.keys}");
       print("Vehicle_D_IAmHere id: ${Vehicle_D_IAmHere["c_id"]}");
-      print("userid: $appController.globalUserId");
+      print("userid: $useridgloable");
       tot_time = Vehicle_D_IAmHere["pickuptime"].toString();
       extratime = Vehicle_D_IAmHere["pickuptime"].toString();
       tot_secound = "0";
@@ -336,7 +337,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       print("Vehicle_D_IAmHere_pickuptime tot_time: ${tot_time}");
       print("Vehicle_D_IAmHere_pickuptime tot_time: ${extratime}");
 
-      if (Vehicle_D_IAmHere["c_id"] == appController.globalUserId.toString()) {
+      if (Vehicle_D_IAmHere["c_id"] == useridgloable.toString()) {
         print("Done Done");
         driveridloader == false;
         globalDriverAcceptClass.driverdetailfunction(
@@ -351,8 +352,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       }
     });
 
-    socket.on('Vehicle_Accept_Cancel${appController.globalUserId}',
-        (Vehicle_Accept_Cancel) {
+    socket.on('Vehicle_Accept_Cancel${useridgloable}', (Vehicle_Accept_Cancel) {
       print("++++++ /Vehicle_Accept_Cancel/ ++++ :---  $Vehicle_Accept_Cancel");
       print("++++++ /request_id accpt/ ++++ :---  ${request_id.toString()}");
       print(

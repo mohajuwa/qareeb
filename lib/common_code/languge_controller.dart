@@ -2,11 +2,9 @@
 
 import 'package:get/get.dart';
 
-class language1 extends GetxController  implements GetxService{
-
-  fun({required Function demo}){
+class language1 extends GetxController implements GetxService {
+  fun({required Function demo}) {
     demo();
     update();
   }
-
 }

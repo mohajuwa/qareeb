@@ -272,47 +272,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(
                     height: 10,
                   ),
-                  Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: IntlPhoneField(
-                      searchText: 'بحث',
-                      controller: phonecontroller,
-                      readOnly: true,
-                      style: TextStyle(color: notifier.textColor),
-                      decoration: InputDecoration(
-                        counterText: "",
-                        enabledBorder: OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.grey.withOpacity(0.4)),
-                            borderRadius: BorderRadius.circular(10)),
-                        contentPadding: EdgeInsets.only(top: 8),
-                        hintText: '${phonecontroller.text}',
-                        hintStyle: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        border: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: Colors.grey,
-                            ),
-                            borderRadius: BorderRadius.circular(10)),
-                        focusedBorder: OutlineInputBorder(
-                            borderSide:
-                                const BorderSide(color: Color(0xff7D2AFF)),
-                            borderRadius: BorderRadius.circular(10)),
+                  IntlPhoneField(
+                    controller: phonecontroller,
+                    readOnly: true,
+                    style: TextStyle(color: notifier.textColor),
+                    decoration: InputDecoration(
+                      counterText: "",
+                      enabledBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Colors.grey.withOpacity(0.4)),
+                          borderRadius: BorderRadius.circular(10)),
+                      contentPadding: EdgeInsets.only(top: 8),
+                      hintText: '${phonecontroller.text}',
+                      hintStyle: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
                       ),
-                      flagsButtonPadding: EdgeInsets.zero,
-                      showCountryFlag: true,
-                      showDropdownIcon: false,
-                      initialCountryCode: 'YE',
-                      languageCode: "ar",
-                      dropdownTextStyle:
-                          TextStyle(color: notifier.textColor, fontSize: 15),
-                      onChanged: (number) {
-                        setState(() {});
-                      },
+                      border: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                            color: Colors.grey,
+                          ),
+                          borderRadius: BorderRadius.circular(10)),
+                      focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              const BorderSide(color: Color(0xff7D2AFF)),
+                          borderRadius: BorderRadius.circular(10)),
                     ),
+                    flagsButtonPadding: EdgeInsets.zero,
+                    showCountryFlag: false,
+                    showDropdownIcon: false,
+                    initialCountryCode: 'IN',
+                    dropdownTextStyle:
+                        TextStyle(color: notifier.textColor, fontSize: 15),
+                    // style: const TextStyle(color: Colors.black,fontSize: 16),
+                    onChanged: (number) {
+                      setState(() {});
+                    },
                   ),
                 ],
               ),

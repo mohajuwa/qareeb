@@ -1,89 +1,71 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'package:http/http.dart' as http;
 import 'package:qareeb/common_code/config.dart';
-import 'package:qareeb/common_code/http_helper.dart';
+
 import '../api_model/forgot_api_model.dart';
 import '../common_code/common_button.dart';
 
 class ForgotController extends GetxController implements GetxService {
   ForgotModel? forgotModel;
 
-  Future forgotApi(
+  forgotApi(
       {required String phone,
       required String password,
       required String ccode,
       context}) async {
-    try {
-      Map body = {"phone": phone, "password": password, "ccode": ccode};
+    Map body = {"phone": phone, "password": password, "ccode": ccode};
 
-      Map<String, String> userHeader = {
-        "Content-type": "application/json",
-        "Accept": "application/json"
-      };
+    Map<String, String> userHeader = {
+      "Content-type": "application/json",
+      "Accept": "application/json"
+    };
 
-      String url = Config.baseurl + Config.forgot;
+    var response = await http.post(Uri.parse(Config.baseurl + Config.forgot),
+        body: jsonEncode(body), headers: userHeader);
 
-      if (kDebugMode) {
-        print('Forgot Password URL: $url');
-        print('Forgot Password Body: $body');
-      }
+    print('+ + + + + + + + + + +$body');
+    print('- - - - - - - - - - -${response.body}');
 
-      var response = await HttpHelper.post(url,
-              body: jsonEncode(body), headers: userHeader)
-          .timeout(Duration(seconds: 30));
+    var data = jsonDecode(response.body);
 
-      if (kDebugMode) {
-        print('Forgot Password Response Status: ${response.statusCode}');
-        print('Forgot Password Response Body: ${response.body}');
-      }
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-
-        if (data["Result"] == true) {
-          forgotModel = forgotModelFromJson(response.body);
-          if (forgotModel!.result == true) {
-            update();
-            Get.back();
-            Get.back();
-            Get.back();
-            snackbar(context: context, text: "${data["message"]}");
-            return data;
-          } else {
-            snackbar(context: context, text: "${forgotModel!.message}");
-            return data;
-          }
-        } else {
+    if (response.statusCode == 200) {
+      if (data["Result"] == true) {
+        forgotModel = forgotModelFromJson(response.body);
+        if (forgotModel!.result == true) {
+          // Get.offAll(BoardingPage());
+          update();
+          Get.back();
+          Get.back();
+          Get.back();
+          // Fluttertoast.showToast(
+          //   msg: "${data["message"]}",
+          // );
           snackbar(context: context, text: "${data["message"]}");
+          return data;
+        } else {
+          // Fluttertoast.showToast(
+          //   msg: "${forgotModel!.message}",
+          // );
+          snackbar(context: context, text: "${forgotModel!.message}");
+          return data;
         }
       } else {
-        snackbar(
-            context: context,
-            text:
-                "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
+        // Fluttertoast.showToast(
+        //   msg: "${data["message"]}",
+        // );
+        snackbar(context: context, text: "${data["message"]}");
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Forgot Password API Error: $e");
-      }
-
-      String errorMessage = "فشل الاتصال"; // "Connection failed"
-      if (e.toString().contains('Failed host lookup')) {
-        errorMessage =
-            "لا يمكن الوصول إلى الخادم. تحقق من اتصال الإنترنت."; // "Server not reachable. Check your internet connection."
-      } else if (e.toString().contains('CERTIFICATE_VERIFY_FAILED')) {
-        errorMessage =
-            "خطأ في شهادة الأمان. جاري استخدام تجاوز الشهادة المؤقتة."; // "SSL Certificate error. Using self-signed certificate bypass."
-      } else if (e.toString().contains('TimeoutException')) {
-        errorMessage =
-            "انتهت مهلة الطلب. حاول مرة أخرى."; // "Request timeout. Please try again."
-      } else {
-        errorMessage =
-            "حدث خطأ ما. حاول مرة أخرى."; // "Something went wrong. Please try again."
-      }
-
-      snackbar(context: context, text: errorMessage);
+    } else {
+      // Fluttertoast.showToast(
+      //   msg: "Somthing went wrong!.....",
+      // );
+      snackbar(context: context, text: "Somthing went wrong!.....");
     }
   }
 }

@@ -57,16 +57,15 @@ class _Onmobile3ScreenState extends State<Onmobile3Screen> {
 
   String? _validateName(String? value) {
     if (value == null || value.isEmpty) {
-      return 'الاسم مطلوب.';
+      return 'Name is required.';
     }
     if (value.length < 8) {
-      return 'يجب أن يكون الاسم 8 أحرف على الأقل.';
+      return 'Name must be at least 8 characters.';
     }
-    // يقبل الحروف العربية، الإنجليزية، والمسافات فقط
-    if (!RegExp(r'^[a-zA-Z\u0600-\u06FF\s]+$').hasMatch(value)) {
-      return 'يجب أن يحتوي الاسم على حروف عربية أو إنجليزية فقط.';
+    if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value)) {
+      return 'Name must contain only alphabetic characters.';
     }
-    return null;
+    return null; // No validation errors
   }
 
   ColorNotifier notifier = ColorNotifier();

@@ -1,14 +1,10 @@
 // To parse this JSON data, do
 //
 //     final calCulateModel = calCulateModelFromJson(jsonString);
-// To parse this JSON data, do
-//
-//   final calCulateModel = calCulateModelFromJson(jsonString);
 
 import 'dart:convert';
 
-CalCulateModel calCulateModelFromJson(String str) =>
-    CalCulateModel.fromJson(json.decode(str));
+CalCulateModel calCulateModelFromJson(String str) => CalCulateModel.fromJson(json.decode(str));
 
 String calCulateModelToJson(CalCulateModel data) => json.encode(data.toJson());
 
@@ -42,57 +38,36 @@ class CalCulateModel {
   });
 
   factory CalCulateModel.fromJson(Map<String, dynamic> json) => CalCulateModel(
-        responseCode: json["ResponseCode"],
-        result: json["Result"],
-        message: json["message"],
-        offerExpireTime: json["offer_expire_time"],
-        zoneresult: json["zoneresult"] == null
-            ? []
-            : List<Zoneresult>.from(
-                json["zoneresult"]!.map((x) => Zoneresult.fromJson(x))),
-        totKm: (json["tot_km"] is num)
-            ? json["tot_km"].toDouble()
-            : double.tryParse(json["tot_km"].toString()) ?? 0.0,
-        dropPrice: (json["drop_price"] is num)
-            ? json["drop_price"].toDouble()
-            : double.tryParse(json["drop_price"].toString()) ?? 0.0,
-        // ✅ FIX: Changed .toDouble() to .toInt() for integer fields
-        totHour: (json["tot_hour"] is num)
-            ? json["tot_hour"].toInt()
-            : int.tryParse(json["tot_hour"].toString()),
-        totMinute: (json["tot_minute"] is num)
-            ? json["tot_minute"].toInt()
-            : int.tryParse(json["tot_minute"].toString()),
-        totSecond: (json["tot_second"] is num)
-            ? json["tot_second"].toInt()
-            : int.tryParse(json["tot_second"].toString()),
-        driverId: json["driver_id"] == null
-            ? []
-            : List<int>.from(json["driver_id"]!.map((x) => x)),
-        vehicle:
-            json["vehicle"] == null ? null : Vehicle.fromJson(json["vehicle"]),
-      );
+    responseCode: json["ResponseCode"],
+    result: json["Result"],
+    message: json["message"],
+    offerExpireTime: json["offer_expire_time"],
+    zoneresult: json["zoneresult"] == null ? [] : List<Zoneresult>.from(json["zoneresult"]!.map((x) => Zoneresult.fromJson(x))),
+    totKm: json["tot_km"]?.toDouble(),
+    dropPrice: json["drop_price"]?.toDouble(),
+    totHour: json["tot_hour"],
+    totMinute: json["tot_minute"],
+    totSecond: json["tot_second"],
+    driverId: json["driver_id"] == null ? [] : List<int>.from(json["driver_id"]!.map((x) => x)),
+    vehicle: json["vehicle"] == null ? null : Vehicle.fromJson(json["vehicle"]),
+  );
 
   Map<String, dynamic> toJson() => {
-        "ResponseCode": responseCode,
-        "Result": result,
-        "message": message,
-        "offer_expire_time": offerExpireTime,
-        "zoneresult": zoneresult == null
-            ? []
-            : List<dynamic>.from(zoneresult!.map((x) => x.toJson())),
-        "tot_km": totKm,
-        "drop_price": dropPrice,
-        "tot_hour": totHour,
-        "tot_minute": totMinute,
-        "tot_second": totSecond,
-        "driver_id":
-            driverId == null ? [] : List<dynamic>.from(driverId!.map((x) => x)),
-        "vehicle": vehicle?.toJson(),
-      };
+    "ResponseCode": responseCode,
+    "Result": result,
+    "message": message,
+    "offer_expire_time": offerExpireTime,
+    "zoneresult": zoneresult == null ? [] : List<dynamic>.from(zoneresult!.map((x) => x.toJson())),
+    "tot_km": totKm,
+    "drop_price": dropPrice,
+    "tot_hour": totHour,
+    "tot_minute": totMinute,
+    "tot_second": totSecond,
+    "driver_id": driverId == null ? [] : List<dynamic>.from(driverId!.map((x) => x)),
+    "vehicle": vehicle?.toJson(),
+  };
 }
 
-// ... rest of the file remains the same
 class Vehicle {
   int? id;
   String? image;
@@ -133,44 +108,44 @@ class Vehicle {
   });
 
   factory Vehicle.fromJson(Map<String, dynamic> json) => Vehicle(
-        id: json["id"],
-        image: json["image"],
-        mapImg: json["map_img"],
-        name: json["name"],
-        description: json["description"],
-        minKmDistance: json["min_km_distance"],
-        minKmPrice: json["min_km_price"],
-        afterKmPrice: json["after_km_price"],
-        comissionRate: json["comission_rate"],
-        comissionType: json["comission_type"],
-        extraCharge: json["extra_charge"],
-        passengerCapacity: json["passenger_capacity"],
-        bidding: json["bidding"],
-        whetherCharge: json["whether_charge"],
-        status: json["status"],
-        minimumFare: json["minimum_fare"],
-        maximumFare: json["maximum_fare"],
-      );
+    id: json["id"],
+    image: json["image"],
+    mapImg: json["map_img"],
+    name: json["name"],
+    description: json["description"],
+    minKmDistance: json["min_km_distance"],
+    minKmPrice: json["min_km_price"],
+    afterKmPrice: json["after_km_price"],
+    comissionRate: json["comission_rate"],
+    comissionType: json["comission_type"],
+    extraCharge: json["extra_charge"],
+    passengerCapacity: json["passenger_capacity"],
+    bidding: json["bidding"],
+    whetherCharge: json["whether_charge"],
+    status: json["status"],
+    minimumFare: json["minimum_fare"],
+    maximumFare: json["maximum_fare"],
+  );
 
   Map<String, dynamic> toJson() => {
-        "id": id,
-        "image": image,
-        "map_img": mapImg,
-        "name": name,
-        "description": description,
-        "min_km_distance": minKmDistance,
-        "min_km_price": minKmPrice,
-        "after_km_price": afterKmPrice,
-        "comission_rate": comissionRate,
-        "comission_type": comissionType,
-        "extra_charge": extraCharge,
-        "passenger_capacity": passengerCapacity,
-        "bidding": bidding,
-        "whether_charge": whetherCharge,
-        "status": status,
-        "minimum_fare": minimumFare,
-        "maximum_fare": maximumFare,
-      };
+    "id": id,
+    "image": image,
+    "map_img": mapImg,
+    "name": name,
+    "description": description,
+    "min_km_distance": minKmDistance,
+    "min_km_price": minKmPrice,
+    "after_km_price": afterKmPrice,
+    "comission_rate": comissionRate,
+    "comission_type": comissionType,
+    "extra_charge": extraCharge,
+    "passenger_capacity": passengerCapacity,
+    "bidding": bidding,
+    "whether_charge": whetherCharge,
+    "status": status,
+    "minimum_fare": minimumFare,
+    "maximum_fare": maximumFare,
+  };
 }
 
 class Zoneresult {
@@ -183,12 +158,12 @@ class Zoneresult {
   });
 
   factory Zoneresult.fromJson(Map<String, dynamic> json) => Zoneresult(
-        zone: json["zone"],
-        status: json["status"],
-      );
+    zone: json["zone"],
+    status: json["status"],
+  );
 
   Map<String, dynamic> toJson() => {
-        "zone": zone,
-        "status": status,
-      };
+    "zone": zone,
+    "status": status,
+  };
 }

@@ -1,10 +1,15 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'package:http/http.dart' as http;
 import 'package:qareeb/common_code/config.dart';
-import 'package:qareeb/common_code/http_helper.dart';
+
 import '../api_model/wallete_api_model.dart';
 import '../app_screen/top_up_screen.dart';
 
@@ -17,116 +22,155 @@ class WalletApiController extends GetxController implements GetxService {
       required String uid,
       required String payment_id,
       context}) async {
-    try {
-      Map body = {
-        "amount": amount,
-        "uid": uid,
-        "payment_id": payment_id,
-      };
+    Map body = {
+      "amount": amount,
+      "uid": uid,
+      "payment_id": payment_id,
+    };
+    Map<String, String> userHeader = {
+      "Content-type": "application/json",
+      "Accept": "application/json"
+    };
 
-      Map<String, String> userHeader = {
-        "Content-type": "application/json",
-        "Accept": "application/json"
-      };
+    var response = await http.post(
+        Uri.parse(Config.baseurl + Config.walletupapi),
+        body: jsonEncode(body),
+        headers: userHeader);
 
-      String url = Config.baseurl + Config.walletupapi;
+    print(body);
+    print("///////////:---  ${response.body}");
 
-      if (kDebugMode) {
-        print('Wallet Add URL: $url');
-        print('Wallet Add Body: $body');
-      }
-
-      var response = await HttpHelper.post(url,
-              body: jsonEncode(body), headers: userHeader)
-          .timeout(Duration(seconds: 30));
-
-      if (kDebugMode) {
-        print('Wallet Add Response Status: ${response.statusCode}');
-        print('Wallet Add Response Body: ${response.body}');
-      }
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        walletAddApiModel = walletAddApiModelFromJson(response.body);
-
-        if (data["Result"] == true) {
-          Fluttertoast.showToast(msg: walletAddApiModel!.message.toString());
-
-          showModalBottomSheet(
-            isDismissible: false,
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(15),
-                    topRight: Radius.circular(15))),
-            context: context,
-            builder: (BuildContext context) {
-              return Container(
-                height: 330,
-                decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(15),
-                        topRight: Radius.circular(15))),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      color: Colors.green,
-                      size: 100,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "Payment Successful!",
-                      style: TextStyle(
-                        fontSize: 24,
+    var data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      walletAddApiModel = walletAddApiModelFromJson(response.body);
+      if (data["Result"] == true) {
+        Fluttertoast.showToast(msg: walletAddApiModel!.message.toString());
+        showModalBottomSheet(
+          isDismissible: false,
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(15), topRight: Radius.circular(15))),
+          context: context,
+          builder: (BuildContext context) {
+            return Container(
+              height: 330,
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15))),
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const CircleAvatar(
+                    radius: 35,
+                    backgroundColor: Color(0xff7D2AFF),
+                    child: Center(
+                        child: Icon(
+                      Icons.check,
+                      color: Colors.white,
+                    )),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Text(
+                    'Top up $currencybol${walletController.text}.00',
+                    style: TextStyle(
+                        fontSize: 30,
                         fontWeight: FontWeight.bold,
-                      ),
+                        color: Colors.black),
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Text(
+                    'Successfuly',
+                    style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                  ),
+                  const SizedBox(
+                    height: 28,
+                  ),
+                  Text(
+                    '$currencybol${walletController.text} has been added to your wallet',
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey),
+                  ),
+                  const SizedBox(
+                    height: 28,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20, right: 20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            style: const ButtonStyle(
+                                fixedSize:
+                                    MaterialStatePropertyAll(Size(0, 50)),
+                                backgroundColor:
+                                    MaterialStatePropertyAll(Colors.white),
+                                side: MaterialStatePropertyAll(
+                                    BorderSide(color: Colors.black)),
+                                shape: MaterialStatePropertyAll(
+                                    RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(30))))),
+                            onPressed: () {
+                              Get.back();
+                              // Get.back();
+                            },
+                            child: Text('Done For Now',
+                                style: TextStyle(color: Colors.black)),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: const ButtonStyle(
+                                fixedSize:
+                                    MaterialStatePropertyAll(Size(0, 50)),
+                                backgroundColor:
+                                    MaterialStatePropertyAll(Colors.black),
+                                side: MaterialStatePropertyAll(
+                                    BorderSide(color: Colors.black)),
+                                shape: MaterialStatePropertyAll(
+                                    RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(30))))),
+                            onPressed: () {
+                              Get.back();
+                              // Get.back();
+                            },
+                            child: Text('Another Top Up'.tr,
+                                style: const TextStyle(color: Colors.white)),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Amount: $amount",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    const SizedBox(height: 30),
-                    ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text("Close"),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        } else {
-          Fluttertoast.showToast(msg: "${data["message"]}");
-        }
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+        isLoading = false;
+        update();
+        return jsonDecode(response.body);
       } else {
-        Fluttertoast.showToast(
-            msg:
-                "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
+        Fluttertoast.showToast(msg: "${data["message"]}");
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Wallet Add API Error: $e");
-      }
-
-      String errorMessage = "فشل الاتصال"; // "Connection failed"
-      if (e.toString().contains('Failed host lookup')) {
-        errorMessage =
-            "لا يمكن الوصول إلى الخادم. تحقق من اتصال الإنترنت."; // "Server not reachable. Check your internet connection."
-      } else if (e.toString().contains('CERTIFICATE_VERIFY_FAILED')) {
-        errorMessage =
-            "خطأ في شهادة الأمان. جاري استخدام تجاوز الشهادة المؤقتة."; // "SSL Certificate error. Using self-signed certificate bypass."
-      } else if (e.toString().contains('TimeoutException')) {
-        errorMessage =
-            "انتهت مهلة الطلب. حاول مرة أخرى."; // "Request timeout. Please try again."
-      } else {
-        errorMessage =
-            "حدث خطأ ما. حاول مرة أخرى."; // "Something went wrong. Please try again."
-      }
-
-      Fluttertoast.showToast(msg: errorMessage);
+    } else {
+      Fluttertoast.showToast(msg: "Something went Wrong....!!!");
     }
   }
 }

@@ -249,13 +249,13 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                   //       child: Text(
                   //         "Resend code?".tr,
                   //         style: TextStyle(
-                  //             fontFamily: "Khebrat", color: Colors.black, fontSize: 16),
+                  //             fontFamily: "SofiaRegular", color: Colors.black, fontSize: 16),
                   //       ),
                   //     ) : Text(
                   //       " $secondsRemaining Seconds".tr,
                   //       style: TextStyle(
                   //         color: theamcolore,
-                  //         fontFamily: "Khebrat",
+                  //         fontFamily: "SofiaRegular",
                   //       ),
                   //     ),
                   //     Spacer(),

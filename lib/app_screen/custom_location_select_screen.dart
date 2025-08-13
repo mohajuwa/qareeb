@@ -14,13 +14,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
 import 'package:qareeb/common_code/common_button.dart';
-import 'package:qareeb/common_code/global_variables.dart';
-import 'package:qareeb/common_code/refrish_data.dart';
 import 'dart:ui' as ui;
 import '../api_code/calculate_api_controller.dart';
 import '../api_code/modual_calculate_api_controller.dart';
 import 'home_screen.dart';
-import 'package:qareeb/app/controllers/location_controller.dart';
 import 'map_screen.dart';
 
 var lat;
@@ -54,16 +51,13 @@ class _CustomLocationSelectScreenState
     });
   }
 
-  bool isLoadingLocation = true;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     // datagetfunction();
-    Get.put(LocationController());
-
-    Get.find<LocationController>().clearDestinations();
-    // destination longs cleared via LocationController
+    destinationlat = [];
+    destinationlong = [];
     mapThemeStyle(context: context);
 
     setState(() {
@@ -76,7 +70,7 @@ class _CustomLocationSelectScreenState
     });
   }
 
-  Set<Marker> markers = {};
+  Set<Marker> markers = Set();
   late GoogleMapController mapController1;
 
   Future fun() async {
@@ -105,84 +99,12 @@ class _CustomLocationSelectScreenState
     lat = latitude;
     long = longitude;
 
-    try {
-      // Add timeout and error handling for geocoding
-      List<Placemark> placemarks = await placemarkFromCoordinates(lat, long)
-          .timeout(const Duration(seconds: 10));
-
-      if (placemarks.isNotEmpty) {
-        address =
-            '${placemarks.first.name ?? ''}, ${placemarks.first.locality ?? ''}, ${placemarks.first.country ?? ''}';
-        if (kDebugMode) {
-          print("✅ Geocoding successful: $address");
-        }
-      } else {
-        // Fallback if no address found
-        address =
-            'Location: ${latitude.toStringAsFixed(4)}, ${longitude.toStringAsFixed(4)}';
-        if (kDebugMode) {
-          print("⚠️ No address found, using coordinates");
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("❌ Geocoding error: $e");
-      }
-
-      // Fallback address when geocoding fails
+    await placemarkFromCoordinates(lat, long)
+        .then((List<Placemark> placemarks) {
       address =
-          'Location: ${latitude.toStringAsFixed(4)}, ${longitude.toStringAsFixed(4)}';
-
-      // Show user-friendly message
-      if (e.toString().contains('TimeoutException')) {
-        if (kDebugMode) {
-          print("Geocoding timeout - using coordinates as fallback");
-        }
-      }
-    }
-
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  void _moveToUserLocation(GoogleMapController controller) async {
-    setState(() => isLoadingLocation = true);
-
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
-        timeLimit: const Duration(seconds: 10), // Increased timeout
-      );
-
-      final userLatLng = LatLng(position.latitude, position.longitude);
-
-      controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: userLatLng, zoom: 14),
-      ));
-
-      // Use the improved getCurrentLatAndLong method
-      await getCurrentLatAndLong(position.latitude, position.longitude);
-
-      _onAddMarkerButtonPressed(position.latitude, position.longitude);
-    } catch (e) {
-      if (kDebugMode) {
-        print("Location error: $e");
-      }
-
-      // Fallback to default location (Sana'a) if current location fails
-      const fallbackLocation = LatLng(15.3694, 44.1910);
-      controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: fallbackLocation, zoom: 14),
-      ));
-
-      await getCurrentLatAndLong(
-          fallbackLocation.latitude, fallbackLocation.longitude);
-      _onAddMarkerButtonPressed(
-          fallbackLocation.latitude, fallbackLocation.longitude);
-    }
-
-    setState(() => isLoadingLocation = false);
+          '${placemarks.first.name}, ${placemarks.first.locality}, ${placemarks.first.country}';
+      print("FIRST USER CURRENT LOCATION :-- $address");
+    });
   }
 
   Future<Uint8List> getImages(String path, int width) async {
@@ -305,13 +227,13 @@ class _CustomLocationSelectScreenState
                       ? calculateController
                           .calculateApi(
                               context: context,
-                              uid: appController.globalUserId.toString(),
+                              uid: useridgloable.toString(),
                               mid: mid,
                               mrole: mroal,
                               pickup_lat_lon:
                                   "${latitudepick},${longitudepick}",
                               drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: appController.onlypass)
+                              drop_lat_lon_list: onlypass)
                           .then(
                           (value) {
                             dropprice = 0;
@@ -319,19 +241,9 @@ class _CustomLocationSelectScreenState
                             maximumfare = 0;
 
                             if (value["Result"] == true) {
-                              dropprice =
-                                  (value["drop_price"] as num?)?.toDouble() ??
-                                      0.0;
-                              minimumfare = double.tryParse(value["vehicle"]
-                                              ["minimum_fare"]
-                                          ?.toString() ??
-                                      '0') ??
-                                  0.0;
-                              maximumfare = double.tryParse(value["vehicle"]
-                                              ["maximum_fare"]
-                                          ?.toString() ??
-                                      '0') ??
-                                  0.0;
+                              dropprice = value["drop_price"];
+                              minimumfare = value["vehicle"]["minimum_fare"];
+                              maximumfare = value["vehicle"]["maximum_fare"];
                               responsemessage = value["message"];
 
                               tot_hour = value["tot_hour"].toString();
@@ -362,13 +274,13 @@ class _CustomLocationSelectScreenState
                       : modual_calculateController
                           .modualcalculateApi(
                               context: context,
-                              uid: appController.globalUserId.toString(),
+                              uid: useridgloable.toString(),
                               mid: mid,
                               mrole: mroal,
                               pickup_lat_lon:
                                   "${latitudepick},${longitudepick}",
                               drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: appController.onlypass)
+                              drop_lat_lon_list: onlypass)
                           .then(
                           (value) {
                             totalkm = double.parse(modual_calculateController
@@ -433,84 +345,70 @@ class _CustomLocationSelectScreenState
                       ? calculateController
                           .calculateApi(
                               context: context,
-                              uid: appController.globalUserId.toString(),
+                              uid: useridgloable.toString(),
                               mid: mid,
                               mrole: mroal,
                               pickup_lat_lon:
                                   "${latitudepick},${longitudepick}",
                               drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: appController.onlypass)
-                          .then((value) {
-                          dropprice = 0;
-                          minimumfare = 0;
-                          maximumfare = 0;
+                              drop_lat_lon_list: onlypass)
+                          .then(
+                          (value) {
+                            dropprice = 0;
+                            minimumfare = 0;
+                            maximumfare = 0;
 
-                          if (value["Result"] == true) {
-                            dropprice =
-                                (value["drop_price"] as num?)?.toDouble() ??
-                                    0.0;
-                            minimumfare = double.tryParse(value["vehicle"]
-                                            ["minimum_fare"]
-                                        ?.toString() ??
-                                    '0') ??
-                                0.0;
-                            maximumfare = double.tryParse(value["vehicle"]
-                                            ["maximum_fare"]
-                                        ?.toString() ??
-                                    '0') ??
-                                0.0;
-                            responsemessage = value["message"];
-                            // ✅ FIX: Properly convert to double with null safety
-                            tot_hour = (value["tot_hour"] ?? 0).toString();
-                            tot_time = (value["tot_minute"] ?? 0).toString();
-                            vehicle_id = value["vehicle"]["id"].toString();
+                            if (value["Result"] == true) {
+                              amountresponse = "true";
+                              dropprice = value["drop_price"];
+                              minimumfare = value["vehicle"]["minimum_fare"];
+                              maximumfare = value["vehicle"]["maximum_fare"];
+                              responsemessage = value["message"];
 
-                            // ✅ FIX: Safe conversion to double
-                            vihicalrice = (value["drop_price"] is num)
-                                ? value["drop_price"].toDouble()
-                                : double.tryParse(
-                                        value["drop_price"].toString()) ??
-                                    0.0;
+                              tot_hour = value["tot_hour"].toString();
+                              tot_time = value["tot_minute"].toString();
+                              vehicle_id = value["vehicle"]["id"].toString();
+                              vihicalrice =
+                                  double.parse(value["drop_price"].toString());
+                              totalkm =
+                                  double.parse(value["tot_km"].toString());
+                              tot_secound = "0";
 
-                            totalkm = (value["tot_km"] is num)
-                                ? value["tot_km"].toDouble()
-                                : double.tryParse(value["tot_km"].toString()) ??
-                                    0.0;
+                              vihicalimage =
+                                  value["vehicle"]["map_img"].toString();
+                              vihicalname = value["vehicle"]["name"].toString();
 
-                            tot_secound = "0";
+                              print(".......>>>>>> ${tot_hour}");
+                              print(".......>>>>>> ${tot_time}");
+                              print(".......>>>>>> ${vehicle_id}");
+                              print(".......>>>>>> ${vihicalrice}");
+                              print(".......>>>>>> ${totalkm}");
+                              print(".......>>>>>> ${totalkm}");
+                              print(".......>>>>>> ${totalkm}");
+                            } else {
+                              amountresponse = "false";
+                              print(
+                                  "jojojojojojojojojojojojojojojojojojojojojojojojo");
+                            }
 
-                            vihicalimage =
-                                value["vehicle"]["map_img"].toString();
-                            vihicalname = value["vehicle"]["name"].toString();
-
-                            print(".......>>>>>> ${tot_hour}");
-                            print(".......>>>>>> ${tot_time}");
-                            print(".......>>>>>> ${vehicle_id}");
-                            print(".......>>>>>> ${vihicalrice}");
-                            print(".......>>>>>> ${totalkm}");
-                          } else {
-                            amountresponse = "false";
                             print(
-                                "jojojojojojojojojojojojojojojojojojojojojojojojo");
-                          }
-
-                          print(
-                              "********** dropprice **********:----- ${dropprice}");
-                          print(
-                              "********** minimumfare **********:----- ${minimumfare}");
-                          print(
-                              "********** maximumfare **********:----- ${maximumfare}");
-                        })
+                                "********** dropprice **********:----- ${dropprice}");
+                            print(
+                                "********** minimumfare **********:----- ${minimumfare}");
+                            print(
+                                "********** maximumfare **********:----- ${maximumfare}");
+                          },
+                        )
                       : modual_calculateController
                           .modualcalculateApi(
                               context: context,
-                              uid: appController.globalUserId.toString(),
+                              uid: useridgloable.toString(),
                               mid: mid,
                               mrole: mroal,
                               pickup_lat_lon:
                                   "${latitudepick},${longitudepick}",
                               drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: appController.onlypass)
+                              drop_lat_lon_list: onlypass)
                           .then(
                           (value) {
                             // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
@@ -549,15 +447,14 @@ class _CustomLocationSelectScreenState
               }
             },
             context: context,
-            txt1: "Done".tr),
+            txt1: "Done"),
       ),
       body: GoogleMap(
         gestureRecognizers: {
           Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())
         },
-        initialCameraPosition: const CameraPosition(
-            target: LatLng(15.3694, 44.1910), zoom: 14), // Sana'a
-
+        initialCameraPosition:
+            const CameraPosition(target: LatLng(21.2408, 72.8806), zoom: 13),
         mapType: MapType.normal,
         markers: Set<Marker>.of(markers),
         onTap: (argument) {
@@ -583,7 +480,6 @@ class _CustomLocationSelectScreenState
             controller.setMapStyle(themeForMap);
             mapController1 = controller;
           });
-          _moveToUserLocation(controller);
         },
       ),
     );

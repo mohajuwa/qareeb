@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-import 'package:qareeb/common_code/global_variables.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
 
@@ -87,19 +86,14 @@ class _CounterBottomSheetState extends State<CounterBottomSheet> {
   socketConnect() async {
     setState(() {});
 
-    socket = IO.io('https://qareeb.modwir.com', <String, dynamic>{
+    socket = IO.io(Config.imageurl, <String, dynamic>{
       'autoConnect': false,
       'transports': ['websocket'],
-      'extraHeaders': {'Accept': '*/*'},
-      'timeout': 30000,
-      'forceNew': true,
     });
-
     socket.connect();
 
     socket.onConnect((_) {
       print('Connected');
-
       socket.emit('message', 'Hello from Flutter');
     });
 
@@ -521,7 +515,7 @@ class _CounterBottomSheetState extends State<CounterBottomSheet> {
                                             addVihicalCalculateController
                                                 .addVihicalCalculateModel!.id,
                                         'driverid': value["driver_list"],
-                                        'c_id': appController.globalUserId
+                                        'c_id': useridgloable
                                       });
                                       // socateempt();
                                       commonbottomsheetrequestsend(

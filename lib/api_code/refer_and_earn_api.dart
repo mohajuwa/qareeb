@@ -1,81 +1,62 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:qareeb/common_code/http_helper.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'package:http/http.dart' as http;
 import '../api_model/refer_and_earn_api_model.dart';
 import '../common_code/config.dart';
 import 'calculate_api_controller.dart';
 
+
 class referandearnApiController extends GetxController implements GetxService {
+
   ReferAndEarnApiModel? referAndEarnApiModel;
   bool isLoading = true;
 
-  Future referapi({context, required String uid}) async {
-    try {
-      Map body = {"uid": uid};
+  Future referapi({context,required String uid}) async {
+    Map body = {
+      "uid" : uid,
+    };
 
-      Map<String, String> userHeader = {
-        "Content-type": "application/json",
-        "Accept": "application/json"
-      };
+    Map<String, String> userHeader = {
+      "Content-type": "application/json",
+      "Accept": "application/json"
+    };
 
-      String url = Config.baseurl + Config.referearnapi;
+    var response = await http.post(Uri.parse(Config.baseurl + Config.referearnapi),
+        body: jsonEncode(body), headers: userHeader);
 
-      if (kDebugMode) {
-        print('Refer and Earn URL: $url');
-        print('Refer and Earn Body: $body');
-      }
+    print('+ + + + + referapi + + + + + + :--- $body');
+    print('- - - - - referapi t - - - - - - :--- ${response.body}');
 
-      var response = await HttpHelper.post(url,
-              body: jsonEncode(body), headers: userHeader)
-          .timeout(Duration(seconds: 30));
+    var data = jsonDecode(response.body);
 
-      if (kDebugMode) {
-        print('Refer and Earn Response Status: ${response.statusCode}');
-        print('Refer and Earn Response Body: ${response.body}');
-      }
+    if (response.statusCode == 200) {
+      if (data["Result"] == true) {
 
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
+        referAndEarnApiModel = referAndEarnApiModelFromJson(response.body);
+        if (referAndEarnApiModel!.result == true) {
+          // Get.offAll(BoardingPage());
+          isLoading = false;
+          update();
 
-        if (data["Result"] == true) {
-          referAndEarnApiModel = referAndEarnApiModelFromJson(response.body);
+          return data;
 
-          if (referAndEarnApiModel!.result == true) {
-            isLoading = false;
-            update();
-            return data;
-          } else {
-            return data;
-          }
         } else {
+
           return data;
         }
+
       } else {
-        showToastForDuration("خطأ في HTTP: ${response.statusCode}",
-            3); // "HTTP Error: ${response.statusCode}"
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Refer and Earn API Error: $e");
+
+        return data;
       }
 
-      String errorMessage = "فشل الاتصال"; // "Connection failed"
-      if (e.toString().contains('Failed host lookup')) {
-        errorMessage =
-            "لا يمكن الوصول إلى الخادم. تحقق من اتصال الإنترنت."; // "Server not reachable. Check your internet connection."
-      } else if (e.toString().contains('CERTIFICATE_VERIFY_FAILED')) {
-        errorMessage =
-            "خطأ في شهادة الأمان. جاري استخدام تجاوز الشهادة المؤقتة."; // "SSL Certificate error. Using self-signed certificate bypass."
-      } else if (e.toString().contains('TimeoutException')) {
-        errorMessage =
-            "انتهت مهلة الطلب. حاول مرة أخرى."; // "Request timeout. Please try again."
-      } else {
-        errorMessage =
-            "حدث خطأ ما. حاول مرة أخرى."; // "Something went wrong. Please try again."
-      }
+    } else {
 
-      showToastForDuration(errorMessage, 3);
+      showToastForDuration("Somthing went wrong!.....", 3);
+
+
     }
   }
 }

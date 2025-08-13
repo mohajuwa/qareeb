@@ -3,8 +3,6 @@
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
 // ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
 
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // import 'package:flutter_share/flutter_share.dart';
@@ -13,12 +11,10 @@ import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/common_code/global_variables.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qareeb/app_screen/home_screen.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
 import 'package:qareeb/common_code/colore_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api_code/refer_and_earn_api.dart';
 
@@ -34,32 +30,12 @@ class _ReferAndEarnState extends State<ReferAndEarn> {
   String? appName;
   String? packageName;
   // late ByCoinProvider byCoinProvider;
-  var userId;
-  var decodeUid;
+
   @override
   void initState() {
     super.initState();
     getPackage();
-
-    setUserId().then((_) {
-      if (userId != null && userId.toString().isNotEmpty) {
-        referandearnapicontroller.referapi(uid: userId.toString());
-      } else {
-        print("User ID is null or empty");
-      }
-    });
-  }
-
-  Future<void> setUserId() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-
-    var uid = preferences.getString("userLogin");
-    if (uid != null && uid.isNotEmpty) {
-      decodeUid = jsonDecode(uid);
-      userId = decodeUid['id'];
-    } else {
-      userId = null;
-    }
+    referandearnapicontroller.referapi(uid: useridgloable.toString());
   }
 
   referandearnApiController referandearnapicontroller =
@@ -236,7 +212,7 @@ class _ReferAndEarnState extends State<ReferAndEarn> {
                                                   color: notifier.textColor)),
                                       TextSpan(
                                           text:
-                                              "${appController.globalCurrency.value}${referandearnapicontroller.referAndEarnApiModel!.referData!.signupCredit}",
+                                              "${globalcurrency}${referandearnapicontroller.referAndEarnApiModel!.referData!.signupCredit}",
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyMedium!
@@ -287,7 +263,7 @@ class _ReferAndEarnState extends State<ReferAndEarn> {
                                                   color: notifier.textColor)),
                                       TextSpan(
                                           text:
-                                              "${appController.globalCurrency.value}${referandearnapicontroller.referAndEarnApiModel!.referData!.referCredit}",
+                                              "${globalcurrency}${referandearnapicontroller.referAndEarnApiModel!.referData!.referCredit}",
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyMedium!

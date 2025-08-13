@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'package:http/http.dart' as http;
 import 'package:qareeb/common_code/config.dart';
-import 'package:qareeb/common_code/http_helper.dart';
 import '../api_model/calculate_api_model.dart';
 
 class CalculateController extends GetxController implements GetxService {
   CalCulateModel? calCulateModel;
-  bool isLoading = false;
+
   Future calculateApi(
       {context,
       required String uid,
@@ -18,80 +19,43 @@ class CalculateController extends GetxController implements GetxService {
       required String pickup_lat_lon,
       required String drop_lat_lon,
       required List drop_lat_lon_list}) async {
-    try {
-      Map body = {
-        "uid": uid,
-        "mid": mid,
-        "mrole": mrole,
-        "pickup_lat_lon": pickup_lat_lon,
-        "drop_lat_lon": drop_lat_lon,
-        "drop_lat_lon_list": drop_lat_lon_list,
-      };
+    Map body = {
+      "uid": uid,
+      "mid": mid,
+      "mrole": mrole,
+      "pickup_lat_lon": pickup_lat_lon,
+      "drop_lat_lon": drop_lat_lon,
+      "drop_lat_lon_list": drop_lat_lon_list,
+    };
 
-      Map<String, String> userHeader = {
-        "Content-type": "application/json",
-        "Accept": "application/json"
-      };
+    Map<String, String> userHeader = {
+      "Content-type": "application/json",
+      "Accept": "application/json"
+    };
 
-      String url = Config.baseurl + Config.calculate;
+    var response = await http.post(Uri.parse(Config.baseurl + Config.calculate),
+        body: jsonEncode(body), headers: userHeader);
 
-      if (kDebugMode) {
-        print('Calculate URL: $url');
-        print('Calculate Body: $body');
-      }
+    print('+ + + + + CalCulate + + + + + + :--- $body');
+    print('- - - - - CalCulate - - - - - - :--- ${response.body}');
 
-      var response = await HttpHelper.post(url,
-              body: jsonEncode(body), headers: userHeader)
-          .timeout(Duration(seconds: 30));
+    var data = jsonDecode(response.body);
 
-      if (kDebugMode) {
-        print('Calculate Response Status: ${response.statusCode}');
-        print('Calculate Response Body: ${response.body}');
-      }
+    if (response.statusCode == 200) {
+      if (data["Result"] == true) {
+        calCulateModel = calCulateModelFromJson(response.body);
+        if (calCulateModel!.result == true) {
+          // Get.offAll(BoardingPage());
+          update();
 
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        isLoading = true;
-        if (data["Result"] == true) {
-          calCulateModel = calCulateModelFromJson(response.body);
-          if (calCulateModel!.result == true) {
-            isLoading = false;
-            update();
-            return data;
-          } else {
-            return data;
-          }
+          return data;
         } else {
           return data;
         }
       } else {
-        if (kDebugMode) {
-          print('Calculate API HTTP Error: ${response.statusCode}');
-        }
-        showToastForDuration("خطأ في HTTP: ${response.statusCode}",
-            3); // "HTTP Error: ${response.statusCode}"
-        return null;
+        return data;
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Calculate API Error: $e");
-      }
-
-      String errorMessage = "فشل الاتصال"; // "Connection failed"
-      if (e.toString().contains('Failed host lookup')) {
-        errorMessage =
-            "لا يمكن الوصول إلى الخادم. تحقق من اتصال الإنترنت."; // "Server not reachable. Check your internet connection."
-      } else if (e.toString().contains('CERTIFICATE_VERIFY_FAILED')) {
-        errorMessage =
-            "خطأ في شهادة الأمان. جاري استخدام تجاوز الشهادة المؤقتة."; // "SSL Certificate error. Using self-signed certificate bypass."
-      } else if (e.toString().contains('TimeoutException')) {
-        errorMessage =
-            "انتهت مهلة الطلب. حاول مرة أخرى."; // "Request timeout. Please try again."
-      }
-
-      showToastForDuration(errorMessage, 3);
-      return null;
-    }
+    } else {}
   }
 }
 
@@ -112,3 +76,10 @@ void showToastForDuration(String message, int durationInSeconds) {
     }
   });
 }
+
+
+// ScaffoldFeatureController<SnackBar, SnackBarClosedReason> snackBartimer({required context,required String text}){
+//   return  ScaffoldMessenger.of(context).showSnackBar(
+//     SnackBar(content: Text(text),behavior: SnackBarBehavior.floating, duration: const Duration(seconds: 10),shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),),
+//   );
+// }

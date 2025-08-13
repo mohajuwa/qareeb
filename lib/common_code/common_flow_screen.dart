@@ -8,7 +8,6 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:qareeb/common_code/global_variables.dart';
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/cancel_rason_request_api_controller.dart';
 import '../api_code/remove_request.dart';
@@ -36,180 +35,187 @@ bool cancelloader = false;
 Future commonbottomsheetrequestsend({required context}) {
   socket.connect();
   RemoveRequest removeRequest = Get.put(RemoveRequest());
-  VihicalCalculateController vihicalCalculateController =
-      Get.put(VihicalCalculateController());
-
-  return Get.bottomSheet(enableDrag: false, isDismissible: false,
-      StatefulBuilder(
-    builder: (context, setState) {
-      return Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            height: 420,
-            width: Get.width,
-            decoration: BoxDecoration(
-              color: notifier.containercolore,
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(15), topRight: Radius.circular(15)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 15, right: 15),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                      height: 5,
-                      width: 50,
-                      decoration: BoxDecoration(
+  VihicalCalculateController vihicalCalculateController = Get.put(
+    VihicalCalculateController(),
+  );
+  return Get.bottomSheet(
+    enableDrag: false,
+    isDismissible: false,
+    StatefulBuilder(
+      builder: (context, setState) {
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              height: 420,
+              width: Get.width,
+              decoration: BoxDecoration(
+                color: notifier.containercolore,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                  topRight: Radius.circular(15),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 15, right: 15),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 10),
+                      Container(
+                        height: 5,
+                        width: 50,
+                        decoration: BoxDecoration(
                           color: Colors.grey.withOpacity(0.4),
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        "Finding Ride for you",
-                        style: TextStyle(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          "Finding Ride for you",
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: notifier.textColor),
-                      ),
-                      subtitle: Text(
-                        "$vihicalname ride",
-                        style: TextStyle(
+                            color: notifier.textColor,
+                          ),
+                        ),
+                        subtitle: Text(
+                          "$vihicalname ride",
+                          style: TextStyle(
                             color: notifier.textColor,
                             fontWeight: FontWeight.bold,
-                            fontSize: 14),
-                      ),
-                      trailing: InkWell(
-                        onTap: () {
-                          commonbottomsheetcancelflow(context: context);
-                        },
-                        child: Container(
-                          height: 35,
-                          width: 110,
-                          decoration: BoxDecoration(
-                            border:
-                                Border.all(color: Colors.grey.withOpacity(0.4)),
-                            borderRadius: BorderRadius.circular(20),
+                            fontSize: 14,
                           ),
-                          child: Center(
-                            child: Text(
-                              "Trip Details",
-                              style: TextStyle(color: notifier.textColor),
+                        ),
+                        trailing: InkWell(
+                          onTap: () {
+                            commonbottomsheetcancelflow(context: context);
+                          },
+                          child: Container(
+                            height: 35,
+                            width: 110,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.grey.withOpacity(0.4),
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Center(
+                              child: Text(
+                                "Trip Details",
+                                style: TextStyle(color: notifier.textColor),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    const CounterBottomSheet(),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    lottie.Lottie.asset('assets/lottie/find.json', height: 200),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    cancelloader == true
-                        ? Center(
-                            child: CircularProgressIndicator(
-                              color: theamcolore,
-                            ),
-                          )
-                        : CommonOutLineButton(
-                            bordercolore: theamcolore,
-                            onPressed1: () {
-                              cancelloader = true;
-                              removeRequest
-                                  .removeApi(uid: userId.toString())
-                                  .then(
-                                (value) {
+                      const SizedBox(height: 10),
+                      const CounterBottomSheet(),
+                      const SizedBox(height: 10),
+                      lottie.Lottie.asset(
+                        'assets/lottie/find.json',
+                        height: 200,
+                      ),
+                      const SizedBox(height: 10),
+                      cancelloader == true
+                          ? Center(
+                              child: CircularProgressIndicator(
+                                color: theamcolore,
+                              ),
+                            )
+                          : CommonOutLineButton(
+                              bordercolore: theamcolore,
+                              onPressed1: () {
+                                cancelloader = true;
+                                removeRequest
+                                    .removeApi(uid: useridgloable.toString())
+                                    .then((value) {
                                   socket.emit('AcceRemoveOther', {
                                     'requestid': request_id,
                                     'driverid': vihicalCalculateController
                                         .vihicalCalculateModel!.driverId!,
                                   });
-                                  Future.delayed(Duration(microseconds: 500),
-                                      () {
-                                    setState(() {
-                                      setState(() {});
-                                    });
-                                  });
+                                  Future.delayed(
+                                    Duration(microseconds: 500),
+                                    () {
+                                      setState(() {
+                                        setState(() {});
+                                      });
+                                    },
+                                  );
                                   Get.back();
                                   cancelloader = false;
-                                  Future.delayed(const Duration(seconds: 2),
-                                      () {
-                                    socket.close();
-                                    print('Action performed!');
-                                  });
-                                },
-                              );
-                            },
-                            context: context,
-                            txt1: "Cancel Request")
-                  ],
+                                  Future.delayed(
+                                    const Duration(seconds: 2),
+                                    () {
+                                      socket.close();
+                                      print('Action performed!');
+                                    },
+                                  );
+                                });
+                              },
+                              context: context,
+                              txt1: "Cancel Request",
+                            ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          // Positioned(
-          //   top: -50,
-          //   right: 10,
-          //   child: InkWell(
-          //     onTap: () {
-          //
-          //         print("vvvvvvv");
-          //         removeRequest.removeApi(uid: userId.toString()).then((value) {
-          //           socket.emit('AcceRemoveOther',{
-          //             'requestid': request_id,
-          //             'driverid' : vihicalCalculateController.vihicalCalculateModel!.driverId!,
-          //           });
-          //         },);
-          //         // Get.back();
-          //         print("aaaaaaa");
-          //
-          //       // Navigator.of(context).pop();
-          //     },
-          //     child: Container(
-          //       alignment: Alignment.center,
-          //       height: 40,
-          //       width: 100,
-          //       padding: const EdgeInsets.symmetric(horizontal: 15),
-          //       decoration: BoxDecoration(
-          //         color: Colors.white,
-          //         borderRadius: BorderRadius.circular(30),
-          //       ),
-          //       child: const Text("Cancel",style: TextStyle(
-          //         color: Colors.black,
-          //         fontSize: 14,
-          //         letterSpacing: 0.5,
-          //       ),
-          //       ),
-          //     ),
-          //   ),
-          // ),
-        ],
-      );
-    },
-  ));
+            // Positioned(
+            //   top: -50,
+            //   right: 10,
+            //   child: InkWell(
+            //     onTap: () {
+            //
+            //         print("vvvvvvv");
+            //         removeRequest.removeApi(uid: useridgloable.toString()).then((value) {
+            //           socket.emit('AcceRemoveOther',{
+            //             'requestid': request_id,
+            //             'driverid' : vihicalCalculateController.vihicalCalculateModel!.driverId!,
+            //           });
+            //         },);
+            //         // Get.back();
+            //         print("aaaaaaa");
+            //
+            //       // Navigator.of(context).pop();
+            //     },
+            //     child: Container(
+            //       alignment: Alignment.center,
+            //       height: 40,
+            //       width: 100,
+            //       padding: const EdgeInsets.symmetric(horizontal: 15),
+            //       decoration: BoxDecoration(
+            //         color: Colors.white,
+            //         borderRadius: BorderRadius.circular(30),
+            //       ),
+            //       child: const Text("Cancel",style: TextStyle(
+            //         color: Colors.black,
+            //         fontSize: 14,
+            //         letterSpacing: 0.5,
+            //       ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
+          ],
+        );
+      },
+    ),
+  );
 }
 
 Future commonbottomsheetcancelflow({required context}) {
-  CancelRasonRequestApiController cancelRasonRequestApiController =
-      Get.put(CancelRasonRequestApiController());
-  VihicalCancelRideApiController vihicalCancelRideApiController =
-      Get.put(VihicalCancelRideApiController());
+  CancelRasonRequestApiController cancelRasonRequestApiController = Get.put(
+    CancelRasonRequestApiController(),
+  );
+  VihicalCancelRideApiController vihicalCancelRideApiController = Get.put(
+    VihicalCancelRideApiController(),
+  );
   cancelRasonRequestApiController.cancelreasonApi(context);
   String cancel_id = "";
   // late IO.Socket socket;
@@ -220,798 +226,874 @@ Future commonbottomsheetcancelflow({required context}) {
   // });
   socket.connect();
 
-  return Get.bottomSheet(isScrollControlled: true, StatefulBuilder(
-    builder: (context, setState) {
-      return Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            // height: 800,
-            // width: Get.width,
-            decoration: BoxDecoration(
-              color: notifier.background,
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(15), topRight: Radius.circular(15)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 15, right: 15),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Center(
-                    child: Container(
-                      height: 5,
-                      width: 50,
-                      decoration: BoxDecoration(
+  return Get.bottomSheet(
+    isScrollControlled: true,
+    StatefulBuilder(
+      builder: (context, setState) {
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              // height: 800,
+              // width: Get.width,
+              decoration: BoxDecoration(
+                color: notifier.background,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                  topRight: Radius.circular(15),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 15, right: 15),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Container(
+                        height: 5,
+                        width: 50,
+                        decoration: BoxDecoration(
                           color: Colors.grey.withOpacity(0.4),
-                          borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Image(
-                      image: NetworkImage("${Config.imageurl}$vihicalimage"),
-                      height: 40,
-                    ),
-                    title: Text(
-                      "Traveling by",
-                      style: TextStyle(color: notifier.textColor),
-                    ),
-                    subtitle: Text(
-                      "$vihicalname ride",
-                      style: TextStyle(
+                    const SizedBox(height: 10),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Image(
+                        image: NetworkImage("${Config.imageurl}$vihicalimage"),
+                        height: 40,
+                      ),
+                      title: Text(
+                        "Traveling by",
+                        style: TextStyle(color: notifier.textColor),
+                      ),
+                      subtitle: Text(
+                        "$vihicalname ride",
+                        style: TextStyle(
                           color: notifier.textColor,
-                          fontWeight: FontWeight.bold),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  loadertimer == true
-                      ? const SizedBox()
-                      : const CounterBottomSheet(),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  Text(
-                    "Location Details",
-                    style: TextStyle(
+                    const SizedBox(height: 10),
+                    loadertimer == true
+                        ? const SizedBox()
+                        : const CounterBottomSheet(),
+                    const SizedBox(height: 20),
+                    Text(
+                      "Location Details",
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
-                        color: notifier.textColor),
-                  ),
-                  Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 1,
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                    top: 16, bottom: 20, left: 0),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      height: 15,
-                                      width: 15,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                            color: Colors.green, width: 4),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 4,
-                                    ),
-                                    Container(
-                                      height: 10,
-                                      width: 3,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.withOpacity(0.4),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 4,
-                                    ),
-                                    Container(
-                                      height: 10,
-                                      width: 3,
-                                      decoration: BoxDecoration(
-                                          color: Colors.grey.withOpacity(0.4),
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
-                                    ),
-                                    const SizedBox(
-                                      height: 4,
-                                    ),
-                                    textfieldlist.isNotEmpty
-                                        ? const SizedBox()
-                                        : Container(
-                                            height: 10,
-                                            width: 3,
-                                            decoration: BoxDecoration(
-                                                color: Colors.grey
-                                                    .withOpacity(0.4),
-                                                borderRadius:
-                                                    BorderRadius.circular(10)),
-                                          ),
-                                    const SizedBox(
-                                      height: 4,
-                                    ),
-                                    Container(
-                                      height: 15,
-                                      width: 15,
-                                      decoration: BoxDecoration(
+                        color: notifier.textColor,
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 1,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 16,
+                                    bottom: 20,
+                                    left: 0,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        height: 15,
+                                        width: 15,
+                                        decoration: BoxDecoration(
                                           color: Colors.white,
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                              color: Colors.red, width: 4)),
-                                    ),
-                                    const SizedBox(
-                                      height: 4,
-                                    ),
-                                    textfieldlist.isEmpty
-                                        ? const SizedBox()
-                                        : Container(
-                                            height: 10,
-                                            width: 3,
-                                            decoration: BoxDecoration(
-                                                color: Colors.grey
-                                                    .withOpacity(0.4),
-                                                borderRadius:
-                                                    BorderRadius.circular(10)),
-                                          ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              flex: 12,
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 10),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Transform.translate(
-                                      offset: picktitle == ""
-                                          ? const Offset(0, 0)
-                                          : const Offset(0, -10),
-                                      child: ListTile(
-                                        // isThreeLine: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        title: Text(
-                                          "${picktitle == "" ? addresspickup : picktitle}",
-                                          style: TextStyle(
-                                              color: notifier.textColor),
-                                        ),
-                                        subtitle: Text(
-                                          picksubtitle,
-                                          style: const TextStyle(
-                                              color: Colors.grey),
-                                          maxLines: 1,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 5,
-                                    ),
-                                    Transform.translate(
-                                      offset: const Offset(0, -30),
-                                      child: ListTile(
-                                        // isThreeLine: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        title: Text(
-                                          droptitle,
-                                          style: TextStyle(
-                                              color: notifier.textColor),
-                                        ),
-                                        subtitle: Text(
-                                          dropsubtitle,
-                                          style: const TextStyle(
-                                              color: Colors.grey),
-                                          maxLines: 1,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      textfieldlist.isEmpty
-                          ? const SizedBox()
-                          : Transform.translate(
-                              offset: const Offset(0, -40),
-                              child: ListView.builder(
-                                physics: const NeverScrollableScrollPhysics(),
-                                padding: EdgeInsets.zero,
-                                shrinkWrap: true,
-                                itemCount: textfieldlist.length,
-                                itemBuilder: (context, index) {
-                                  return Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: ListView.builder(
-                                          padding: EdgeInsets.zero,
-                                          clipBehavior: Clip.none,
-                                          shrinkWrap: true,
-                                          itemCount: 1,
-                                          itemBuilder: (context, index) {
-                                            return Transform.translate(
-                                              offset: const Offset(-5, -25),
-                                              child: Column(
-                                                children: [
-                                                  // const SizedBox(height: 4,),
-                                                  Container(
-                                                    height: 10,
-                                                    width: 3,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
-                                                  Container(
-                                                    height: 10,
-                                                    width: 3,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
-                                                  Container(
-                                                    height: 15,
-                                                    width: 15,
-                                                    decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        shape: BoxShape.circle,
-                                                        border: Border.all(
-                                                            color: Colors.red,
-                                                            width: 4)),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
-                                                  Container(
-                                                    height: 10,
-                                                    width: 3,
-                                                    decoration: BoxDecoration(
-                                                        color: Colors.grey
-                                                            .withOpacity(0.4),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10)),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 9,
-                                        child: Transform.translate(
-                                          offset: const Offset(0, -15),
-                                          child: Column(
-                                            children: [
-                                              // Transform.translate(
-                                              //   offset: const Offset(0, -7),
-                                              //   child: Text("${droptitlelist[index]["title"]}"),
-                                              // ),
-                                              // const SizedBox(height: 5,),
-                                              ListTile(
-                                                // isThreeLine: true,
-                                                contentPadding: EdgeInsets.zero,
-                                                title: Text(
-                                                  "${droptitlelist[index]["title"]}",
-                                                  style: TextStyle(
-                                                      color:
-                                                          notifier.textColor),
-                                                ),
-                                                subtitle: Text(
-                                                  "${droptitlelist[index]["subt"]}",
-                                                  style: const TextStyle(
-                                                      color: Colors.grey),
-                                                  maxLines: 1,
-                                                ),
-                                              ),
-                                            ],
+                                            color: Colors.green,
+                                            width: 4,
                                           ),
                                         ),
                                       ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ),
-                      driveridloader == true
-                          ? Transform.translate(
-                              offset: const Offset(0, -40),
-                              child: ListView.builder(
-                                physics: const NeverScrollableScrollPhysics(),
-                                padding: EdgeInsets.zero,
-                                shrinkWrap: true,
-                                itemCount: droptitlelist.length,
-                                itemBuilder: (context, index) {
-                                  return Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: ListView.builder(
-                                          padding: EdgeInsets.zero,
-                                          clipBehavior: Clip.none,
-                                          shrinkWrap: true,
-                                          itemCount: 1,
-                                          itemBuilder: (context, index) {
-                                            return Transform.translate(
-                                              offset: const Offset(-5, -25),
-                                              child: Column(
-                                                children: [
-                                                  // const SizedBox(height: 4,),
-                                                  Container(
-                                                    height: 10,
-                                                    width: 3,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
-                                                  Container(
-                                                    height: 10,
-                                                    width: 3,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
-                                                  Container(
-                                                    height: 15,
-                                                    width: 15,
-                                                    decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        shape: BoxShape.circle,
-                                                        border: Border.all(
-                                                            color: Colors.red,
-                                                            width: 4)),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 4,
-                                                  ),
-                                                  Container(
-                                                    height: 10,
-                                                    width: 3,
-                                                    decoration: BoxDecoration(
-                                                        color: Colors.grey
-                                                            .withOpacity(0.4),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10)),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 9,
-                                        child: Transform.translate(
-                                          offset: const Offset(0, -15),
-                                          child: Column(
-                                            children: [
-                                              // Transform.translate(
-                                              //   offset: const Offset(0, -7),
-                                              //   child: Text("${droptitlelist[index]["title"]}"),
-                                              // ),
-                                              // const SizedBox(height: 5,),
-                                              ListTile(
-                                                // isThreeLine: true,
-                                                contentPadding: EdgeInsets.zero,
-                                                title: Text(
-                                                  "${droptitlelist[index]["title"]}",
-                                                  style: TextStyle(
-                                                      color:
-                                                          notifier.textColor),
-                                                ),
-                                                subtitle: Text(
-                                                  "${droptitlelist[index]["subt"]}",
-                                                  style: const TextStyle(
-                                                      color: Colors.grey),
-                                                  maxLines: 1,
-                                                ),
-                                              ),
-                                            ],
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        height: 10,
+                                        width: 3,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.withOpacity(0.4),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
                                         ),
                                       ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            )
-                          : SizedBox(),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Text("Total Fare",
-                          style: TextStyle(
-                              color: notifier.textColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16)),
-                      const Spacer(),
-                      Text("${appController.globalCurrency.value} $vihicalrice",
-                          style: TextStyle(
-                              color: notifier.textColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16))
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  const Text(
-                    "Paying via cash",
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
-                  // const Spacer(),
-                  // const SizedBox(height: 40,),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  statusridestart == "5"
-                      ? const SizedBox()
-                      : CommonOutLineButton(
-                          bordercolore: theamcolore,
-                          onPressed1: () {
-                            Get.back();
-                            Get.bottomSheet(StatefulBuilder(
-                              builder: (context, setState) {
-                                return Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    Container(
-                                      height: 500,
-                                      width: Get.width,
-                                      decoration: BoxDecoration(
-                                        color: notifier.containercolore,
-                                        borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(15),
-                                            topRight: Radius.circular(15)),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        height: 10,
+                                        width: 3,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.withOpacity(0.4),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
                                       ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 15, right: 15),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const SizedBox(
-                                              height: 20,
-                                            ),
-                                            Text(
-                                              "Why do you want to cancel?",
-                                              style: TextStyle(
-                                                  color: notifier.textColor,
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            const SizedBox(
+                                      const SizedBox(height: 4),
+                                      textfieldlist.isNotEmpty
+                                          ? const SizedBox()
+                                          : Container(
                                               height: 10,
+                                              width: 3,
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.withOpacity(
+                                                  0.4,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
                                             ),
-                                            Text(
-                                              "Please provide the reason for cancellation",
-                                              style: TextStyle(
-                                                  color: notifier.textColor),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        height: 15,
+                                        width: 15,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.red,
+                                            width: 4,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      textfieldlist.isEmpty
+                                          ? const SizedBox()
+                                          : Container(
+                                              height: 10,
+                                              width: 3,
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.withOpacity(
+                                                  0.4,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
                                             ),
-                                            const SizedBox(
-                                              height: 20,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                flex: 12,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 10),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Transform.translate(
+                                        offset: picktitle == ""
+                                            ? const Offset(0, 0)
+                                            : const Offset(0, -10),
+                                        child: ListTile(
+                                          // isThreeLine: true,
+                                          contentPadding: EdgeInsets.zero,
+                                          title: Text(
+                                            "${picktitle == "" ? addresspickup : picktitle}",
+                                            style: TextStyle(
+                                              color: notifier.textColor,
                                             ),
-                                            Expanded(
-                                              child: ListView.separated(
-                                                  // physics: const NeverScrollableScrollPhysics(),
-                                                  separatorBuilder:
-                                                      (context, index) {
-                                                    return const SizedBox(
-                                                      width: 0,
-                                                    );
-                                                  },
-                                                  shrinkWrap: true,
-                                                  scrollDirection:
-                                                      Axis.vertical,
-                                                  itemCount:
-                                                      cancelRasonRequestApiController
-                                                          .cancelReasonModel!
-                                                          .rideCancelList!
-                                                          .length,
-                                                  itemBuilder:
-                                                      (BuildContext context,
-                                                          int index) {
-                                                    return Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              left: 10,
-                                                              right: 10),
-                                                      child: Column(
-                                                        children: [
-                                                          InkWell(
-                                                            onTap: () {
-                                                              setState(() {
-                                                                cancel_id = cancelRasonRequestApiController
-                                                                    .cancelReasonModel!
-                                                                    .rideCancelList![
-                                                                        index]
-                                                                    .id
-                                                                    .toString();
-                                                                Get.back();
-                                                                Get.bottomSheet(
+                                          ),
+                                          subtitle: Text(
+                                            picksubtitle,
+                                            style: const TextStyle(
+                                              color: Colors.grey,
+                                            ),
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Transform.translate(
+                                        offset: const Offset(0, -30),
+                                        child: ListTile(
+                                          // isThreeLine: true,
+                                          contentPadding: EdgeInsets.zero,
+                                          title: Text(
+                                            droptitle,
+                                            style: TextStyle(
+                                              color: notifier.textColor,
+                                            ),
+                                          ),
+                                          subtitle: Text(
+                                            dropsubtitle,
+                                            style: const TextStyle(
+                                              color: Colors.grey,
+                                            ),
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        textfieldlist.isEmpty
+                            ? const SizedBox()
+                            : Transform.translate(
+                                offset: const Offset(0, -40),
+                                child: ListView.builder(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  padding: EdgeInsets.zero,
+                                  shrinkWrap: true,
+                                  itemCount: textfieldlist.length,
+                                  itemBuilder: (context, index) {
+                                    return Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 1,
+                                          child: ListView.builder(
+                                            padding: EdgeInsets.zero,
+                                            clipBehavior: Clip.none,
+                                            shrinkWrap: true,
+                                            itemCount: 1,
+                                            itemBuilder: (context, index) {
+                                              return Transform.translate(
+                                                offset: const Offset(-5, -25),
+                                                child: Column(
+                                                  children: [
+                                                    // const SizedBox(height: 4,),
+                                                    Container(
+                                                      height: 10,
+                                                      width: 3,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey
+                                                            .withOpacity(0.4),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                          10,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Container(
+                                                      height: 10,
+                                                      width: 3,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey
+                                                            .withOpacity(0.4),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                          10,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Container(
+                                                      height: 15,
+                                                      width: 15,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white,
+                                                        shape: BoxShape.circle,
+                                                        border: Border.all(
+                                                          color: Colors.red,
+                                                          width: 4,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Container(
+                                                      height: 10,
+                                                      width: 3,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey
+                                                            .withOpacity(0.4),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                          10,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 9,
+                                          child: Transform.translate(
+                                            offset: const Offset(0, -15),
+                                            child: Column(
+                                              children: [
+                                                // Transform.translate(
+                                                //   offset: const Offset(0, -7),
+                                                //   child: Text("${droptitlelist[index]["title"]}"),
+                                                // ),
+                                                // const SizedBox(height: 5,),
+                                                ListTile(
+                                                  // isThreeLine: true,
+                                                  contentPadding:
+                                                      EdgeInsets.zero,
+                                                  title: Text(
+                                                    "${droptitlelist[index]["title"]}",
+                                                    style: TextStyle(
+                                                      color: notifier.textColor,
+                                                    ),
+                                                  ),
+                                                  subtitle: Text(
+                                                    "${droptitlelist[index]["subt"]}",
+                                                    style: const TextStyle(
+                                                      color: Colors.grey,
+                                                    ),
+                                                    maxLines: 1,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ),
+                        driveridloader == true
+                            ? Transform.translate(
+                                offset: const Offset(0, -40),
+                                child: ListView.builder(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  padding: EdgeInsets.zero,
+                                  shrinkWrap: true,
+                                  itemCount: droptitlelist.length,
+                                  itemBuilder: (context, index) {
+                                    return Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 1,
+                                          child: ListView.builder(
+                                            padding: EdgeInsets.zero,
+                                            clipBehavior: Clip.none,
+                                            shrinkWrap: true,
+                                            itemCount: 1,
+                                            itemBuilder: (context, index) {
+                                              return Transform.translate(
+                                                offset: const Offset(-5, -25),
+                                                child: Column(
+                                                  children: [
+                                                    // const SizedBox(height: 4,),
+                                                    Container(
+                                                      height: 10,
+                                                      width: 3,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey
+                                                            .withOpacity(0.4),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                          10,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Container(
+                                                      height: 10,
+                                                      width: 3,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey
+                                                            .withOpacity(0.4),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                          10,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Container(
+                                                      height: 15,
+                                                      width: 15,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white,
+                                                        shape: BoxShape.circle,
+                                                        border: Border.all(
+                                                          color: Colors.red,
+                                                          width: 4,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Container(
+                                                      height: 10,
+                                                      width: 3,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey
+                                                            .withOpacity(0.4),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                          10,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 9,
+                                          child: Transform.translate(
+                                            offset: const Offset(0, -15),
+                                            child: Column(
+                                              children: [
+                                                // Transform.translate(
+                                                //   offset: const Offset(0, -7),
+                                                //   child: Text("${droptitlelist[index]["title"]}"),
+                                                // ),
+                                                // const SizedBox(height: 5,),
+                                                ListTile(
+                                                  // isThreeLine: true,
+                                                  contentPadding:
+                                                      EdgeInsets.zero,
+                                                  title: Text(
+                                                    "${droptitlelist[index]["title"]}",
+                                                    style: TextStyle(
+                                                      color: notifier.textColor,
+                                                    ),
+                                                  ),
+                                                  subtitle: Text(
+                                                    "${droptitlelist[index]["subt"]}",
+                                                    style: const TextStyle(
+                                                      color: Colors.grey,
+                                                    ),
+                                                    maxLines: 1,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              )
+                            : SizedBox(),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Text(
+                          "Total Fare",
+                          style: TextStyle(
+                            color: notifier.textColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          "$globalcurrency $vihicalrice",
+                          style: TextStyle(
+                            color: notifier.textColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "Paying via cash",
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                    // const Spacer(),
+                    // const SizedBox(height: 40,),
+                    const SizedBox(height: 10),
+                    statusridestart == "5"
+                        ? const SizedBox()
+                        : CommonOutLineButton(
+                            bordercolore: theamcolore,
+                            onPressed1: () {
+                              Get.back();
+                              Get.bottomSheet(
+                                StatefulBuilder(
+                                  builder: (context, setState) {
+                                    return Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        Container(
+                                          height: 500,
+                                          width: Get.width,
+                                          decoration: BoxDecoration(
+                                            color: notifier.containercolore,
+                                            borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(15),
+                                              topRight: Radius.circular(15),
+                                            ),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                              left: 15,
+                                              right: 15,
+                                            ),
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                const SizedBox(height: 20),
+                                                Text(
+                                                  "Why do you want to cancel?",
+                                                  style: TextStyle(
+                                                    color: notifier.textColor,
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 10),
+                                                Text(
+                                                  "Please provide the reason for cancellation",
+                                                  style: TextStyle(
+                                                    color: notifier.textColor,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 20),
+                                                Expanded(
+                                                  child: ListView.separated(
+                                                    // physics: const NeverScrollableScrollPhysics(),
+                                                    separatorBuilder:
+                                                        (context, index) {
+                                                      return const SizedBox(
+                                                        width: 0,
+                                                      );
+                                                    },
+                                                    shrinkWrap: true,
+                                                    scrollDirection:
+                                                        Axis.vertical,
+                                                    itemCount:
+                                                        cancelRasonRequestApiController
+                                                            .cancelReasonModel!
+                                                            .rideCancelList!
+                                                            .length,
+                                                    itemBuilder: (
+                                                      BuildContext context,
+                                                      int index,
+                                                    ) {
+                                                      return Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(
+                                                          left: 10,
+                                                          right: 10,
+                                                        ),
+                                                        child: Column(
+                                                          children: [
+                                                            InkWell(
+                                                              onTap: () {
+                                                                setState(() {
+                                                                  cancel_id = cancelRasonRequestApiController
+                                                                      .cancelReasonModel!
+                                                                      .rideCancelList![
+                                                                          index]
+                                                                      .id
+                                                                      .toString();
+                                                                  Get.back();
+                                                                  Get.bottomSheet(
                                                                     StatefulBuilder(
-                                                                  builder: (context,
-                                                                      setState) {
-                                                                    return Stack(
-                                                                      clipBehavior:
-                                                                          Clip.none,
-                                                                      children: [
-                                                                        Container(
-                                                                          height:
-                                                                              500,
-                                                                          width:
-                                                                              Get.width,
-                                                                          decoration:
-                                                                              BoxDecoration(
-                                                                            color:
-                                                                                notifier.containercolore,
-                                                                            borderRadius:
-                                                                                BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15)),
-                                                                          ),
-                                                                          child:
-                                                                              Padding(
-                                                                            padding:
-                                                                                const EdgeInsets.only(left: 15, right: 15),
-                                                                            child:
-                                                                                Column(
-                                                                              mainAxisAlignment: MainAxisAlignment.start,
-                                                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                                                              children: [
-                                                                                const SizedBox(
-                                                                                  height: 10,
+                                                                      builder: (
+                                                                        context,
+                                                                        setState,
+                                                                      ) {
+                                                                        return Stack(
+                                                                          clipBehavior:
+                                                                              Clip.none,
+                                                                          children: [
+                                                                            Container(
+                                                                              height: 500,
+                                                                              width: Get.width,
+                                                                              decoration: BoxDecoration(
+                                                                                color: notifier.containercolore,
+                                                                                borderRadius: BorderRadius.only(
+                                                                                  topLeft: Radius.circular(
+                                                                                    15,
+                                                                                  ),
+                                                                                  topRight: Radius.circular(
+                                                                                    15,
+                                                                                  ),
                                                                                 ),
-                                                                                Center(
-                                                                                  child: Container(
-                                                                                    height: 5,
-                                                                                    width: 50,
-                                                                                    decoration: BoxDecoration(
-                                                                                      color: Colors.grey.withOpacity(0.4),
-                                                                                      borderRadius: BorderRadius.circular(10),
+                                                                              ),
+                                                                              child: Padding(
+                                                                                padding: const EdgeInsets.only(
+                                                                                  left: 15,
+                                                                                  right: 15,
+                                                                                ),
+                                                                                child: Column(
+                                                                                  mainAxisAlignment: MainAxisAlignment.start,
+                                                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                  children: [
+                                                                                    const SizedBox(
+                                                                                      height: 10,
+                                                                                    ),
+                                                                                    Center(
+                                                                                      child: Container(
+                                                                                        height: 5,
+                                                                                        width: 50,
+                                                                                        decoration: BoxDecoration(
+                                                                                          color: Colors.grey.withOpacity(
+                                                                                            0.4,
+                                                                                          ),
+                                                                                          borderRadius: BorderRadius.circular(
+                                                                                            10,
+                                                                                          ),
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                    // SizedBox(height: 20,),
+                                                                                    // const Image(image: AssetImage("assets/rapido.png")),
+                                                                                    lottie.Lottie.asset(
+                                                                                      "assets/lottie/canceljson.json",
+                                                                                    ),
+                                                                                    Text(
+                                                                                      "Are you sure you want to cancel this ride?",
+                                                                                      style: TextStyle(
+                                                                                        color: notifier.textColor,
+                                                                                        fontSize: 22,
+                                                                                      ),
+                                                                                      maxLines: 2,
+                                                                                    ),
+                                                                                    const SizedBox(
+                                                                                      height: 20,
+                                                                                    ),
+                                                                                    Text(
+                                                                                      "We have found captains near you, please wait for a while, your ride should be confirmed any minutes.",
+                                                                                      style: TextStyle(
+                                                                                        color: notifier.textColor,
+                                                                                        fontSize: 16,
+                                                                                      ),
+                                                                                      maxLines: 2,
+                                                                                    ),
+                                                                                    const Spacer(),
+                                                                                    CommonOutLineButton(
+                                                                                      bordercolore: theamcolore,
+                                                                                      onPressed1: () {},
+                                                                                      context: context,
+                                                                                      txt1: "Keep searching",
+                                                                                    ),
+                                                                                    const SizedBox(
+                                                                                      height: 5,
+                                                                                    ),
+                                                                                    CommonButton(
+                                                                                      containcolore: theamcolore,
+                                                                                      onPressed1: () {
+                                                                                        vihicalCancelRideApiController
+                                                                                            .vihicalcancelapi(
+                                                                                          uid: useridgloable.toString(),
+                                                                                          lat: lathomecurrent.toString(),
+                                                                                          lon: longhomecurrent.toString(),
+                                                                                          cancel_id: cancel_id.toString(),
+                                                                                          request_id: request_id.toString(),
+                                                                                        )
+                                                                                            .then(
+                                                                                          (
+                                                                                            value,
+                                                                                          ) {
+                                                                                            socket.emit(
+                                                                                              'Vehicle_Ride_Cancel',
+                                                                                              {
+                                                                                                'uid': "$useridgloable",
+                                                                                                'driverid': value["driverid"],
+                                                                                              },
+                                                                                            );
+                                                                                            Get.close(
+                                                                                              2,
+                                                                                            );
+                                                                                            // Get.offAll(MapScreen());
+                                                                                            // Get.to(PickupDropPoint(pagestate: false,bidding: homeApiController.homeapimodel!.categoryList![select1].bidding.toString(),));
+                                                                                            // Get.to(HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,destinationlat: destinationlat));
+                                                                                            // vihicaleridecancelemit();
+                                                                                          },
+                                                                                        );
+                                                                                      },
+                                                                                      context: context,
+                                                                                      txt1: "Cancel my ride",
+                                                                                    ),
+                                                                                    const SizedBox(
+                                                                                      height: 5,
+                                                                                    ),
+                                                                                  ],
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                            Positioned(
+                                                                              top: -50,
+                                                                              right: 5,
+                                                                              child: InkWell(
+                                                                                onTap: () {
+                                                                                  Get.back();
+                                                                                },
+                                                                                child: Container(
+                                                                                  height: 40,
+                                                                                  width: 40,
+                                                                                  decoration: BoxDecoration(
+                                                                                    color: notifier.containercolore,
+                                                                                    shape: BoxShape.circle,
+                                                                                  ),
+                                                                                  child: Center(
+                                                                                    child: Image(
+                                                                                      image: AssetImage(
+                                                                                        "assets/close.png",
+                                                                                      ),
+                                                                                      height: 20,
+                                                                                      color: notifier.textColor,
                                                                                     ),
                                                                                   ),
                                                                                 ),
-                                                                                // SizedBox(height: 20,),
-                                                                                // const Image(image: AssetImage("assets/rapido.png")),
-                                                                                lottie.Lottie.asset("assets/lottie/canceljson.json"),
-                                                                                Text(
-                                                                                  "Are you sure you want to cancel this ride?",
-                                                                                  style: TextStyle(color: notifier.textColor, fontSize: 22),
-                                                                                  maxLines: 2,
-                                                                                ),
-                                                                                const SizedBox(
-                                                                                  height: 20,
-                                                                                ),
-                                                                                Text(
-                                                                                  "We have found captains near you, please wait for a while, your ride should be confirmed any minutes.",
-                                                                                  style: TextStyle(color: notifier.textColor, fontSize: 16),
-                                                                                  maxLines: 2,
-                                                                                ),
-                                                                                const Spacer(),
-                                                                                CommonOutLineButton(bordercolore: theamcolore, onPressed1: () {}, context: context, txt1: "Keep searching"),
-                                                                                const SizedBox(
-                                                                                  height: 5,
-                                                                                ),
-                                                                                CommonButton(
-                                                                                    containcolore: theamcolore,
-                                                                                    onPressed1: () {
-                                                                                      vihicalCancelRideApiController.vihicalcancelapi(uid: userId.toString(), lat: lathomecurrent.toString(), lon: longhomecurrent.toString(), cancel_id: cancel_id.toString(), request_id: request_id.toString()).then(
-                                                                                        (value) {
-                                                                                          socket.emit('Vehicle_Ride_Cancel', {
-                                                                                            'uid': "$userId",
-                                                                                            'driverid': value["driverid"],
-                                                                                          });
-                                                                                          Get.close(2);
-                                                                                          // Get.offAll(MapScreen());
-                                                                                          // Get.to(PickupDropPoint(pagestate: false,bidding: homeApiController.homeapimodel!.categoryList![select1].bidding.toString(),));
-                                                                                          // Get.to(HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,destinationlat: destinationlat));
-                                                                                          // vihicaleridecancelemit();
-                                                                                        },
-                                                                                      );
-                                                                                    },
-                                                                                    context: context,
-                                                                                    txt1: "Cancel my ride"),
-                                                                                const SizedBox(
-                                                                                  height: 5,
-                                                                                ),
-                                                                              ],
+                                                                              ),
                                                                             ),
-                                                                          ),
-                                                                        ),
-                                                                        Positioned(
-                                                                          top:
-                                                                              -50,
-                                                                          right:
-                                                                              5,
-                                                                          child:
-                                                                              InkWell(
-                                                                            onTap:
-                                                                                () {
-                                                                              Get.back();
-                                                                            },
-                                                                            child: Container(
-                                                                                height: 40,
-                                                                                width: 40,
-                                                                                decoration: BoxDecoration(color: notifier.containercolore, shape: BoxShape.circle),
-                                                                                child: Center(
-                                                                                    child: Image(
-                                                                                  image: AssetImage("assets/close.png"),
-                                                                                  height: 20,
-                                                                                  color: notifier.textColor,
-                                                                                ))),
-                                                                          ),
-                                                                        )
-                                                                      ],
-                                                                    );
-                                                                  },
-                                                                ));
-                                                              });
-                                                            },
-                                                            child: ListTile(
-                                                              contentPadding:
-                                                                  EdgeInsets
-                                                                      .zero,
-                                                              // title: Text("Selected Wrong Pickup Location"),
-                                                              title: Text(
-                                                                "${cancelRasonRequestApiController.cancelReasonModel!.rideCancelList![index].title}",
-                                                                style: TextStyle(
+                                                                          ],
+                                                                        );
+                                                                      },
+                                                                    ),
+                                                                  );
+                                                                });
+                                                              },
+                                                              child: ListTile(
+                                                                contentPadding:
+                                                                    EdgeInsets
+                                                                        .zero,
+                                                                // title: Text("Selected Wrong Pickup Location"),
+                                                                title: Text(
+                                                                  "${cancelRasonRequestApiController.cancelReasonModel!.rideCancelList![index].title}",
+                                                                  style:
+                                                                      TextStyle(
                                                                     color: notifier
-                                                                        .textColor),
-                                                              ),
-                                                              trailing: Image(
-                                                                image: AssetImage(
-                                                                    "assets/angle-right-small.png"),
-                                                                height: 25,
-                                                                color: notifier
-                                                                    .textColor,
+                                                                        .textColor,
+                                                                  ),
+                                                                ),
+                                                                trailing: Image(
+                                                                  image:
+                                                                      AssetImage(
+                                                                    "assets/angle-right-small.png",
+                                                                  ),
+                                                                  height: 25,
+                                                                  color: notifier
+                                                                      .textColor,
+                                                                ),
                                                               ),
                                                             ),
-                                                          ),
-                                                          const Divider(
+                                                            const Divider(
                                                               color:
                                                                   Colors.grey,
-                                                              height: 5),
-                                                        ],
-                                                      ),
-                                                    );
-                                                  }),
-                                            )
-                                          ],
+                                                              height: 5,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: -50,
-                                      left: 5,
-                                      child: InkWell(
-                                        onTap: () {
-                                          Get.back();
-                                        },
-                                        child: Container(
-                                            height: 40,
-                                            width: 40,
-                                            decoration: BoxDecoration(
+                                        Positioned(
+                                          top: -50,
+                                          left: 5,
+                                          child: InkWell(
+                                            onTap: () {
+                                              Get.back();
+                                            },
+                                            child: Container(
+                                              height: 40,
+                                              width: 40,
+                                              decoration: BoxDecoration(
                                                 color: notifier.containercolore,
-                                                shape: BoxShape.circle),
-                                            child: Center(
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Center(
                                                 child: Image(
-                                              image: AssetImage(
-                                                  "assets/arrow-left.png"),
-                                              height: 20,
-                                              color: notifier.textColor,
-                                            ))),
-                                      ),
-                                    )
-                                  ],
-                                );
-                              },
-                            ));
-                          },
-                          context: context,
-                          txt1: "Cancel Ride"),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  CommonButton(
+                                                  image: AssetImage(
+                                                    "assets/arrow-left.png",
+                                                  ),
+                                                  height: 20,
+                                                  color: notifier.textColor,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                            context: context,
+                            txt1: "Cancel Ride",
+                          ),
+                    const SizedBox(height: 10),
+                    CommonButton(
                       containcolore: theamcolore,
                       onPressed1: () {
                         Get.back();
                       },
                       context: context,
-                      txt1: "Back"),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                ],
+                      txt1: "Back",
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
               ),
             ),
-          ),
-          Positioned(
-            top: -50,
-            left: 5,
-            child: InkWell(
-              onTap: () {
-                Get.back();
-              },
-              child: Container(
+            Positioned(
+              top: -50,
+              left: 5,
+              child: InkWell(
+                onTap: () {
+                  Get.back();
+                },
+                child: Container(
                   height: 40,
                   width: 40,
                   decoration: BoxDecoration(
-                      color: notifier.background, shape: BoxShape.circle),
+                    color: notifier.background,
+                    shape: BoxShape.circle,
+                  ),
                   child: Center(
-                      child: Image(
-                    image: AssetImage("assets/arrow-left.png"),
-                    height: 20,
-                    color: notifier.textColor,
-                  ))),
+                    child: Image(
+                      image: AssetImage("assets/arrow-left.png"),
+                      height: 20,
+                      color: notifier.textColor,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          )
-        ],
-      );
-    },
-  ));
+          ],
+        );
+      },
+    ),
+  );
 }
 
 String drivername = "";
@@ -1043,24 +1125,27 @@ num additionaltime = 0.00;
 
 List<PointLatLng> droppointstartscreen = [];
 List listdrop = [];
-var userId;
 
 class GlobalDriverAcceptClass extends GetxController implements GetxService {
-  driverdetailfunction(
-      {required String d_id,
-      required String request_id,
-      required context,
-      required double lat,
-      required double long}) {
+  driverdetailfunction({
+    required String d_id,
+    required String request_id,
+    required context,
+    required double lat,
+    required double long,
+  }) {
     print("object@@@@@@@1");
     // print("firt time +++:-- $driver_id");
     // print("secound time +++:-- ${driver_id.toString()}");
-    VihicalCalculateController vihicalCalculateController =
-        Get.put(VihicalCalculateController());
-    AddVihicalCalculateController addVihicalCalculateController =
-        Get.put(AddVihicalCalculateController());
-    VihicalDriverDetailApiController vihicalDriverDetailApiController =
-        Get.put(VihicalDriverDetailApiController());
+    VihicalCalculateController vihicalCalculateController = Get.put(
+      VihicalCalculateController(),
+    );
+    AddVihicalCalculateController addVihicalCalculateController = Get.put(
+      AddVihicalCalculateController(),
+    );
+    VihicalDriverDetailApiController vihicalDriverDetailApiController = Get.put(
+      VihicalDriverDetailApiController(),
+    );
     otpstatus = false;
 
     // late IO.Socket socket;
@@ -1072,12 +1157,12 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
 
     socket.connect();
 
-    // socket.on('Vehicle_Ride_Start_End$userId', (Vehicle_Ride_Start_End) {
+    // socket.on('Vehicle_Ride_Start_End$useridgloable', (Vehicle_Ride_Start_End) {
     //
     //   print("++++++ /Vehicle_Ride_Start_End/ ++++ :---  $Vehicle_Ride_Start_End");
     //   print("Vehicle_Ride_Start_End is of type: ${Vehicle_Ride_Start_End.runtimeType}");
     //   print("Vehicle_Ride_Start_End keys: ${Vehicle_Ride_Start_End.keys}");
-    //   print("++++Vehicle_Ride_Start_End userid+++++: $userId");
+    //   print("++++Vehicle_Ride_Start_End userid+++++: $useridgloable");
     //   print("++++Vehicle_Ride_Start_End gggg +++++: ${Vehicle_Ride_Start_End["uid"].toString()}");
     //   print("++++driver_id gggg +++++: $driver_id");
     //
@@ -1144,17 +1229,21 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
 
     print("object@@@@@@@2");
 
-    socket.on('Vehicle_Ride_Payment$userId', (Vehicle_Ride_Payment) {
+    socket.on('Vehicle_Ride_Payment$useridgloable', (Vehicle_Ride_Payment) {
       print("++++++ /Vehicle_Ride_Payment1/ ++++ :---  $Vehicle_Ride_Payment");
       print(
-          "Vehicle_Ride_Payment1 is of type: ${Vehicle_Ride_Payment.runtimeType}");
+        "Vehicle_Ride_Payment1 is of type: ${Vehicle_Ride_Payment.runtimeType}",
+      );
       print("Vehicle_Ride_Payment1 keys: ${Vehicle_Ride_Payment.keys}");
       print(
-          "Vehicle_Ride_Payment1 total1........: ${Vehicle_Ride_Payment["ResponseCode"]}");
+        "Vehicle_Ride_Payment1 total1........: ${Vehicle_Ride_Payment["ResponseCode"]}",
+      );
       print(
-          "Vehicle_Ride_Payment1 total1: ${Vehicle_Ride_Payment["price_list"]}");
+        "Vehicle_Ride_Payment1 total1: ${Vehicle_Ride_Payment["price_list"]}",
+      );
       print(
-          "Vehicle_Ride_Payment1 total3: ${Vehicle_Ride_Payment["price_list"]["tot_price"]}");
+        "Vehicle_Ride_Payment1 total3: ${Vehicle_Ride_Payment["price_list"]["tot_price"]}",
+      );
 
       total = Vehicle_Ride_Payment["price_list"]["tot_price"];
       finaltotal = Vehicle_Ride_Payment["price_list"]["final_price"];
@@ -1173,18 +1262,19 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
       print("+++++(platformfee)++++++:---- $platformfee");
       print("+++++(whthercharge)++++++:---- $whthercharge");
       print(
-          "+++++(finaltotalsecounde finaltotalsecounde)++++++:---- $finaltotalsecounde");
+        "+++++(finaltotalsecounde finaltotalsecounde)++++++:---- $finaltotalsecounde",
+      );
     });
 
     socket.on('Vehicle_Ride_OTP', (Vehicle_Ride_OTP) {
       print("++++++ /Vehicle_Ride_OTP/ ++++ :---  $Vehicle_Ride_OTP");
       print("Vehicle_Ride_OTP is of type: ${Vehicle_Ride_OTP.runtimeType}");
       print("Vehicle_Ride_OTP keys: ${Vehicle_Ride_OTP.keys}");
-      print("++++userid+++++: $userId");
+      print("++++userid+++++: $useridgloable");
 
       print("++++otpstatus+++++:- $otpstatus");
 
-      if (userId.toString() == Vehicle_Ride_OTP["c_id"].toString()) {
+      if (useridgloable.toString() == Vehicle_Ride_OTP["c_id"].toString()) {
         otpstatus = Vehicle_Ride_OTP["status"];
       } else {
         otpstatus = false;
@@ -1192,7 +1282,7 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
       }
     });
 
-    // socket.on('Vehicle_Time_update$userId', (Vehicle_Time_update) {
+    // socket.on('Vehicle_Time_update$useridgloable', (Vehicle_Time_update) {
     //
     //   print("++++++ /Vehicle_Time_update/ ++++ :---  $Vehicle_Time_update");
     //   print("Vehicle_Time_update is of type: ${Vehicle_Time_update.runtimeType}");
@@ -1219,10 +1309,13 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
 
     print("object@@@@@@@4");
 
-    // vihicalDriverDetailApiController.vihicaldriverdetailapi(driver_list: vihicalCalculateController.vihicalCalculateModel!.driverId!,uid: userId.toString(), d_id: d_id, request_id: request_id).then((value) {
+    // vihicalDriverDetailApiController.vihicaldriverdetailapi(driver_list: vihicalCalculateController.vihicalCalculateModel!.driverId!,uid: useridgloable.toString(), d_id: d_id, request_id: request_id).then((value) {
     vihicalDriverDetailApiController
         .vihicaldriverdetailapi(
-            uid: userId.toString(), d_id: d_id, request_id: request_id)
+      uid: useridgloable.toString(),
+      d_id: d_id,
+      request_id: request_id,
+    )
         .then((value) {
       print("object@@@@@@@5");
       if (value["Result"] == true) {
@@ -1267,10 +1360,11 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
             "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.primaryPhoneNo}";
 
         Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DriverDetailScreen(lat: lat, long: long),
-            ));
+          context,
+          MaterialPageRoute(
+            builder: (context) => DriverDetailScreen(lat: lat, long: long),
+          ),
+        );
       } else {
         print("papapapapapapapapapapapappaappaapapappapapapapa");
       }
@@ -1284,22 +1378,22 @@ totalRateUpdate(double rating) {
 }
 
 Future rateBottomSheet() {
-  DriverReviewDetailApiController driverReviewDetailApiController =
-      Get.put(DriverReviewDetailApiController());
+  DriverReviewDetailApiController driverReviewDetailApiController = Get.put(
+    DriverReviewDetailApiController(),
+  );
   // VihicalRideCompleteOrderApiController vihicalRideCompleteOrderApiController = Get.put(VihicalRideCompleteOrderApiController());
   TextEditingController reviewtextcontroller = TextEditingController();
-  ReviewDataApiController reviewDataApiController =
-      Get.put(ReviewDataApiController());
+  ReviewDataApiController reviewDataApiController = Get.put(
+    ReviewDataApiController(),
+  );
 
   // String reviewid = '';
   List reviewid = [];
   String reviewtitle = '';
 
-  reviewDataApiController.reviewdataApi().then(
-    (value) {
-      print("****11111@@@@@***:--- (${value})");
-    },
-  );
+  reviewDataApiController.reviewdataApi().then((value) {
+    print("****11111@@@@@***:--- (${value})");
+  });
 
   return Get.bottomSheet(
     isScrollControlled: true,
@@ -1308,10 +1402,7 @@ Future rateBottomSheet() {
     GetBuilder<ReviewDataApiController>(
       builder: (reviewDataApiController) {
         return reviewDataApiController.isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                color: theamcolore,
-              ))
+            ? Center(child: CircularProgressIndicator(color: theamcolore))
             : StatefulBuilder(
                 builder: (context, setState) {
                   return Stack(
@@ -1324,8 +1415,9 @@ Future rateBottomSheet() {
                         decoration: BoxDecoration(
                           color: notifier.containercolore,
                           borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(20),
-                              topRight: Radius.circular(20)),
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
+                          ),
                         ),
                         child: SingleChildScrollView(
                           physics: const BouncingScrollPhysics(),
@@ -1342,7 +1434,7 @@ Future rateBottomSheet() {
                                   ),
                                   const SizedBox(width: 5),
                                   Text(
-                                    "Paid ${appController.globalCurrency.value}$finaltotal",
+                                    "Paid $globalcurrency$finaltotal",
                                     style: TextStyle(
                                       fontSize: 15,
                                       // fontWeight: FontWeight.w500,
@@ -1352,12 +1444,16 @@ Future rateBottomSheet() {
                                   const Spacer(),
                                   Container(
                                     padding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 6),
+                                      horizontal: 8,
+                                      vertical: 6,
+                                    ),
                                     decoration: BoxDecoration(
-                                        color: notifier.languagecontainercolore,
-                                        borderRadius: BorderRadius.circular(40),
-                                        border: Border.all(
-                                            color: Colors.grey.shade300)),
+                                      color: notifier.languagecontainercolore,
+                                      borderRadius: BorderRadius.circular(40),
+                                      border: Border.all(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
@@ -1365,9 +1461,11 @@ Future rateBottomSheet() {
                                           CrossAxisAlignment.center,
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.help_outline,
-                                            size: 21,
-                                            color: notifier.textColor),
+                                        Icon(
+                                          Icons.help_outline,
+                                          size: 21,
+                                          color: notifier.textColor,
+                                        ),
                                         SizedBox(width: 3),
                                         Text(
                                           "Help",
@@ -1391,8 +1489,9 @@ Future rateBottomSheet() {
                                     // color: theamcolore,
                                     shape: BoxShape.circle,
                                     image: DecorationImage(
-                                        image: NetworkImage("$driverimage"),
-                                        fit: BoxFit.cover),
+                                      image: NetworkImage("$driverimage"),
+                                      fit: BoxFit.cover,
+                                    ),
                                     // image: DecorationImage(image: NetworkImage("https://cdn.prod.website-files.com/595d6b420002832258c527cb/602edff72af06859a9cf846a_driver-behavior-professional-truck-driver-driving-truck-vehicle-1000.jpg"),fit: BoxFit.cover),
                                   ),
                                 ),
@@ -1427,8 +1526,9 @@ Future rateBottomSheet() {
                                     color: theamcolore,
                                   ),
                                 ),
-                                itemPadding:
-                                    const EdgeInsets.symmetric(horizontal: 4.0),
+                                itemPadding: const EdgeInsets.symmetric(
+                                  horizontal: 4.0,
+                                ),
                                 onRatingUpdate: (rating) {
                                   setState(() {
                                     totalRateUpdate(rating);
@@ -1462,68 +1562,82 @@ Future rateBottomSheet() {
                                               .reviewList!
                                               .length;
                                       a++)
-                                    Builder(builder: (context) {
-                                      return InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            // reviewid = reviewDataApiController.reviewDataApiModel!.reviewList![a].id.toString();
-
-                                            reviewtitle =
-                                                reviewDataApiController
-                                                    .reviewDataApiModel!
-                                                    .reviewList![a]
-                                                    .title
-                                                    .toString();
+                                    Builder(
+                                      builder: (context) {
+                                        return InkWell(
+                                          onTap: () {
                                             setState(() {
-                                              if (reviewid.contains(
+                                              // reviewid = reviewDataApiController.reviewDataApiModel!.reviewList![a].id.toString();
+
+                                              reviewtitle =
                                                   reviewDataApiController
                                                       .reviewDataApiModel!
                                                       .reviewList![a]
-                                                      .id)) {
-                                                reviewid.remove(
+                                                      .title
+                                                      .toString();
+                                              setState(() {
+                                                if (reviewid.contains(
+                                                  reviewDataApiController
+                                                      .reviewDataApiModel!
+                                                      .reviewList![a]
+                                                      .id,
+                                                )) {
+                                                  reviewid.remove(
                                                     reviewDataApiController
                                                         .reviewDataApiModel!
                                                         .reviewList![a]
-                                                        .id);
-                                                print(
-                                                    "-------remove--------- ${reviewid}");
-                                              } else {
-                                                reviewid.add(
+                                                        .id,
+                                                  );
+                                                  print(
+                                                    "-------remove--------- ${reviewid}",
+                                                  );
+                                                } else {
+                                                  reviewid.add(
                                                     reviewDataApiController
                                                         .reviewDataApiModel!
                                                         .reviewList![a]
-                                                        .id);
-                                                print(
-                                                    "+++++++Add+++++++ ${reviewid}");
-                                              }
-                                            });
+                                                        .id,
+                                                  );
+                                                  print(
+                                                    "+++++++Add+++++++ ${reviewid}",
+                                                  );
+                                                }
+                                              });
 
-                                            print(" + + + +  + + + $reviewid");
-                                          });
-                                          // Get.back();
-                                        },
-                                        child: Container(
-                                          height: 40,
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 15, vertical: 8),
-                                          decoration: BoxDecoration(
+                                              print(
+                                                " + + + +  + + + $reviewid",
+                                              );
+                                            });
+                                            // Get.back();
+                                          },
+                                          child: Container(
+                                            height: 40,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 15,
+                                              vertical: 8,
+                                            ),
+                                            decoration: BoxDecoration(
                                               color: reviewid.contains(
-                                                      reviewDataApiController
-                                                          .reviewDataApiModel!
-                                                          .reviewList![a]
-                                                          .id)
+                                                reviewDataApiController
+                                                    .reviewDataApiModel!
+                                                    .reviewList![a]
+                                                    .id,
+                                              )
                                                   ? theamcolore
                                                   : notifier.containercolore,
                                               // color: reviewtitle == reviewDataApiController.reviewDataApiModel!.reviewList![a].title ?  theamcolore : Colors.white,
                                               borderRadius:
                                                   BorderRadius.circular(18),
                                               border: Border.all(
-                                                  color: Colors.grey
-                                                      .withOpacity(0.4))),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
+                                                color: Colors.grey.withOpacity(
+                                                  0.4,
+                                                ),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
                                                   reviewDataApiController
                                                       .reviewDataApiModel!
                                                       .reviewList![a]
@@ -1533,60 +1647,68 @@ Future rateBottomSheet() {
                                                       .textTheme
                                                       .bodySmall!
                                                       .copyWith(
-                                                          fontSize: 15,
-                                                          color: reviewid.contains(
-                                                                  reviewDataApiController
-                                                                      .reviewDataApiModel!
-                                                                      .reviewList![
-                                                                          a]
-                                                                      .id)
-                                                              ? Colors.white
-                                                              : notifier
-                                                                  .textColor)),
-                                            ],
+                                                        fontSize: 15,
+                                                        color:
+                                                            reviewid.contains(
+                                                          reviewDataApiController
+                                                              .reviewDataApiModel!
+                                                              .reviewList![a]
+                                                              .id,
+                                                        )
+                                                                ? Colors.white
+                                                                : notifier
+                                                                    .textColor,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    })
+                                        );
+                                      },
+                                    ),
                                 ],
                               ),
                               const SizedBox(height: 20),
                               CommonTextfiled200(
-                                  txt: "Tell us more...",
-                                  context: context,
-                                  controller: reviewtextcontroller),
+                                txt: "Tell us more...",
+                                context: context,
+                                controller: reviewtextcontroller,
+                              ),
                               const SizedBox(height: 20),
                               CommonButton(
-                                  txt1: "Done",
-                                  onPressed1: () {
-                                    print("userid:-- ($userId)");
-                                    print("driver_id:-- ($driver_id)");
-                                    print(
-                                        "reviewtextcontroller.text:-- (${reviewtextcontroller.text})");
-                                    print("tRate:-- ($tRate)");
-                                    print(
-                                        "ridecompleterequestid:-- ($ridecompleterequestid)");
-                                    driverReviewDetailApiController.reviewapi(
-                                        def_review: reviewid,
-                                        uid: userId.toString(),
-                                        d_id: "$driver_id",
-                                        review: reviewtextcontroller.text,
-                                        tot_star: "$tRate",
-                                        request_id: "$ridecompleterequestid",
-                                        context: context);
-                                  },
-                                  containcolore: theamcolore,
-                                  context: context),
+                                txt1: "Done",
+                                onPressed1: () {
+                                  print("userid:-- ($useridgloable)");
+                                  print("driver_id:-- ($driver_id)");
+                                  print(
+                                    "reviewtextcontroller.text:-- (${reviewtextcontroller.text})",
+                                  );
+                                  print("tRate:-- ($tRate)");
+                                  print(
+                                    "ridecompleterequestid:-- ($ridecompleterequestid)",
+                                  );
+                                  driverReviewDetailApiController.reviewapi(
+                                    def_review: reviewid,
+                                    uid: useridgloable.toString(),
+                                    d_id: "$driver_id",
+                                    review: reviewtextcontroller.text,
+                                    tot_star: "$tRate",
+                                    request_id: "$ridecompleterequestid",
+                                    context: context,
+                                  );
+                                },
+                                containcolore: theamcolore,
+                                context: context,
+                              ),
                               const SizedBox(height: 10),
                               CommonOutLineButton(
-                                  bordercolore: theamcolore,
-                                  onPressed1: () {
-                                    Get.offAll(MapScreen(
-                                      selectvihical: false,
-                                    ));
-                                  },
-                                  txt1: "Skip",
-                                  context: context)
+                                bordercolore: theamcolore,
+                                onPressed1: () {
+                                  Get.offAll(MapScreen(selectvihical: false));
+                                },
+                                txt1: "Skip",
+                                context: context,
+                              ),
                             ],
                           ),
                         ),

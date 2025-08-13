@@ -1,15 +1,17 @@
+import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:qareeb/common_code/global_variables.dart';
+
+import '../app_screen/map_screen.dart';
 
 Color theamcolore = const Color(0xff00cdbc);
 Color greaycolore = const Color(0xffF6F6F6);
 
 class ColorNotifier with ChangeNotifier {
-  get background => isDark ? const Color(0xff161616) : Colors.white;
+  get background => isDark ? Color(0xff161616) : Colors.white;
   get textColor => isDark ? Colors.white : Colors.black;
-  get containercolore => isDark ? const Color(0xff1C1C1C) : Colors.white;
-  get containergreaycolore =>
-      isDark ? const Color(0xff1C1C1C) : const Color(0xffF6F6F6);
+  get containercolore => isDark ? Color(0xff1C1C1C) : Colors.white;
+  get containergreaycolore => isDark ? Color(0xff1C1C1C) : Color(0xffF6F6F6);
   get languagecontainercolore =>
       isDark ? const Color(0xff232323) : const Color(0xffEEEEEE);
   get driverlistcolore =>

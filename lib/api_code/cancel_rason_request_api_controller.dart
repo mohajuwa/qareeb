@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:qareeb/common_code/config.dart';
 import '../api_model/cancel_reason_api_model.dart';
+import '../api_model/payment_api_model.dart';
 
 class CancelRasonRequestApiController extends GetxController
     implements GetxService {

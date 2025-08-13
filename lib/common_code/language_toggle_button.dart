@@ -18,7 +18,7 @@ class _LanguageToggleButtonState extends State<LanguageToggleButton> {
     super.initState();
     // Check current language
     String currentLocale = Get.locale.toString();
-    isArabic = currentLocale.contains('ar') || currentLocale.contains('arabic');
+    isArabic = currentLocale.contains('ur') || currentLocale.contains('arabic');
   }
 
   void toggleLanguage() {
@@ -28,7 +28,7 @@ class _LanguageToggleButtonState extends State<LanguageToggleButton> {
 
     if (isArabic) {
       // Switch to Arabic
-      Get.updateLocale(const Locale('ar'));
+      Get.updateLocale(const Locale('ur', 'arabic'));
       Get.changeTheme(ThemeData(
         fontFamily: 'Khebrat',
         useMaterial3: false,
@@ -39,7 +39,7 @@ class _LanguageToggleButtonState extends State<LanguageToggleButton> {
       ));
     } else {
       // Switch to English
-      Get.updateLocale(const Locale('en', 'US'));
+      Get.updateLocale(const Locale('en', 'English'));
       Get.changeTheme(ThemeData(
         fontFamily: 'SofiaRegular',
         useMaterial3: false,

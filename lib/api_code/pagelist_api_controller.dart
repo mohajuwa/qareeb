@@ -1,82 +1,43 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
-import 'package:qareeb/common_code/http_helper.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'package:http/http.dart' as http;
 import '../api_model/pagelist_api_model.dart';
 import '../common_code/config.dart';
 
-// ignore: camel_case_types
+
 class pagelistApiController extends GetxController implements GetxService {
+
   PageListApiiimodel? pageListApiiimodel;
   bool isLoading = true;
 
-  Future pagelistttApi(context) async {
-    try {
-      Map<String, String> userHeader = {
-        "Content-type": "application/json",
-        "Accept": "application/json"
-      };
+  pagelistttApi(context) async{
 
-      String url = Config.baseurl + Config.pagelistapi;
+    Map<String,String> userHeader = {"Content-type": "application/json", "Accept": "application/json"};
+    var response = await http.get(Uri.parse(Config.baseurl + Config.pagelistapi),headers: userHeader);
 
-      if (kDebugMode) {
-        print("PageList API URL: $url");
+    print(response.body);
+
+    var data = jsonDecode(response.body);
+    if(response.statusCode == 200){
+      if(data["Result"] == true){
+        pageListApiiimodel = pageListApiiimodelFromJson(response.body);
+        isLoading = false;
+        update();
       }
-
-      var response = await HttpHelper.get(url, headers: userHeader)
-          .timeout(Duration(seconds: 30));
-
-      if (kDebugMode) {
-        print("PageList API Response Status: ${response.statusCode}");
-        print("PageList API Response Body: ${response.body}");
-      }
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-
-        if (data["Result"] == true) {
-          pageListApiiimodel = pageListApiiimodelFromJson(response.body);
-          isLoading = false;
-          update();
-        } else {
-          Get.back();
-          Fluttertoast.showToast(msg: "${data["message"]}");
-        }
-      } else {
+      else{
         Get.back();
-        Fluttertoast.showToast(
-            msg:
-                "خطأ في HTTP: ${response.statusCode}"); // "HTTP Error: ${response.statusCode}"
+        Fluttertoast.showToast(msg: "${data["Result"]}");
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print("PageList API Error: $e");
-      }
-
+    }
+    else{
       Get.back();
-
-      String errorMessage = "فشل الاتصال"; // "Connection failed"
-      if (e.toString().contains('Failed host lookup')) {
-        errorMessage =
-            "لا يمكن الوصول إلى الخادم. تحقق من اتصال الإنترنت."; // "Server not reachable. Check your internet connection."
-      } else if (e.toString().contains('CERTIFICATE_VERIFY_FAILED')) {
-        errorMessage =
-            "خطأ في شهادة الأمان. جاري استخدام تجاوز الشهادة المؤقتة."; // "SSL Certificate error. Using self-signed certificate bypass."
-      } else if (e.toString().contains('TimeoutException')) {
-        errorMessage =
-            "انتهت مهلة الطلب. حاول مرة أخرى."; // "Request timeout. Please try again."
-      } else {
-        errorMessage =
-            "حدث خطأ ما. حاول مرة أخرى."; // "Something went wrong. Please try again."
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(errorMessage),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Something went Wrong....!!!")));
     }
   }
 }
