@@ -1,27 +1,55 @@
-analyze the project , map_screen_original.dart take it as a refrence for what you should do to make map_screen.dart
-get the same feture ..
-the promblims I noteced that the vehicles not displaing the default category , and when changing the vehicle the price should change to fit with..
+Project Requirements - Yemen Delivery App
+Files Provided:
+
+lib_customer (Flutter customer app)
+lib_driver (Flutter driver app)
+node_js_admin_panel (Backend API)
+Database SQL files
+
+Timeline: Deploy within 1 week
+Architecture & State Management:
+
+Separate frontend (Flutter apps) from backend (Node.js API)
+Implement GetX for state management
+Use StatelessWidget throughout (StatefulWidget only when absolutely necessary)
+Create reusable widget components
+
+UI/UX Improvements:
+
+Replace all loading indicators with assets/lottie/loading.json
+Font configuration:
+
+Arabic text: 'Khebrat' font family
+English text: 'SofiaProBold' font family
 
 
-and here is some of what I noticed , and you should notice better that me ..
+Set Arabic as default language
+Complete all missing translations (add tr keys)
+Make both apps fully responsive across all screen sizes
+Customer app: Implement 3D-style map display
+Replace Fluttertoast with modern notification system (e.g., GetSnackBar, flash, or custom overlays)
 
-Problem 1: Vehicles Stacking Up Instead of Switching
-When you select a different vehicle type (like switching from "Car" to "Motorcycle"), the old car markers stay on the map AND the new motorcycle markers get added on top. So you end up seeing ALL types of vehicles at once instead of just the category you selected. It's like having multiple layers of stickers on your map that never get removed.
-Problem 2: Vehicles Disappear After Selecting Drop Location
-When you first open the app, you can see vehicle markers on the map just fine. But as soon as you select both pickup and drop locations, all the vehicle markers vanish! This is really frustrating because you want to see available drivers near your route, not have them disappear right when you need them most.
-Problem 3: Missing Trip Calculation Display
-In your original working version, when you select pickup and drop points, you probably see a nice panel showing:
+Technical Requirements:
 
-Distance: "5.2 km"
-Duration: "12 minutes"
-Estimated fare: "15 YRE"
-Price range: "12 YRE - YRE 18"
+Flutter 3.0+
+Proper error handling throughout
+Yemen-specific localization and configurations
+Fix any database inconsistencies
+Ensure zero runtime errors
+Production-ready code quality
 
-But in the current version, this calculation panel is either missing completely or not showing the right information. Users need to see this before booking!
-Problem 4: Button Shows Loading Forever
-When you tap the "Calculate Price" or "Find Driver" button, it shows a loading spinner but never actually completes. It just keeps spinning indefinitely instead of showing you the calculated price and letting you proceed to book.
-What Should Happen Instead:
+Priority Focus:
 
-Vehicle Switching: When you tap "Motorcycle", all car markers should disappear and only motorcycle markers should show
-Persistent Vehicles: After selecting pickup/drop, vehicles should STAY visible on the map
-Clear Calculations: Should show a nice panel with distance, time, and price estimates
+Backend-frontend separation
+State management migration to GetX
+Responsive design implementation
+UI polish and user experience
+Localization completion
+
+Expected Deliverables:
+
+Clean, maintainable codebase
+Responsive mobile applications
+Robust backend API
+Updated database schema
+Deployment-ready applications

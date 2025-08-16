@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:get/get.dart';
@@ -94,37 +95,47 @@ class _TimerScreenState extends State<TimerScreen> {
 
   bool isloading = false;
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    if (kDebugMode) print("TimerScreen dispose called");
+    _isDisposed = true;
+    _timer?.cancel();
+    super.dispose();
+  }
+
+
+
   void _startTimer1() {
+    if (_isDisposed) return;
+
     extraststus = "";
     setState(() {
       isloading = true;
       extraststus = "Time's up. Extra charges apply";
     });
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_isDisposed || !mounted) {
+        timer.cancel();
+        return;
+      }
+
       setState(() {
         if (_remainingTime < 1000000000000000000) {
           otpstatus == true ? timer.cancel() : _remainingTime++;
-          print("++++++++++:----- ${_remainingTime}");
-          print("+++++---+++++:----- ${otpstatus}");
-          print("+++++---extraststus+++++:----- ${extraststus}");
+          if (kDebugMode) {
+            print("++++++++++:----- ${_remainingTime}");
+            print("+++++---+++++:----- ${otpstatus}");
+            print("+++++---extraststus+++++:----- ${extraststus}");
+          }
         } else {
           timer.cancel();
         }
       });
     });
   }
-
-  // @override
-  // void dispose() {
-  //   _timer?.cancel();
-  //   super.dispose();
-  // }
-
-  // String _formatTime(int seconds) {
-  //   int minutes = seconds ~/ 60;
-  //   int remainingSeconds = seconds % 60;
-  //   return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
-  // }
 
   String _formatTime(int seconds) {
     int hours = seconds ~/ 3600;

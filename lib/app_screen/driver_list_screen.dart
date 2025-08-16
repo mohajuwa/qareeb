@@ -4,6 +4,7 @@
 // ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -38,6 +39,8 @@ class _DriverListScreenState extends State<DriverListScreen>
   List<double> progressList = [];
 
   List<AnimationController> controllers = [];
+  Timer? countdownTimer;
+  bool _isDisposed = false;
 
   socketConnect() async {
     socket.connect();
@@ -79,29 +82,22 @@ class _DriverListScreenState extends State<DriverListScreen>
 
   // Timer code
 
-  Timer? countdownTimer;
-
   void startTimer() {
+    if (_isDisposed) return;
+
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {
-          for (int i = 0; i < vehicle_bidding_secounde.length; i++) {
-            if (vehicle_bidding_secounde[i] > 0) {
-              vehicle_bidding_secounde[i]--;
-              // print("secounde:- ${vehicle_bidding_secounde}");
-              // print("++++++:----- vfghsv  ${timeout}");
-            }
-          }
-        });
-      } else {
-        // Cancel the timer if the widget is not mounted to avoid memory leaks
-        countdownTimer?.cancel();
+      if (_isDisposed || !mounted) {
+        timer.cancel();
+        return;
       }
 
-      // if(timeoutsecound == 0){
-      //   print("fffffffffssvdsgdf ${timeoutsecound}");
-      //   Get.back();
-      // }
+      setState(() {
+        for (int i = 0; i < vehicle_bidding_secounde.length; i++) {
+          if (vehicle_bidding_secounde[i] > 0) {
+            vehicle_bidding_secounde[i]--;
+          }
+        }
+      });
     });
   }
 
@@ -181,11 +177,20 @@ class _DriverListScreenState extends State<DriverListScreen>
 
   @override
   void dispose() {
-    // for (var controller in controllers) {
-    //   controller.dispose();
-    // }
-    // controller.dispose();
+    if (kDebugMode) print("DriverListScreen dispose called");
+    _isDisposed = true;
+
+    // Cancel timer
     countdownTimer?.cancel();
+
+    // Dispose all animation controllers
+    for (var controller in controllers) {
+      if (!controller.isDismissed) {
+        controller.dispose();
+      }
+    }
+    controllers.clear();
+
     super.dispose();
   }
 

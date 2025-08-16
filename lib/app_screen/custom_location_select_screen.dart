@@ -37,6 +37,8 @@ class CustomLocationSelectScreen extends StatefulWidget {
 
 class _CustomLocationSelectScreenState
     extends State<CustomLocationSelectScreen> {
+  bool _isDisposed = false;
+
   String themeForMap = "";
 
   mapThemeStyle({required BuildContext context}) {
@@ -54,19 +56,22 @@ class _CustomLocationSelectScreenState
   @override
   void initState() {
     super.initState();
-    // datagetfunction();
     destinationlat = [];
     destinationlong = [];
     mapThemeStyle(context: context);
 
-    setState(() {
-      fun().then(
-        (value) {
-          setState(() {});
-          getCurrentLatAndLong(lat, long);
-        },
-      );
+    fun().then((value) {
+      if (_isDisposed || !mounted) return;
+      setState(() {});
+      getCurrentLatAndLong(lat, long);
     });
+  }
+
+  @override
+  void dispose() {
+    if (kDebugMode) print("CustomLocationSelectScreen dispose called");
+    _isDisposed = true;
+    super.dispose();
   }
 
   void _moveToUserLocation(GoogleMapController controller) async {
@@ -131,14 +136,29 @@ class _CustomLocationSelectScreenState
 
   getCurrentLatAndLong(double latitude, double longitude) async {
     lat = latitude;
+
     long = longitude;
 
-    await placemarkFromCoordinates(lat, long)
-        .then((List<Placemark> placemarks) {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, long)
+          .timeout(const Duration(seconds: 6));
+
+      if (placemarks.isNotEmpty) {
+        final placemark = placemarks.first;
+
+        address =
+            '${placemark.name ?? "Unknown"}, ${placemark.locality ?? "Unknown"}, ${placemark.country ?? "Unknown"}';
+
+        if (kDebugMode) print("Address: $address");
+      } else {
+        address = "Location $latitude, $longitude";
+      }
+    } catch (e) {
+      if (kDebugMode) print("Geocoding error: $e");
+
       address =
-          '${placemarks.first.name}, ${placemarks.first.locality}, ${placemarks.first.country}';
-      print("FIRST USER CURRENT LOCATION :-- $address");
-    });
+          "Location ${latitude.toStringAsFixed(4)}, ${longitude.toStringAsFixed(4)}";
+    }
   }
 
   Future<Uint8List> getImages(String path, int width) async {

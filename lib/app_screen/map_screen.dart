@@ -186,7 +186,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
       if (_isDisposed) return;
 
-      safeSetState(() {});
+      setState(() {});
 
       socket = IO.io(Config.imageurl, <String, dynamic>{
         'autoConnect': false,
@@ -277,7 +277,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 .then((value) {
               if (_isDisposed || !mounted) return;
 
-              safeSetState(() {
+              setState(() {
                 if (kDebugMode) print("///:---  ${value["Result"]}");
 
                 if (value["Result"] == false) {
@@ -315,7 +315,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           // Handle running ride data with safety checks
           if (!_isDisposed &&
               homeApiController.homeapimodel!.runnigRide!.isNotEmpty) {
-            // Your existing running ride logic here, but wrap setState calls with safeSetState
+            // Your existing running ride logic here, but wrap setState calls with setState
             pickupcontroller.text = homeApiController
                 .homeapimodel!.runnigRide![0].pickAdd!.title
                 .toString();
@@ -343,7 +343,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               calculateController.calCulateModel!.driverId =
                   homeApiController.homeapimodel!.runnigRide![0].dId;
 
-              safeSetState(() {
+              setState(() {
                 isanimation = true;
                 loadertimer = true;
                 offerpluse = false;
@@ -409,7 +409,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             if (!_isDisposed && mounted) {
               markers[markerId] = marker;
               markers11[markerId] = marker;
-              safeSetState(() {});
+              setState(() {});
             }
           }
         } catch (e) {
@@ -459,7 +459,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               markers11[markerId] = updatedMarker;
             }
 
-            safeSetState(() {});
+            setState(() {});
           }
         } catch (e) {
           if (kDebugMode) print("Driver location update error: $e");
@@ -473,7 +473,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           print("++++++ Vehicle_Bidding ++++ :---  $Vehicle_Bidding");
         }
 
-        safeSetState(() {
+        setState(() {
           vehicle_bidding_driver = Vehicle_Bidding["bidding_list"];
           vehicle_bidding_secounde = [];
 
@@ -504,7 +504,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               "acceptvehrequest is of type map: ${acceptvehrequest.runtimeType}");
         }
 
-        safeSetState(() {
+        setState(() {
           isanimation = false;
           isControllerDisposed = true;
           loadertimer = true;
@@ -567,7 +567,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         return;
       }
 
-      safeSetState(() {
+      setState(() {
         // Your timer logic here
       });
     });
@@ -650,7 +650,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           cancelTimer();
           if (kDebugMode) print("Timer finished 111 !");
 
-          safeSetState(() {
+          setState(() {
             isanimation = false;
           });
 
@@ -667,7 +667,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               print("*****value data******:--- ${value["driverid"]}");
             }
 
-            // Your existing bottom sheet code here, but wrap any setState calls with safeSetState
+            // Your existing bottom sheet code here, but wrap any setState calls with setState
             Get.bottomSheet(
               isDismissible: false,
               enableDrag: false,
@@ -1059,7 +1059,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     _isDisposed = false; // Initialize disposal flag
 
-    // Your existing initState code, but replace setState calls with safeSetState
+    // Your existing initState code, but replace setState calls with setState
 
     if (widget.selectvihical == true) {
       if (kDebugMode) {
@@ -1126,7 +1126,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
             vihicalname = value["vehicle"]["name"].toString();
 
-            safeSetState(() {});
+            setState(() {});
           } else {
             amountresponse = "false";
 
@@ -1134,7 +1134,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               print("jojojojojojojojojojojojojojojojojojojojojojojojo");
             }
 
-            safeSetState(() {});
+            setState(() {});
           }
 
           if (kDebugMode) {
@@ -1182,12 +1182,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (kDebugMode) print("Calculate API error: $error");
     });
 
-    safeSetState(() {});
+    setState(() {});
 
     fun().then((value) {
       if (_isDisposed || !mounted) return;
 
-      safeSetState(() {});
+      setState(() {});
 
       getCurrentLatAndLong(lathome, longhome);
 
@@ -1196,7 +1196,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (kDebugMode) print("Fun error: $error");
     });
 
-    // Continue with rest of your initState but replace setState with safeSetState
+    // Continue with rest of your initState but replace setState with setState
 
     paymentGetApiController.paymentlistApi(context).then((value) {
       if (_isDisposed || !mounted) return;
@@ -1207,7 +1207,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         if (int.parse(paymentGetApiController.paymentgetwayapi!.defaultPayment
                 .toString()) ==
             paymentGetApiController.paymentgetwayapi!.paymentList![i].id) {
-          safeSetState(() {
+          setState(() {
             payment =
                 paymentGetApiController.paymentgetwayapi!.paymentList![i].id!;
 
@@ -1298,13 +1298,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-// Add this safe setState method right after the dispose method:
-  void safeSetState(VoidCallback fn) {
-    if (mounted && !_isDisposed) {
-      setState(fn);
-    }
-  }
-
 // Replace your existing mapThemeStyle method:
   mapThemeStyle({required BuildContext context}) {
     if (_isDisposed) return;
@@ -1315,7 +1308,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
     DefaultAssetBundle.of(context).loadString(stylePath).then((value) {
       if (!_isDisposed && mounted) {
-        safeSetState(() {
+        setState(() {
           themeForMap = value;
         });
       }
@@ -1594,7 +1587,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       width: 3,
     );
     polylines11[id] = polyline;
-    safeSetState(() {});
+    setState(() {});
   }
 
   void _addMarkers() async {
@@ -1660,9 +1653,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _iconPaths.map((path) => _loadIcon(path)),
     );
 
-    safeSetState(() {
+    setState(() {
       pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
-          ? safeSetState(() {
+          ? setState(() {
               polylines11.clear();
             })
           : "";
@@ -1683,7 +1676,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   .toString())),
         );
         markers[markerId] = marker;
-        safeSetState(() {});
+        setState(() {});
       }
     });
   }
@@ -1723,7 +1716,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       _iconPathsbiddingon.map((path) => _loadIcon(path)),
     );
 
-    safeSetState(() {
+    setState(() {
       markers11.clear();
 
       _addMarker11(LatLng(latitudepick, longitudepick), "origin",
@@ -1787,26 +1780,66 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         desiredAccuracy: LocationAccuracy.high);
   }
 
+// Optimized version with offline fallback
+
   Future getCurrentLatAndLong(double latitude, double longitude) async {
+    if (_isDisposed) return;
+
     lathome = latitude;
+
     longhome = longitude;
+
     lathomecurrent = latitude;
+
     longhomecurrent = longitude;
 
-    await placemarkFromCoordinates(lathome, longhome)
-        .then((List<Placemark> placemarks) {
-      addresshome =
-          '${placemarks.first.name}, ${placemarks.first.locality}, ${placemarks.first.country}';
+    // First set coordinate-based fallback immediately
 
-      if (pickupcontroller.text.isEmpty) {
-        pickupcontroller.text = addresshome.toString();
-      } else {}
+    String fallbackAddress =
+        "Location ${latitude.toStringAsFixed(4)}, ${longitude.toStringAsFixed(4)}";
 
-      print("FIRST USER CURRENT LOCATION :-- $addresshome");
-      print("FIRST USER CURRENT LOCATION :-- $lathome");
-      print("FIRST USER CURRENT LOCATION :-- $longhome");
-    });
-    safeSetState(() {});
+    if (pickupcontroller.text.isEmpty && !_isDisposed) {
+      pickupcontroller.text = fallbackAddress;
+
+      if (!_isDisposed && mounted) {
+        setState(() {}); // Update UI immediately with coordinates
+      }
+    }
+
+    try {
+      // Try to get detailed address in background
+
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(lathome, longhome)
+              .timeout(const Duration(seconds: 6));
+
+      if (placemarks.isNotEmpty && !_isDisposed) {
+        final placemark = placemarks.first;
+
+        String detailedAddress =
+            '${placemark.name ?? "Unknown Location"}, ${placemark.locality ?? "Unknown Area"}, ${placemark.country ?? "Unknown Country"}';
+
+        // Update with detailed address if we got one
+
+        addresshome = detailedAddress;
+
+        // Update pickup controller if it still has the fallback text
+
+        if (pickupcontroller.text == fallbackAddress && !_isDisposed) {
+          pickupcontroller.text = addresshome;
+
+          if (!_isDisposed && mounted) {
+            setState(() {}); // Update UI with detailed address
+          }
+        }
+
+        if (kDebugMode) print("Detailed address loaded: $addresshome");
+      }
+    } catch (e) {
+      if (kDebugMode) print("Geocoding failed, keeping fallback: $e");
+
+      addresshome = fallbackAddress; // Keep the coordinate-based fallback
+    }
   }
 
   Future<Uint8List> getImages(String path, int width) async {
@@ -1914,7 +1947,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
     markers[const MarkerId("my_1")] = marker;
 
-    safeSetState(() {});
+    setState(() {});
   }
 
   final GlobalKey<ScaffoldState> _key = GlobalKey<ScaffoldState>();
@@ -1935,7 +1968,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   void _refreshPage() {
-    safeSetState(() {});
+    setState(() {});
   }
 
   socateempt() {
@@ -2035,7 +2068,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 : Set<Marker>.of(markers11.values),
                             // markers: Set<Marker>.of(markers.values),
                             onTap: (argument) {
-                              safeSetState(() {
+                              setState(() {
                                 _onAddMarkerButtonPressed(
                                     argument.latitude, argument.longitude);
                                 lathome = argument.latitude;
@@ -2050,11 +2083,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                         lat: lathome.toString(),
                                         lon: longhome.toString())
                                     .then((value) {
-                                  safeSetState(() {});
+                                  setState(() {});
                                   print("///:---  ${value["Result"]}");
 
                                   if (value["Result"] == false) {
-                                    safeSetState(() {
+                                    setState(() {
                                       vihicallocations.clear();
                                       markers.clear();
                                       _addMarkers();
@@ -2062,7 +2095,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                           "***if condition+++:---  $vihicallocations");
                                     });
                                   } else {
-                                    safeSetState(() {});
+                                    setState(() {});
                                     vihicallocations.clear();
                                     for (int i = 0;
                                         i <
@@ -2101,7 +2134,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             tiltGesturesEnabled: true,
                             zoomControlsEnabled: true,
                             onMapCreated: (controller) {
-                              safeSetState(() {
+                              setState(() {
                                 controller.setMapStyle(themeForMap);
                                 mapController1 = controller;
                               });
@@ -2132,7 +2165,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             flex: 1,
                             child: InkWell(
                               onTap: () {
-                                safeSetState(() {
+                                setState(() {
                                   _key.currentState!.openDrawer();
                                 });
                               },
@@ -2161,7 +2194,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 onTap: () {
                                   _addMarkers();
                                   fun().then((value) {
-                                    safeSetState(() {});
+                                    setState(() {});
                                     getCurrentLatAndLong(lathome, longhome)
                                         .then(
                                       (value) {
@@ -2221,7 +2254,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                     suffixIcon: InkWell(
                                         onTap: () {
                                           // fun().then((value) {
-                                          //   safeSetState(() {
+                                          //   setState(() {
                                           //   });
                                           //   getCurrentLatAndLong(lathome, longhome);
                                           //   mapController1.animateCamera(
@@ -2236,7 +2269,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
                                           _addMarkers();
                                           fun().then((value) {
-                                            safeSetState(() {});
+                                            setState(() {});
                                             getCurrentLatAndLong(
                                                     lathome, longhome)
                                                 .then(
@@ -2320,7 +2353,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                       itemBuilder: (context, index) {
                                         return InkWell(
                                           onTap: () {
-                                            safeSetState(() {
+                                            setState(() {
                                               select1 = index;
                                               // dropcontroller.clear();
                                               mid = homeApiController
@@ -2349,7 +2382,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                       dropcontroller
                                                           .text.isEmpty
                                                   ? fun().then((value) {
-                                                      safeSetState(() {});
+                                                      setState(() {});
                                                       getCurrentLatAndLong(
                                                           lathome, longhome);
                                                       // _loadMapStyles();
@@ -2373,20 +2406,19 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                               .toString())
                                                       .then(
                                                       (value) {
-                                                        safeSetState(() {});
+                                                        setState(() {});
                                                         print(
                                                             "///:---  ${value["Result"]}");
 
                                                         if (value["Result"] ==
                                                             false) {
-                                                          safeSetState(() {
+                                                          setState(() {
                                                             vihicallocations
                                                                 .clear();
                                                             markers.clear();
                                                             _addMarkers();
                                                             fun().then((value) {
-                                                              safeSetState(
-                                                                  () {});
+                                                              setState(() {});
                                                               getCurrentLatAndLong(
                                                                   lathome,
                                                                   longhome);
@@ -2396,7 +2428,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                                 "***if condition+++:---  $vihicallocations");
                                                           });
                                                         } else {
-                                                          safeSetState(() {});
+                                                          setState(() {});
                                                           for (int i = 0;
                                                               i <
                                                                   homeMapController
@@ -2434,13 +2466,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                               .toString())
                                                       .then(
                                                       (value) {
-                                                        safeSetState(() {});
+                                                        setState(() {});
                                                         print(
                                                             "///:---  ${value["Result"]}");
 
                                                         if (value["Result"] ==
                                                             false) {
-                                                          safeSetState(() {
+                                                          setState(() {
                                                             vihicallocationsbiddingon
                                                                 .clear();
                                                             markers.clear();
@@ -2449,7 +2481,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                                 "***if condition+++:---  $vihicallocationsbiddingon");
                                                           });
                                                         } else {
-                                                          safeSetState(() {});
+                                                          setState(() {});
                                                           for (int i = 0;
                                                               i <
                                                                   homeMapController
@@ -2534,12 +2566,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                         value["vehicle"]["name"]
                                                             .toString();
 
-                                                    safeSetState(() {});
+                                                    setState(() {});
                                                   } else {
                                                     amountresponse = "false";
                                                     print(
                                                         "jojojojojojojojojojojojojojojojojojojojojojojojo");
-                                                    safeSetState(() {});
+                                                    setState(() {});
                                                   }
 
                                                   print(
@@ -2601,8 +2633,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                         select1 == index
                                                             ? InkWell(
                                                                 onTap: () {
-                                                                  safeSetState(
-                                                                      () {
+                                                                  setState(() {
                                                                     vihicalInformationApiController
                                                                         .vihicalinformationApi(
                                                                             vehicle_id:
@@ -2998,7 +3029,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                             // }
                                             // homeApiController.homeApi(uid: userid.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
                                             //   if(value["Result"] == true){
-                                            //     safeSetState(() {
+                                            //     setState(() {
                                             //       Buttonpresebottomshhet();
                                             //       isLoad = false;
                                             //     });
@@ -3090,7 +3121,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                     // }
                                                     // homeApiController.homeApi(uid: userid.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
                                                     //   if(value["Result"] == true){
-                                                    //    safeSetState(() {
+                                                    //    setState(() {
                                                     //      Buttonpresebottomshhet();
                                                     //      isLoad = false;
                                                     //    });
@@ -3463,7 +3494,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                   return;
                                                 }
 
-                                                safeSetState(() {
+                                                setState(() {
                                                   darkMode = value;
                                                 });
 
@@ -3850,7 +3881,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             Spacer(),
                             InkWell(
                               onTap: () {
-                                safeSetState(() {
+                                setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
                                     Fluttertoast.showToast(
@@ -3891,7 +3922,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                           children: [
                             InkWell(
                               onTap: () {
-                                safeSetState(() {
+                                setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
                                     Fluttertoast.showToast(
@@ -3965,7 +3996,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                         : "";
                                   },
                                   onSubmitted: (value) {
-                                    safeSetState(() {
+                                    setState(() {
                                       if (int.parse(amountcontroller.text) >
                                           maxprice) {
                                         amountcontroller.clear();
@@ -3992,7 +4023,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             const Spacer(),
                             InkWell(
                               onTap: () {
-                                safeSetState(() {
+                                setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
                                     Fluttertoast.showToast(
@@ -4096,11 +4127,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                         );
                                       }
                                     : (bool value) {
-                                        safeSetState(() {
+                                        setState(() {
                                           light = value;
                                           offerpluse = true;
                                           biddautostatus = value.toString();
-                                          print("****:-- (${biddautostatus})");
+                                          print(
+                                              "****:--BIDSTATUS (${biddautostatus})");
                                         });
                                       },
                               ),
@@ -4363,7 +4395,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                                                   groupValue: true,
                                                                                   onChanged: (value) {
                                                                                     print(value);
-                                                                                    safeSetState(() {
+                                                                                    setState(() {
                                                                                       selectedOption = value.toString();
                                                                                       selectBoring = paymentGetApiController.paymentgetwayapi!.paymentList![index].image.toString();
                                                                                     });
@@ -4425,7 +4457,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 child: InkWell(
                                   onTap: () {
                                     {
-                                      safeSetState(() {
+                                      setState(() {
                                         mainamount = dropprice.toString();
                                         if (couponadd.isEmpty) {
                                           for (int i = 0;
@@ -4652,7 +4684,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                                               true
                                                                           ? InkWell(
                                                                               onTap: () {
-                                                                                safeSetState(() {
+                                                                                setState(() {
                                                                                   // couponindex = index;
                                                                                   couponadd[index] = false;
                                                                                   dropprice = mainamount;
@@ -4687,7 +4719,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                                                 if (double.parse(amountcontroller.text.toString()) >= double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount.toString())) {
                                                                                   // cartController.checkCouponDataApi(cid: cartController.cartDataInfo?.couponList[index].id);
 
-                                                                                  safeSetState(() {
+                                                                                  setState(() {
                                                                                     couponAmt = int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString());
                                                                                     // couponadd[index] = true;
                                                                                     couponindex = index;
@@ -4832,7 +4864,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                               ? CommonButton(
                                   containcolore: theamcolore,
                                   onPressed1: () {
-                                    safeSetState(() {
+                                    setState(() {
                                       if (double.parse(amountcontroller.text) >
                                           maxprice) {
                                         amountcontroller.clear();
@@ -4883,8 +4915,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                           ),
                                         ),
                                         onPressed: () {
-                                          safeSetState(() {
-                                            safeSetState(() {
+                                          setState(() {
+                                            setState(() {
                                               if (double.parse(
                                                       amountcontroller.text) >
                                                   maxprice) {
@@ -5003,7 +5035,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                   : CommonOutLineButton(
                                       bordercolore: theamcolore,
                                       onPressed1: () {
-                                        safeSetState(() {
+                                        setState(() {
                                           // socket.connect();
                                           homeApiController
                                               .homeapimodel!
@@ -5030,7 +5062,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                   : CommonOutLineButton(
                                       bordercolore: theamcolore,
                                       onPressed1: () {
-                                        safeSetState(() {
+                                        setState(() {
                                           isanimation = false;
                                           cancelloader = true;
                                           print(
@@ -5052,8 +5084,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                               Future.delayed(
                                                   Duration(microseconds: 500),
                                                   () {
-                                                safeSetState(() {
-                                                  safeSetState(() {});
+                                                setState(() {
+                                                  setState(() {});
                                                 });
                                               });
                                               Get.back();
@@ -5117,7 +5149,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     for (int i = 0; i < 4; i++) {
       percentValue.add(0);
     }
-    safeSetState(() {
+    setState(() {
       currentStoryIndex = 0;
       // loadertimer = false;
     });
@@ -5151,7 +5183,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     ).then(
       (value) {
         print("+++++${value["id"]}");
-        safeSetState(() {});
+        setState(() {});
         request_id = value["id"].toString();
         socateempt();
       },
