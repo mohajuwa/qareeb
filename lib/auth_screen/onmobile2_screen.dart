@@ -12,7 +12,8 @@ import 'package:otp_text_field/otp_field.dart';
 import 'package:otp_text_field/otp_field_style.dart';
 import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/auth_screen/onmobile3_screen.dart';
+import 'onmobile3_screen.dart';
+import '../services/notifier.dart';
 import '../api_code/msg91_api_controller.dart';
 import '../api_code/sms_type_controller.dart';
 import '../api_code/twilyo_api_controoler.dart';
@@ -280,11 +281,10 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                             builder: (context) => const Onmobile3Screen(),
                           ));
                     } else {
-                      Fluttertoast.showToast(
-                          msg: "Incorrect OTP. Please try again.".tr);
+                      Notifier.info('');
                     }
                   } else {
-                    Fluttertoast.showToast(msg: "Please Enter Otp.".tr);
+                    Notifier.info('');
                   }
                 },
                 context: context,

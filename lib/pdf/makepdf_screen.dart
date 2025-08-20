@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
-import 'package:qareeb/app_screen/map_screen.dart';
+import '../app_screen/map_screen.dart';
 import '../api_code/my_ride_detail_api.dart';
 import 'package:pdf/widgets.dart' as pw;
 

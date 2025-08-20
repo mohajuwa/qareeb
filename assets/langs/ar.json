@@ -1,0 +1,189 @@
+{
+  "app_name": "تطبيق التوصيل اليمني",
+  "loading": "جارِ التحميل...",
+  "ok": "حسناً",
+  "cancel": "إلغاء",
+  "error_generic": "حدث خطأ غير متوقع",
+  "network_error": "خطأ في الاتصال بالشبكة",
+  "retry": "إعادة المحاولة",
+  "Captains are busy": "القادة مشغولون",
+  "Find a driver": "ابحث عن سائق",
+  "City to city": "من مدينة إلى مدينة",
+  "From": "من",
+  "To": "إلى",
+  "Departure date": "تاريخ المغادرة",
+  "Departure time": "وقت المغادرة",
+  "Done": "تم",
+  "Skip": "تخطي",
+  "Next": "التالي",
+  "When": "متى",
+  "Number of passengers": "عدد الركاب",
+  "Set your price": "حدد السعر",
+  "We charge no commission. Full": "لا نفرض أي عمولة. يذهب المبلغ",
+  "amount goes to the captain": "الكامل إلى القائد",
+  "Higher the price,higher the chance of": "كلما ارتفع السعر، زادت فرصة",
+  "getting a ride": "الحصول على رحلة",
+  "Automatically accept the nearest driver for your fare": "اقبل تلقائيًا أقرب سائق مقابل أجرة",
+  "Offer your fare": "اعرض أجرة",
+  "Comments": "التعليقات",
+  "How many of you will go?": "كم منكم سيذهب؟",
+  "Captain on the way": "الكابتن في الطريق",
+  "Captain has arrived": "لقد وصل الكابتن",
+  "Heading to the destination": "متجه إلى الوجهة",
+  "Start your order with PIN": "ابدأ طلبك باستخدام رقم التعريف الشخصي (PIN)",
+  "Pickup From": "الاستلام من",
+  "Trip Details": "تفاصيل الرحلة",
+  "Rating": "التقييم",
+  "Trips": "الرحلات",
+  "Joined": "تم الانضمام",
+  "Language": "اللغة",
+  "Preference": "التفضيل",
+  "Choose a driver": "اختر سائقًا",
+  "Driver can offer their fare and time": "يمكن للسائق تقديم أجرة ووقت",
+  "Decline": "رفض",
+  "Accept": "قبول",
+  "Drop to": "إسقاط إلى",
+  "Faq List": "قائمة الأسئلة الشائعة",
+  "CONTINUE": "متابعة",
+  "Payment Getway Method": "طريقة الدفع Getway",
+  "All coupons": "جميع القسائم",
+  "Best Coupon": "أفضل قسيمة",
+  "Coupon Code: ": "رمز القسيمة:",
+  "Coupon Amount: ": "مبلغ القسيمة:",
+  "Minimum Amount: ": "الحد الأدنى للمبلغ:",
+  "Ex Date: ": "تاريخ انتهاء الصلاحية:",
+  "Remove": "إزالة",
+  "Apply coupons": "تطبيق القسائم",
+  "Coupon": "القسيمة",
+  "Coupon applied": "القسيمة المطبقة",
+  "Try Again": "حاول مرة أخرى",
+  "Cancel": "إلغاء",
+  "Home": "الصفحة الرئيسية",
+  "My Ride": "رحلتي",
+  "Wallet": "المحفظة",
+  "Profile": "الملف الشخصي",
+  "Faq": "الأسئلة الشائعة",
+  "Refer and earn": "أحل واكسب",
+  "Notifications": "الإشعارات",
+  "Your Current Location": "موقعك الحالي",
+  "Close": "إغلاق",
+  "Searching for you on the map...": "البحث عنك على الخريطة...",
+  "💡Raise the fare, increase your chances.": "💡ارفع الأجرة، وزد من فرصك.",
+  "Automatically book the nearest driver for": "احجز تلقائيًا أقرب سائق لـ",
+  "Cancel Request": "إلغاء الطلب",
+  "Completed": "مكتمل",
+  "Invoice": "الفاتورة",
+  "Rate your ride": "قيم رحلتك",
+  "Pickup": "الاستلام",
+  "Destination": "الوجهة",
+  "RIDE DETAIL": "تفاصيل الرحلة",
+  "Ride Type :": "نوع الرحلة:",
+  "Car Type :": "نوع السيارة:",
+  "hours / minit :": "ساعات/دقائق:",
+  "Date & Time :": "التاريخ والوقت:",
+  "PAYMENT": "الدفع",
+  "Ride Fair :": "معرض الرحلة:",
+  "Promo :": "العرض الترويجي:",
+  "PlatformFee :": "رسوم المنصة:",
+  "Weather Price :": "سعر الطقس:",
+  "Total :": "الإجمالي:",
+  "My Rides": "رحلاتي",
+  "Upcoming": "المقبلة",
+  "Cancelled": "الملغاة",
+  "Notification": "الإشعارات",
+  "No new notifications": "لا توجد إشعارات جديدة",
+  "Looks like you haven't received any notification": "يبدو أنك لم تتلق أي إشعارات",
+  "Allow Notifications and on-ride alerts": "السماح بالإشعارات والتنبيهات أثناء الرحلة",
+  "Real-time Captain updates": "تحديثات القبطان في الوقت الفعلي",
+  "Get notified about captain`s allocation, arrival and more": "احصل على إشعارات حول تخصيص القبطان ووصوله والمزيد",
+  "Be the first to know about our offers and new features": "كن أول من يعرف بعروضنا والميزات الجديدة",
+  "Allow": "السماح",
+  "Maybe, later": "ربما، لاحقًا",
+  "Location permission not enabled": "إذن الموقع غير ممكّن",
+  "Sharing Location permission helps us improve your ride booking and pickup experience": "مشاركة إذن الموقع يساعدنا في تحسين حجز رحلتك وتجربة الاستلام",
+  "Allow Permission": "السماح بالإذن",
+  "Enter pickup manually": "إدخال الاستلام يدويًا",
+  "Drop": "التسليم",
+  "Drop location": "موقع التسليم",
+  "Select on map": "حدد على الخريطة",
+  "Add a destination": "أضف وجهة",
+  "Update": "تحديث",
+  "My Profile": "My الملف الشخصي",
+  "Name": "الاسم",
+  "Email": "البريد الإلكتروني",
+  "Password": "كلمة المرور",
+  "Refer your friends": "أحل أصدقاءك",
+  "& Earn Coins!": "& اربح عملات!",
+  "Invite all your friend to ": "ادعُ جميع أصدقائك إلى",
+  "Qareeb": "Qareeb",
+  "Your referred person gets ": "يحصل الشخص الذي أحلته على",
+  " coins when they sign up using your code": "عملات عند التسجيل باستخدام الكود الخاص بك",
+  "and you receive ": "وتتلقى",
+  " coins when the person you referred purchases a membership.": "عملات عندما يشتري الشخص الذي أحلته عضوية.",
+  "Start inviting friends today and enjoy the benefits together!": "ابدأ في دعوة الأصدقاء اليوم واستمتع بالمزايا معًا!",
+  "Refer a Friend": "أحل صديقًا",
+  "Help": "المساعدة",
+  "H": "H",
+  "RIDE COMPLETED": "اكتملت الرحلة",
+  "Select a payment method to pay": "حدد طريقة الدفع للدفع",
+  "Total trip fare": "إجمالي أجرة الرحلة",
+  "Ride Charges": "رسوم الرحلة",
+  "Discount": "الخصم",
+  "Whether Charge": "سواء كانت رسومًا",
+  "Platform fee": "رسوم المنصة",
+  "AMOUNT TO BE PAID": "المبلغ المطلوب دفعه",
+  "Payment Gateway Method": "طريقة بوابة الدفع",
+  "Total Balance": "إجمالي الرصيد",
+  "Add Wallet Amount": "أضف مبلغ المحفظة",
+  "Enter Amount": "أدخل المبلغ",
+  "Select Payment Method": "حدد طريقة الدفع",
+  "Enter Amount!!!": "أدخل المبلغ!!!",
+  "Top-up": "إعادة الشحن",
+  "Join Our App and Make a Difference:": "انضم إلى تطبيقنا وأحدث فرقًا:",
+  "Donate Today!": "تبرع اليوم!",
+  "Invite friend": "ادعُ صديقًا",
+  "Transaction History": "سجل المعاملات",
+  "Debit": "الخصم",
+  "Creadit": "Creadit",
+  "Welcome to Your Qareeb Ride!": "مرحبًا بك في رحلتك على Qareeb!",
+  "Your Journey, Just a Tap Away": "رحلتك، بنقرة واحدة فقط",
+  "Wherever You Go, We’re Here": "أينما ذهبت، نحن هنا",
+  "Book a ride in just a few taps and reach your destination comfortably": "احجز رحلة ببضع نقرات فقط ووصل إلى وجهتك بشكل مريح",
+  "Experience fast, reliable, and safe rides with ease.": "استمتع برحلات سريعة وموثوقة وآمنة بكل سهولة.",
+  "Find a ride quickly and enjoy your journey hassle-free": "اعثر على رحلة بسرعة واستمتع برحلتك دون أي متاعب",
+  "Phone Number": "رقم الهاتف",
+  "By clicking Continue.you agree tp our ": "بالنقر فوق متابعة، فإنك توافق على",
+  "T&Cs": "شروط وأحكامنا",
+  "Continue": "متابعة",
+  "Forget Password ?": "نسيت كلمة المرور؟",
+  "Enter Mobile Number...!!!": "أدخل رقم الهاتف المحمول...!!!",
+  "Forgot Password ?": "نسيت كلمة المرور؟",
+  "Milk made modern!": "حليب عصري!",
+  "Our app combines the convenience of technology with the tradition of the milkman": "يجمع تطبيقنا بين راحة التكنولوجيا وتقاليد بائع الحليب",
+  "Never miss a delivery again!": "لا تفوت أي عملية توصيل مرة أخرى!",
+  "With our app, you'll receive real-time notifications about your milk deliveries": "من خلال تطبيقنا، ستتلقى إشعارات في الوقت الفعلي حول عمليات توصيل الحليب الخاصة بك",
+  "Milk at your fingertips!": "الحليب في متناول يدك!",
+  "order fresh milk and dairy products for delivery straight to your doorstep": "اطلب الحليب الطازج ومنتجات الألبان للتوصيل مباشرة إلى باب منزلك",
+  "Get Started": "ابدأ",
+  "Step 1/3": "الخطوة 1/3",
+  "Let's get you trip-ready!": "دعنا نجهزك للرحلة!",
+  "Step 1/2": "الخطوة 1/2",
+  "Got an OTP?": "هل لديك كلمة مرور لمرة واحدة؟",
+  "Step 2/2": "الخطوة 2/2",
+  "Just one last thing": "شيء أخير",
+  "Full Name": "الاسم الكامل",
+  "email": "البريد الإلكتروني",
+  "Referral code(optional)": "رمز الإحالة (اختياري)",
+  "Referral code": "رمز الإحالة",
+  "Let's go!": "لننطلق!",
+  "No Chat Found!": "لم يتم العثور على دردشة!",
+  "Currently you don’t have chat.": "حاليًا ليس لديك دردشة.",
+  "Say Something...": "قل شيئًا...",
+  "Reject": "ارفض",
+  "How much time do you need?": "كم من الوقت تحتاج؟",
+  "Leave now": "اغادر الآن",
+  "Leave later": "اغادر لاحقًا",
+  "Date and Time": "التاريخ والوقت",
+  "Starting at": "يبدأ من",
+  "Choose a ride": "اختر رحلة"
+}

@@ -8,10 +8,10 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import '../common_code/colore_screen.dart';
-import '../common_code/languge_controller.dart';
-
+import '../common_code/languge_controller.dart'; // Assuming this controller exists
 
 bool rtl = false;
+
 class LanguageScreen extends StatefulWidget {
   const LanguageScreen({super.key});
 
@@ -20,65 +20,41 @@ class LanguageScreen extends StatefulWidget {
 }
 
 class _LanguageScreenState extends State<LanguageScreen> {
-
-
   int value = 0;
-  List languageimage = [
+  final List languageimage = [
     'assets/L-English.png',
-    'assets/L-Spanish.png',
     'assets/L-Arabic.png',
-    'assets/L-Hindi-Gujarati.png',
-    'assets/L-Hindi-Gujarati.png',
-    'assets/L-Afrikaans.png',
-    'assets/L-Bengali.png',
-    'assets/L-Indonesion.png',
   ];
 
-  List languagetext = [
+  final List languagetext = [
     'English',
-    'Spanish',
     'Arabic',
-    'Hindi',
-    'Gujarati',
-    'Afrikaans',
-    'Bengali',
-    'Indonesian',
   ];
 
-  List languagetext1 = [
-    'en_English',
-    'en_spanse',
-    'ur_arabic',
-    'en_Hindi',
-    'en_Gujarati',
-    'en_African',
-    'en_Bangali',
-    'en_Indonesiya',
+  final List<Locale> locales = [
+    const Locale('en', 'US'),
+    const Locale('ar', 'YE'),
   ];
 
   language1 language11 = Get.put(language1());
 
-  fun(){
-    for(int a= 0 ;a<languagetext1.length;a++){
-      print(languagetext1[a]);
-      print(Get.locale);
-      if(languagetext1[a].toString().compareTo(Get.locale.toString()) == 0){
-        setState(() {
-          value = a;
-        });
-
-      }else{
-      }
+  void updateCurrentLocale() {
+    final currentLocale = Get.locale;
+    int newIndex = locales.indexWhere(
+        (locale) => locale.languageCode == currentLocale?.languageCode);
+    if (newIndex != -1) {
+      setState(() {
+        value = newIndex;
+      });
     }
   }
 
-
   @override
   void initState() {
-    fun();
-    // TODO: implement initState
     super.initState();
+    updateCurrentLocale();
   }
+
   ColorNotifier notifier = ColorNotifier();
   @override
   Widget build(BuildContext context) {
@@ -88,23 +64,24 @@ class _LanguageScreenState extends State<LanguageScreen> {
         backgroundColor: notifier.background,
         elevation: 0,
         centerTitle: true,
-        // automaticallyImplyLeading: false,
-        iconTheme: IconThemeData(
-            color: notifier.textColor
-        ),
-        title:  Text('Language'.tr,style: TextStyle(color: notifier.textColor,fontFamily: "SofiaProBold",fontSize: 18)),
+        iconTheme: IconThemeData(color: notifier.textColor),
+        title: Text('Language'.tr,
+            style: TextStyle(
+                color: notifier.textColor,
+                fontFamily: "SofiaProBold",
+                fontSize: 18)),
       ),
       backgroundColor: notifier.background,
       body: Column(
         children: [
           Container(
-            height: 610,
-            decoration:  BoxDecoration(
-              // color: notifier.languagecontainercolore,
-              borderRadius: const BorderRadius.only(topRight: Radius.circular(15),topLeft: Radius.circular(15)),
+            height: 260,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(15), topLeft: Radius.circular(15)),
             ),
-            child:  Padding(
-              padding: const EdgeInsets.only(left: 15,right: 15,top: 10),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
               child: SingleChildScrollView(
                 scrollDirection: Axis.vertical,
                 child: Column(
@@ -115,7 +92,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
                       shrinkWrap: true,
                       scrollDirection: Axis.vertical,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: 8,
+                      itemCount: languagetext.length, // Corrected itemCount
                       itemBuilder: (context, index) {
                         return GestureDetector(
                           onTap: () {
@@ -123,77 +100,23 @@ class _LanguageScreenState extends State<LanguageScreen> {
                               value = index;
                             });
 
-
-                            if(index == 2){
-                              setState(() {
-                                rtl = true;
-                                print("++++++++++if+++++++++++${rtl}");
-                              });
-
-                            }
-                            else{
-                              setState(() {
-                                rtl = false;
-                                print("+++++++++++else++++++++++${rtl}");
-                              });
-                            }
-
-
-                            switch (index) {
-                              case 0:
-                                Get.updateLocale(const Locale('en', 'English'));
-                                Get.back();
-                                // homeController.setselectpage(0);
-                                break;
-                              case 1:
-                                Get.updateLocale(const Locale('en', 'spanse'));
-                                Get.back();
-                                // homeController.setselectpage(0);
-                                break;
-                              case 2:
-                                Get.updateLocale(const Locale('ur', 'arabic'));
-                                Get.back();
-                                // homeController.setselectpage(0);
-                                break;
-                              case 3:
-                                Get.updateLocale(const Locale('en', 'Hindi'));
-                                Get.back();
-                                // homeController.setselectpage(0);
-                                break;
-                              case 4:
-                                Get.updateLocale(const Locale('en', 'Gujarati'));
-                                Get.back();
-                                // homeController.setselectpage(0);
-                                break;
-                              case 5:
-                                Get.updateLocale(const Locale('en', 'African'));
-                                Get.back();
-                                // homeController.setselectpage(0);
-                                break;
-                              case 6:
-                                language11.fun(demo: () {
-                                  Get.updateLocale(const Locale('en', 'Bangali'));
-                                  Get.back();
-                                  // homeController.setselectpage(0);
-                                });
-                                break;
-                              case 7:
-                                language11.fun(demo: (){
-                                  Get.updateLocale(const Locale('en', 'Indonesiya'));
-                                  Get.back();
-                                  // homeController.setselectpage(0);
-                                });
-                                break;
+                            // Update locale based on the selected index
+                            if (index >= 0 && index < locales.length) {
+                              Get.updateLocale(locales[index]);
+                              // Get.back();
                             }
                           },
-                          // onTap: () {},
                           child: Container(
                             height: 60,
                             width: Get.width,
                             margin: const EdgeInsets.symmetric(vertical: 7),
                             decoration: BoxDecoration(
-                                border: Border.all(color: value == index ? theamcolore : Colors.transparent,),
-                                color:  notifier.languagecontainercolore,
+                                border: Border.all(
+                                  color: value == index
+                                      ? theamcolore
+                                      : Colors.transparent,
+                                ),
+                                color: notifier.languagecontainercolore,
                                 borderRadius: BorderRadius.circular(10)),
                             child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -207,20 +130,25 @@ class _LanguageScreenState extends State<LanguageScreen> {
                                             horizontal: 10),
                                         decoration: BoxDecoration(
                                           color: Colors.transparent,
-                                          borderRadius: BorderRadius.circular(100),
+                                          borderRadius:
+                                              BorderRadius.circular(100),
                                         ),
                                         child: Center(
                                           child: Container(
                                             height: 32,
                                             width: 32,
-                                            decoration: BoxDecoration(image: DecorationImage(image: AssetImage(languageimage[index]),)),
+                                            decoration: BoxDecoration(
+                                                image: DecorationImage(
+                                              image: AssetImage(
+                                                  languageimage[index]),
+                                            )),
                                           ),
                                         ),
                                       ),
                                       const SizedBox(height: 10),
                                       Column(
                                         crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(languagetext[index],
                                               style: TextStyle(
@@ -231,7 +159,9 @@ class _LanguageScreenState extends State<LanguageScreen> {
                                       ),
                                       const Spacer(),
                                       CheckboxListTile(index),
-                                      const SizedBox(width: 15,),
+                                      const SizedBox(
+                                        width: 15,
+                                      ),
                                     ],
                                   ),
                                 ]),
@@ -255,69 +185,30 @@ class _LanguageScreenState extends State<LanguageScreen> {
       width: 24,
       child: ElevatedButton(
         onPressed: () {
-          value = index;
           setState(() {
             value = index;
-
-            switch (index) {
-              case 0:
-                Get.updateLocale(const Locale('en', 'English'));
-                Get.back();
-                break;
-              case 1:
-                Get.updateLocale(const Locale('en', 'spanse'));
-                Get.back();
-                break;
-              case 2:
-                Get.updateLocale(const Locale('en', 'arabic'));
-                Get.back();
-                break;
-              case 3:
-                Get.updateLocale(const Locale('en', 'Hindi'));
-                Get.back();
-                break;
-              case 4:
-                Get.updateLocale(const Locale('en', 'Gujarati'));
-                Get.back();
-                break;
-              case 5:
-                Get.updateLocale(const Locale('en', 'African'));
-                Get.back();
-                break;
-              case 6:
-                Get.updateLocale(const Locale('en', 'Bangali'));
-                Get.back();
-                break;
-              case 7:
-                Get.updateLocale(const Locale('en', 'Indonesiya'));
-                Get.back();
-            }
-
           });
+          if (index >= 0 && index < locales.length) {
+            Get.updateLocale(locales[index]);
+            // Get.back();
+          }
         },
-        // onPressed: () {
-        //
-        // },
         style: ElevatedButton.styleFrom(
           elevation: 0,
           backgroundColor: const Color(0xffEEEEEE),
           side: BorderSide(
-            color: (value == index)
-                ? Colors.transparent
-                : Colors.transparent,
+            color: (value == index) ? Colors.transparent : Colors.transparent,
             width: (value == index) ? 2 : 2,
           ),
           padding: const EdgeInsets.all(0),
         ),
         child: Center(
             child: Icon(
-              Icons.check,
-              color: value == index ? Colors.black : Colors.transparent,
-              size: 18,
-            )),
+          Icons.check,
+          color: value == index ? Colors.black : Colors.transparent,
+          size: 18,
+        )),
       ),
     );
   }
-
-
 }

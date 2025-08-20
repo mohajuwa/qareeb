@@ -8,7 +8,12 @@ environment:
   sdk: ">=3.2.0 <4.0.0"
 
 dependencies:
+  intl: ^0.20.0
+  flutter_screenutil: ^5.9.0
+  get_storage: ^2.1.1
   flutter:
+    sdk: flutter
+  flutter_localizations:   # ✅ هنا صح
     sdk: flutter
 
   cupertino_icons: ^1.0.6
@@ -21,7 +26,7 @@ dependencies:
   geolocator: ^10.1.0
   google_maps_flutter: ^2.1.1
   onesignal_flutter: ^5.2.5
-  http: ^0.13.6  # Keep existing version
+  http: ^0.13.6
   geocoding: ^3.0.0
   google_place: ^0.4.7
   flutter_polyline_points: ^1.0.0
@@ -29,7 +34,7 @@ dependencies:
   shared_preferences: ^2.0.6
   socket_io_client: ^2.0.3+1
   razorpay_flutter: ^1.3.6
-  lottie: ^2.7.0  # Compatible with http ^0.13.6
+  lottie: ^2.7.0
   package_info_plus: ^4.2.0
   share_plus: ^7.2.2
   flutter_rating_bar: ^4.0.1
@@ -70,27 +75,27 @@ flutter:
     - assets/images/
     - assets/map_styles/
     - assets/svgpicture/
-    - assets/map_styles/dark_style.json
+    - assets/langs/   # ✅ خليها هنا مش تحت flutter_localizations
 
   fonts:
     - family: SofiaRegular
       fonts:
-        - asset: assets/All_Fonts/Sofia Pro Regular.ttf
+        - asset: assets/fonts/Sofia Pro Regular.ttf
     - family: SofiaProLight
       fonts:
-        - asset: assets/All_Fonts/SofiaProLight.ttf
+        - asset: assets/fonts/SofiaProLight.ttf
     - family: SofiaProBold
       fonts:
-        - asset: assets/All_Fonts/SofiaProBold.ttf
+        - asset: assets/fonts/SofiaProBold.ttf
     - family: GilroyRegular
       fonts:
-        - asset: assets/All_Fonts/Gilroy-Regular.otf
+        - asset: assets/fonts/Gilroy-Regular.otf
     - family: GilroyLight
       fonts:
-        - asset: assets/All_Fonts/Gilroy-Light.ttf
+        - asset: assets/fonts/Gilroy-Light.ttf
     - family: GilroyBold
       fonts:
-        - asset: assets/All_Fonts/Gilroy-Bold.ttf
+        - asset: assets/fonts/Gilroy-Bold.ttf
     - family: Khebrat
       fonts:
-        - asset: assets/All_Fonts/Khebrat/18 Khebrat Musamim Regular.ttf
+        - asset: assets/fonts/Khebrat/18 Khebrat Musamim Regular.ttf

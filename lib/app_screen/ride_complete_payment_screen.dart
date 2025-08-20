@@ -12,12 +12,14 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../services/notifier.dart';
+import '../widgets/loading_overlay.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:qareeb/api_code/vihical_ride_complete_order_api_controller.dart';
-import 'package:qareeb/app_screen/home_screen.dart';
-import 'package:qareeb/common_code/colore_screen.dart';
-import 'package:qareeb/common_code/common_button.dart';
+import '../api_code/vihical_ride_complete_order_api_controller.dart';
+import 'home_screen.dart';
+import '../common_code/colore_screen.dart';
+import '../common_code/common_button.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../api_code/coupon_payment_api_contoller.dart';
 import '../api_code/review_data_api_controller.dart';
@@ -192,15 +194,11 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
   }
 
   void handlePaymentError(PaymentFailureResponse response) {
-    Fluttertoast.showToast(
-        msg: 'ERROR HERE: ${response.code} - ${response.message}',
-        timeInSecForIosWeb: 4);
+    Notifier.info('');
   }
 
   void handleExternalWallet(ExternalWalletResponse response) {
-    Fluttertoast.showToast(
-        msg: 'EXTERNAL_WALLET IS: ${response.walletName}',
-        timeInSecForIosWeb: 4);
+    Notifier.info('');
   }
 
   File? _selectedImage;
@@ -278,18 +276,87 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
           ),
         ),
         bottomNavigationBar: Container(
-            color: notifier.containercolore,
-            padding: const EdgeInsets.all(10),
-            child: finaltotal == 0
-                ? CommonButton(
-                    containcolore: theamcolore,
-                    onPressed1: () {
-                      // print("++${payment}");
-                      // print("--${paymentindex}");
-                      // socateempt();
+          color: notifier.containercolore,
+          padding: const EdgeInsets.all(10),
+          child: finaltotal == 0
+              ? CommonButton(
+                  containcolore: theamcolore,
+                  onPressed1: () {
+                    // print("++${payment}");
+                    // print("--${paymentindex}");
+                    // socateempt();
+                    vihicalRideCompleteOrderApiController
+                        .vihicalridecomplete(
+                            payment_id: "",
+                            context: context,
+                            payment_img: "",
+                            uid: "${userid}",
+                            d_id: "${driver_id}",
+                            request_id: "${request_id}",
+                            wallet: "${walletValue}")
+                        .then(
+                      (value) {
+                        print(
+                            "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh ${value}");
+                        rateBottomSheet();
+                        socateemptvihicalridecomplete();
+                      },
+                    );
+                  },
+                  context: context,
+                  txt1: "Wallet".tr)
+              : CommonButton(
+                  containcolore: theamcolore,
+                  onPressed1: () {
+                    // print("++${payment}");
+                    // print("--${paymentindex}");
+                    socateempt();
+                    if (paymentGetApiController
+                            .paymentgetwayapi!.paymentList![paymentindex].id ==
+                        1) {
+                      razorPayClass.openCheckout(
+                          key: paymentGetApiController.paymentgetwayapi!
+                              .paymentList![paymentindex].attribute
+                              .toString(),
+                          amount: '$finaltotal',
+                          number: '${decodeUid['phone']}',
+                          name: '${decodeUid['name']}');
+                      // Get.back();
+                      print("+++++++++++if+++++++++++");
+                    } else if (paymentGetApiController
+                            .paymentgetwayapi!.paymentList![paymentindex].id ==
+                        2) {
+                      print("paypal");
+                    } else if (paymentGetApiController
+                            .paymentgetwayapi!.paymentList![paymentindex].id ==
+                        3) {
+                      print("Stripe");
+                    } else if (paymentGetApiController
+                            .paymentgetwayapi!.paymentList![paymentindex].id ==
+                        4) {
+                      print("PayStack");
+                    } else if (paymentGetApiController
+                            .paymentgetwayapi!.paymentList![paymentindex].id ==
+                        5) {
+                      print("FlutterWave");
+                    } else if (paymentGetApiController
+                            .paymentgetwayapi!.paymentList![paymentindex].id ==
+                        6) {
+                      print("SenangPay");
+                    } else if (paymentGetApiController
+                            .paymentgetwayapi!.paymentList![paymentindex].id ==
+                        7) {
+                      print("Payfast");
+                    } else if (paymentGetApiController
+                            .paymentgetwayapi!.paymentList![paymentindex].id ==
+                        8) {
+                      print("Midtrans");
+                    } else if (paymentGetApiController
+                            .paymentgetwayapi!.paymentList![paymentindex].id ==
+                        9) {
                       vihicalRideCompleteOrderApiController
                           .vihicalridecomplete(
-                              payment_id: "",
+                              payment_id: payment.toString(),
                               context: context,
                               payment_img: "",
                               uid: "${userid}",
@@ -304,422 +371,349 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                           socateemptvihicalridecomplete();
                         },
                       );
-                    },
-                    context: context,
-                    txt1: "Wallet".tr)
-                : CommonButton(
-                    containcolore: theamcolore,
-                    onPressed1: () {
-                      // print("++${payment}");
-                      // print("--${paymentindex}");
-                      socateempt();
-                      if (paymentGetApiController.paymentgetwayapi!
-                              .paymentList![paymentindex].id ==
-                          1) {
-                        razorPayClass.openCheckout(
-                            key: paymentGetApiController.paymentgetwayapi!
-                                .paymentList![paymentindex].attribute
-                                .toString(),
-                            amount: '$finaltotal',
-                            number: '${decodeUid['phone']}',
-                            name: '${decodeUid['name']}');
-                        // Get.back();
-                        print("+++++++++++if+++++++++++");
-                      } else if (paymentGetApiController.paymentgetwayapi!
-                              .paymentList![paymentindex].id ==
-                          2) {
-                        print("paypal");
-                      } else if (paymentGetApiController.paymentgetwayapi!
-                              .paymentList![paymentindex].id ==
-                          3) {
-                        print("Stripe");
-                      } else if (paymentGetApiController.paymentgetwayapi!
-                              .paymentList![paymentindex].id ==
-                          4) {
-                        print("PayStack");
-                      } else if (paymentGetApiController.paymentgetwayapi!
-                              .paymentList![paymentindex].id ==
-                          5) {
-                        print("FlutterWave");
-                      } else if (paymentGetApiController.paymentgetwayapi!
-                              .paymentList![paymentindex].id ==
-                          6) {
-                        print("SenangPay");
-                      } else if (paymentGetApiController.paymentgetwayapi!
-                              .paymentList![paymentindex].id ==
-                          7) {
-                        print("Payfast");
-                      } else if (paymentGetApiController.paymentgetwayapi!
-                              .paymentList![paymentindex].id ==
-                          8) {
-                        print("Midtrans");
-                      } else if (paymentGetApiController.paymentgetwayapi!
-                              .paymentList![paymentindex].id ==
-                          9) {
-                        vihicalRideCompleteOrderApiController
-                            .vihicalridecomplete(
-                                payment_id: payment.toString(),
-                                context: context,
-                                payment_img: "",
-                                uid: "${userid}",
-                                d_id: "${driver_id}",
-                                request_id: "${request_id}",
-                                wallet: "${walletValue}")
-                            .then(
-                          (value) {
-                            print(
-                                "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh ${value}");
-                            rateBottomSheet();
-                            socateemptvihicalridecomplete();
-                          },
-                        );
-                        print("Cash");
-                      } else if (paymentGetApiController.paymentgetwayapi!
-                              .paymentList![paymentindex].id ==
-                          10) {
-                        print("Pay with QR Code");
-                        Get.bottomSheet(
-                            clipBehavior: Clip.none,
-                            backgroundColor: Colors.white,
-                            shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(10),
-                                    topRight: Radius.circular(10))),
-                            StatefulBuilder(
-                          builder: (context, setState) {
-                            return Container(
-                              height: 300,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.only(
-                                    topRight: Radius.circular(10),
-                                    topLeft: Radius.circular(10)),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(15),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Pay with QR Code",
-                                      style: TextStyle(
-                                          color: Colors.black, fontSize: 20),
-                                    ),
-                                    const SizedBox(
-                                      height: 20,
-                                    ),
-                                    Center(
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Container(
-                                            height: 150,
-                                            width: 150,
-                                            decoration: BoxDecoration(
-                                                borderRadius:
-                                                    const BorderRadius.all(
-                                                        Radius.circular(10)),
-                                                image: DecorationImage(
-                                                    image: NetworkImage(
-                                                        "${Config.imageurl}${paymentGetApiController.paymentgetwayapi!.paymentList![paymentindex].attribute}"),
-                                                    fit: BoxFit.cover)),
-                                            // child: Image.network("${Config.imageurl}${paymentGetApiController.paymentgetwayapi!.paymentList![paymentindex].attribute}",height: 150,width: 150,fit: BoxFit.cover,)
-                                          ),
-                                          const Spacer(),
-                                          InkWell(
-                                            onTap: () {
-                                              setState(() {
-                                                _pickImage().then(
-                                                  (value) {
-                                                    setState(() {});
-                                                  },
-                                                );
-                                              });
-                                            },
-                                            child: Container(
-                                              width: 150,
-                                              height: 150,
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey
-                                                    .withOpacity(0.1),
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              child: _selectedImage != null
-                                                  ? Image.file(
-                                                      _selectedImage!,
-                                                      fit: BoxFit.cover,
-                                                    )
-                                                  : const Center(
-                                                      child:
-                                                          Text("Select Image")),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    _selectedImage != null
-                                        ? CommonButton(
-                                            containcolore: theamcolore,
-                                            onPressed1: () {
-                                              Get.back();
-                                              vihicalRideCompleteOrderApiController
-                                                  .vihicalridecomplete(
-                                                      payment_id:
-                                                          payment.toString(),
-                                                      context: context,
-                                                      payment_img:
-                                                          _selectedImage!.path,
-                                                      uid: "${userid}",
-                                                      d_id: "${driver_id}",
-                                                      request_id:
-                                                          "${request_id}",
-                                                      wallet: "${walletValue}")
-                                                  .then(
+                      print("Cash");
+                    } else if (paymentGetApiController
+                            .paymentgetwayapi!.paymentList![paymentindex].id ==
+                        10) {
+                      print("Pay with QR Code");
+                      Get.bottomSheet(
+                          clipBehavior: Clip.none,
+                          backgroundColor: Colors.white,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(10),
+                                  topRight: Radius.circular(10))),
+                          StatefulBuilder(
+                        builder: (context, setState) {
+                          return Container(
+                            height: 300,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(10),
+                                  topLeft: Radius.circular(10)),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(15),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Pay with QR Code",
+                                    style: TextStyle(
+                                        color: Colors.black, fontSize: 20),
+                                  ),
+                                  const SizedBox(
+                                    height: 20,
+                                  ),
+                                  Center(
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          height: 150,
+                                          width: 150,
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  const BorderRadius.all(
+                                                      Radius.circular(10)),
+                                              image: DecorationImage(
+                                                  image: NetworkImage(
+                                                      "${Config.imageurl}${paymentGetApiController.paymentgetwayapi!.paymentList![paymentindex].attribute}"),
+                                                  fit: BoxFit.cover)),
+                                          // child: Image.network("${Config.imageurl}${paymentGetApiController.paymentgetwayapi!.paymentList![paymentindex].attribute}",height: 150,width: 150,fit: BoxFit.cover,)
+                                        ),
+                                        const Spacer(),
+                                        InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              _pickImage().then(
                                                 (value) {
-                                                  rateBottomSheet();
-                                                  socateemptvihicalridecomplete();
+                                                  setState(() {});
                                                 },
                                               );
-                                            },
-                                            context: context,
-                                            txt1: "Next")
-                                        : CommonButton(
-                                            containcolore:
-                                                theamcolore.withOpacity(0.1),
-                                            onPressed1: () {
-                                              Fluttertoast.showToast(
-                                                  msg: "Please Select Image");
-                                            },
-                                            context: context,
-                                            txt1: "Next"),
-                                    const SizedBox(
-                                      height: 10,
-                                    )
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ));
-                      } else if (paymentGetApiController.paymentgetwayapi!
-                              .paymentList![paymentindex].id ==
-                          11) {
-                        print("Bank Account");
-                        Get.bottomSheet(
-                            clipBehavior: Clip.none,
-                            backgroundColor: Colors.white,
-                            shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(10),
-                                    topRight: Radius.circular(10))),
-                            StatefulBuilder(
-                          builder: (context, setState) {
-                            return Container(
-                              height: 420,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.only(
-                                    topRight: Radius.circular(10),
-                                    topLeft: Radius.circular(10)),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(15),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Bank Details",
-                                      style: TextStyle(
-                                          color: Colors.black, fontSize: 20),
-                                    ),
-                                    const SizedBox(
-                                      height: 20,
-                                    ),
-                                    // Row(
-                                    //   children: [
-                                    //     Text("Bank Name")
-                                    //   ],
-                                    // ),
-                                    // ListView.builder(
-                                    //   shrinkWrap: true,
-                                    //   clipBehavior: Clip.none,
-                                    //   itemCount: paymentGetApiController.paymentgetwayapi!.bankData!.length,
-                                    //   itemBuilder: (context, index) {
-                                    //   return Text("${paymentGetApiController.paymentgetwayapi!.bankData![index].bankName}");
-                                    // },),
-                                    // SizedBox(height: 10,),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "bank Name",
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                        const Spacer(),
-                                        Text(
-                                            "${paymentGetApiController.paymentgetwayapi!.bankData![0].bankName}",
-                                            style:
-                                                const TextStyle(fontSize: 16)),
-                                      ],
-                                    ),
-                                    const SizedBox(
-                                      height: 5,
-                                    ),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "holder Name",
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                        const Spacer(),
-                                        Text(
-                                          "${paymentGetApiController.paymentgetwayapi!.bankData![1].holderName}",
-                                          style: const TextStyle(fontSize: 16),
+                                            });
+                                          },
+                                          child: Container(
+                                            width: 150,
+                                            height: 150,
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.grey.withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: _selectedImage != null
+                                                ? Image.file(
+                                                    _selectedImage!,
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                : const Center(
+                                                    child:
+                                                        Text("Select Image")),
+                                          ),
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(
-                                      height: 5,
-                                    ),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "account No",
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                        const Spacer(),
-                                        Text(
-                                          "${paymentGetApiController.paymentgetwayapi!.bankData![2].accountNo}",
-                                          style: const TextStyle(fontSize: 16),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(
-                                      height: 5,
-                                    ),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "iafc Code",
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                        const Spacer(),
-                                        Text(
-                                          "${paymentGetApiController.paymentgetwayapi!.bankData![3].iafcCode}",
-                                          style: const TextStyle(fontSize: 16),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(
-                                      height: 5,
-                                    ),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "swift Code",
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                        const Spacer(),
-                                        Text(
-                                          "${paymentGetApiController.paymentgetwayapi!.bankData![4].swiftCode}",
-                                          style: const TextStyle(fontSize: 16),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
-                                    Center(
-                                      child: InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            _pickImage1().then(
+                                  ),
+                                  const Spacer(),
+                                  _selectedImage != null
+                                      ? CommonButton(
+                                          containcolore: theamcolore,
+                                          onPressed1: () {
+                                            Get.back();
+                                            vihicalRideCompleteOrderApiController
+                                                .vihicalridecomplete(
+                                                    payment_id:
+                                                        payment.toString(),
+                                                    context: context,
+                                                    payment_img:
+                                                        _selectedImage!.path,
+                                                    uid: "${userid}",
+                                                    d_id: "${driver_id}",
+                                                    request_id: "${request_id}",
+                                                    wallet: "${walletValue}")
+                                                .then(
                                               (value) {
-                                                setState(() {});
+                                                rateBottomSheet();
+                                                socateemptvihicalridecomplete();
                                               },
                                             );
-                                          });
-                                        },
-                                        child: Container(
-                                          width: 150,
-                                          height: 150,
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey.withOpacity(0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: _selectedImage1 != null
-                                              ? Image.file(
-                                                  _selectedImage1!,
-                                                  fit: BoxFit.cover,
-                                                )
-                                              : const Center(
-                                                  child: Text("Select Image")),
+                                          },
+                                          context: context,
+                                          txt1: "Next")
+                                      : CommonButton(
+                                          containcolore:
+                                              theamcolore.withOpacity(0.1),
+                                          onPressed1: () {
+                                            Notifier.info('');
+                                          },
+                                          context: context,
+                                          txt1: "Next"),
+                                  const SizedBox(
+                                    height: 10,
+                                  )
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ));
+                    } else if (paymentGetApiController
+                            .paymentgetwayapi!.paymentList![paymentindex].id ==
+                        11) {
+                      print("Bank Account");
+                      Get.bottomSheet(
+                          clipBehavior: Clip.none,
+                          backgroundColor: Colors.white,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(10),
+                                  topRight: Radius.circular(10))),
+                          StatefulBuilder(
+                        builder: (context, setState) {
+                          return Container(
+                            height: 420,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(10),
+                                  topLeft: Radius.circular(10)),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(15),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Bank Details",
+                                    style: TextStyle(
+                                        color: Colors.black, fontSize: 20),
+                                  ),
+                                  const SizedBox(
+                                    height: 20,
+                                  ),
+                                  // Row(
+                                  //   children: [
+                                  //     Text("Bank Name")
+                                  //   ],
+                                  // ),
+                                  // ListView.builder(
+                                  //   shrinkWrap: true,
+                                  //   clipBehavior: Clip.none,
+                                  //   itemCount: paymentGetApiController.paymentgetwayapi!.bankData!.length,
+                                  //   itemBuilder: (context, index) {
+                                  //   return Text("${paymentGetApiController.paymentgetwayapi!.bankData![index].bankName}");
+                                  // },),
+                                  // SizedBox(height: 10,),
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        "bank Name",
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                          "${paymentGetApiController.paymentgetwayapi!.bankData![0].bankName}",
+                                          style: const TextStyle(fontSize: 16)),
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        "holder Name",
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        "${paymentGetApiController.paymentgetwayapi!.bankData![1].holderName}",
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        "account No",
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        "${paymentGetApiController.paymentgetwayapi!.bankData![2].accountNo}",
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        "iafc Code",
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        "${paymentGetApiController.paymentgetwayapi!.bankData![3].iafcCode}",
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        "swift Code",
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        "${paymentGetApiController.paymentgetwayapi!.bankData![4].swiftCode}",
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  Center(
+                                    child: InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _pickImage1().then(
+                                            (value) {
+                                              setState(() {});
+                                            },
+                                          );
+                                        });
+                                      },
+                                      child: Container(
+                                        width: 150,
+                                        height: 150,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
                                         ),
+                                        child: _selectedImage1 != null
+                                            ? Image.file(
+                                                _selectedImage1!,
+                                                fit: BoxFit.cover,
+                                              )
+                                            : const Center(
+                                                child: Text("Select Image")),
                                       ),
                                     ),
-                                    const Spacer(),
-                                    _selectedImage1 != null
-                                        ? CommonButton(
-                                            containcolore: theamcolore,
-                                            onPressed1: () {
-                                              Get.back();
-                                              vihicalRideCompleteOrderApiController
-                                                  .vihicalridecomplete(
-                                                      payment_id:
-                                                          payment.toString(),
-                                                      context: context,
-                                                      payment_img:
-                                                          _selectedImage1!.path,
-                                                      uid: "${userid}",
-                                                      d_id: "${driver_id}",
-                                                      request_id:
-                                                          "${request_id}",
-                                                      wallet: "${walletValue}")
-                                                  .then(
-                                                (value) {
-                                                  rateBottomSheet();
-                                                  socateemptvihicalridecomplete();
-                                                },
-                                              );
-                                            },
-                                            context: context,
-                                            txt1: "Next")
-                                        : CommonButton(
-                                            containcolore:
-                                                theamcolore.withOpacity(0.1),
-                                            onPressed1: () {
-                                              Fluttertoast.showToast(
-                                                msg: "Please Select Image",
-                                              );
-                                            },
-                                            context: context,
-                                            txt1: "Next"),
-                                    const SizedBox(
-                                      height: 10,
-                                    )
-                                  ],
-                                ),
+                                  ),
+                                  const Spacer(),
+                                  _selectedImage1 != null
+                                      ? CommonButton(
+                                          containcolore: theamcolore,
+                                          onPressed1: () {
+                                            Get.back();
+                                            vihicalRideCompleteOrderApiController
+                                                .vihicalridecomplete(
+                                                    payment_id:
+                                                        payment.toString(),
+                                                    context: context,
+                                                    payment_img:
+                                                        _selectedImage1!.path,
+                                                    uid: "${userid}",
+                                                    d_id: "${driver_id}",
+                                                    request_id: "${request_id}",
+                                                    wallet: "${walletValue}")
+                                                .then(
+                                              (value) {
+                                                rateBottomSheet();
+                                                socateemptvihicalridecomplete();
+                                              },
+                                            );
+                                          },
+                                          context: context,
+                                          txt1: "Next")
+                                      : CommonButton(
+                                          containcolore:
+                                              theamcolore.withOpacity(0.1),
+                                          onPressed1: () {
+                                            Notifier.info('');
+                                          },
+                                          context: context,
+                                          txt1: "Next"),
+                                  const SizedBox(
+                                    height: 10,
+                                  )
+                                ],
                               ),
-                            );
-                          },
-                        ));
-                      } else {
-                        // Get.back();
-                        print("+++++++++++else+++++++++++");
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text('Not Valid'.tr),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10))),
-                        );
-                      }
-                    },
-                    context: context,
-                    txt1: "Next".tr)),
+                            ),
+                          );
+                        },
+                      ));
+                    } else {
+                      // Get.back();
+                      print("+++++++++++else+++++++++++");
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('Not Valid'.tr),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10))),
+                      );
+                    }
+                  },
+                  context: context,
+                  txt1: "Next".tr,
+                ),
+        ),
         body: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -1023,8 +1017,7 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                         topRight: Radius.circular(15)),
                   ),
                   child: paymentGetApiController.isLoading
-                      ? Center(
-                          child: CircularProgressIndicator(color: theamcolore))
+                      ? LoadingOverlay()
                       : Padding(
                           padding: const EdgeInsets.only(
                               left: 10, right: 10, bottom: 10),

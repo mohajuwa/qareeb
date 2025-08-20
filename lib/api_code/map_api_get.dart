@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:qareeb/common_code/config.dart';
+import '../common_code/config.dart';
 import '../api_model/map_api_model.dart';
 
 class MapSuggestGetApiController extends GetxController implements GetxService {

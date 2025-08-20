@@ -10,11 +10,12 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import '../services/notifier.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:qareeb/app_screen/pickup_drop_point.dart';
-import 'package:qareeb/chat_code/chat_screen.dart';
-import 'package:qareeb/common_code/common_button.dart';
+import 'pickup_drop_point.dart';
+import '../chat_code/chat_screen.dart';
+import '../common_code/common_button.dart';
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/driver_detail_api.dart';
 import '../api_code/vihical_calculate_api_controller.dart';
@@ -814,10 +815,10 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
         throw 'Could not launch $url';
       }
     } else if (status.isPermanentlyDenied) {
-      Fluttertoast.showToast(msg: "Please allow calls Permission");
+      Notifier.info('');
       await openAppSettings();
     } else {
-      Fluttertoast.showToast(msg: "Please allow calls Permission");
+      Notifier.info('');
       await openAppSettings();
     }
   }
@@ -841,7 +842,10 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
               children: [
                 GoogleMap(
                   initialCameraPosition: CameraPosition(
-                      target: LatLng(widget.lat, widget.long), zoom: 15),
+                    target: LatLng(widget.lat, widget.long), zoom: 16,
+                    tilt: 60, // 3D feel
+                    bearing: 30,
+                  ),
                   myLocationEnabled: true,
                   tiltGesturesEnabled: true,
                   compassEnabled: true,

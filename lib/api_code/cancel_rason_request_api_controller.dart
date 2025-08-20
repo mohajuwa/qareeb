@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:qareeb/common_code/config.dart';
+import '../common_code/config.dart';
+import '../services/notifier.dart';
 import '../api_model/cancel_reason_api_model.dart';
 import '../api_model/payment_api_model.dart';
 
@@ -32,7 +33,7 @@ class CancelRasonRequestApiController extends GetxController
         update();
       } else {
         Get.back();
-        Fluttertoast.showToast(msg: "${data["message"]}");
+        Notifier.info('');
       }
     } else {
       Get.back();

@@ -5,12 +5,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/api_code/chat_list_api_controller.dart';
-import 'package:qareeb/app_screen/home_screen.dart';
-import 'package:qareeb/common_code/colore_screen.dart';
+import '../api_code/chat_list_api_controller.dart';
+import '../app_screen/home_screen.dart';
+import '../common_code/colore_screen.dart';
 import 'package:get/get.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:qareeb/common_code/config.dart';
+import '../common_code/config.dart';
 import '../app_screen/map_screen.dart';
 
 class ChatScreen extends StatefulWidget {

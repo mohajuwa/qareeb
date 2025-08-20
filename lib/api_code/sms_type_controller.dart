@@ -7,7 +7,7 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:qareeb/common_code/config.dart';
+import '../common_code/config.dart';
 
 import '../api_model/sms_type_api_model.dart';
 import 'package:http/http.dart' as http;
@@ -41,7 +41,7 @@ class SmstypeApiController extends GetxController implements GetxService {
         update();
       } else {
         Get.back();
-        // Fluttertoast.showToast(msg: "${data["message"]}");
+        // Notifier.info('');
         snackbar(context: context, text: "${data["message"]}");
       }
     } else {

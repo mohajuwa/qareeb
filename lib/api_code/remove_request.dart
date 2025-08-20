@@ -4,7 +4,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
-import 'package:qareeb/common_code/config.dart';
+import '../common_code/config.dart';
+import '../services/notifier.dart';
 import '../api_model/remove_request_api_model.dart';
 
 class RemoveRequest extends GetxController implements GetxService {
@@ -36,25 +37,17 @@ class RemoveRequest extends GetxController implements GetxService {
         removeVihicalRequest = removeVihicalRequestFromJson(response.body);
         if (removeVihicalRequest!.result == true) {
           isLoading = false;
-          Fluttertoast.showToast(
-            msg: "${removeVihicalRequest!.message}",
-          );
+          Notifier.info('');
           update();
           return data;
         } else {
-          // Fluttertoast.showToast(
-          //   msg: "${removeVihicalRequest!.message}",
-          // );
+          // Notifier.info('');
         }
       } else {
-        // Fluttertoast.showToast(
-        //   msg: "${data["ResponseMsg"]}",
-        // );
+        // Notifier.info('');
       }
     } else {
-      Fluttertoast.showToast(
-        msg: "Somthing went wrong!.....",
-      );
+      Notifier.info('');
     }
   }
 }

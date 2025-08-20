@@ -8,6 +8,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import '../widgets/loading_overlay.dart';
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/cancel_rason_request_api_controller.dart';
 import '../api_code/remove_request.dart';
@@ -122,11 +123,7 @@ Future commonbottomsheetrequestsend({required context}) {
                       ),
                       const SizedBox(height: 10),
                       cancelloader == true
-                          ? Center(
-                              child: CircularProgressIndicator(
-                                color: theamcolore,
-                              ),
-                            )
+                          ? LoadingOverlay()
                           : CommonOutLineButton(
                               bordercolore: theamcolore,
                               onPressed1: () {
@@ -1402,7 +1399,7 @@ Future rateBottomSheet() {
     GetBuilder<ReviewDataApiController>(
       builder: (reviewDataApiController) {
         return reviewDataApiController.isLoading
-            ? Center(child: CircularProgressIndicator(color: theamcolore))
+            ? LoadingOverlay()
             : StatefulBuilder(
                 builder: (context, setState) {
                   return Stack(
@@ -1670,13 +1667,13 @@ Future rateBottomSheet() {
                               ),
                               const SizedBox(height: 20),
                               CommonTextfiled200(
-                                txt: "Tell us more...",
+                                txt: "Tell us more...".tr,
                                 context: context,
                                 controller: reviewtextcontroller,
                               ),
                               const SizedBox(height: 20),
                               CommonButton(
-                                txt1: "Done",
+                                txt1: "Done".tr,
                                 onPressed1: () {
                                   print("userid:-- ($useridgloable)");
                                   print("driver_id:-- ($driver_id)");

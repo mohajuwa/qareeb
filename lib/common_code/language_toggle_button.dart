@@ -28,7 +28,7 @@ class _LanguageToggleButtonState extends State<LanguageToggleButton> {
 
     if (isArabic) {
       // Switch to Arabic
-      Get.updateLocale(const Locale('ur', 'arabic'));
+      Get.updateLocale(const Locale('ar', 'YE'));
       Get.changeTheme(ThemeData(
         fontFamily: 'Khebrat',
         useMaterial3: false,
@@ -39,7 +39,7 @@ class _LanguageToggleButtonState extends State<LanguageToggleButton> {
       ));
     } else {
       // Switch to English
-      Get.updateLocale(const Locale('en', 'English'));
+      Get.updateLocale(const Locale('en', 'US'));
       Get.changeTheme(ThemeData(
         fontFamily: 'SofiaRegular',
         useMaterial3: false,

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
+import '../services/notifier.dart';
 import '../common_code/config.dart';
 
 
@@ -74,18 +75,16 @@ class ProfileeditApiController extends GetxController implements GetxService {
       if(responsnessaj["Result"] == true){
         isLoading = false;
 
-        Fluttertoast.showToast(msg: responsnessaj["message"],);
+        Notifier.info('');
         return responsnessaj;
       }
       else{
-        Fluttertoast.showToast(msg: responsnessaj["message"],);
+        Notifier.info('');
       }
 
     }
     else{
-      Fluttertoast.showToast(
-        msg: responsnessaj["message"],
-      );
+      Notifier.info('');
     }
   }
 

@@ -11,9 +11,9 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:qareeb/app_screen/pickup_drop_point.dart';
-import 'package:qareeb/common_code/colore_screen.dart';
-import 'package:qareeb/common_code/common_button.dart';
+import 'pickup_drop_point.dart';
+import '../common_code/colore_screen.dart';
+import '../common_code/common_button.dart';
 import 'dart:ui' as ui;
 import '../api_code/calculate_api_controller.dart';
 import '../api_code/modual_calculate_api_controller.dart';
@@ -507,8 +507,11 @@ class _CustomLocationSelectScreenState
         gestureRecognizers: {
           Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())
         },
-        initialCameraPosition:
-            const CameraPosition(target: LatLng(15.3694, 44.1910), zoom: 13),
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(15.3694, 44.1910), zoom: 16,
+          tilt: 60, // 3D feel
+          bearing: 30,
+        ),
         mapType: MapType.normal,
         markers: Set<Marker>.of(markers),
         onTap: (argument) {

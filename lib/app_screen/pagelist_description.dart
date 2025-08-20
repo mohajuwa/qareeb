@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/common_code/colore_screen.dart';
+import '../common_code/colore_screen.dart';
 
 class Page_List_description extends StatefulWidget {
   final String title;
