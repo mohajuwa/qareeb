@@ -1,7 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:lottie/lottie.dart';
@@ -11,7 +10,6 @@ import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui' as ui;
 
-import 'onmobile1_screen.dart';
 import '../common_code/colore_screen.dart';
 import '../common_code/language_toggle_button.dart';
 import '../services/notifier.dart';
@@ -228,7 +226,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
             style: TextStyle(
               fontSize: 22,
               color: notifier.textColor,
-             
+
             ),
           ),
           const SizedBox(height: 10),

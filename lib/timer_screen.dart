@@ -35,7 +35,7 @@ class _TimerScreenState extends State<TimerScreen> {
   @override
   void initState() {
     super.initState();
-    print("!!!!!!!!!!!!!!!!!!!!!!!otpstatus!!!!!!!!!!!!!!!!!!! ${otpstatus}");
+    print("!!!!!!!!!!!!!!!!!!!!!!!otpstatus!!!!!!!!!!!!!!!!!!! $otpstatus");
     socketConnect();
     hours1 = widget.hours;
     minutes1 = widget.minutes;
@@ -78,12 +78,12 @@ class _TimerScreenState extends State<TimerScreen> {
       setState(() {
         if (_remainingTime > 0) {
           otpstatus == true ? timer.cancel() : _remainingTime--;
-          print("!!!!!otpstatus!!!!!! ${otpstatus}");
+          print("!!!!!otpstatus!!!!!! $otpstatus");
         } else {
           setState(() {
             print("@@@@@@@@@@");
-            print("minutes1${minutes1}");
-            print("@@@@@@@@@@${totaldropmint}");
+            print("minutes1$minutes1");
+            print("@@@@@@@@@@$totaldropmint");
             timer.cancel();
             timeincressstatus == "2" ? timer.cancel() : socateempt();
             timeincressstatus == "2" ? _startTimer1() : timer.cancel();
@@ -126,9 +126,9 @@ class _TimerScreenState extends State<TimerScreen> {
         if (_remainingTime < 1000000000000000000) {
           otpstatus == true ? timer.cancel() : _remainingTime++;
           if (kDebugMode) {
-            print("++++++++++:----- ${_remainingTime}");
-            print("+++++---+++++:----- ${otpstatus}");
-            print("+++++---extraststus+++++:----- ${extraststus}");
+            print("++++++++++:----- $_remainingTime");
+            print("+++++---+++++:----- $otpstatus");
+            print("+++++---extraststus+++++:----- $extraststus");
           }
         } else {
           timer.cancel();
@@ -172,14 +172,14 @@ class _TimerScreenState extends State<TimerScreen> {
     socket.onConnectError((data) => print('Connect Error: $data'));
     socket.onDisconnect((data) => print('Socket.IO server disconnected'));
 
-    socket.on('Vehicle_Time_update$useridgloable', (Vehicle_Time_update) {
-      print("++++++ /Vehicle_Time_update000/ ++++ :---  $Vehicle_Time_update");
+    socket.on('Vehicle_Time_update$useridgloable', (vehicleTimeUpdate) {
+      print("++++++ /Vehicle_Time_update000/ ++++ :---  $vehicleTimeUpdate");
       print(
-          "Vehicle_Time_update is of type00: ${Vehicle_Time_update.runtimeType}");
-      print("Vehicle_Time_update keys00: ${Vehicle_Time_update.keys}");
+          "Vehicle_Time_update is of type00: ${vehicleTimeUpdate.runtimeType}");
+      print("Vehicle_Time_update keys00: ${vehicleTimeUpdate.keys}");
 
       hours1 = 0;
-      minutes1 = int.parse(Vehicle_Time_update["time"]);
+      minutes1 = int.parse(vehicleTimeUpdate["time"]);
 
       if (_remainingTime > 0) {
         print("iopioioioiiooiiooiioioioioioioioioioioioio");
@@ -198,27 +198,27 @@ class _TimerScreenState extends State<TimerScreen> {
       print("+++tot_time00+++:-- $tot_time");
     });
 
-    socket.on('Vehicle_Ride_Start_End$useridgloable', (Vehicle_Ride_Start_End) {
+    socket.on('Vehicle_Ride_Start_End$useridgloable', (vehicleRideStartEnd) {
       print(
-          "++++++ /Vehicle_Ride_Start_End/ ++++ :---  $Vehicle_Ride_Start_End");
+          "++++++ /Vehicle_Ride_Start_End/ ++++ :---  $vehicleRideStartEnd");
       print(
-          "Vehicle_Ride_Start_End is of type: ${Vehicle_Ride_Start_End.runtimeType}");
-      print("Vehicle_Ride_Start_End keys: ${Vehicle_Ride_Start_End.keys}");
+          "Vehicle_Ride_Start_End is of type: ${vehicleRideStartEnd.runtimeType}");
+      print("Vehicle_Ride_Start_End keys: ${vehicleRideStartEnd.keys}");
       print("++++Vehicle_Ride_Start_End userid+++++: $useridgloable");
       print(
-          "++++Vehicle_Ride_Start_End gggg +++++: ${Vehicle_Ride_Start_End["uid"].toString()}");
+          "++++Vehicle_Ride_Start_End gggg +++++: ${vehicleRideStartEnd["uid"].toString()}");
       print("++++driver_id gggg +++++: $driver_id");
 
       statusridestart = "";
       totaldropmint = "";
       plusetimer = "";
 
-      if (driver_id == Vehicle_Ride_Start_End["uid"].toString()) {
+      if (driver_id == vehicleRideStartEnd["uid"].toString()) {
         print("SuccessFully1");
-        statusridestart = Vehicle_Ride_Start_End["status"];
-        totaldropmint = Vehicle_Ride_Start_End["tot_min"].toString();
-        totaldrophour = Vehicle_Ride_Start_End["tot_hour"].toString();
-        totaldropsecound = Vehicle_Ride_Start_End["tot_second"].toString();
+        statusridestart = vehicleRideStartEnd["status"];
+        totaldropmint = vehicleRideStartEnd["tot_min"].toString();
+        totaldrophour = vehicleRideStartEnd["tot_hour"].toString();
+        totaldropsecound = vehicleRideStartEnd["tot_second"].toString();
         otpstatus = false;
 
         timeincressstatus = "2";
@@ -232,7 +232,7 @@ class _TimerScreenState extends State<TimerScreen> {
           timervarable = true;
           droppointstartscreen = [];
           listdrop = [];
-          listdrop = Vehicle_Ride_Start_End["drop_list"];
+          listdrop = vehicleRideStartEnd["drop_list"];
           print("xxxxxxxxx droppointstartscreen xxxxxxxxx$listdrop");
           print("xxxxxxxxx listdrop length:- ${listdrop.length}");
 
@@ -240,9 +240,9 @@ class _TimerScreenState extends State<TimerScreen> {
             print("objectMMMMMMMMM:-- ($i)");
             droppointstartscreen.add(PointLatLng(
                 double.parse(
-                    Vehicle_Ride_Start_End["drop_list"][i]["latitude"]),
+                    vehicleRideStartEnd["drop_list"][i]["latitude"]),
                 double.parse(
-                    Vehicle_Ride_Start_End["drop_list"][i]["longitude"])));
+                    vehicleRideStartEnd["drop_list"][i]["longitude"])));
             print(
                 "vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
           }
@@ -251,8 +251,8 @@ class _TimerScreenState extends State<TimerScreen> {
           minutes1 = int.parse(totaldropmint);
           hours1 = int.parse(totaldrophour);
           seconds = int.parse(totaldropsecound);
-          print("======minutes1======:-  ${minutes1}");
-          print("======hours1======:-  ${hours1}");
+          print("======minutes1======:-  $minutes1");
+          print("======hours1======:-  $hours1");
 
           if (_remainingTime > 0) {
             print("iopioioioiiooiiooiioioioioioioioioioioioio");
@@ -272,16 +272,16 @@ class _TimerScreenState extends State<TimerScreen> {
           timervarable = false;
           droppointstartscreen = [];
           listdrop = [];
-          listdrop = Vehicle_Ride_Start_End["drop_list"];
+          listdrop = vehicleRideStartEnd["drop_list"];
           print("xxxxxxxxx droppointstartscreen xxxxxxxxx$listdrop");
           print("xxxxxxxxx listdrop length${listdrop.length}");
           for (int i = 0; i < listdrop.length; i++) {
-            print("objectHHHHH:-- (${i})");
+            print("objectHHHHH:-- ($i)");
             droppointstartscreen.add(PointLatLng(
                 double.parse(
-                    Vehicle_Ride_Start_End["drop_list"][i]["latitude"]),
+                    vehicleRideStartEnd["drop_list"][i]["latitude"]),
                 double.parse(
-                    Vehicle_Ride_Start_End["drop_list"][i]["longitude"])));
+                    vehicleRideStartEnd["drop_list"][i]["longitude"])));
             print(
                 "vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
           }

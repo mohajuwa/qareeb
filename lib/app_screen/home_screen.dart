@@ -901,7 +901,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // Load all icons
-    final List<BitmapDescriptor> _icons = await Future.wait(
+    final List<BitmapDescriptor> icons = await Future.wait(
       _iconPathsbiddingoff.map((path) => loadIcon(path)),
     );
 
@@ -929,7 +929,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final marker = Marker(
           markerId: markerId,
           position: vihicallocationsbiddingoff[i],
-          icon: _icons[i],
+          icon: icons[i],
         );
         markers[markerId] = marker; // Add marker to the map
       }
@@ -1230,7 +1230,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                           color: notifier.containercolore,
                           // border: Border.all(color: Colors.grey.withOpacity(0.4))
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
                                 color: Colors.grey,
                                 offset: Offset(0, -0.4),

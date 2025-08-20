@@ -229,7 +229,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         ),
                         context: context,
                         builder: (context) {
-                          return Container(
+                          return SizedBox(
                             height: 750,
                             // color: Colors.red,
                             child: const Column(
@@ -280,7 +280,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         ),
                         context: context,
                         builder: (context) {
-                          return Container(
+                          return SizedBox(
                             height: 750,
                             // color: Colors.red,
                             child: const Column(
@@ -916,7 +916,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 int passengervalue = 1;
 
 class counterpaggentbottomshhet extends StatefulWidget {
-  counterpaggentbottomshhet({super.key});
+  const counterpaggentbottomshhet({super.key});
 
   @override
   State<counterpaggentbottomshhet> createState() =>
