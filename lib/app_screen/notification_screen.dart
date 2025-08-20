@@ -44,7 +44,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         title: Text('Notification'.tr,
             style: TextStyle(
                 color: notifier.textColor,
-                fontFamily: "SofiaProBold",
+                
                 fontSize: 18)),
       ),
       backgroundColor: notifier.background,

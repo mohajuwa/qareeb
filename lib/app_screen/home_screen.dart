@@ -1175,8 +1175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     style: TextStyle(
                                                         color:
                                                             notifier.textColor,
-                                                        fontFamily:
-                                                            "SofiaProBold",
+
                                                         fontSize: 16)),
                                                 const SizedBox(
                                                   width: 10,
@@ -1331,8 +1330,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                             'Payment Getway Method'
                                                                 .tr,
                                                             style: TextStyle(
-                                                                fontFamily:
-                                                                    "SofiaProBold",
+
                                                                 fontSize: 18,
                                                                 color: notifier
                                                                     .textColor)),
@@ -1451,7 +1449,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                     padding: const EdgeInsets.only(bottom: 4),
                                                                                     child: Text(
                                                                                       paymentGetApiController.paymentgetwayapi!.paymentList![index].name.toString(),
-                                                                                      style: TextStyle(fontSize: 16, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                      style: TextStyle(fontSize: 16, color: notifier.textColor),
                                                                                       maxLines: 2,
                                                                                     ),
                                                                                   ),
@@ -1459,7 +1457,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                     padding: const EdgeInsets.only(bottom: 4),
                                                                                     child: Text(
                                                                                       paymentGetApiController.paymentgetwayapi!.paymentList![index].subTitle.toString(),
-                                                                                      style: TextStyle(fontSize: 12, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                      style: TextStyle(fontSize: 12,  color: notifier.textColor),
                                                                                       maxLines: 2,
                                                                                     ),
                                                                                   ),

@@ -184,9 +184,13 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
             request_id: "${request_id}",
             wallet: "${walletValue}")
         .then(
-      (value) {
+      (returnedRequestId) {
+        if (returnedRequestId != null) {
+          ridecompleterequestid = returnedRequestId;
+          print("ridecompleterequestid set to: $ridecompleterequestid");
+        }
         print(
-            "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh ${value}");
+            "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh  handlePaymentSuccess${returnedRequestId}");
         rateBottomSheet();
         socateemptvihicalridecomplete();
       },
@@ -295,9 +299,14 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                             request_id: "${request_id}",
                             wallet: "${walletValue}")
                         .then(
-                      (value) {
+                      (returnedRequestId) {
+                        if (returnedRequestId != null) {
+                          ridecompleterequestid = returnedRequestId;
+                          print(
+                              "ridecompleterequestid set to: $ridecompleterequestid");
+                        }
                         print(
-                            "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh ${value}");
+                            "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh Wallet Button ${returnedRequestId}");
                         rateBottomSheet();
                         socateemptvihicalridecomplete();
                       },
@@ -364,11 +373,27 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                               request_id: "${request_id}",
                               wallet: "${walletValue}")
                           .then(
-                        (value) {
-                          print(
-                              "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh ${value}");
-                          rateBottomSheet();
-                          socateemptvihicalridecomplete();
+                        (returnedRequestId) {
+                          if (returnedRequestId != null &&
+                              returnedRequestId.isNotEmpty) {
+                            ridecompleterequestid = returnedRequestId;
+                            print(
+                                "ridecompleterequestid set to: $ridecompleterequestid");
+                            rateBottomSheet();
+                            socateemptvihicalridecomplete();
+                          } else {
+                            print("ERROR: No request_id returned from API");
+                            // Show specific error message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Please wait for the driver to complete the ride first',
+                                ),
+                                backgroundColor: Colors.orange,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
                         },
                       );
                       print("Cash");
@@ -475,7 +500,13 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                                     request_id: "${request_id}",
                                                     wallet: "${walletValue}")
                                                 .then(
-                                              (value) {
+                                              (returnedRequestId) {
+                                                if (returnedRequestId != null) {
+                                                  ridecompleterequestid =
+                                                      returnedRequestId;
+                                                  print(
+                                                      "ridecompleterequestid set to: $ridecompleterequestid");
+                                                }
                                                 rateBottomSheet();
                                                 socateemptvihicalridecomplete();
                                               },
@@ -673,7 +704,13 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                                     request_id: "${request_id}",
                                                     wallet: "${walletValue}")
                                                 .then(
-                                              (value) {
+                                              (returnedRequestId) {
+                                                if (returnedRequestId != null) {
+                                                  ridecompleterequestid =
+                                                      returnedRequestId;
+                                                  print(
+                                                      "ridecompleterequestid set to: $ridecompleterequestid");
+                                                }
                                                 rateBottomSheet();
                                                 socateemptvihicalridecomplete();
                                               },
@@ -737,7 +774,8 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                           shape: BoxShape.circle,
                         ),
                         child: Text(
-                          "${decodeUid['name'][0] ?? ""}".tr,
+                          "${decodeUid != null ? (decodeUid['name']?[0] ?? "U") : "U"}"
+                              .tr,
                           style: TextStyle(
                             fontSize: 23,
                             color: Colors.white,
@@ -1031,9 +1069,7 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                               ),
                               Text('Payment Gateway Method'.tr,
                                   style: TextStyle(
-                                      fontFamily: "SofiaProBold",
-                                      fontSize: 18,
-                                      color: notifier.textColor)),
+                                      fontSize: 18, color: notifier.textColor)),
                               const SizedBox(
                                 height: 10,
                               ),
@@ -1217,8 +1253,6 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                                             .toString(),
                                                         style: TextStyle(
                                                             fontSize: 16,
-                                                            fontFamily:
-                                                                "SofiaProBold",
                                                             color: notifier
                                                                 .textColor),
                                                         maxLines: 2,
@@ -1236,8 +1270,6 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                                             .toString(),
                                                         style: TextStyle(
                                                             fontSize: 12,
-                                                            fontFamily:
-                                                                "SofiaProBold",
                                                             color: notifier
                                                                 .textColor),
                                                         maxLines: 2,

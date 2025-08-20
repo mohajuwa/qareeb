@@ -16,18 +16,19 @@ class VihicalRideCompleteOrderApiController extends GetxController
   bool orederloader = false;
   bool isloadoing = false;
 
-  Future vihicalridecomplete(
-      {required String payment_id,
-      required String payment_img,
-      required String uid,
-      required String d_id,
-      required String request_id,
-      required String wallet,
-      context}) async {
-    print("vvvpayment_imgvvv:-- ${payment_img}");
+  Future<String?> vihicalridecomplete({
+    required String payment_id,
+    required String payment_img,
+    required String uid,
+    required String d_id,
+    required String request_id,
+    required String wallet,
+    context,
+  }) async {
+    print("vvvpayment_imgvvv:-- $payment_img");
 
     if (orederloader) {
-      return;
+      return null;
     } else {
       orederloader = true;
     }
@@ -52,24 +53,30 @@ class VihicalRideCompleteOrderApiController extends GetxController
 
     http.StreamedResponse response = await request.send();
 
-    // var responsnessaj = jsonDecode(await response.stream.bytesToString());
-    // http.StreamedResponse response = await request.send();
     final responseString = await response.stream.bytesToString();
     final responsnessaj = jsonDecode(responseString);
+
+    print("API Response Status Code: ${response.statusCode}");
+    print("API Response Body: $responsnessaj");
 
     if (response.statusCode == 200) {
       orederloader = false;
 
-      // print("++++++body for request ++++++:--- ${await response.stream.bytesToString()}");
       print("MMMMMMMMM (bar) MMMMMMMMM:- ${responsnessaj["review_list"]}");
 
       if (responsnessaj["Result"] == true) {
         isloadoing = false;
-        ridecompleterequestid = responsnessaj["request_id"].toString();
-        // vihicalRideCompleteApiModel = jsonDecode(responsnessaj["review_list"]);
+
+        // Extract and store the request_id from response
+        String responseRequestId = responsnessaj["request_id"].toString();
+        ridecompleterequestid = responseRequestId;
+
+        print("Setting ridecompleterequestid to: $responseRequestId");
+
         vihicalRideCompleteApiModel =
             VihicalRideCompleteApiModel.fromJson(responsnessaj);
 
+        // Clear pickup/drop data
         pickupcontroller.text = "";
         dropcontroller.text = "";
         latitudepick = 0.00;
@@ -87,22 +94,28 @@ class VihicalRideCompleteOrderApiController extends GetxController
 
         print("++hahaha++:- (${pickupcontroller.text})");
         print("++hahaha++:- (${dropcontroller.text})");
-        print("++hahaha++:- (${latitudepick})");
-        print("++hahaha++:- (${longitudepick})");
-        print("++hahaha++:- (${latitudedrop})");
-        print("++hahaha++:- (${longitudedrop})");
-        print("++hahaha++:- (${picktitle})");
-        print("++hahaha++:- (${picksubtitle})");
-        print("++hahaha++:- (${droptitle})");
-        print("++hahaha++:- (${dropsubtitle})");
-        print("++hahaha++:- (${droptitlelist})");
+        print("++hahaha++:- ($latitudepick)");
+        print("++hahaha++:- ($longitudepick)");
+        print("++hahaha++:- ($latitudedrop)");
+        print("++hahaha++:- ($longitudedrop)");
+        print("++hahaha++:- ($picktitle)");
+        print("++hahaha++:- ($picksubtitle)");
+        print("++hahaha++:- ($droptitle)");
+        print("++hahaha++:- ($dropsubtitle)");
+        print("++hahaha++:- ($droptitlelist)");
 
-        Notifier.info('');
+        // Return the request_id so it can be used immediately
+        return responseRequestId;
       } else {
-        Notifier.info('');
+        print("API Result is false: ${responsnessaj["message"]}");
+
+        return null;
       }
     } else {
-      Notifier.info('');
+      print("API call failed with status code: ${response.statusCode}");
+      orederloader = false;
+
+      return null;
     }
   }
 }

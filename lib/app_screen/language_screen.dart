@@ -68,7 +68,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
         title: Text('Language'.tr,
             style: TextStyle(
                 color: notifier.textColor,
-                fontFamily: "SofiaProBold",
+
                 fontSize: 18)),
       ),
       backgroundColor: notifier.background,

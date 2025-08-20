@@ -228,7 +228,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
             style: TextStyle(
               fontSize: 22,
               color: notifier.textColor,
-              fontFamily: 'Khebrat',
+             
             ),
           ),
           const SizedBox(height: 10),

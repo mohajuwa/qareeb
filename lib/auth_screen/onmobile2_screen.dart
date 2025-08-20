@@ -213,7 +213,7 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                     style: TextStyle(
                         fontSize: 17,
                         color: notifier.textColor,
-                        fontFamily: "SofiaProBold"),
+                        ),
                     onChanged: (pin) {
                       setState(() {
                         otpvarable2 = int.parse(pin);
@@ -250,13 +250,13 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                   //       child: Text(
                   //         "Resend code?".tr,
                   //         style: TextStyle(
-                  //             fontFamily: "SofiaRegular", color: Colors.black, fontSize: 16),
+                  //          color: Colors.black, fontSize: 16),
                   //       ),
                   //     ) : Text(
                   //       " $secondsRemaining Seconds".tr,
                   //       style: TextStyle(
                   //         color: theamcolore,
-                  //         fontFamily: "SofiaRegular",
+
                   //       ),
                   //     ),
                   //     Spacer(),

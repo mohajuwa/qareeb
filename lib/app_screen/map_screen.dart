@@ -2233,7 +2233,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                     hintText: "Your Current Location".tr,
                                     hintStyle: const TextStyle(
                                         color: Colors.grey,
-                                        fontFamily: "SofiaProBold",
                                         fontSize: 14),
                                     focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
@@ -4231,8 +4230,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                           'Payment Getway Method'
                                                               .tr,
                                                           style: TextStyle(
-                                                              fontFamily:
-                                                                  "SofiaProBold",
+
                                                               fontSize: 18,
                                                               color: notifier
                                                                   .textColor)),
@@ -4355,7 +4353,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                                                   padding: const EdgeInsets.only(bottom: 4),
                                                                                   child: Text(
                                                                                     paymentGetApiController.paymentgetwayapi!.paymentList![index].name.toString(),
-                                                                                    style: TextStyle(fontSize: 16, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                    style: TextStyle(fontSize: 16,  color: notifier.textColor),
                                                                                     maxLines: 2,
                                                                                   ),
                                                                                 ),
@@ -4363,7 +4361,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                                                   padding: const EdgeInsets.only(bottom: 4),
                                                                                   child: Text(
                                                                                     paymentGetApiController.paymentgetwayapi!.paymentList![index].subTitle.toString(),
-                                                                                    style: TextStyle(fontSize: 12, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                    style: TextStyle(fontSize: 12,  color: notifier.textColor),
                                                                                     maxLines: 2,
                                                                                   ),
                                                                                 ),
