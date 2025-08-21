@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'common_code/colore_screen.dart';
-import 'common_code/common_button.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
+import 'package:qareeb/common_code/common_button.dart';
 
 class HourliRideScreen extends StatefulWidget {
   const HourliRideScreen({super.key});
@@ -44,7 +44,7 @@ class _HourliRideScreenState extends State<HourliRideScreen> {
                 ),
                 Text(
                   "How much time do you need?".tr,
-                  style: const TextStyle(fontSize: 30),
+                  style: TextStyle(fontSize: 30),
                 ),
                 const SizedBox(
                   height: 60,
@@ -124,7 +124,7 @@ class _HourliRideScreenState extends State<HourliRideScreen> {
                       child: Center(
                         child: Text(
                           "Leave now".tr,
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: Colors.white),
                         ),
                       ),
                     ),
@@ -193,7 +193,7 @@ class _HourliRideScreenState extends State<HourliRideScreen> {
                                 const Spacer(),
                                 Text(
                                   "Departure date".tr,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       color: Colors.black, fontSize: 20),
                                 ),
                                 const Spacer(),
@@ -266,7 +266,7 @@ class _HourliRideScreenState extends State<HourliRideScreen> {
                                               const Spacer(),
                                               Text(
                                                 "Departure time".tr,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                     color: Colors.black,
                                                     fontSize: 20),
                                               ),
@@ -337,7 +337,7 @@ class _HourliRideScreenState extends State<HourliRideScreen> {
                       contentPadding: EdgeInsets.zero,
                       title: Text(
                         "Date and Time".tr,
-                        style: const TextStyle(color: Colors.grey),
+                        style: TextStyle(color: Colors.grey),
                       ),
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: 4.0),
@@ -371,10 +371,10 @@ class _HourliRideScreenState extends State<HourliRideScreen> {
                     children: [
                       Text(
                         "Starting at".tr,
-                        style: const TextStyle(fontSize: 22, color: Colors.black),
+                        style: TextStyle(fontSize: 22, color: Colors.black),
                       ),
-                      const Spacer(),
-                      const Column(
+                      Spacer(),
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(

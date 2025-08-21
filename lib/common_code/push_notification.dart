@@ -1,5 +1,5 @@
 import 'package:onesignal_flutter/onesignal_flutter.dart';
-import 'config.dart';
+import 'package:qareeb/common_code/config.dart';
 import 'package:get/get.dart';
 import '../app_screen/map_screen.dart';
 
@@ -11,7 +11,7 @@ Future<void> initPlatformState({context}) async {
 
   if (permissionGranted) {
     print("Notification permission granted.");
-    Get.offAll(const MapScreen(
+    Get.offAll(MapScreen(
       selectvihical: false,
     ));
   } else {

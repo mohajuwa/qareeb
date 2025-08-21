@@ -8,7 +8,7 @@ import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../common_code/config.dart';
+import 'package:qareeb/common_code/config.dart';
 import '../api_model/sign_up_api_model.dart';
 import 'package:http/http.dart' as http;
 import '../app_screen/map_screen.dart';
@@ -63,7 +63,7 @@ class SignupController extends GetxController implements GetxService {
         loginSharedPreferencesSet(false);
 
         onesignalkey = data["general"]["one_app_id"];
-        print("==========:----- ($onesignalkey)");
+        print("==========:----- (${onesignalkey})");
         print("=====Config.oneSignel=====:----- (${Config.oneSignel})");
 
         // initPlatformState(context: context);

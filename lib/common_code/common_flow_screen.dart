@@ -3,16 +3,11 @@
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
 // ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
 
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../widgets/loading_overlay.dart';
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/cancel_rason_request_api_controller.dart';
 import '../api_code/remove_request.dart';
@@ -127,7 +122,11 @@ Future commonbottomsheetrequestsend({required context}) {
                       ),
                       const SizedBox(height: 10),
                       cancelloader == true
-                          ? LoadingOverlay()
+                          ? Center(
+                              child: CircularProgressIndicator(
+                                color: theamcolore,
+                              ),
+                            )
                           : CommonOutLineButton(
                               bordercolore: theamcolore,
                               onPressed1: () {
@@ -1163,7 +1162,7 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
     //   print("++++++ /Vehicle_Ride_Start_End/ ++++ :---  $Vehicle_Ride_Start_End");
     //   print("Vehicle_Ride_Start_End is of type: ${Vehicle_Ride_Start_End.runtimeType}");
     //   print("Vehicle_Ride_Start_End keys: ${Vehicle_Ride_Start_End.keys}");
-    //   print("++++Vehicle_Ride_Start_End useridgloable+++++: $useridgloable");
+    //   print("++++Vehicle_Ride_Start_End userid+++++: $useridgloable");
     //   print("++++Vehicle_Ride_Start_End gggg +++++: ${Vehicle_Ride_Start_End["uid"].toString()}");
     //   print("++++driver_id gggg +++++: $driver_id");
     //
@@ -1271,7 +1270,7 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
       print("++++++ /Vehicle_Ride_OTP/ ++++ :---  $Vehicle_Ride_OTP");
       print("Vehicle_Ride_OTP is of type: ${Vehicle_Ride_OTP.runtimeType}");
       print("Vehicle_Ride_OTP keys: ${Vehicle_Ride_OTP.keys}");
-      print("++++useridgloable+++++: $useridgloable");
+      print("++++userid+++++: $useridgloable");
 
       print("++++otpstatus+++++:- $otpstatus");
 
@@ -1378,68 +1377,22 @@ totalRateUpdate(double rating) {
   // update();
 }
 
-void setGlobalRideData({
-  required String rideRequestId,
-  required String rideDriverId,
-  required String rideUserId,
-}) {
-  request_id = rideRequestId;
-  driver_id = rideDriverId;
-  useridgloable = rideUserId;
-
-  if (kDebugMode) {
-    print("🌐 Global ride data set:");
-    print("   request_id: $request_id");
-    print("   driver_id: $driver_id");
-    print("   useridgloable: $useridgloable");
-  }
-}
-
-// Function to load user data from SharedPreferences
-Future<void> _loadUserData() async {
-  try {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    var uid = preferences.getString("userLogin");
-
-    if (uid != null) {
-      var decodeUid = jsonDecode(uid);
-      useridgloable = decodeUid['id'];
-      if (kDebugMode) {
-        print("Loaded useridgloable from SharedPreferences: $useridgloable");
-      }
-    } else {
-      if (kDebugMode) {
-        print("No user login data found in SharedPreferences");
-      }
-    }
-  } catch (e) {
-    if (kDebugMode) {
-      print("Error loading user data: $e");
-    }
-  }
-}
-
 Future rateBottomSheet() {
   DriverReviewDetailApiController driverReviewDetailApiController = Get.put(
     DriverReviewDetailApiController(),
   );
-
+  // VihicalRideCompleteOrderApiController vihicalRideCompleteOrderApiController = Get.put(VihicalRideCompleteOrderApiController());
   TextEditingController reviewtextcontroller = TextEditingController();
   ReviewDataApiController reviewDataApiController = Get.put(
     ReviewDataApiController(),
   );
 
-  List<int> reviewid = [];
-  bool isSubmitting = false;
+  // String reviewid = '';
+  List reviewid = [];
+  String reviewtitle = '';
 
-  // Load user data from SharedPreferences
-  _loadUserData();
-
-  // Load review data immediately
   reviewDataApiController.reviewdataApi().then((value) {
-    if (kDebugMode) {
-      print("Review data loaded: $value");
-    }
+    print("****11111@@@@@***:--- (${value})");
   });
 
   return Get.bottomSheet(
@@ -1449,353 +1402,318 @@ Future rateBottomSheet() {
     GetBuilder<ReviewDataApiController>(
       builder: (reviewDataApiController) {
         return reviewDataApiController.isLoading
-            ? Container(
-                height: Get.height * 0.6,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              )
+            ? Center(child: CircularProgressIndicator(color: theamcolore))
             : StatefulBuilder(
                 builder: (context, setState) {
-                  return Container(
-                    height: Get.height * 0.85,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          // Top handle
-                          Container(
-                            width: 50,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        clipBehavior: Clip.hardEdge,
+                        width: Get.width,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: notifier.containercolore,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
                           ),
-                          const SizedBox(height: 20),
-
-                          // Close button
-                          Align(
-                            alignment: Alignment.topRight,
-                            child: GestureDetector(
-                              onTap: () => Get.back(),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 20,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Title
-                          const Text(
-                            "How was your ride?",
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          const Text(
-                            "Your feedback helps us improve",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-
-                          const SizedBox(height: 30),
-
-                          // Star Rating
-                          RatingBar(
-                            initialRating: tRate,
-                            direction: Axis.horizontal,
-                            itemCount: 5,
-                            allowHalfRating: true,
-                            itemSize: 45,
-                            ratingWidget: RatingWidget(
-                              full: Icon(
-                                Icons.star,
-                                color: theamcolore,
-                              ),
-                              half: Icon(
-                                Icons.star_half,
-                                color: theamcolore,
-                              ),
-                              empty: Icon(
-                                Icons.star_border,
-                                color: Colors.grey[300],
-                              ),
-                            ),
-                            itemPadding: const EdgeInsets.symmetric(
-                              horizontal: 4.0,
-                            ),
-                            onRatingUpdate: (rating) {
-                              setState(() {
-                                totalRateUpdate(rating);
-                                if (kDebugMode) {
-                                  print("Rating updated: $rating");
-                                  print("tRate: $tRate");
-                                }
-                              });
-                            },
-                          ),
-
-                          const SizedBox(height: 30),
-
-                          // Review options
-                          if (reviewDataApiController
-                                  .reviewDataApiModel?.reviewList !=
-                              null)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "What did you like the most? 😍",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black87,
+                        ),
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                // mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  SvgPicture.asset(
+                                    "assets/svgpicture/check-circle.svg",
+                                    color: notifier.textColor,
                                   ),
-                                ),
-                                const SizedBox(height: 15),
-                                Wrap(
-                                  spacing: 10,
-                                  runSpacing: 10,
-                                  children: List.generate(
-                                    reviewDataApiController
-                                        .reviewDataApiModel!.reviewList!.length,
-                                    (index) {
-                                      final reviewItem = reviewDataApiController
-                                          .reviewDataApiModel!
-                                          .reviewList![index];
-                                      final isSelected =
-                                          reviewid.contains(reviewItem.id);
-
-                                      return GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            if (isSelected) {
-                                              reviewid.remove(reviewItem.id);
-                                              if (kDebugMode) {
-                                                print(
-                                                    "Removed review: ${reviewItem.id}");
-                                              }
-                                            } else {
-                                              reviewid.add(reviewItem.id!);
-                                              if (kDebugMode) {
-                                                print(
-                                                    "Added review: ${reviewItem.id}");
-                                              }
-                                            }
-                                            if (kDebugMode) {
-                                              print(
-                                                  "Current reviewid list: $reviewid");
-                                            }
-                                          });
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 12,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? theamcolore
-                                                : Colors.grey[100],
-                                            borderRadius:
-                                                BorderRadius.circular(25),
-                                            border: Border.all(
-                                              color: isSelected
-                                                  ? theamcolore
-                                                  : Colors.grey[300]!,
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            reviewItem.title ?? "",
-                                            style: TextStyle(
-                                              color: isSelected
-                                                  ? Colors.white
-                                                  : Colors.black87,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    "Paid $globalcurrency$finaltotal",
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      // fontWeight: FontWeight.w500,
+                                      color: notifier.textColor,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: notifier.languagecontainercolore,
+                                      borderRadius: BorderRadius.circular(40),
+                                      border: Border.all(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.help_outline,
+                                          size: 21,
+                                          color: notifier.textColor,
+                                        ),
+                                        SizedBox(width: 3),
+                                        Text(
+                                          "Help",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: notifier.textColor,
                                           ),
                                         ),
-                                      );
-                                    },
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 15),
+                              Center(
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  height: 80,
+                                  width: 80,
+                                  decoration: BoxDecoration(
+                                    // color: theamcolore,
+                                    shape: BoxShape.circle,
+                                    image: DecorationImage(
+                                      image: NetworkImage("$driverimage"),
+                                      fit: BoxFit.cover,
+                                    ),
+                                    // image: DecorationImage(image: NetworkImage("https://cdn.prod.website-files.com/595d6b420002832258c527cb/602edff72af06859a9cf846a_driver-behavior-professional-truck-driver-driving-truck-vehicle-1000.jpg"),fit: BoxFit.cover),
                                   ),
                                 ),
-                              ],
-                            ),
-
-                          const SizedBox(height: 25),
-
-                          // Text review input
-                          TextField(
-                            controller: reviewtextcontroller,
-                            maxLines: 4,
-                            decoration: InputDecoration(
-                              hintText: "Share your experience (optional)",
-                              hintStyle: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide:
-                                    BorderSide(color: Colors.grey[300]!),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: theamcolore),
-                              ),
-                              contentPadding: const EdgeInsets.all(16),
-                            ),
-                          ),
-
-                          const Spacer(),
-
-                          // Submit button
-                          if (isSubmitting)
-                            Container(
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: theamcolore.withOpacity(0.7),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Center(
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
+                              const SizedBox(height: 15),
+                              Text(
+                                "How was your ride with $drivername",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                  color: notifier.textColor,
                                 ),
+                                textAlign: TextAlign.center,
                               ),
-                            )
-                          else
-                            CommonButton(
-                              containcolore: theamcolore,
-                              onPressed1: () async {
-                                // Prevent multiple submissions
-                                if (isSubmitting) return;
-
-                                setState(() {
-                                  isSubmitting = true;
-                                });
-
-                                // Determine which request_id to use
-                                String requestIdToUse =
-                                    ridecompleterequestid.isNotEmpty
-                                        ? ridecompleterequestid
-                                        : (request_id.toString() ?? "");
-
-                                if (kDebugMode) {
-                                  print("useridgloable: $useridgloable");
-                                  print("driver_id: $driver_id");
-                                  print(
-                                      "review text: ${reviewtextcontroller.text}");
-                                  print("rating: $tRate");
-                                  print(
-                                      "ridecompleterequestid: $ridecompleterequestid");
-                                  print("original request_id: $request_id");
-                                  print("using request_id: $requestIdToUse");
-                                  print("selected reviews: $reviewid");
-                                }
-
-                                // Validate required fields
-                                if (requestIdToUse.isEmpty) {
+                              const SizedBox(height: 20),
+                              RatingBar(
+                                initialRating: 1,
+                                direction: Axis.horizontal,
+                                itemCount: 5,
+                                allowHalfRating: true,
+                                ratingWidget: RatingWidget(
+                                  full: Image.asset(
+                                    'assets/starBold.png',
+                                    color: theamcolore,
+                                  ),
+                                  half: Image.asset(
+                                    'assets/star-half.png',
+                                    color: theamcolore,
+                                  ),
+                                  empty: Image.asset(
+                                    'assets/star.png',
+                                    color: theamcolore,
+                                  ),
+                                ),
+                                itemPadding: const EdgeInsets.symmetric(
+                                  horizontal: 4.0,
+                                ),
+                                onRatingUpdate: (rating) {
                                   setState(() {
-                                    isSubmitting = false;
+                                    totalRateUpdate(rating);
+                                    print("---:-- $rating");
+                                    print("+++:-- $tRate");
                                   });
-                                  Get.snackbar(
-                                    "Error",
-                                    "Request ID is missing. Please try again.",
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              const Text(
+                                "Great, what did you like the most? 😍",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 20),
+                              Wrap(
+                                spacing: 13,
+                                runSpacing: 13,
+                                alignment: WrapAlignment.start,
+                                clipBehavior: Clip.none,
+                                crossAxisAlignment: WrapCrossAlignment.start,
+                                runAlignment: WrapAlignment.start,
+                                children: [
+                                  for (int a = 0;
+                                      a <
+                                          reviewDataApiController
+                                              .reviewDataApiModel!
+                                              .reviewList!
+                                              .length;
+                                      a++)
+                                    Builder(
+                                      builder: (context) {
+                                        return InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              // reviewid = reviewDataApiController.reviewDataApiModel!.reviewList![a].id.toString();
+
+                                              reviewtitle =
+                                                  reviewDataApiController
+                                                      .reviewDataApiModel!
+                                                      .reviewList![a]
+                                                      .title
+                                                      .toString();
+                                              setState(() {
+                                                if (reviewid.contains(
+                                                  reviewDataApiController
+                                                      .reviewDataApiModel!
+                                                      .reviewList![a]
+                                                      .id,
+                                                )) {
+                                                  reviewid.remove(
+                                                    reviewDataApiController
+                                                        .reviewDataApiModel!
+                                                        .reviewList![a]
+                                                        .id,
+                                                  );
+                                                  print(
+                                                    "-------remove--------- ${reviewid}",
+                                                  );
+                                                } else {
+                                                  reviewid.add(
+                                                    reviewDataApiController
+                                                        .reviewDataApiModel!
+                                                        .reviewList![a]
+                                                        .id,
+                                                  );
+                                                  print(
+                                                    "+++++++Add+++++++ ${reviewid}",
+                                                  );
+                                                }
+                                              });
+
+                                              print(
+                                                " + + + +  + + + $reviewid",
+                                              );
+                                            });
+                                            // Get.back();
+                                          },
+                                          child: Container(
+                                            height: 40,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 15,
+                                              vertical: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: reviewid.contains(
+                                                reviewDataApiController
+                                                    .reviewDataApiModel!
+                                                    .reviewList![a]
+                                                    .id,
+                                              )
+                                                  ? theamcolore
+                                                  : notifier.containercolore,
+                                              // color: reviewtitle == reviewDataApiController.reviewDataApiModel!.reviewList![a].title ?  theamcolore : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(18),
+                                              border: Border.all(
+                                                color: Colors.grey.withOpacity(
+                                                  0.4,
+                                                ),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  reviewDataApiController
+                                                      .reviewDataApiModel!
+                                                      .reviewList![a]
+                                                      .title
+                                                      .toString(),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall!
+                                                      .copyWith(
+                                                        fontSize: 15,
+                                                        color:
+                                                            reviewid.contains(
+                                                          reviewDataApiController
+                                                              .reviewDataApiModel!
+                                                              .reviewList![a]
+                                                              .id,
+                                                        )
+                                                                ? Colors.white
+                                                                : notifier
+                                                                    .textColor,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              CommonTextfiled200(
+                                txt: "Tell us more...",
+                                context: context,
+                                controller: reviewtextcontroller,
+                              ),
+                              const SizedBox(height: 20),
+                              CommonButton(
+                                txt1: "Done",
+                                onPressed1: () {
+                                  print("userid:-- ($useridgloable)");
+                                  print("driver_id:-- ($driver_id)");
+                                  print(
+                                    "reviewtextcontroller.text:-- (${reviewtextcontroller.text})",
                                   );
-                                  return;
-                                }
-
-                                // Load useridgloable if it's still null
-                                if (useridgloable == null) {
-                                  await _loadUserData();
-                                }
-
-                                if (useridgloable == null) {
-                                  setState(() {
-                                    isSubmitting = false;
-                                  });
-                                  Get.snackbar(
-                                    "Error",
-                                    "User or driver information is missing. Please restart the app.",
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
+                                  print("tRate:-- ($tRate)");
+                                  print(
+                                    "ridecompleterequestid:-- ($ridecompleterequestid)",
                                   );
-                                  return;
-                                }
-
-                                try {
-                                  // Submit the review
-                                  await driverReviewDetailApiController
-                                      .reviewapi(
-                                    context: context,
-                                    uid: useridgloable.toString(),
-                                    d_id: driver_id.toString(),
-                                    review: reviewtextcontroller.text.trim(),
-                                    tot_star: tRate.toString(),
-                                    request_id: requestIdToUse,
+                                  driverReviewDetailApiController.reviewapi(
                                     def_review: reviewid,
+                                    uid: useridgloable.toString(),
+                                    d_id: "$driver_id",
+                                    review: reviewtextcontroller.text,
+                                    tot_star: "$tRate",
+                                    request_id: "$ridecompleterequestid",
+                                    context: context,
                                   );
-                                } catch (e) {
-                                  if (kDebugMode) {
-                                    print("Error submitting review: $e");
-                                  }
-                                  setState(() {
-                                    isSubmitting = false;
-                                  });
-                                  Get.snackbar(
-                                    "Error",
-                                    "Failed to submit review. Please try again.",
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
-                                  );
-                                }
-                              },
-                              context: context,
-                              txt1: "Submit Review",
-                            ),
-
-                          const SizedBox(height: 20),
-                        ],
+                                },
+                                containcolore: theamcolore,
+                                context: context,
+                              ),
+                              const SizedBox(height: 10),
+                              CommonOutLineButton(
+                                bordercolore: theamcolore,
+                                onPressed1: () {
+                                  Get.offAll(MapScreen(selectvihical: false));
+                                },
+                                txt1: "Skip",
+                                context: context,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   );
                 },
               );

@@ -16,10 +16,10 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../api_code/vihical_calculate_api_controller.dart';
-import 'map_screen.dart';
-import 'pickup_drop_point.dart';
-import '../common_code/common_button.dart';
+import 'package:qareeb/api_code/vihical_calculate_api_controller.dart';
+import 'package:qareeb/app_screen/map_screen.dart';
+import 'package:qareeb/app_screen/pickup_drop_point.dart';
+import 'package:qareeb/common_code/common_button.dart';
 import 'dart:ui' as ui;
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/cancel_rason_request_api_controller.dart';
@@ -901,7 +901,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // Load all icons
-    final List<BitmapDescriptor> icons = await Future.wait(
+    final List<BitmapDescriptor> _icons = await Future.wait(
       _iconPathsbiddingoff.map((path) => loadIcon(path)),
     );
 
@@ -929,7 +929,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final marker = Marker(
           markerId: markerId,
           position: vihicallocationsbiddingoff[i],
-          icon: icons[i],
+          icon: _icons[i],
         );
         markers[markerId] = marker; // Add marker to the map
       }
@@ -1175,7 +1175,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     style: TextStyle(
                                                         color:
                                                             notifier.textColor,
-
+                                                        fontFamily:
+                                                            "SofiaProBold",
                                                         fontSize: 16)),
                                                 const SizedBox(
                                                   width: 10,
@@ -1230,7 +1231,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                           color: notifier.containercolore,
                           // border: Border.all(color: Colors.grey.withOpacity(0.4))
-                          boxShadow: const [
+                          boxShadow: [
                             BoxShadow(
                                 color: Colors.grey,
                                 offset: Offset(0, -0.4),
@@ -1330,7 +1331,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                             'Payment Getway Method'
                                                                 .tr,
                                                             style: TextStyle(
-
+                                                                fontFamily:
+                                                                    "SofiaProBold",
                                                                 fontSize: 18,
                                                                 color: notifier
                                                                     .textColor)),
@@ -1449,7 +1451,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                     padding: const EdgeInsets.only(bottom: 4),
                                                                                     child: Text(
                                                                                       paymentGetApiController.paymentgetwayapi!.paymentList![index].name.toString(),
-                                                                                      style: TextStyle(fontSize: 16, color: notifier.textColor),
+                                                                                      style: TextStyle(fontSize: 16, fontFamily: "SofiaProBold", color: notifier.textColor),
                                                                                       maxLines: 2,
                                                                                     ),
                                                                                   ),
@@ -1457,7 +1459,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                     padding: const EdgeInsets.only(bottom: 4),
                                                                                     child: Text(
                                                                                       paymentGetApiController.paymentgetwayapi!.paymentList![index].subTitle.toString(),
-                                                                                      style: TextStyle(fontSize: 12,  color: notifier.textColor),
+                                                                                      style: TextStyle(fontSize: 12, fontFamily: "SofiaProBold", color: notifier.textColor),
                                                                                       maxLines: 2,
                                                                                     ),
                                                                                   ),
@@ -2035,7 +2037,11 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             GoogleMap(
               initialCameraPosition: CameraPosition(
-                  target: LatLng(widget.latpic, widget.longpic), zoom: 15),
+                target: LatLng(widget.latpic, widget.longpic),
+                zoom: 16,
+                tilt: 60,
+                bearing: 30,
+              ),
               myLocationEnabled: true,
               tiltGesturesEnabled: true,
               compassEnabled: true,

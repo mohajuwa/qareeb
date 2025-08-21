@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import '../api_code/signup_controller.dart';
+import 'package:qareeb/api_code/signup_controller.dart';
 import '../common_code/colore_screen.dart';
 import '../common_code/common_button.dart';
 import 'onbording_screen.dart';

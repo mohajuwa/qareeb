@@ -19,23 +19,22 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
-import '../services/notifier.dart';
-import '../widgets/loading_overlay.dart';
+import 'package:qareeb/services/notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
-import '../api_code/coupon_payment_api_contoller.dart';
-import '../api_code/home_controller.dart';
-import 'home_screen.dart';
-import 'pagelist_description.dart';
-import 'pickup_drop_point.dart';
-import 'profile_screen.dart';
-import 'refer_and_earn.dart';
-import 'top_up_screen.dart';
+import 'package:qareeb/api_code/coupon_payment_api_contoller.dart';
+import 'package:qareeb/api_code/home_controller.dart';
+import 'package:qareeb/app_screen/home_screen.dart';
+import 'package:qareeb/app_screen/pagelist_description.dart';
+import 'package:qareeb/app_screen/pickup_drop_point.dart';
+import 'package:qareeb/app_screen/profile_screen.dart';
+import 'package:qareeb/app_screen/refer_and_earn.dart';
+import 'package:qareeb/app_screen/top_up_screen.dart';
 import 'dart:ui' as ui;
-import '../common_code/colore_screen.dart';
-import '../common_code/common_button.dart';
-import '../common_code/common_flow_screen.dart';
-import '../common_code/config.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
+import 'package:qareeb/common_code/common_button.dart';
+import 'package:qareeb/common_code/common_flow_screen.dart';
+import 'package:qareeb/common_code/config.dart';
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/calculate_api_controller.dart';
 import '../api_code/delete_api_controller.dart';
@@ -1620,7 +1619,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     //   }
     // }
 
-    Future<BitmapDescriptor> loadIcon(String url,
+    Future<BitmapDescriptor> _loadIcon(String url,
         {int targetWidth = 30, int targetHeight = 50}) async {
       try {
         if (url.isEmpty || url.contains("undefined")) {
@@ -1651,8 +1650,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
 
     // Load all icons
-    final List<BitmapDescriptor> icons = await Future.wait(
-      _iconPaths.map((path) => loadIcon(path)),
+    final List<BitmapDescriptor> _icons = await Future.wait(
+      _iconPaths.map((path) => _loadIcon(path)),
     );
 
     setState(() {
@@ -1670,7 +1669,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             MarkerId("${homeMapController.homeMapApiModel!.list![i].id}");
         Marker marker = Marker(
           markerId: markerId,
-          icon: icons[i],
+          icon: _icons[i],
           position: LatLng(
               double.parse(homeMapController.homeMapApiModel!.list![i].latitude
                   .toString()),
@@ -1684,7 +1683,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   void _addMarkers2() async {
-    Future<BitmapDescriptor> loadIcon(String url) async {
+    Future<BitmapDescriptor> _loadIcon(String url) async {
       try {
         if (url.isEmpty || url.contains("undefined")) {
           // Fallback to a default icon if the URL is invalid
@@ -1714,8 +1713,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
 
     // Load all icons
-    final List<BitmapDescriptor> icons = await Future.wait(
-      _iconPathsbiddingon.map((path) => loadIcon(path)),
+    final List<BitmapDescriptor> _icons = await Future.wait(
+      _iconPathsbiddingon.map((path) => _loadIcon(path)),
     );
 
     setState(() {
@@ -1749,7 +1748,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   .toString()),
               double.parse(homeMapController.homeMapApiModel!.list![i].longitude
                   .toString())),
-          icon: icons[i],
+          icon: _icons[i],
         );
         markers11[markerId] = marker; // Add marker to the map
       }
@@ -2036,12 +2035,18 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       body: GetBuilder<HomeApiController>(
         builder: (homeApiController) {
           return homeApiController.isLoading
-              ? LoadingOverlay()
+              ? Center(
+                  child: CircularProgressIndicator(
+                  color: theamcolore,
+                ))
               : Stack(
                   children: [
                     // pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty ? lathome == null ? Center(child: CircularProgressIndicator(color: theamcolore,)) :
                     lathome == null
-                        ? LoadingOverlay()
+                        ? Center(
+                            child: CircularProgressIndicator(
+                            color: theamcolore,
+                          ))
                         : GoogleMap(
                             gestureRecognizers: {
                               Factory<OneSequenceGestureRecognizer>(
@@ -2051,15 +2056,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                         .text.isEmpty ||
                                     dropcontroller.text.isEmpty
                                 ? CameraPosition(
-                                    target: LatLng(lathome, longhome), zoom: 16,
-                                    tilt: 60, // 3D feel
+                                    target: LatLng(lathome, longhome),
+                                    zoom: 16,
+                                    tilt: 60,
                                     bearing: 30,
                                   )
                                 : CameraPosition(
                                     target: LatLng(latitudepick, longitudepick),
                                     zoom: 16,
-                                    tilt: 60, // 3D feel
-                                    bearing: 30,
+                                    tilt: 50,
+                                    bearing: 25,
                                   ),
                             // initialCameraPosition:  CameraPosition(target: LatLng(21.2408,72.8806), zoom: 13),
                             mapType: MapType.normal,
@@ -2204,7 +2210,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                           CameraUpdate.newCameraPosition(
                                             CameraPosition(
                                               target: LatLng(lathome, longhome),
-                                              zoom: 14.0,
+                                              zoom: 16,
+                                              tilt: 60,
+                                              bearing: 30,
                                             ),
                                           ),
                                         );
@@ -2233,6 +2241,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                     hintText: "Your Current Location".tr,
                                     hintStyle: const TextStyle(
                                         color: Colors.grey,
+                                        fontFamily: "SofiaProBold",
                                         fontSize: 14),
                                     focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
@@ -2281,7 +2290,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                     CameraPosition(
                                                       target: LatLng(
                                                           lathome, longhome),
-                                                      zoom: 14.0,
+                                                      zoom: 16,
+                                                      tilt: 60,
+                                                      bearing: 30,
                                                     ),
                                                   ),
                                                 );
@@ -2828,10 +2839,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                     ),
                                   ),
                                 ),
-                                textfieldlist.isNotEmpty
+                                textfieldlist.length > 0
                                     ? const SizedBox(height: 0)
                                     : const SizedBox(height: 10),
-                                textfieldlist.isNotEmpty
+                                textfieldlist.length > 0
                                     ? InkWell(
                                         onTap: () {
                                           // _navigateAndRefresh();
@@ -3065,7 +3076,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                               fontSize: 16),
                                                         )
                                                       : Text(
-                                                          "${currencyy ?? globalcurrency} ${dropprice ?? ""}",
+                                                          "${currencyy ?? globalcurrency} ${dropprice == null ? "" : dropprice}",
                                                           style: TextStyle(
                                                               color: notifier
                                                                   .textColor,
@@ -3265,7 +3276,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   ],
                 ),
                 homeApiController.isLoading
-                    ? LoadingOverlay()
+                    ? Center(
+                        child: CircularProgressIndicator(
+                        color: theamcolore,
+                      ))
                     : InkWell(
                         onTap: () {
                           Navigator.of(context).push(MaterialPageRoute(
@@ -3791,11 +3805,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   Buttonpresebottomshhet() {
     if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
-      Notifier.info('');
+      Notifier.error('Pickup or drop location is empty'.tr);
     } else if (amountresponse == "false") {
-      Notifier.info('');
+      Notifier.error('Amount response is not calceluated'.tr);
     } else if (dropprice == 0) {
-      Notifier.info('');
+      Notifier.error('Drop price is not set yet, please try again'.tr);
     } else {
       toast = 0;
       amountcontroller.text = dropprice.toString();
@@ -4230,7 +4244,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                           'Payment Getway Method'
                                                               .tr,
                                                           style: TextStyle(
-
+                                                              fontFamily:
+                                                                  "SofiaProBold",
                                                               fontSize: 18,
                                                               color: notifier
                                                                   .textColor)),
@@ -4353,7 +4368,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                                                   padding: const EdgeInsets.only(bottom: 4),
                                                                                   child: Text(
                                                                                     paymentGetApiController.paymentgetwayapi!.paymentList![index].name.toString(),
-                                                                                    style: TextStyle(fontSize: 16,  color: notifier.textColor),
+                                                                                    style: TextStyle(fontSize: 16, fontFamily: "SofiaProBold", color: notifier.textColor),
                                                                                     maxLines: 2,
                                                                                   ),
                                                                                 ),
@@ -4361,7 +4376,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                                                   padding: const EdgeInsets.only(bottom: 4),
                                                                                   child: Text(
                                                                                     paymentGetApiController.paymentgetwayapi!.paymentList![index].subTitle.toString(),
-                                                                                    style: TextStyle(fontSize: 12,  color: notifier.textColor),
+                                                                                    style: TextStyle(fontSize: 12, fontFamily: "SofiaProBold", color: notifier.textColor),
                                                                                     maxLines: 2,
                                                                                   ),
                                                                                 ),
@@ -5030,7 +5045,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                           StatefulBuilder(
                             builder: (context, setState) {
                               return cancelloader
-                                  ? LoadingOverlay()
+                                  ? Center(
+                                      child: CircularProgressIndicator(
+                                        color: theamcolore,
+                                      ),
+                                    )
                                   : CommonOutLineButton(
                                       bordercolore: theamcolore,
                                       onPressed1: () {

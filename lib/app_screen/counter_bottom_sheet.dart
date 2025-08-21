@@ -11,7 +11,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'pickup_drop_point.dart';
+import 'package:qareeb/app_screen/pickup_drop_point.dart';
 
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/remove_request.dart';

@@ -4,6 +4,7 @@
 // ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
 
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geocoding/geocoding.dart';
@@ -12,9 +13,9 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../api_code/map_api_get.dart';
-import 'custom_location_select_screen.dart';
-import 'home_screen.dart';
+import 'package:qareeb/api_code/map_api_get.dart';
+import 'package:qareeb/app_screen/custom_location_select_screen.dart';
+import 'package:qareeb/app_screen/home_screen.dart';
 import '../api_code/calculate_api_controller.dart';
 import '../api_code/modual_calculate_api_controller.dart';
 import '../common_code/colore_screen.dart';

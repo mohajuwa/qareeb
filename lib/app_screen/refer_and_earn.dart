@@ -12,9 +12,9 @@ import 'package:lottie/lottie.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'home_screen.dart';
-import 'map_screen.dart';
-import '../common_code/colore_screen.dart';
+import 'package:qareeb/app_screen/home_screen.dart';
+import 'package:qareeb/app_screen/map_screen.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
 
 import '../api_code/refer_and_earn_api.dart';
 

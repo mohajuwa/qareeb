@@ -11,11 +11,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../api_code/profile_edit_api_controller.dart';
-import 'map_screen.dart';
-import '../common_code/colore_screen.dart';
-import '../common_code/common_button.dart';
-import '../common_code/config.dart';
+import 'package:qareeb/api_code/profile_edit_api_controller.dart';
+import 'package:qareeb/app_screen/map_screen.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
+import 'package:qareeb/common_code/common_button.dart';
+import 'package:qareeb/common_code/config.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

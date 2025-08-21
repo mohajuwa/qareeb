@@ -6,9 +6,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'map_screen.dart';
-import 'pickup_drop_point.dart';
-import '../common_code/colore_screen.dart';
+import 'package:qareeb/app_screen/map_screen.dart';
+import 'package:qareeb/app_screen/pickup_drop_point.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
 
 import '../common_code/common_button.dart';
 
@@ -229,7 +229,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         ),
                         context: context,
                         builder: (context) {
-                          return SizedBox(
+                          return Container(
                             height: 750,
                             // color: Colors.red,
                             child: const Column(
@@ -280,7 +280,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         ),
                         context: context,
                         builder: (context) {
-                          return SizedBox(
+                          return Container(
                             height: 750,
                             // color: Colors.red,
                             child: const Column(
@@ -916,7 +916,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 int passengervalue = 1;
 
 class counterpaggentbottomshhet extends StatefulWidget {
-  const counterpaggentbottomshhet({super.key});
+  counterpaggentbottomshhet({super.key});
 
   @override
   State<counterpaggentbottomshhet> createState() =>

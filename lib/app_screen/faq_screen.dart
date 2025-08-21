@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import '../common_code/colore_screen.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
 import '../api_code/faq_api_controller.dart';
 
 class FaqScreen extends StatefulWidget {

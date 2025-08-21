@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../common_code/config.dart';
+import 'package:qareeb/common_code/config.dart';
 import '../api_model/login_api_model.dart';
 import '../app_screen/map_screen.dart';
 import '../app_screen/permisiion_scren.dart';
@@ -54,7 +54,7 @@ class LoginController extends GetxController implements GetxService {
           loginSharedPreferencesSet(false);
 
           onesignalkey = data["general"]["one_app_id"];
-          print("==========:----- ($onesignalkey)");
+          print("==========:----- (${onesignalkey})");
           print("=====Config.oneSignel=====:----- (${Config.oneSignel})");
 
           // initPlatformState(context: context);

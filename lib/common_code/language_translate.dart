@@ -5,14 +5,7 @@ import 'package:get/get.dart';
 class AppTranslations extends Translations {
   @override
   Map<String, Map<String, String>> get keys => {
-        'en': {
-          "app_name": "Qareeb",
-          "loading": "Loading...",
-          "ok": "OK",
-          "cancel": "Cancel",
-          "error_generic": "An unexpected error occurred",
-          "network_error": "Network error",
-          "retry": "Retry",
+        'en_English': {
           "Captains are busy": "Captains are busy",
           "Find a driver": "Find a driver",
           "City to city": "City to city",
@@ -83,6 +76,7 @@ class AppTranslations extends Translations {
           "Automatically book the nearest driver for":
               "Automatically book the nearest driver for",
           "Cancel Request": "Cancel Request",
+          "cancel": "cancel",
           "Completed": "Completed",
           "Invoice": "Invoice",
           "Rate your ride": "Rate your ride",
@@ -213,16 +207,10 @@ class AppTranslations extends Translations {
           "Leave later": "Leave later",
           "Date and Time": "Date and Time",
           "Starting at": "Starting at",
-          "Choose a ride": "Choose a ride"
+          "Choose a ride": "Choose a ride",
+          // "" : "",
         },
-        'ar': {
-          "app_name": "قريب",
-          "loading": "جارِ التحميل...",
-          "ok": "حسناً",
-          "cancel": "إلغاء",
-          "error_generic": "حدث خطأ غير متوقع",
-          "network_error": "خطأ في الاتصال بالشبكة",
-          "retry": "إعادة المحاولة",
+        'ur_arabic': {
           "Captains are busy": "القادة مشغولون",
           "Find a driver": "ابحث عن سائق",
           "City to city": "من مدينة إلى مدينة",
@@ -293,6 +281,7 @@ class AppTranslations extends Translations {
           "Automatically book the nearest driver for":
               "احجز تلقائيًا أقرب سائق لـ",
           "Cancel Request": "إلغاء الطلب",
+          "cancel": "إلغاء",
           "Completed": "مكتمل",
           "Invoice": "الفاتورة",
           "Rate your ride": "قيم رحلتك",
@@ -423,7 +412,7 @@ class AppTranslations extends Translations {
           "Leave later": "اغادر لاحقًا",
           "Date and Time": "التاريخ والوقت",
           "Starting at": "يبدأ من",
-          "Choose a ride": "اختر رحلة"
+          "Choose a ride": "اختر رحلة",
         }
       };
 }

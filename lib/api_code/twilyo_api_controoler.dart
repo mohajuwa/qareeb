@@ -1,9 +1,10 @@
 import 'dart:convert';
 
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
-import '../common_code/config.dart';
+import 'package:qareeb/common_code/config.dart';
 
 import '../api_model/twilyo_api_model.dart';
 import '../common_code/common_button.dart';

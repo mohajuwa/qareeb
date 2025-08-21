@@ -12,8 +12,8 @@ import 'package:otp_text_field/otp_field.dart';
 import 'package:otp_text_field/otp_field_style.dart';
 import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
-import 'onmobile3_screen.dart';
-import '../services/notifier.dart';
+import 'package:qareeb/auth_screen/onmobile3_screen.dart';
+import 'package:qareeb/services/notifier.dart';
 import '../api_code/msg91_api_controller.dart';
 import '../api_code/sms_type_controller.dart';
 import '../api_code/twilyo_api_controoler.dart';
@@ -213,7 +213,7 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                     style: TextStyle(
                         fontSize: 17,
                         color: notifier.textColor,
-                        ),
+                        fontFamily: "SofiaProBold"),
                     onChanged: (pin) {
                       setState(() {
                         otpvarable2 = int.parse(pin);
@@ -250,13 +250,13 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                   //       child: Text(
                   //         "Resend code?".tr,
                   //         style: TextStyle(
-                  //          color: Colors.black, fontSize: 16),
+                  //             fontFamily: "SofiaRegular", color: Colors.black, fontSize: 16),
                   //       ),
                   //     ) : Text(
                   //       " $secondsRemaining Seconds".tr,
                   //       style: TextStyle(
                   //         color: theamcolore,
-
+                  //         fontFamily: "SofiaRegular",
                   //       ),
                   //     ),
                   //     Spacer(),
@@ -281,10 +281,10 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                             builder: (context) => const Onmobile3Screen(),
                           ));
                     } else {
-                      Notifier.info('');
+                      Notifier.info("Incorrect OTP. Please try again.".tr);
                     }
                   } else {
-                    Notifier.info('');
+                    Notifier.info("Please Enter Otp.".tr);
                   }
                 },
                 context: context,

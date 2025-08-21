@@ -8,8 +8,8 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
-import '../common_code/config.dart';
-import '../services/notifier.dart';
+import 'package:qareeb/common_code/config.dart';
+import 'package:qareeb/services/notifier.dart';
 
 import '../api_model/wallete_api_model.dart';
 import '../app_screen/top_up_screen.dart';
@@ -45,7 +45,7 @@ class WalletApiController extends GetxController implements GetxService {
     if (response.statusCode == 200) {
       walletAddApiModel = walletAddApiModelFromJson(response.body);
       if (data["Result"] == true) {
-        Notifier.info('');
+        Notifier.info("${data["message"]}");
         showModalBottomSheet(
           isDismissible: false,
           shape: const RoundedRectangleBorder(
@@ -115,12 +115,12 @@ class WalletApiController extends GetxController implements GetxService {
                           child: ElevatedButton(
                             style: const ButtonStyle(
                                 fixedSize:
-                                    WidgetStatePropertyAll(Size(0, 50)),
+                                    MaterialStatePropertyAll(Size(0, 50)),
                                 backgroundColor:
-                                    WidgetStatePropertyAll(Colors.white),
-                                side: WidgetStatePropertyAll(
+                                    MaterialStatePropertyAll(Colors.white),
+                                side: MaterialStatePropertyAll(
                                     BorderSide(color: Colors.black)),
-                                shape: WidgetStatePropertyAll(
+                                shape: MaterialStatePropertyAll(
                                     RoundedRectangleBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(30))))),
@@ -139,12 +139,12 @@ class WalletApiController extends GetxController implements GetxService {
                           child: ElevatedButton(
                             style: const ButtonStyle(
                                 fixedSize:
-                                    WidgetStatePropertyAll(Size(0, 50)),
+                                    MaterialStatePropertyAll(Size(0, 50)),
                                 backgroundColor:
-                                    WidgetStatePropertyAll(Colors.black),
-                                side: WidgetStatePropertyAll(
+                                    MaterialStatePropertyAll(Colors.black),
+                                side: MaterialStatePropertyAll(
                                     BorderSide(color: Colors.black)),
-                                shape: WidgetStatePropertyAll(
+                                shape: MaterialStatePropertyAll(
                                     RoundedRectangleBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(30))))),
@@ -168,10 +168,10 @@ class WalletApiController extends GetxController implements GetxService {
         update();
         return jsonDecode(response.body);
       } else {
-        Notifier.info('');
+        Notifier.error("${data["message"]}");
       }
     } else {
-      Notifier.info('');
+      Notifier.error("${data["message"]}");
     }
   }
 }

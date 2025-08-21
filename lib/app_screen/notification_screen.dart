@@ -6,10 +6,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import '../api_code/notification_api_controller.dart';
-import 'home_screen.dart';
-import '../common_code/colore_screen.dart';
-import '../common_code/config.dart';
+import 'package:qareeb/api_code/notification_api_controller.dart';
+import 'package:qareeb/app_screen/home_screen.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
+import 'package:qareeb/common_code/config.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -44,7 +44,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         title: Text('Notification'.tr,
             style: TextStyle(
                 color: notifier.textColor,
-                
+                fontFamily: "SofiaProBold",
                 fontSize: 18)),
       ),
       backgroundColor: notifier.background,

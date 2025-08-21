@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
-import '../common_code/config.dart';
-import '../services/notifier.dart';
+import 'package:qareeb/common_code/config.dart';
+import 'package:qareeb/services/notifier.dart';
 import '../api_model/calculate_api_model.dart';
 
 class CalculateController extends GetxController implements GetxService {
@@ -65,7 +68,7 @@ void showToastForDuration(String message, int durationInSeconds) {
     if (elapsed >= durationInSeconds) {
       timer.cancel();
     } else {
-      Notifier.info('');
+      Notifier.info(message);
       elapsed += interval;
     }
   });

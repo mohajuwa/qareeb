@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:lottie/lottie.dart';
@@ -10,10 +11,10 @@ import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui' as ui;
 
-import '../common_code/colore_screen.dart';
-import '../common_code/language_toggle_button.dart';
-import '../services/notifier.dart';
-import '../widgets/loading_overlay.dart';
+import 'package:qareeb/auth_screen/onmobile1_screen.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
+import 'package:qareeb/common_code/language_toggle_button.dart';
+import 'package:qareeb/services/notifier.dart';
 import '../api_code/forgot_api_controller.dart';
 import '../api_code/login_controller.dart';
 import '../api_code/mobile_check_controller.dart';
@@ -226,7 +227,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
             style: TextStyle(
               fontSize: 22,
               color: notifier.textColor,
-
+              fontFamily: 'Khebrat',
             ),
           ),
           const SizedBox(height: 10),
@@ -366,7 +367,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
         height: Get.height,
         width: Get.width,
         alignment: Alignment.center,
-        child: const LoadingOverlay(),
+        child: CircularProgressIndicator(color: theamcolore),
       ),
     );
   }

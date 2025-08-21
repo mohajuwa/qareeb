@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
-import '../app_screen/pickup_drop_point.dart';
+import 'package:qareeb/app_screen/pickup_drop_point.dart';
+import 'package:qareeb/services/notifier.dart';
 import '../api_model/vihical_ride_api_model.dart';
 import '../common_code/config.dart';
 
@@ -14,86 +15,94 @@ class VihicalRideCompleteOrderApiController extends GetxController
   VihicalRideCompleteApiModel? vihicalRideCompleteApiModel;
   bool orederloader = false;
   bool isloadoing = false;
-  Future<String?> vihicalridecomplete({
-    required String payment_id,
-    required String payment_img,
-    required String uid,
-    required String d_id,
-    required String request_id,
-    required String wallet,
-    context,
-  }) async {
-    if (kDebugMode) {
-      print("🚀 Starting ride completion with params:");
-      print("uid: $uid, d_id: $d_id, request_id: $request_id");
-      print("wallet: $wallet, payment_id: $payment_id");
+
+  Future vihicalridecomplete(
+      {required String payment_id,
+      required String payment_img,
+      required String uid,
+      required String d_id,
+      required String request_id,
+      required String wallet,
+      context}) async {
+    print("vvvpayment_imgvvv:-- ${payment_img}");
+
+    if (orederloader) {
+      return;
+    } else {
+      orederloader = true;
     }
 
-    if (orederloader) return null;
-    orederloader = true;
+    var request = http.MultipartRequest(
+        'POST', Uri.parse(Config.baseurl + Config.vihicalridecomplete));
 
-    try {
-      var request = http.MultipartRequest(
-          'POST', Uri.parse(Config.baseurl + Config.vihicalridecomplete));
+    request.fields.addAll({
+      'uid': uid,
+      'd_id': d_id,
+      'request_id': request_id,
+      'wallet': wallet,
+      'payment_id': payment_id,
+    });
 
-      request.fields.addAll({
-        'uid': uid.toString(),
-        'd_id': d_id.toString(),
-        'request_id': request_id.toString(),
-        'wallet': wallet.toString(),
-        'payment_id': payment_id.toString(),
-      });
+    if (payment_img != "") {
+      request.files
+          .add(await http.MultipartFile.fromPath('payment_img', payment_img));
+    } else {
+      print("ffffffffffff");
+    }
 
-      if (payment_img.isNotEmpty) {
-        request.files
-            .add(await http.MultipartFile.fromPath('payment_img', payment_img));
-      }
+    http.StreamedResponse response = await request.send();
 
-      http.StreamedResponse response = await request.send().timeout(
-            const Duration(seconds: 30),
-          );
+    // var responsnessaj = jsonDecode(await response.stream.bytesToString());
+    // http.StreamedResponse response = await request.send();
+    final responseString = await response.stream.bytesToString();
+    final responsnessaj = jsonDecode(responseString);
 
-      final responseString = await response.stream.bytesToString();
-
-      if (kDebugMode) {
-        print("📡 API Response Status: ${response.statusCode}");
-        print("📄 API Response Body: $responseString");
-      }
-
-      if (response.statusCode == 200) {
-        final responsnessaj = jsonDecode(responseString);
-
-        if (responsnessaj["Result"] == true) {
-          String newRequestId = responsnessaj["request_id"].toString();
-          ridecompleterequestid = newRequestId;
-
-          if (kDebugMode) {
-            print(
-                "✅ Ride completed successfully! New request_id: $newRequestId");
-          }
-
-          // Clear ride data...
-
-          return newRequestId;
-        } else {
-          if (kDebugMode) {
-            print("❌ API returned false: ${responsnessaj["message"]}");
-          }
-          return null;
-        }
-      } else {
-        if (kDebugMode) {
-          print("🔥 HTTP Error ${response.statusCode}: $responseString");
-        }
-        return null;
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("💥 Exception in ride completion: $e");
-      }
-      return null;
-    } finally {
+    if (response.statusCode == 200) {
       orederloader = false;
+
+      // print("++++++body for request ++++++:--- ${await response.stream.bytesToString()}");
+      print("MMMMMMMMM (bar) MMMMMMMMM:- ${responsnessaj["review_list"]}");
+
+      if (responsnessaj["Result"] == true) {
+        isloadoing = false;
+        ridecompleterequestid = responsnessaj["request_id"].toString();
+        // vihicalRideCompleteApiModel = jsonDecode(responsnessaj["review_list"]);
+        vihicalRideCompleteApiModel =
+            VihicalRideCompleteApiModel.fromJson(responsnessaj);
+
+        pickupcontroller.text = "";
+        dropcontroller.text = "";
+        latitudepick = 0.00;
+        longitudepick = 0.00;
+        latitudedrop = 0.00;
+        longitudedrop = 0.00;
+        picktitle = "";
+        picksubtitle = "";
+        droptitle = "";
+        dropsubtitle = "";
+        droptitlelist = [];
+        destinationlat = [];
+        destinationlong = [];
+        textfieldlist = [];
+
+        print("++hahaha++:- (${pickupcontroller.text})");
+        print("++hahaha++:- (${dropcontroller.text})");
+        print("++hahaha++:- (${latitudepick})");
+        print("++hahaha++:- (${longitudepick})");
+        print("++hahaha++:- (${latitudedrop})");
+        print("++hahaha++:- (${longitudedrop})");
+        print("++hahaha++:- (${picktitle})");
+        print("++hahaha++:- (${picksubtitle})");
+        print("++hahaha++:- (${droptitle})");
+        print("++hahaha++:- (${dropsubtitle})");
+        print("++hahaha++:- (${droptitlelist})");
+
+        Notifier.success("${responsnessaj["message"]}");
+      } else {
+        Notifier.error("${responsnessaj["message"]}");
+      }
+    } else {
+      Notifier.error("${responsnessaj["message"]}");
     }
   }
 }

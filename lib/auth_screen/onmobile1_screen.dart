@@ -6,7 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import '../common_code/colore_screen.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
 
 // TextEditingController signupmobilecontroller = TextEditingController();
 // String ccode ="";

@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import '../common_code/config.dart';
-import '../services/notifier.dart';
+import 'package:qareeb/common_code/config.dart';
+import 'package:qareeb/services/notifier.dart';
 import '../api_model/review_data_api_model.dart';
 
 class ReviewDataApiController extends GetxController implements GetxService {
@@ -28,7 +30,7 @@ class ReviewDataApiController extends GetxController implements GetxService {
         return data;
       } else {
         Get.back();
-        Notifier.info('');
+        Notifier.error("${data["message"]}");
       }
     } else {
       Get.back();

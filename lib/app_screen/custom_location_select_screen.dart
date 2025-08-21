@@ -11,9 +11,9 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'pickup_drop_point.dart';
-import '../common_code/colore_screen.dart';
-import '../common_code/common_button.dart';
+import 'package:qareeb/app_screen/pickup_drop_point.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
+import 'package:qareeb/common_code/common_button.dart';
 import 'dart:ui' as ui;
 import '../api_code/calculate_api_controller.dart';
 import '../api_code/modual_calculate_api_controller.dart';
@@ -84,7 +84,12 @@ class _CustomLocationSelectScreenState
       final userLatLng = LatLng(position.latitude, position.longitude);
 
       controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: userLatLng, zoom: 14),
+        CameraPosition(
+          target: userLatLng,
+          zoom: 16,
+          tilt: 60,
+          bearing: 30,
+        ),
       ));
 
       // Use the improved getCurrentLatAndLong method
@@ -99,7 +104,12 @@ class _CustomLocationSelectScreenState
       // Fallback to default location (Sana'a) if current location fails
       const fallbackLocation = LatLng(15.3694, 44.1910);
       controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: fallbackLocation, zoom: 14),
+        CameraPosition(
+          target: fallbackLocation,
+          zoom: 16,
+          tilt: 60,
+          bearing: 30,
+        ),
       ));
 
       await getCurrentLatAndLong(
@@ -109,7 +119,7 @@ class _CustomLocationSelectScreenState
     }
   }
 
-  Set<Marker> markers = {};
+  Set<Marker> markers = Set();
   late GoogleMapController mapController1;
 
   Future fun() async {
@@ -508,8 +518,9 @@ class _CustomLocationSelectScreenState
           Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())
         },
         initialCameraPosition: const CameraPosition(
-          target: LatLng(15.3694, 44.1910), zoom: 16,
-          tilt: 60, // 3D feel
+          target: LatLng(15.3694, 44.1910),
+          zoom: 16,
+          tilt: 60,
           bearing: 30,
         ),
         mapType: MapType.normal,

@@ -7,18 +7,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import '../services/notifier.dart';
+import 'package:qareeb/services/notifier.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'driver_detail_screen.dart';
-import '../common_code/colore_screen.dart';
+import 'package:qareeb/app_screen/driver_detail_screen.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
 import '../chat_code/chat_screen.dart';
 import '../common_code/common_flow_screen.dart';
 import '../common_code/config.dart';
 import 'dart:async';
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'dart:ui' as ui;
@@ -721,8 +723,12 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
             Stack(
           children: [
             GoogleMap(
-              initialCameraPosition:
-                  CameraPosition(target: LatLng(livelat, livelong), zoom: 15),
+              initialCameraPosition: CameraPosition(
+                target: LatLng(livelat, livelong),
+                zoom: 16,
+                tilt: 50,
+                bearing: 25,
+              ),
               myLocationEnabled: true,
               tiltGesturesEnabled: true,
               compassEnabled: true,

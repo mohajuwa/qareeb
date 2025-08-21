@@ -6,11 +6,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../common_code/colore_screen.dart';
-import '../common_code/common_button.dart';
-import '../common_code/push_notification.dart';
+import 'package:qareeb/app_screen/map_screen.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
+import 'package:qareeb/common_code/common_button.dart';
+import 'package:qareeb/common_code/push_notification.dart';
 
 class PermissionScreen extends StatefulWidget {
   const PermissionScreen({super.key});
