@@ -12,11 +12,13 @@ class VihicalDriverDetailApiController extends GetxController
     implements GetxService {
   VihicalDriverDetailModel? vihicalDriverDetailModel;
 
-  Future vihicaldriverdetailapi(
-      {context,
-      required String uid,
-      required String d_id,
-      required String request_id}) async {
+  Future vihicaldriverdetailapi({
+    context,
+    required String uid,
+    required String d_id,
+    required String request_id,
+    int maxRetries = 3,
+  }) async {
     Map body = {
       "uid": uid,
       "d_id": d_id,
@@ -28,36 +30,71 @@ class VihicalDriverDetailApiController extends GetxController
       "Accept": "application/json"
     };
 
-    var response = await http.post(
-        Uri.parse(Config.baseurl + Config.vihicaldriverdetail),
-        body: jsonEncode(body),
-        headers: userHeader);
-
     print('+ + + + + VihicalDriverDetailApiController + + + + + + :--- $body');
-    print(
-        '- - - - - VihicalDriverDetailApiController - - - - - - :--- ${response.body}');
 
-    var data = jsonDecode(response.body);
+    // Retry loop
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        var response = await http.post(
+          Uri.parse(Config.baseurl + Config.vihicaldriverdetail),
+          body: jsonEncode(body),
+          headers: userHeader,
+        );
 
-    if (response.statusCode == 200) {
-      if (data["Result"] == true) {
-        vihicalDriverDetailModel =
-            vihicalDriverDetailModelFromJson(response.body);
-        if (vihicalDriverDetailModel!.result == true) {
-          // Get.offAll(BoardingPage());
-          update();
-          showToastForDuration("${data["message"]}", 2);
-          return data;
+        print(
+            '- - - - - VihicalDriverDetailApiController - - - - - - :--- ${response.body}');
+
+        var data = jsonDecode(response.body);
+
+        if (response.statusCode == 200) {
+          if (data["Result"] == true) {
+            vihicalDriverDetailModel =
+                vihicalDriverDetailModelFromJson(response.body);
+            if (vihicalDriverDetailModel!.result == true) {
+              update();
+              showToastForDuration("${data["message"]}", 2);
+              return data;
+            } else {
+              showToastForDuration("${data["message"]}", 2);
+              return data;
+            }
+          } else {
+            // Check if this is a timing issue (recent request found but not in cart)
+            if (data["debug"] != null &&
+                data["debug"]["recent_request_records"] != null &&
+                data["debug"]["recent_request_records"].isNotEmpty &&
+                attempt < maxRetries) {
+              print(
+                  "⏳ Timing issue detected on attempt $attempt, retrying in ${attempt}s...");
+              await Future.delayed(Duration(seconds: attempt));
+              continue; // Retry
+            }
+
+            // If it's the last attempt or no timing issue, return the result
+            showToastForDuration("${data["message"]}", 2);
+            return data;
+          }
         } else {
-          showToastForDuration("${data["message"]}", 2);
-          return data;
+          if (attempt < maxRetries) {
+            print(
+                "❌ HTTP ${response.statusCode} on attempt $attempt, retrying...");
+            await Future.delayed(Duration(seconds: attempt));
+            continue;
+          } else {
+            showToastForDuration("Something went wrong!.....", 2);
+            return {"Result": false, "message": "Network error"};
+          }
         }
-      } else {
-        showToastForDuration("${data["message"]}", 2);
-        return data;
+      } catch (e) {
+        print("❌ Exception on attempt $attempt: $e");
+        if (attempt < maxRetries) {
+          await Future.delayed(Duration(seconds: attempt));
+          continue;
+        } else {
+          showToastForDuration("Connection error!.....", 2);
+          return {"Result": false, "message": "Connection error"};
+        }
       }
-    } else {
-      showToastForDuration("Somthing went wrong!.....", 2);
     }
   }
 }

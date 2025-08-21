@@ -1127,237 +1127,76 @@ List<PointLatLng> droppointstartscreen = [];
 List listdrop = [];
 
 class GlobalDriverAcceptClass extends GetxController implements GetxService {
-  driverdetailfunction({
-    required String d_id,
-    required String request_id,
-    required context,
+  Future<void> driverdetailfunction({
+    required BuildContext context,
     required double lat,
     required double long,
-  }) {
-    print("object@@@@@@@1");
-    // print("firt time +++:-- $driver_id");
-    // print("secound time +++:-- ${driver_id.toString()}");
-    VihicalCalculateController vihicalCalculateController = Get.put(
-      VihicalCalculateController(),
-    );
-    AddVihicalCalculateController addVihicalCalculateController = Get.put(
-      AddVihicalCalculateController(),
-    );
+    required String d_id,
+    required String request_id,
+  }) async {
     VihicalDriverDetailApiController vihicalDriverDetailApiController = Get.put(
       VihicalDriverDetailApiController(),
     );
-    otpstatus = false;
+    print("****:-- $d_id");
 
-    // late IO.Socket socket;
-    //
-    // socket = IO.io(Config.imageurl,<String,dynamic>{
-    //   'autoConnect': false,
-    //   'transports': ['websocket'],
-    // });
+    print("****:-- $vihicalrice");
 
-    socket.connect();
+    print("**driver_id**:-- $d_id");
 
-    // socket.on('Vehicle_Ride_Start_End$useridgloable', (Vehicle_Ride_Start_End) {
-    //
-    //   print("++++++ /Vehicle_Ride_Start_End/ ++++ :---  $Vehicle_Ride_Start_End");
-    //   print("Vehicle_Ride_Start_End is of type: ${Vehicle_Ride_Start_End.runtimeType}");
-    //   print("Vehicle_Ride_Start_End keys: ${Vehicle_Ride_Start_End.keys}");
-    //   print("++++Vehicle_Ride_Start_End userid+++++: $useridgloable");
-    //   print("++++Vehicle_Ride_Start_End gggg +++++: ${Vehicle_Ride_Start_End["uid"].toString()}");
-    //   print("++++driver_id gggg +++++: $driver_id");
-    //
-    //   statusridestart = "";
-    //   totaldropmint = "";
-    //
-    //   if(driver_id == Vehicle_Ride_Start_End["uid"].toString()){
-    //     print("SuccessFully1");
-    //     statusridestart = Vehicle_Ride_Start_End["status"];
-    //     totaldropmint = Vehicle_Ride_Start_End["tot_min"].toString();
-    //     totaldrophour = Vehicle_Ride_Start_End["tot_hour"].toString();
-    //     print("+++++++totaldropmint++++:-- $totaldropmint");
-    //     print("+++++++totaldrophour++++:-- $totaldrophour");
-    //     print("++++++++ststus++++:-- $statusridestart");
-    //
-    //
-    //
-    //     if(statusridestart == "5"){
-    //       print("555555555555555555555555");
-    //       droppointstartscreen = [];
-    //       listdrop = [];
-    //       listdrop = Vehicle_Ride_Start_End["drop_list"];
-    //       print("xxxxxxxxx droppointstartscreen xxxxxxxxx$listdrop");
-    //       print("xxxxxxxxx listdrop length:- ${listdrop.length}");
-    //
-    //       for(int i=0; i<listdrop.length; i++){
-    //         print("objectMMMMMMMMM:-- ($i)");
-    //         droppointstartscreen.add(PointLatLng(double.parse(Vehicle_Ride_Start_End["drop_list"][i]["latitude"]), double.parse(Vehicle_Ride_Start_End["drop_list"][i]["longitude"])));
-    //         print("vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
-    //       }
-    //       Get.to(const DriverStartrideScreen());
-    //       // Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartrideScreen(),));
-    //
-    //     }
-    //     else if(statusridestart == "6"){
-    //       print("6666666666666666");
-    //       droppointstartscreen = [];
-    //       listdrop = [];
-    //       listdrop = Vehicle_Ride_Start_End["drop_list"];
-    //       print("xxxxxxxxx droppointstartscreen xxxxxxxxx$listdrop");
-    //       print("xxxxxxxxx listdrop length${listdrop.length}");
-    //       for(int i=0; i<listdrop.length; i++){
-    //         print("objectHHHHH:-- (${i})");
-    //         droppointstartscreen.add(PointLatLng(double.parse(Vehicle_Ride_Start_End["drop_list"][i]["latitude"]), double.parse(Vehicle_Ride_Start_End["drop_list"][i]["longitude"])));
-    //         print("vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
-    //       }
-    //       // Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartrideScreen(),));
-    //     }
-    //     else if(statusridestart == "7"){
-    //       print("7777777777777777");
-    //       Get.to(const RideCompletePaymentScreen());
-    //       // Navigator.push(context, MaterialPageRoute(builder: (context) => const RideCompletePaymentScreen(),));
-    //     }
-    //     else{
-    //
-    //     }
-    //
-    //   }else{
-    //     statusridestart = "";
-    //     print("UnSuccessFully1");
-    //   }
-    //
-    // });
+    print("object@@@@@@@1");
 
     print("object@@@@@@@2");
 
-    socket.on('Vehicle_Ride_Payment$useridgloable', (Vehicle_Ride_Payment) {
-      print("++++++ /Vehicle_Ride_Payment1/ ++++ :---  $Vehicle_Ride_Payment");
-      print(
-        "Vehicle_Ride_Payment1 is of type: ${Vehicle_Ride_Payment.runtimeType}",
-      );
-      print("Vehicle_Ride_Payment1 keys: ${Vehicle_Ride_Payment.keys}");
-      print(
-        "Vehicle_Ride_Payment1 total1........: ${Vehicle_Ride_Payment["ResponseCode"]}",
-      );
-      print(
-        "Vehicle_Ride_Payment1 total1: ${Vehicle_Ride_Payment["price_list"]}",
-      );
-      print(
-        "Vehicle_Ride_Payment1 total3: ${Vehicle_Ride_Payment["price_list"]["tot_price"]}",
-      );
-
-      total = Vehicle_Ride_Payment["price_list"]["tot_price"];
-      finaltotal = Vehicle_Ride_Payment["price_list"]["final_price"];
-      coupontotal = Vehicle_Ride_Payment["price_list"]["coupon_amount"];
-      additionaltotal = Vehicle_Ride_Payment["price_list"]["addi_time_price"];
-      whthercharge = Vehicle_Ride_Payment["price_list"]["weather_price"];
-      platformfee = Vehicle_Ride_Payment["price_list"]["platform_fee"];
-      additionaltime = Vehicle_Ride_Payment["price_list"]["addi_time"];
-
-      finaltotalsecounde = finaltotal;
-
-      print("+++++(total)++++++:---- $total");
-      print("+++++(finaltotal)++++++:---- $finaltotal");
-      print("++++++(coupontotal)+++++:---- $coupontotal");
-      print("+++++(additionaltotal)++++++:---- $additionaltotal");
-      print("+++++(platformfee)++++++:---- $platformfee");
-      print("+++++(whthercharge)++++++:---- $whthercharge");
-      print(
-        "+++++(finaltotalsecounde finaltotalsecounde)++++++:---- $finaltotalsecounde",
-      );
-    });
-
-    socket.on('Vehicle_Ride_OTP', (Vehicle_Ride_OTP) {
-      print("++++++ /Vehicle_Ride_OTP/ ++++ :---  $Vehicle_Ride_OTP");
-      print("Vehicle_Ride_OTP is of type: ${Vehicle_Ride_OTP.runtimeType}");
-      print("Vehicle_Ride_OTP keys: ${Vehicle_Ride_OTP.keys}");
-      print("++++userid+++++: $useridgloable");
-
-      print("++++otpstatus+++++:- $otpstatus");
-
-      if (useridgloable.toString() == Vehicle_Ride_OTP["c_id"].toString()) {
-        otpstatus = Vehicle_Ride_OTP["status"];
-      } else {
-        otpstatus = false;
-        print("++++nmnmnmnmnmnmnnnmnmn+++++:- ${otpstatus}");
-      }
-    });
-
-    // socket.on('Vehicle_Time_update$useridgloable', (Vehicle_Time_update) {
-    //
-    //   print("++++++ /Vehicle_Time_update/ ++++ :---  $Vehicle_Time_update");
-    //   print("Vehicle_Time_update is of type: ${Vehicle_Time_update.runtimeType}");
-    //   print("Vehicle_Time_update keys: ${Vehicle_Time_update.keys}");
-    //
-    //   tot_hour = "0";
-    //   tot_time = Vehicle_Time_update["time"].toString();
-    //
-    //   print("+++tot_hour+++:-- $tot_hour");
-    //   print("+++tot_time+++:-- $tot_time");
-    //
-    // });
-
-    drivername = "";
-    drivervihicalnumber = "";
-    driverlanguage = "";
-    driverrating = "";
-    driverimage = "";
-
     print("object@@@@@@@3");
-    print("object@@@@@@@333 (${driveridloader})");
 
-    // driveridloader == false ? drive_id_list = vihicalCalculateController.vihicalCalculateModel!.driverId! : [];
+    print("object@@@@@@@333 ($driveridloader)");
 
     print("object@@@@@@@4");
 
-    // vihicalDriverDetailApiController.vihicaldriverdetailapi(driver_list: vihicalCalculateController.vihicalCalculateModel!.driverId!,uid: useridgloable.toString(), d_id: d_id, request_id: request_id).then((value) {
+    // Use the enhanced API call with retry mechanism
+
     vihicalDriverDetailApiController
         .vihicaldriverdetailapi(
       uid: useridgloable.toString(),
+
       d_id: d_id,
+
       request_id: request_id,
+
+      maxRetries: 3, // Add retry parameter
     )
         .then((value) {
       print("object@@@@@@@5");
+
       if (value["Result"] == true) {
-        driveridloader == false
-            ? tot_hour = value["accepted_d_detail"]["tot_hour"].toString()
-            : "";
-        driveridloader == false
-            ? tot_time = value["accepted_d_detail"]["tot_minute"].toString()
-            : "";
-        timeincressstatus = value["accepted_d_detail"]["status"].toString();
+        driveridloader = false;
 
-        livelat = double.parse(value["accepted_d_detail"]["latitude"]);
-        livelong = double.parse(value["accepted_d_detail"]["longitude"]);
-        imagenetwork =
-            "${Config.imageurl}${value["accepted_d_detail"]["map_img"]}";
+        tot_hour = value["accepted_d_detail"]["tot_hour"].toString();
 
-        print("-----livelat---:-- $livelat");
-        print("-----livelong---:-- $livelong");
-        print("-----imagenetwork---:-- $imagenetwork");
-        print("-----timeincressstatus---:-- $timeincressstatus");
+        tot_time = value["accepted_d_detail"]["tot_minute"].toString();
 
-        // socket.emit('AcceRemoveOther',{
-        //   'requestid': driveridloader == false ? addVihicalCalculateController.addVihicalCalculateModel!.id : appstatusid,
-        //   'driverid' : value["driverlist"],
-        // });
+        tot_secound = "0";
 
-        Get.back();
+        driver_id = d_id;
 
         drivername =
-            "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.firstName} ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.lastName}";
+            "${value["accepted_d_detail"]["first_name"]} ${value["accepted_d_detail"]["last_name"]}";
+
         drivervihicalnumber =
-            "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.vehicleNumber}";
-        driverlanguage =
-            "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.language}";
-        driverrating =
-            "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.rating}";
+            value["accepted_d_detail"]["vehicle_number"].toString();
+
+        driverlanguage = value["accepted_d_detail"]["language"].toString();
+
+        driverrating = value["accepted_d_detail"]["rating"].toString();
+
         driverimage =
-            "${Config.imageurl}${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.profileImage}";
+            "${Config.imageurl}${value["accepted_d_detail"]["profile_image"]}";
+
         drivercountrycode =
-            "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.primaryCcode}";
+            value["accepted_d_detail"]["primary_ccode"].toString();
+
         driverphonenumber =
-            "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.primaryPhoneNo}";
+            value["accepted_d_detail"]["primary_phone_no"].toString();
 
         Navigator.push(
           context,
@@ -1367,6 +1206,96 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
         );
       } else {
         print("papapapapapapapapapapapappaappaapapappapapapapa");
+
+        // Show user-friendly message
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(value["message"] ??
+                "Driver details not available. Please try again."),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        // One final retry after 3 seconds if timing issue detected
+
+        if (value["debug"] != null &&
+            value["debug"]["recent_request_records"] != null &&
+            value["debug"]["recent_request_records"].isNotEmpty) {
+          print("🔄 Scheduling final retry in 3 seconds...");
+
+          Future.delayed(const Duration(seconds: 3), () {
+            vihicalDriverDetailApiController
+                .vihicaldriverdetailapi(
+              uid: useridgloable.toString(),
+              d_id: d_id,
+              request_id: request_id,
+              maxRetries: 1,
+            )
+                .then((retryValue) {
+              if (retryValue["Result"] == true && context.mounted) {
+                // Update all the driver details
+
+                driveridloader = false;
+
+                tot_hour =
+                    retryValue["accepted_d_detail"]["tot_hour"].toString();
+
+                tot_time =
+                    retryValue["accepted_d_detail"]["tot_minute"].toString();
+
+                tot_secound = "0";
+
+                driver_id = d_id;
+
+                drivername =
+                    "${retryValue["accepted_d_detail"]["first_name"]} ${retryValue["accepted_d_detail"]["last_name"]}";
+
+                drivervihicalnumber = retryValue["accepted_d_detail"]
+                        ["vehicle_number"]
+                    .toString();
+
+                driverlanguage =
+                    retryValue["accepted_d_detail"]["language"].toString();
+
+                driverrating =
+                    retryValue["accepted_d_detail"]["rating"].toString();
+
+                driverimage =
+                    "${Config.imageurl}${retryValue["accepted_d_detail"]["profile_image"]}";
+
+                drivercountrycode =
+                    retryValue["accepted_d_detail"]["primary_ccode"].toString();
+
+                driverphonenumber = retryValue["accepted_d_detail"]
+                        ["primary_phone_no"]
+                    .toString();
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        DriverDetailScreen(lat: lat, long: long),
+                  ),
+                );
+              }
+            });
+          });
+        }
+      }
+    }).catchError((error) {
+      print("❌ Error in driverdetailfunction: $error");
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                "Connection error. Please check your internet and try again."),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
       }
     });
   }

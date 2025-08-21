@@ -494,27 +494,32 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         }
       });
 
-      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
+      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) async {
         if (_isDisposed || !mounted) return;
 
         socket.close();
 
         if (kDebugMode) {
           print("++++++ /acceptvehrequest map/ ++++ :---  $acceptvehrequest");
+
           print(
               "acceptvehrequest is of type map: ${acceptvehrequest.runtimeType}");
         }
 
         setState(() {
           isanimation = false;
+
           isControllerDisposed = true;
+
           loadertimer = true;
         });
 
         // Safely dispose controller
+
         if (controller != null && controller!.isAnimating) {
           try {
             controller!.dispose();
+
             controller = null;
           } catch (e) {
             if (kDebugMode) print("Error disposing controller in socket: $e");
@@ -531,9 +536,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             .toString()
             .contains(useridgloable.toString())) {
           if (kDebugMode) print("condition done");
+
           driveridloader = false;
 
           if (!_isDisposed && mounted) {
+            // Add a small delay to allow database transaction to complete
+
+            await Future.delayed(const Duration(milliseconds: 800));
+
             globalDriverAcceptClass.driverdetailfunction(
                 context: context,
                 lat: latitudepick,
