@@ -3,8 +3,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
-import 'package:qareeb/common_code/config.dart';
-import 'package:qareeb/services/notifier.dart';
+import '../common_code/config.dart';
 import '../api_model/resend_api_model.dart';
 
 class ResendRequestApiController extends GetxController implements GetxService {
@@ -34,17 +33,25 @@ class ResendRequestApiController extends GetxController implements GetxService {
         resendRequest = resendRequestFromJson(response.body);
         if (resendRequest!.result == true) {
           isLoading = false;
-          Notifier.info("${data["message"]}");
+          Fluttertoast.showToast(
+            msg: "${resendRequest!.message}",
+          );
           update();
           return data;
         } else {
-          Notifier.error("${data["message"]}");
+          Fluttertoast.showToast(
+            msg: "${resendRequest!.message}",
+          );
         }
       } else {
-        Notifier.error("${data["message"]}");
+        Fluttertoast.showToast(
+          msg: "${data["ResponseMsg"]}",
+        );
       }
     } else {
-      Notifier.error("${data["message"]}");
+      Fluttertoast.showToast(
+        msg: "Somthing went wrong!.....",
+      );
     }
   }
 }

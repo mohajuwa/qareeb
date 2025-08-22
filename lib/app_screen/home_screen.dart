@@ -16,10 +16,10 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:qareeb/api_code/vihical_calculate_api_controller.dart';
-import 'package:qareeb/app_screen/map_screen.dart';
-import 'package:qareeb/app_screen/pickup_drop_point.dart';
-import 'package:qareeb/common_code/common_button.dart';
+import '../api_code/vihical_calculate_api_controller.dart';
+import 'map_screen.dart';
+import 'pickup_drop_point.dart';
+import '../common_code/common_button.dart';
 import 'dart:ui' as ui;
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/cancel_rason_request_api_controller.dart';
@@ -2037,11 +2037,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             GoogleMap(
               initialCameraPosition: CameraPosition(
-                target: LatLng(widget.latpic, widget.longpic),
-                zoom: 16,
-                tilt: 60,
-                bearing: 30,
-              ),
+                  target: LatLng(widget.latpic, widget.longpic), zoom: 15),
               myLocationEnabled: true,
               tiltGesturesEnabled: true,
               compassEnabled: true,

@@ -10,11 +10,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:socket_io_client/socket_io_client.dart';
-import 'package:qareeb/app_screen/driver_detail_screen.dart';
-import 'package:qareeb/app_screen/home_screen.dart';
-import 'package:qareeb/app_screen/pickup_drop_point.dart';
-import 'package:qareeb/common_code/common_button.dart';
-import 'package:qareeb/common_code/config.dart';
+import 'driver_detail_screen.dart';
+import 'home_screen.dart';
+import 'pickup_drop_point.dart';
+import '../common_code/common_button.dart';
+import '../common_code/config.dart';
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/calculate_api_controller.dart';
 import '../common_code/colore_screen.dart';
@@ -394,7 +394,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                                       Text(
                                         "$globalcurrency${vehicle_bidding_driver[index]["price"]}",
                                         style: TextStyle(
-                                            fontSize: 14.5,
+                                            fontSize: 18,
                                             color: notifier.textColor),
                                       ),
                                       // const SizedBox(height: 3,),
@@ -426,6 +426,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                                             print("www:-- ${useridgloable}");
                                             print(
                                                 "www:-- ${vehicle_bidding_driver[index]["id"]}");
+                                            // print("www:-- ${addVihicalCalculateController.addVihicalCalculateModel!.id}");
                                             socket.emit('Bidding_decline', {
                                               'uid': useridgloable,
                                               'id':
@@ -481,7 +482,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                                                       lat: latitudepick,
                                                       long: longitudepick,
                                                       d_id: d_id.toString(),
-                                                      request_id: "");
+                                                      request_id: request_id);
                                               // acceptloader = false;
                                             });
                                           },

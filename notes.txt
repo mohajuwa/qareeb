@@ -1,55 +1,18 @@
-Project Requirements - Yemen Delivery App
-Files Provided:
+Analyze the project in your base knowledge and do the following :
 
-lib_customer (Flutter customer app)
-lib_driver (Flutter driver app)
-node_js_admin_panel (Backend API)
-Database SQL files
+first thing write a prompt about the following 
 
-Timeline: Deploy within 1 week
-Architecture & State Management:
+1 - I need you to Replace Fluttertoast with something modern that will display the app icon with the notification
+   with error things or info or success etc..
 
-Separate frontend (Flutter apps) from backend (Node.js API)
-Implement GetX for state management
-Use StatelessWidget throughout (StatefulWidget only when absolutely necessary)
-Create reusable widget components
+2 - see the logic of when request a ride with using this ("Automatically book the nearest driver for (${globalcurrency}${amountcontroller.text})")
+ and when not using it , couse when I turn on the switch the request sends of and the driver response with accept and everything is fine
+ but , when I am not using it , the requist send ok and the driver response with custom price the response till now is fine in customer app
+ thin saddinley I do not get the same as it should when I try to accept or reject his response , see and you will understand..
 
-UI/UX Improvements:
-
-Replace all loading indicators with assets/lottie/loading.json
-Font configuration:
-
-Arabic text: 'Khebrat' font family
-English text: 'SofiaProBold' font family
+ 3 - when I start or get back or refresh the  MapScreen (main screen in app) the app loading like leazy , I mean see
+   and keep in mind that I need it to work with the same logic , if you can re structure the code to make it run faster as posibble
+   thin go ahead .
 
 
-Set Arabic as default language
-Complete all missing translations (add tr keys)
-Make both apps fully responsive across all screen sizes
-Customer app: Implement 3D-style map display
-Replace Fluttertoast with modern notification system (e.g., GetSnackBar, flash, or custom overlays)
-
-Technical Requirements:
-
-Flutter 3.0+
-Proper error handling throughout
-Yemen-specific localization and configurations
-Fix any database inconsistencies
-Ensure zero runtime errors
-Production-ready code quality
-
-Priority Focus:
-
-Backend-frontend separation
-State management migration to GetX
-Responsive design implementation
-UI polish and user experience
-Localization completion
-
-Expected Deliverables:
-
-Clean, maintainable codebase
-Responsive mobile applications
-Robust backend API
-Updated database schema
-Deployment-ready applications
+4 - see where we need to use SingleChildScrollView to make the app style better with zero pixels errors..

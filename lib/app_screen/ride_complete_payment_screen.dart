@@ -12,13 +12,12 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/services/notifier.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:qareeb/api_code/vihical_ride_complete_order_api_controller.dart';
-import 'package:qareeb/app_screen/home_screen.dart';
-import 'package:qareeb/common_code/colore_screen.dart';
-import 'package:qareeb/common_code/common_button.dart';
+import '../api_code/vihical_ride_complete_order_api_controller.dart';
+import 'home_screen.dart';
+import '../common_code/colore_screen.dart';
+import '../common_code/common_button.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../api_code/coupon_payment_api_contoller.dart';
 import '../api_code/review_data_api_controller.dart';
@@ -185,7 +184,7 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
         .then(
       (value) {
         print(
-            "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh ${value}");
+            "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh HandelPayment Success ${value}");
         rateBottomSheet();
         socateemptvihicalridecomplete();
       },
@@ -193,11 +192,15 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
   }
 
   void handlePaymentError(PaymentFailureResponse response) {
-    Notifier.info(response.error.toString());
+    Fluttertoast.showToast(
+        msg: 'ERROR HERE: ${response.code} - ${response.message}',
+        timeInSecForIosWeb: 4);
   }
 
   void handleExternalWallet(ExternalWalletResponse response) {
-    Notifier.info(response.walletName.toString());
+    Fluttertoast.showToast(
+        msg: 'EXTERNAL_WALLET IS: ${response.walletName}',
+        timeInSecForIosWeb: 4);
   }
 
   File? _selectedImage;
@@ -296,7 +299,7 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                           .then(
                         (value) {
                           print(
-                              "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh ${value}");
+                              "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh bottomNavigationBar ${value}");
                           rateBottomSheet();
                           socateemptvihicalridecomplete();
                         },
@@ -365,7 +368,7 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                             .then(
                           (value) {
                             print(
-                                "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh ${value}");
+                                "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssshh CommonButton ${value}");
                             rateBottomSheet();
                             socateemptvihicalridecomplete();
                           },
@@ -487,8 +490,8 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                             containcolore:
                                                 theamcolore.withOpacity(0.1),
                                             onPressed1: () {
-                                              Notifier.info(
-                                                  'Please Select Image'.tr);
+                                              Fluttertoast.showToast(
+                                                  msg: "Please Select Image");
                                             },
                                             context: context,
                                             txt1: "Next"),
@@ -688,8 +691,9 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                             containcolore:
                                                 theamcolore.withOpacity(0.1),
                                             onPressed1: () {
-                                              Notifier.info(
-                                                  'Please Select Image');
+                                              Fluttertoast.showToast(
+                                                msg: "Please Select Image",
+                                              );
                                             },
                                             context: context,
                                             txt1: "Next"),

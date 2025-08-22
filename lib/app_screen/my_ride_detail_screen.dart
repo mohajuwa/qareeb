@@ -10,15 +10,15 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:qareeb/api_code/my_ride_detail_api.dart';
-import 'package:qareeb/common_code/colore_screen.dart';
+import '../api_code/my_ride_detail_api.dart';
+import '../common_code/colore_screen.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:qareeb/common_code/common_button.dart';
+import '../common_code/common_button.dart';
 import 'dart:ui' as ui;
 import '../common_code/common_flow_screen.dart';
 import '../common_code/config.dart';
@@ -235,7 +235,9 @@ class _MyRideDetailScreenState extends State<MyRideDetailScreen> {
   //     print(result);
   //     print('png done');
   //     // showToastMessage("Image saved in gallery");
-  //     Notifier.info('');
+  //     Fluttertoast.showToast(
+  //       msg: "Image saved in gallery",
+  //     );
   //     return pngBytes;
   //   } catch (e) {
   //     print(e);

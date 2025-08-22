@@ -11,10 +11,9 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/services/notifier.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:qareeb/app_screen/driver_detail_screen.dart';
-import 'package:qareeb/common_code/colore_screen.dart';
+import 'driver_detail_screen.dart';
+import '../common_code/colore_screen.dart';
 import '../chat_code/chat_screen.dart';
 import '../common_code/common_flow_screen.dart';
 import '../common_code/config.dart';
@@ -419,10 +418,10 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
         throw 'Could not launch $url';
       }
     } else if (status.isPermanentlyDenied) {
-      Notifier.info('');
+      Fluttertoast.showToast(msg: "Please allow calls Permission");
       await openAppSettings();
     } else {
-      Notifier.info('');
+      Fluttertoast.showToast(msg: "Please allow calls Permission");
       await openAppSettings();
     }
   }
@@ -539,82 +538,162 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
                       borderRadius: BorderRadius.circular(10)),
                   child: Padding(
                     padding: const EdgeInsets.all(15),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(drivername,
-                                  style: TextStyle(
-                                      color: notifier.textColor, fontSize: 18)),
-                              const SizedBox(
-                                height: 2,
-                              ),
-                              Text(
-                                drivervihicalnumber,
-                                style: const TextStyle(
-                                    color: Colors.grey, fontSize: 12),
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                            ],
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(drivername,
+                                    style: TextStyle(
+                                        color: notifier.textColor,
+                                        fontSize: 18)),
+                                const SizedBox(
+                                  height: 2,
+                                ),
+                                Text(
+                                  drivervihicalnumber,
+                                  style: const TextStyle(
+                                      color: Colors.grey, fontSize: 12),
+                                ),
+                                const SizedBox(
+                                  height: 5,
+                                ),
+                              ],
+                            ),
+                            subtitle: Text(
+                              driverlanguage,
+                              style: TextStyle(color: notifier.textColor),
+                            ),
+                            trailing: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                InkWell(
+                                  onTap: () {
+                                    driverdetailbottomsheet();
+                                  },
+                                  child: Container(
+                                    height: 60,
+                                    width: 60,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white,
+                                      image: DecorationImage(
+                                          image: NetworkImage(driverimage),
+                                          fit: BoxFit.cover),
+                                    ),
+                                    // child: Image(image: NetworkImage("https://i.pinimg.com/originals/a3/fc/98/a3fc98cd46931905114589e2e8abdc49.jpg"))
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: -15,
+                                  left: 0,
+                                  right: 0,
+                                  child: Container(
+                                    height: 25,
+                                    width: 40,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        border: Border.all(
+                                            color:
+                                                Colors.grey.withOpacity(0.2)),
+                                        borderRadius:
+                                            BorderRadius.circular(15)),
+                                    child: Center(
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          // Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.rating}"),
+                                          Text("${driverrating}"),
+                                          const SizedBox(
+                                            width: 5,
+                                          ),
+                                          SvgPicture.asset(
+                                            "assets/svgpicture/star-fill.svg",
+                                            height: 15,
+                                          ),
+                                          // const Icon(Icons.star,color: Colors.yellow,size: 15,)
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
-                          subtitle: Text(
-                            driverlanguage,
-                            style: TextStyle(color: notifier.textColor),
+                          const SizedBox(
+                            height: 20,
                           ),
-                          trailing: Stack(
-                            clipBehavior: Clip.none,
+                          Row(
                             children: [
                               InkWell(
                                 onTap: () {
-                                  driverdetailbottomsheet();
+                                  setState(() {
+                                    _makingPhoneCall(
+                                        number:
+                                            "${drivercountrycode}${driverphonenumber}");
+                                  });
                                 },
                                 child: Container(
-                                  height: 60,
-                                  width: 60,
+                                  height: 45,
+                                  width: 45,
                                   decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.white,
-                                    image: DecorationImage(
-                                        image: NetworkImage(driverimage),
-                                        fit: BoxFit.cover),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.grey)),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.call,
+                                      color: Colors.grey,
+                                      size: 20,
+                                    ),
                                   ),
-                                  // child: Image(image: NetworkImage("https://i.pinimg.com/originals/a3/fc/98/a3fc98cd46931905114589e2e8abdc49.jpg"))
                                 ),
                               ),
-                              Positioned(
-                                bottom: -15,
-                                left: 0,
-                                right: 0,
-                                child: Container(
-                                  height: 25,
-                                  width: 40,
-                                  decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                          color: Colors.grey.withOpacity(0.2)),
-                                      borderRadius: BorderRadius.circular(15)),
-                                  child: Center(
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ChatScreen(),
+                                        ));
+                                  },
+                                  child: Container(
+                                    height: 45,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(30),
+                                        border: Border.all(
+                                          color: Colors.grey,
+                                        )),
                                     child: Row(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
                                       children: [
-                                        // Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.rating}"),
-                                        Text("${driverrating}"),
                                         const SizedBox(
-                                          width: 5,
+                                          width: 10,
                                         ),
-                                        SvgPicture.asset(
-                                          "assets/svgpicture/star-fill.svg",
-                                          height: 15,
+                                        const Icon(
+                                          Icons.message,
+                                          color: Colors.grey,
+                                          size: 20,
                                         ),
-                                        // const Icon(Icons.star,color: Colors.yellow,size: 15,)
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
+                                        Text(
+                                          "Message ${drivername}",
+                                          style: TextStyle(
+                                              color: notifier.textColor),
+                                        )
                                       ],
                                     ),
                                   ),
@@ -622,84 +701,9 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
                               )
                             ],
                           ),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Row(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _makingPhoneCall(
-                                      number:
-                                          "${drivercountrycode}${driverphonenumber}");
-                                });
-                              },
-                              child: Container(
-                                height: 45,
-                                width: 45,
-                                decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.grey)),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.call,
-                                    color: Colors.grey,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            Expanded(
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ChatScreen(),
-                                      ));
-                                },
-                                child: Container(
-                                  height: 45,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(30),
-                                      border: Border.all(
-                                        color: Colors.grey,
-                                      )),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      const Icon(
-                                        Icons.message,
-                                        color: Colors.grey,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      Text(
-                                        "Message ${drivername}",
-                                        style: TextStyle(
-                                            color: notifier.textColor),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                        // const SizedBox(height: 10,),
-                      ],
+                          // const SizedBox(height: 10,),
+                        ],
+                      ),
                     ),
                   ),
                 )
@@ -723,12 +727,8 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
             Stack(
           children: [
             GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: LatLng(livelat, livelong),
-                zoom: 16,
-                tilt: 50,
-                bearing: 25,
-              ),
+              initialCameraPosition:
+                  CameraPosition(target: LatLng(livelat, livelong), zoom: 15),
               myLocationEnabled: true,
               tiltGesturesEnabled: true,
               compassEnabled: true,

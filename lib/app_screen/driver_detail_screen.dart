@@ -10,12 +10,11 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/services/notifier.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:qareeb/app_screen/pickup_drop_point.dart';
-import 'package:qareeb/chat_code/chat_screen.dart';
-import 'package:qareeb/common_code/common_button.dart';
+import 'pickup_drop_point.dart';
+import '../chat_code/chat_screen.dart';
+import '../common_code/common_button.dart';
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/driver_detail_api.dart';
 import '../api_code/vihical_calculate_api_controller.dart';
@@ -815,10 +814,10 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
         throw 'Could not launch $url';
       }
     } else if (status.isPermanentlyDenied) {
-      Notifier.info('');
+      Fluttertoast.showToast(msg: "Please allow calls Permission");
       await openAppSettings();
     } else {
-      Notifier.info('');
+      Fluttertoast.showToast(msg: "Please allow calls Permission");
       await openAppSettings();
     }
   }
@@ -842,11 +841,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
               children: [
                 GoogleMap(
                   initialCameraPosition: CameraPosition(
-                    target: LatLng(widget.lat, widget.long),
-                    zoom: 16,
-                    tilt: 30,
-                    bearing: 15,
-                  ),
+                      target: LatLng(widget.lat, widget.long), zoom: 15),
                   myLocationEnabled: true,
                   tiltGesturesEnabled: true,
                   compassEnabled: true,
@@ -895,260 +890,357 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.only(left: 15, right: 15),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                height: 5,
-                                width: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.withOpacity(0.4),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Row(
-                            children: [
-                              if (vihicalDriverDetailApiController
-                                      .vihicalDriverDetailModel!
-                                      .acceptedDDetail!
-                                      .status ==
-                                  "1")
-                                Text(
-                                  "Captain on the way".tr,
-                                  style: TextStyle(
-                                      color: notifier.textColor, fontSize: 18),
-                                )
-                              else if (vihicalDriverDetailApiController
-                                      .vihicalDriverDetailModel!
-                                      .acceptedDDetail!
-                                      .status ==
-                                  "2")
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Captain has arrived".tr,
-                                      style: TextStyle(
-                                          color: notifier.textColor,
-                                          fontSize: 18),
-                                    ),
-                                    extraststus == ""
-                                        ? Text(
-                                            "Free wait time of ${extratime} mins has started.",
-                                            style: TextStyle(
-                                                color: notifier.textColor,
-                                                fontSize: 12),
-                                          )
-                                        : Text(
-                                            extraststus,
-                                            style: TextStyle(
-                                                color: notifier.textColor,
-                                                fontSize: 12),
-                                          ),
-
-                                    // isloading22  ?
-                                    // Text(extraststus,style: const TextStyle(color: Colors.black,fontSize: 12),)
-                                    //     :
-                                    // Text("Free wait time of $tot_time mins has started.",style: const TextStyle(color: Colors.black,fontSize: 12),)
-                                  ],
-                                )
-                              else if (vihicalDriverDetailApiController
-                                      .vihicalDriverDetailModel!
-                                      .acceptedDDetail!
-                                      .status ==
-                                  "3")
-                                Text(
-                                  "Heading to the destination".tr,
-                                  style: TextStyle(
-                                      color: notifier.textColor, fontSize: 18),
-                                ),
-
-                              // switch (r) {
-                              // case 0:
-                              // // do something
-                              // break;
-                              // case myPI:
-                              // // do something else
-                              // break;
-                              // }
-
-                              const Spacer(),
-
-                              // TimerScreen(hours: int.parse(tot_hour),minutes: int.parse(tot_time)-1),
-                              TimerScreen(
-                                hours: int.parse(tot_hour),
-                                minutes: int.parse(tot_time),
-                                secound: int.parse(tot_secound),
-                              ),
-                              // Center(
-                              //   child: Container(
-                              //     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              //     decoration: BoxDecoration(
-                              //       borderRadius: BorderRadius.circular(20),
-                              //       border: Border.all(color:  isloading  ? Colors.green : theamcolore), // Dynamic border width
-                              //       color: theamcolore.withOpacity(0.1),
-                              //     ),
-                              //     child: Text(
-                              //       _formatTime(_remainingTime),
-                              //       style: TextStyle(
-                              //         fontSize: 18,
-                              //         fontWeight: FontWeight.bold,
-                              //         color: isloading  ? Colors.green : theamcolore,
-                              //       ),
-                              //     ),
-                              //   ),
-                              // ),
-                            ],
-                          ),
-                          const Divider(
-                            color: Colors.black,
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                "Start your order with PIN".tr,
-                                style: TextStyle(color: notifier.textColor),
-                              ),
-                              // Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.otp}"),
-                              const Spacer(),
-
-                              for (int i = 0; i < 4; i++)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 4.0),
-                                  child: Container(
-                                    height: 35,
-                                    width: 30,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Center(
-                                        child: Text(
-                                      vihicalDriverDetailApiController
-                                          .vihicalDriverDetailModel!
-                                          .acceptedDDetail!
-                                          .otp![i],
-                                      style:
-                                          TextStyle(color: notifier.textColor),
-                                    )),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  height: 5,
+                                  width: 50,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.withOpacity(0.4),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
-                                )
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                                color: notifier.languagecontainercolore,
-                                borderRadius: BorderRadius.circular(10)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                children: [
-                                  ListTile(
-                                    isThreeLine: true,
-                                    contentPadding: EdgeInsets.zero,
-                                    title: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Row(
+                              children: [
+                                if (vihicalDriverDetailApiController
+                                        .vihicalDriverDetailModel!
+                                        .acceptedDDetail!
+                                        .status ==
+                                    "1")
+                                  Text(
+                                    "Captain on the way".tr,
+                                    style: TextStyle(
+                                        color: notifier.textColor,
+                                        fontSize: 18),
+                                  )
+                                else if (vihicalDriverDetailApiController
+                                        .vihicalDriverDetailModel!
+                                        .acceptedDDetail!
+                                        .status ==
+                                    "2")
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Captain has arrived".tr,
+                                        style: TextStyle(
+                                            color: notifier.textColor,
+                                            fontSize: 18),
+                                      ),
+                                      extraststus == ""
+                                          ? Text(
+                                              "Free wait time of ${extratime} mins has started.",
+                                              style: TextStyle(
+                                                  color: notifier.textColor,
+                                                  fontSize: 12),
+                                            )
+                                          : Text(
+                                              extraststus,
+                                              style: TextStyle(
+                                                  color: notifier.textColor,
+                                                  fontSize: 12),
+                                            ),
+
+                                      // isloading22  ?
+                                      // Text(extraststus,style: const TextStyle(color: Colors.black,fontSize: 12),)
+                                      //     :
+                                      // Text("Free wait time of $tot_time mins has started.",style: const TextStyle(color: Colors.black,fontSize: 12),)
+                                    ],
+                                  )
+                                else if (vihicalDriverDetailApiController
+                                        .vihicalDriverDetailModel!
+                                        .acceptedDDetail!
+                                        .status ==
+                                    "3")
+                                  Text(
+                                    "Heading to the destination".tr,
+                                    style: TextStyle(
+                                        color: notifier.textColor,
+                                        fontSize: 18),
+                                  ),
+
+                                // switch (r) {
+                                // case 0:
+                                // // do something
+                                // break;
+                                // case myPI:
+                                // // do something else
+                                // break;
+                                // }
+
+                                const Spacer(),
+
+                                // TimerScreen(hours: int.parse(tot_hour),minutes: int.parse(tot_time)-1),
+                                TimerScreen(
+                                  hours: int.parse(tot_hour),
+                                  minutes: int.parse(tot_time),
+                                  secound: int.parse(tot_secound),
+                                ),
+                                // Center(
+                                //   child: Container(
+                                //     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                //     decoration: BoxDecoration(
+                                //       borderRadius: BorderRadius.circular(20),
+                                //       border: Border.all(color:  isloading  ? Colors.green : theamcolore), // Dynamic border width
+                                //       color: theamcolore.withOpacity(0.1),
+                                //     ),
+                                //     child: Text(
+                                //       _formatTime(_remainingTime),
+                                //       style: TextStyle(
+                                //         fontSize: 18,
+                                //         fontWeight: FontWeight.bold,
+                                //         color: isloading  ? Colors.green : theamcolore,
+                                //       ),
+                                //     ),
+                                //   ),
+                                // ),
+                              ],
+                            ),
+                            const Divider(
+                              color: Colors.black,
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Start your order with PIN".tr,
+                                    style: TextStyle(color: notifier.textColor),
+                                  ),
+                                ),
+                                Directionality(
+                                  // This is the key line that forces Left-to-Right layout.
+                                  textDirection: TextDirection.ltr,
+                                  child: SizedBox(
+                                    width: 140, // Fixed width for PIN boxes
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
                                       children: [
-                                        Text(
-                                          "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.vehicleNumber}",
-                                          style: TextStyle(
-                                              fontSize: 18,
-                                              color: notifier.textColor),
-                                        ),
-                                        const SizedBox(
-                                          height: 5,
-                                        ),
-                                        Text(
-                                            "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.carName}",
-                                            style: const TextStyle(
-                                                fontSize: 15,
-                                                color: Colors.grey)),
-                                        const SizedBox(
-                                          height: 8,
-                                        ),
+                                        for (int i = 0; i < 4; i++)
+                                          Container(
+                                            height: 35,
+                                            width: 30,
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                  color: Colors.grey),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                vihicalDriverDetailApiController
+                                                    .vihicalDriverDetailModel!
+                                                    .acceptedDDetail!
+                                                    .otp![i],
+                                                style: TextStyle(
+                                                    color: notifier.textColor),
+                                              ),
+                                            ),
+                                          )
                                       ],
                                     ),
-                                    subtitle: Text(
-                                        "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.firstName} ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.lastName}",
-                                        style: const TextStyle(
-                                            fontSize: 15, color: Colors.grey)),
-                                    trailing: Stack(
-                                      clipBehavior: Clip.none,
+                                  ),
+                                )
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Container(
+                              decoration: BoxDecoration(
+                                  color: notifier.languagecontainercolore,
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  children: [
+                                    ListTile(
+                                      isThreeLine: true,
+                                      contentPadding: EdgeInsets.zero,
+                                      title: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.vehicleNumber}",
+                                            style: TextStyle(
+                                                fontSize: 18,
+                                                color: notifier.textColor),
+                                          ),
+                                          const SizedBox(
+                                            height: 5,
+                                          ),
+                                          Text(
+                                              "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.carName}",
+                                              style: const TextStyle(
+                                                  fontSize: 15,
+                                                  color: Colors.grey)),
+                                          const SizedBox(
+                                            height: 8,
+                                          ),
+                                        ],
+                                      ),
+                                      subtitle: Text(
+                                          "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.firstName} ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.lastName}",
+                                          style: const TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.grey)),
+                                      trailing: Stack(
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          InkWell(
+                                            onTap: () {
+                                              print(
+                                                  "jhdgsfhjsvfhjfvhjkafvjahkfvjhkfvjkhfbvjuvaeswj");
+                                              print("*****:(:-- ${prefrence}");
+                                              print(
+                                                  "*****:(:-- ${prefrence.length}");
+                                              driverdetailbottomsheet();
+                                            },
+                                            child: Container(
+                                              height: 60,
+                                              width: 60,
+                                              decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  image: DecorationImage(
+                                                      image: NetworkImage(
+                                                          "${Config.imageurl}${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.profileImage}"),
+                                                      fit: BoxFit.cover)),
+                                              // child: Image(image: NetworkImage("https://i.pinimg.com/originals/a3/fc/98/a3fc98cd46931905114589e2e8abdc49.jpg"))
+                                            ),
+                                          ),
+                                          Positioned(
+                                            bottom: -15,
+                                            left: 0,
+                                            right: 0,
+                                            child: Container(
+                                              height: 25,
+                                              width: 40,
+                                              decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  border: Border.all(
+                                                      color: Colors.grey
+                                                          .withOpacity(0.2)),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          15)),
+                                              child: Center(
+                                                child: Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 3),
+                                                      child: Text(
+                                                          "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.rating}"),
+                                                    ),
+                                                    const SizedBox(
+                                                      width: 5,
+                                                    ),
+                                                    SvgPicture.asset(
+                                                      "assets/svgpicture/star-fill.svg",
+                                                      height: 15,
+                                                    ),
+                                                    // const Icon(Icons.star,color: Colors.yellow,size: 15,)
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    Row(
                                       children: [
                                         InkWell(
                                           onTap: () {
-                                            print(
-                                                "jhdgsfhjsvfhjfvhjkafvjahkfvjhkfvjkhfbvjuvaeswj");
-                                            print("*****:(:-- ${prefrence}");
-                                            print(
-                                                "*****:(:-- ${prefrence.length}");
-                                            driverdetailbottomsheet();
+                                            setState(() {
+                                              _makingPhoneCall(
+                                                  number:
+                                                      "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.primaryCcode}${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.primaryPhoneNo}");
+                                            });
                                           },
                                           child: Container(
-                                            height: 60,
-                                            width: 60,
+                                            height: 45,
+                                            width: 45,
                                             decoration: BoxDecoration(
                                                 shape: BoxShape.circle,
-                                                image: DecorationImage(
-                                                    image: NetworkImage(
-                                                        "${Config.imageurl}${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.profileImage}"),
-                                                    fit: BoxFit.cover)),
-                                            // child: Image(image: NetworkImage("https://i.pinimg.com/originals/a3/fc/98/a3fc98cd46931905114589e2e8abdc49.jpg"))
+                                                border: Border.all(
+                                                    color: Colors.grey)),
+                                            child: const Center(
+                                              child: Icon(
+                                                Icons.call,
+                                                color: Colors.grey,
+                                                size: 20,
+                                              ),
+                                            ),
                                           ),
                                         ),
-                                        Positioned(
-                                          bottom: -15,
-                                          left: 0,
-                                          right: 0,
-                                          child: Container(
-                                            height: 25,
-                                            width: 40,
-                                            decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                border: Border.all(
-                                                    color: Colors.grey
-                                                        .withOpacity(0.2)),
-                                                borderRadius:
-                                                    BorderRadius.circular(15)),
-                                            child: Center(
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: () {
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const ChatScreen(),
+                                                  ));
+                                            },
+                                            child: Container(
+                                              height: 45,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(30),
+                                                  border: Border.all(
+                                                    color: Colors.grey,
+                                                  )),
                                               child: Row(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
                                                 children: [
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            top: 3),
-                                                    child: Text(
-                                                        "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.rating}"),
+                                                  const SizedBox(
+                                                    width: 10,
+                                                  ),
+                                                  const Icon(
+                                                    Icons.message,
+                                                    color: Colors.grey,
+                                                    size: 20,
                                                   ),
                                                   const SizedBox(
-                                                    width: 5,
+                                                    width: 10,
                                                   ),
-                                                  SvgPicture.asset(
-                                                    "assets/svgpicture/star-fill.svg",
-                                                    height: 15,
-                                                  ),
-                                                  // const Icon(Icons.star,color: Colors.yellow,size: 15,)
+                                                  Text(
+                                                    "Message ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.firstName} ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.lastName}",
+                                                    style: TextStyle(
+                                                        color:
+                                                            notifier.textColor),
+                                                  )
                                                 ],
                                               ),
                                             ),
@@ -1156,129 +1248,52 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                         )
                                       ],
                                     ),
-                                  ),
-                                  const SizedBox(
-                                    height: 20,
-                                  ),
-                                  Row(
-                                    children: [
-                                      InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            _makingPhoneCall(
-                                                number:
-                                                    "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.primaryCcode}${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.primaryPhoneNo}");
-                                          });
-                                        },
-                                        child: Container(
-                                          height: 45,
-                                          width: 45,
-                                          decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                  color: Colors.grey)),
-                                          child: const Center(
-                                            child: Icon(
-                                              Icons.call,
-                                              color: Colors.grey,
-                                              size: 20,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () {
-                                            Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const ChatScreen(),
-                                                ));
-                                          },
-                                          child: Container(
-                                            height: 45,
-                                            decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(30),
-                                                border: Border.all(
-                                                  color: Colors.grey,
-                                                )),
-                                            child: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                const SizedBox(
-                                                  width: 10,
-                                                ),
-                                                const Icon(
-                                                  Icons.message,
-                                                  color: Colors.grey,
-                                                  size: 20,
-                                                ),
-                                                const SizedBox(
-                                                  width: 10,
-                                                ),
-                                                Text(
-                                                  "Message ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.firstName} ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.lastName}",
-                                                  style: TextStyle(
-                                                      color:
-                                                          notifier.textColor),
-                                                )
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(
-                              "Pickup From".tr,
-                              style: TextStyle(color: notifier.textColor),
-                            ),
-                            subtitle: Text(
-                              picktitle == "" ? addresspickup : picktitle,
-                              style: TextStyle(color: notifier.textColor),
-                            ),
-                            // subtitle: Text("31"),
-                            trailing: InkWell(
-                              onTap: () {
-                                commonbottomsheetcancelflow(context: context);
-                                // commonbottomsheetrequestsend(context: context);
-                              },
-                              child: Container(
-                                height: 40,
-                                width: 100,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: Colors.grey.withOpacity(0.4)),
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    "Trip Details".tr,
-                                    style: TextStyle(color: notifier.textColor),
-                                  ),
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          )
-                        ],
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                "Pickup From".tr,
+                                style: TextStyle(color: notifier.textColor),
+                              ),
+                              subtitle: Text(
+                                picktitle == "" ? addresspickup : picktitle,
+                                style: TextStyle(color: notifier.textColor),
+                              ),
+                              // subtitle: Text("31"),
+                              trailing: InkWell(
+                                onTap: () {
+                                  commonbottomsheetcancelflow(context: context);
+                                  // commonbottomsheetrequestsend(context: context);
+                                },
+                                child: Container(
+                                  height: 40,
+                                  width: 100,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Colors.grey.withOpacity(0.4)),
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      "Trip Details".tr,
+                                      style:
+                                          TextStyle(color: notifier.textColor),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   ),

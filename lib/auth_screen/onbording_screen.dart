@@ -11,10 +11,9 @@ import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui' as ui;
 
-import 'package:qareeb/auth_screen/onmobile1_screen.dart';
-import 'package:qareeb/common_code/colore_screen.dart';
-import 'package:qareeb/common_code/language_toggle_button.dart';
-import 'package:qareeb/services/notifier.dart';
+import 'onmobile1_screen.dart';
+import '../common_code/colore_screen.dart';
+import '../common_code/language_toggle_button.dart';
 import '../api_code/forgot_api_controller.dart';
 import '../api_code/login_controller.dart';
 import '../api_code/mobile_check_controller.dart';
@@ -410,7 +409,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
         _navigateToOnboarding3();
         break;
       default:
-        Notifier.info('');
+        Fluttertoast.showToast(msg: "No Service".tr);
     }
   }
 
@@ -571,7 +570,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
 
   void _handleForgotPassword() {
     if (_forgotPhoneController.text.isEmpty) {
-      Notifier.info('');
+      Fluttertoast.showToast(msg: 'Enter Mobile Number...!!!'.tr);
       return;
     }
 
@@ -597,10 +596,10 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
           _showCreatePasswordBottomSheet();
           break;
         default:
-          Notifier.info('');
+          Fluttertoast.showToast(msg: "No Service".tr);
       }
     } else {
-      Notifier.info('');
+      Fluttertoast.showToast(msg: "${value['message']}");
     }
   }
 
@@ -712,7 +711,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
     if (expectedOtp == _otpVariableForgot) {
       _showCreatePasswordBottomSheet();
     } else {
-      Notifier.info('');
+      Fluttertoast.showToast(msg: "Incorrect OTP. Please try again.".tr);
     }
   }
 
@@ -769,7 +768,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
 
   void _handlePasswordReset() {
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      Notifier.info('');
+      Fluttertoast.showToast(msg: "Please enter current password".tr);
       return;
     }
 
@@ -784,7 +783,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
       if (value["ResponseCode"] == "200") {
         Get.back();
       }
-      Notifier.info('');
+      Fluttertoast.showToast(msg: value["message"]);
     });
   }
 

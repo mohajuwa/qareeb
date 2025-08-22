@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
-import 'package:qareeb/services/notifier.dart';
 import '../common_code/config.dart';
+
 
 // class ProfileeditApiController extends GetxController implements GetxService {
 //
@@ -42,30 +42,25 @@ import '../common_code/config.dart';
 //
 // }
 
+
 class ProfileeditApiController extends GetxController implements GetxService {
+
   bool isLoading = true;
 
-  Future PrifileediteApi(
-      {required String id,
-      required String name,
-      required String email,
-      required String password,
-      required String profile_img,
-      context}) async {
-    var request = http.MultipartRequest(
-        'POST', Uri.parse(Config.baseurl + Config.editprofile));
+  Future PrifileediteApi({required String id,required String name,required String email,required String password,required String profile_img,context}) async {
+
+    var request = http.MultipartRequest('POST', Uri.parse(Config.baseurl + Config.editprofile));
 
     request.fields.addAll({
-      'id': id,
+      'id' : id,
       'name': name,
       'email': email,
-      'password': password,
+      'password':password,
     });
 
-    if (profile_img != "") {
-      request.files
-          .add(await http.MultipartFile.fromPath('profile_img', profile_img));
-    } else {
+    if(profile_img != ""){
+      request.files.add(await http.MultipartFile.fromPath('profile_img', profile_img));
+    }else{
       print("ffffffffffff");
     }
 
@@ -75,16 +70,23 @@ class ProfileeditApiController extends GetxController implements GetxService {
     final responsnessaj = jsonDecode(responseString);
 
     if (response.statusCode == 200) {
-      if (responsnessaj["Result"] == true) {
+
+      if(responsnessaj["Result"] == true){
         isLoading = false;
 
-        Notifier.info("${responsnessaj["message"]}");
+        Fluttertoast.showToast(msg: responsnessaj["message"],);
         return responsnessaj;
-      } else {
-        Notifier.error("${responsnessaj["message"]}");
       }
-    } else {
-      Notifier.error("${responsnessaj["message"]}");
+      else{
+        Fluttertoast.showToast(msg: responsnessaj["message"],);
+      }
+
+    }
+    else{
+      Fluttertoast.showToast(
+        msg: responsnessaj["message"],
+      );
     }
   }
+
 }

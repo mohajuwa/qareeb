@@ -4,9 +4,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
-import 'package:qareeb/services/notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:qareeb/common_code/config.dart';
+import '../common_code/config.dart';
 
 import '../api_model/home_api_model.dart';
 
@@ -43,14 +42,20 @@ class HomeApiController extends GetxController implements GetxService {
           update();
           return data;
         } else {
-          Notifier.info("${data["message"]}");
+          Fluttertoast.showToast(
+            msg: "${homeapimodel!.message}",
+          );
           return data;
         }
       } else {
-        Notifier.error("${data["message"]}");
+        Fluttertoast.showToast(
+          msg: "${data["message"]}",
+        );
       }
     } else {
-      Notifier.error("${data["message"]}");
+      Fluttertoast.showToast(
+        msg: "Somthing went wrong!.....",
+      );
     }
   }
 }

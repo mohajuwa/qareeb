@@ -19,22 +19,21 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
-import 'package:qareeb/services/notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
-import 'package:qareeb/api_code/coupon_payment_api_contoller.dart';
-import 'package:qareeb/api_code/home_controller.dart';
-import 'package:qareeb/app_screen/home_screen.dart';
-import 'package:qareeb/app_screen/pagelist_description.dart';
-import 'package:qareeb/app_screen/pickup_drop_point.dart';
-import 'package:qareeb/app_screen/profile_screen.dart';
-import 'package:qareeb/app_screen/refer_and_earn.dart';
-import 'package:qareeb/app_screen/top_up_screen.dart';
+import '../api_code/coupon_payment_api_contoller.dart';
+import '../api_code/home_controller.dart';
+import 'home_screen.dart';
+import 'pagelist_description.dart';
+import 'pickup_drop_point.dart';
+import 'profile_screen.dart';
+import 'refer_and_earn.dart';
+import 'top_up_screen.dart';
 import 'dart:ui' as ui;
-import 'package:qareeb/common_code/colore_screen.dart';
-import 'package:qareeb/common_code/common_button.dart';
-import 'package:qareeb/common_code/common_flow_screen.dart';
-import 'package:qareeb/common_code/config.dart';
+import '../common_code/colore_screen.dart';
+import '../common_code/common_button.dart';
+import '../common_code/common_flow_screen.dart';
+import '../common_code/config.dart';
 import '../api_code/add_vehical_api_controller.dart';
 import '../api_code/calculate_api_controller.dart';
 import '../api_code/delete_api_controller.dart';
@@ -494,32 +493,27 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         }
       });
 
-      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) async {
+      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
         if (_isDisposed || !mounted) return;
 
         socket.close();
 
         if (kDebugMode) {
           print("++++++ /acceptvehrequest map/ ++++ :---  $acceptvehrequest");
-
           print(
               "acceptvehrequest is of type map: ${acceptvehrequest.runtimeType}");
         }
 
         setState(() {
           isanimation = false;
-
           isControllerDisposed = true;
-
           loadertimer = true;
         });
 
         // Safely dispose controller
-
         if (controller != null && controller!.isAnimating) {
           try {
             controller!.dispose();
-
             controller = null;
           } catch (e) {
             if (kDebugMode) print("Error disposing controller in socket: $e");
@@ -536,14 +530,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             .toString()
             .contains(useridgloable.toString())) {
           if (kDebugMode) print("condition done");
-
           driveridloader = false;
 
           if (!_isDisposed && mounted) {
-            // Add a small delay to allow database transaction to complete
-
-            await Future.delayed(const Duration(milliseconds: 800));
-
             globalDriverAcceptClass.driverdetailfunction(
                 context: context,
                 lat: latitudepick,
@@ -2066,17 +2055,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                         .text.isEmpty ||
                                     dropcontroller.text.isEmpty
                                 ? CameraPosition(
-                                    target: LatLng(lathome, longhome),
-                                    zoom: 16,
-                                    tilt: 60,
-                                    bearing: 30,
-                                  )
+                                    target: LatLng(lathome, longhome), zoom: 13)
                                 : CameraPosition(
                                     target: LatLng(latitudepick, longitudepick),
-                                    zoom: 16,
-                                    tilt: 50,
-                                    bearing: 25,
-                                  ),
+                                    zoom: 13),
                             // initialCameraPosition:  CameraPosition(target: LatLng(21.2408,72.8806), zoom: 13),
                             mapType: MapType.normal,
                             // markers: markers.,
@@ -2220,9 +2202,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                           CameraUpdate.newCameraPosition(
                                             CameraPosition(
                                               target: LatLng(lathome, longhome),
-                                              zoom: 16,
-                                              tilt: 60,
-                                              bearing: 30,
+                                              zoom: 14.0,
                                             ),
                                           ),
                                         );
@@ -2300,9 +2280,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                     CameraPosition(
                                                       target: LatLng(
                                                           lathome, longhome),
-                                                      zoom: 16,
-                                                      tilt: 60,
-                                                      bearing: 30,
+                                                      zoom: 14.0,
                                                     ),
                                                   ),
                                                 );
@@ -3815,11 +3793,17 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   Buttonpresebottomshhet() {
     if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
-      Notifier.error('Pickup or drop location is empty'.tr);
+      Fluttertoast.showToast(
+        msg: "Select Pickup and Drop",
+      );
     } else if (amountresponse == "false") {
-      Notifier.error('Amount response is not calceluated'.tr);
+      Fluttertoast.showToast(
+        msg: "Address is not in the zone!",
+      );
     } else if (dropprice == 0) {
-      Notifier.error('Drop price is not set yet, please try again'.tr);
+      Fluttertoast.showToast(
+        msg: responsemessage,
+      );
     } else {
       toast = 0;
       amountcontroller.text = dropprice.toString();
@@ -3900,7 +3884,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
-                                    Notifier.info('');
+                                    Fluttertoast.showToast(
+                                      msg:
+                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                    );
                                   } else {
                                     Get.back();
                                   }
@@ -3938,7 +3925,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
-                                    Notifier.info('');
+                                    Fluttertoast.showToast(
+                                      msg:
+                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                    );
                                   } else {
                                     if (double.parse(dropprice.toString()) >
                                         minprice) {
@@ -3999,7 +3989,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                   onTap: () {
                                     controller != null &&
                                             controller!.isAnimating
-                                        ? Notifier.info('')
+                                        ? Fluttertoast.showToast(
+                                            msg:
+                                                "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                          )
                                         : "";
                                   },
                                   onSubmitted: (value) {
@@ -4033,7 +4026,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
-                                    Notifier.info('');
+                                    Fluttertoast.showToast(
+                                      msg:
+                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                    );
                                   } else {
                                     if (double.parse(dropprice.toString()) <
                                         maxprice) {
@@ -4125,7 +4121,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 onChanged: controller != null &&
                                         controller!.isAnimating
                                     ? (bool value) {
-                                        Notifier.info('');
+                                        Fluttertoast.showToast(
+                                          msg:
+                                              "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
+                                        );
                                       }
                                     : (bool value) {
                                         setState(() {
