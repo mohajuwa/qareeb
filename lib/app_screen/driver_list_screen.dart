@@ -392,22 +392,24 @@ class _DriverListScreenState extends State<DriverListScreen>
                                         CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        "$globalcurrency${vehicle_bidding_driver[index]["price"]}",
-                                        style: TextStyle(
-                                            fontSize: 18,
-                                            color: notifier.textColor),
+                                      Flexible(
+                                        child: Text(
+                                          "$globalcurrency${vehicle_bidding_driver[index]["price"]}",
+                                          style: TextStyle(
+                                              fontSize: 18,
+                                              color: notifier.textColor),
+                                        ),
                                       ),
-                                      // const SizedBox(height: 3,),
-                                      // Text("${vehicle_bidding_driver[index]["tot_min"]}",style: const TextStyle(fontSize: 12),),
                                       const SizedBox(
                                         height: 5,
                                       ),
-                                      Text(
-                                        "${vehicle_bidding_driver[index]["tot_km"]} km",
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: notifier.textColor),
+                                      Flexible(
+                                        child: Text(
+                                          "${vehicle_bidding_driver[index]["tot_km"]} km",
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: notifier.textColor),
+                                        ),
                                       ),
                                     ],
                                   ),
