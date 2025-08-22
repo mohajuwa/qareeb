@@ -80,6 +80,7 @@ num walleteamount = 0.00;
 late IO.Socket socket;
 var lathomecurrent;
 var longhomecurrent;
+String biddautostatus = "false";
 
 AnimationController? controller;
 late Animation<Color?> colorAnimation;
@@ -94,7 +95,8 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
+class _MapScreenState extends State<MapScreen>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final List<LatLng> vihicallocations = [];
   final List<String> _iconPaths = [];
   final List<String> _iconPathsbiddingon = [];
@@ -109,7 +111,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   bool isLoad = false;
 
   bool light = false;
-  String biddautostatus = "false";
   bool switchValue = false;
   // int pricecounr = 0;
   int toast = 0;
@@ -165,6 +166,93 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Timer? _animationTimer;
   bool _isDisposed = false;
 
+  void resetMapScreenState() {
+    if (kDebugMode) print("🔄 Resetting map screen state...");
+
+    if (mounted) {
+      setState(() {
+        // Reset animation states
+
+        isanimation = false;
+
+        isControllerDisposed = true;
+
+        buttontimer = false;
+
+        loadertimer = false;
+
+        // Reset bidding data
+
+        vehicle_bidding_driver.clear();
+
+        vehicle_bidding_secounde.clear();
+
+        // Reset driver data
+
+        driveridloader = false;
+
+        // Reset request state
+
+        if (calculateController.calCulateModel != null) {
+          calculateController.calCulateModel!.driverId?.clear();
+        }
+      });
+    }
+
+    // Cancel any running timers
+
+    _mainTimer?.cancel();
+
+    _mainTimer = null;
+
+    // Cancel animation timer if exists
+
+    _animationTimer?.cancel();
+
+    _animationTimer = null;
+
+    // Dispose animation controller safely
+
+    if (controller != null && !isControllerDisposed) {
+      try {
+        if (controller!.isAnimating) {
+          controller!.stop();
+        }
+
+        controller!.dispose();
+
+        controller = null;
+
+        isControllerDisposed = true;
+      } catch (e) {
+        if (kDebugMode) print("Error disposing controller in reset: $e");
+      }
+    }
+
+    // Reset socket listeners if needed
+
+    _reconnectSocketIfNeeded();
+
+    if (kDebugMode) print("✅ Map screen state reset completed");
+  }
+
+  // ✅ NEW: Method to safely reconnect socket
+
+  void _reconnectSocketIfNeeded() {
+    try {
+      if (!socket.connected) {
+        if (kDebugMode) print("🔌 Reconnecting socket...");
+
+        socket.connect();
+
+        // Re-establish critical socket listeners
+
+        _connectSocket();
+      }
+    } catch (e) {
+      if (kDebugMode) print("Socket reconnection error: $e");
+    }
+  }
   // socate code
 
   socketConnect() async {
@@ -209,7 +297,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
-// Replace your existing _connectSocket method:
   _connectSocket() async {
     if (_isDisposed) return;
 
@@ -226,6 +313,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
       socket.onDisconnect((data) {
         if (kDebugMode) print('Socket.IO server disconnected map screen');
+      });
+
+      // ✅ NEW: Listen for screen state reset events
+      socket.on("reset_customer_state$useridgloable", (data) {
+        if (_isDisposed || !mounted) return;
+
+        if (kDebugMode) print("🔄 Received reset state command");
+        resetMapScreenState();
       });
 
       // Wallet API call with safety checks
@@ -264,127 +359,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
           mroal =
               homeApiController.homeapimodel!.categoryList![0].role.toString();
-          var currency = preferences.getString("currenci");
-          if (currency != null) {
-            currencyy = jsonDecode(currency);
-          }
-          globalcurrency = currencyy;
-
-          // Continue with home map API calls but with safety checks
-          if (!_isDisposed &&
-              (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty)) {
-            homeMapController
-                .homemapApi(
-                    mid: mid, lat: lathome.toString(), lon: longhome.toString())
-                .then((value) {
-              if (_isDisposed || !mounted) return;
-
-              setState(() {
-                if (kDebugMode) print("///:---  ${value["Result"]}");
-
-                if (value["Result"] == false) {
-                  vihicallocations.clear();
-                  markers.clear();
-                  _addMarkers();
-                  if (kDebugMode) {
-                    print("***if condition+++:---  $vihicallocations");
-                  }
-                } else {
-                  for (int i = 0;
-                      i < homeMapController.homeMapApiModel!.list!.length;
-                      i++) {
-                    vihicallocations.add(LatLng(
-                        double.parse(homeMapController
-                            .homeMapApiModel!.list![i].latitude
-                            .toString()),
-                        double.parse(homeMapController
-                            .homeMapApiModel!.list![i].longitude
-                            .toString())));
-                    _iconPaths.add(
-                        "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                  }
-                  _addMarkers();
-                }
-                if (kDebugMode) {
-                  print("******-**:::::------ _connectSocket$vihicallocations");
-                }
-              });
-            }).catchError((error) {
-              if (kDebugMode) print("Home map API error: $error");
-            });
-          }
-
-          // Handle running ride data with safety checks
-          if (!_isDisposed &&
-              homeApiController.homeapimodel!.runnigRide!.isNotEmpty) {
-            // Your existing running ride logic here, but wrap setState calls with setState
-            pickupcontroller.text = homeApiController
-                .homeapimodel!.runnigRide![0].pickAdd!.title
-                .toString();
-            dropcontroller.text = homeApiController
-                .homeapimodel!.runnigRide![0].dropAdd!.title
-                .toString();
-
-            // Continue with rest of running ride logic...
-            calculateController
-                .calculateApi(
-                    context: context,
-                    uid: useridgloable.toString(),
-                    mid: mid,
-                    mrole: mroal,
-                    pickup_lat_lon: "$latitudepick,$longitudepick",
-                    drop_lat_lon: "$latitudedrop,$longitudedrop",
-                    drop_lat_lon_list: onlypass)
-                .then((value) {
-              if (_isDisposed || !mounted) return;
-
-              if (kDebugMode) print("CALCULATE DATA LOAD");
-              calculateController.calCulateModel!.offerExpireTime = int.parse(
-                  homeApiController.homeapimodel!.runnigRide![0].increasedTime
-                      .toString());
-              calculateController.calCulateModel!.driverId =
-                  homeApiController.homeapimodel!.runnigRide![0].dId;
-
-              setState(() {
-                isanimation = true;
-                loadertimer = true;
-                offerpluse = false;
-              });
-
-              if (!_isDisposed) {
-                requesttime();
-                Buttonpresebottomshhet();
-              }
-            }).catchError((error) {
-              if (kDebugMode) print("Calculate API error: $error");
-            });
-          }
-        }).catchError((error) {
-          if (kDebugMode) print("Home API error: $error");
-        });
-      }
-
-      // Socket event listeners with safety checks
-      socket.on('home', (messaj) {
-        if (_isDisposed || !mounted) return;
-        if (kDebugMode) print("++++++++++ :---  $messaj");
-
-        homeApiController
-            .homeApi(
-                uid: messaj['uid'].toString(),
-                lat: messaj['lat'].toString(),
-                lon: messaj['lon'].toString())
-            .then((value) {
-          if (_isDisposed || !mounted) return;
-
-          mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
-          mroal =
-              homeApiController.homeapimodel!.categoryList![0].role.toString();
         }).catchError((error) {
           if (kDebugMode) print("Socket home event error: $error");
         });
-      });
+      }
 
+      // ✅ ENHANCED: Driver location updates
       socket.on("Driver_location_On", (Driver_location_On) async {
         if (_isDisposed || !mounted) return;
 
@@ -419,6 +399,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         }
       });
 
+      // ✅ ENHANCED: Driver location updates
       socket.on("Driver_location_Update", (Driver_location_Update) async {
         if (_isDisposed || !mounted) return;
 
@@ -467,7 +448,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           if (kDebugMode) print("Driver location update error: $e");
         }
       });
-
       socket.on("Vehicle_Bidding$userid", (Vehicle_Bidding) {
         if (_isDisposed || !mounted) return;
 
@@ -477,6 +457,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
         setState(() {
           vehicle_bidding_driver = Vehicle_Bidding["bidding_list"];
+
           vehicle_bidding_secounde = [];
 
           for (int i = 0; i < vehicle_bidding_driver.length; i++) {
@@ -485,18 +466,39 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           }
         });
 
-        Get.back();
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const DriverListScreen()));
+        // ✅ CRITICAL: Ensure proper navigation cleanup before going to DriverList
+
+        if (Get.isDialogOpen == true) {
+          Get.back();
+        }
+
+        // ✅ FIXED: Use regular Navigator.push instead of pushReplacement
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const DriverListScreen()),
+        ).then((_) {
+          // ✅ CRITICAL: Reset state when returning from DriverListScreen
+
+          if (kDebugMode) {
+            print("📱 Returned from DriverListScreen, resetting state");
+          }
+
+          resetMapScreenState();
+        });
 
         if (vehicle_bidding_driver.isEmpty) {
           Get.back();
+
           Buttonpresebottomshhet();
         }
       });
-
+      // ✅ ENHANCED: Vehicle request acceptance with cleanup
       socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
         if (_isDisposed || !mounted) return;
+
+        // ✅ CRITICAL: Cleanup before processing acceptance
+        resetMapScreenState();
 
         socket.close();
 
@@ -546,6 +548,47 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           if (kDebugMode) print("condition not done");
         }
       });
+
+      // ✅ NEW: Listen for bidding responses from drivers
+      socket.on("Accept_Bidding_Response$useridgloable", (response) {
+        if (_isDisposed || !mounted) return;
+
+        if (kDebugMode) {
+          print("🎯 Accept_Bidding_Response received in map: $response");
+        }
+
+        // This will be handled by DriverListScreen, but we can log it here
+      });
+
+      socket.on("Bidding_decline_Response$useridgloable", (response) {
+        if (_isDisposed || !mounted) return;
+
+        if (kDebugMode) {
+          print("❌ Bidding_decline_Response received in map: $response");
+        }
+
+        // This will be handled by DriverListScreen, but we can log it here
+      });
+
+      // ✅ NEW: Handle customer data removal (ride cancelled/completed)
+      socket.on("removecustomerdata$useridgloable", (removecustomerdata) {
+        if (_isDisposed || !mounted) return;
+
+        if (kDebugMode) {
+          print("🗑️ removecustomerdata received in map: $removecustomerdata");
+        }
+
+        // Reset map state when ride is removed
+        resetMapScreenState();
+
+        // Close any open dialogs
+        if (Get.isDialogOpen == true) {
+          Get.back();
+        }
+      });
+
+      // ✅ EXISTING: Your other socket listeners (add any others you have)
+      // Add any other socket.on() listeners you might have in your original code here...
     } catch (e) {
       if (kDebugMode) print("_connectSocket error: $e");
     }
@@ -1055,11 +1098,44 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   pagelistApiController pagelistcontroller = Get.put(pagelistApiController());
 
+  Future<Uint8List> getNetworkImage(String url) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      } else {
+        // Return default marker icon as bytes if network image fails
+        final ByteData data = await rootBundle.load('assets/logo.png');
+        return data.buffer.asUint8List();
+      }
+    } catch (e) {
+      if (kDebugMode) print("Error loading network image: $e");
+      // Return default marker icon as bytes
+      final ByteData data = await rootBundle.load('assets/logo.png');
+      return data.buffer.asUint8List();
+    }
+  }
+
+  void updateBiddingMode(bool isAutomatic) {
+    setState(() {
+      switchValue = isAutomatic;
+      biddautostatus = isAutomatic ? "true" : "false";
+    });
+
+    if (kDebugMode) {
+      print("🔧 Bidding mode updated:");
+      print("   Switch Value: $switchValue");
+      print("   Bidding Status: $biddautostatus");
+      print("   Mode: ${isAutomatic ? 'Automatic' : 'Manual'}");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
 
     _isDisposed = false; // Initialize disposal flag
+    WidgetsBinding.instance.addObserver(this);
 
     // Your existing initState code, but replace setState calls with setState
 
@@ -1256,48 +1332,98 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         dropOffPoints: _dropOffPoints);
 
     pagelistcontroller.pagelistttApi(context);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      resetMapScreenState();
+    });
   }
 
   @override
   void dispose() {
     if (kDebugMode) print("MapScreen dispose called");
+
     _isDisposed = true;
 
-    // Cancel all timers
-    _mainTimer?.cancel();
-    _socketTimer?.cancel();
-    _animationTimer?.cancel();
-    timer?.cancel(); // existing timer
+    // ✅ NEW: Remove observer
 
-    // Dispose animation controller safely
-    if (controller != null && !isControllerDisposed) {
-      try {
-        if (controller!.isAnimating) {
-          controller!.stop();
-        }
-        controller!.dispose();
-        controller = null;
-        isControllerDisposed = true;
-      } catch (e) {
-        if (kDebugMode) print("Error disposing controller: $e");
-      }
-    }
+    WidgetsBinding.instance.removeObserver(this);
 
-    // Close socket connection safely
+    // ✅ CRITICAL: Comprehensive cleanup
+
+    resetMapScreenState();
+
+    // Remove socket listeners
+
     try {
-      if (socket.connected) {
-        socket.disconnect();
-        socket.dispose();
-      }
-    } catch (e) {
-      if (kDebugMode) print("Error disposing socket: $e");
-    }
+      socket.off("Vehicle_Bidding$userid");
 
-    // Dispose other controllers
-    sheetController.dispose();
-    amountcontroller.dispose();
+      socket.off("acceptvehrequest$useridgloable");
+
+      socket.off("reset_customer_state$useridgloable");
+
+      socket.off("Vehicle_Location_update$userid");
+
+      socket.off("Accept_Bidding_Response$useridgloable");
+
+      socket.off("Bidding_decline_Response$useridgloable");
+
+      socket.off("removecustomerdata$useridgloable");
+
+      socket.off("Driver_location_On");
+
+      socket.off("Driver_location_Update");
+    } catch (e) {
+      if (kDebugMode) print("Error removing socket listeners: $e");
+    }
 
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+
+        // App came back to foreground
+
+        if (kDebugMode) print("🔄 App resumed, checking map state");
+
+        resetMapScreenState();
+
+        break;
+
+      case AppLifecycleState.paused:
+
+        // App went to background
+
+        if (kDebugMode) print("⏸️ App paused");
+
+        break;
+
+      case AppLifecycleState.detached:
+
+        // App is being terminated
+
+        if (kDebugMode) print("🔚 App detached");
+
+        break;
+
+      case AppLifecycleState.inactive:
+
+        // App is inactive (e.g., phone call)
+
+        if (kDebugMode) print("😴 App inactive");
+
+        break;
+
+      case AppLifecycleState.hidden:
+
+        // App is hidden
+
+        if (kDebugMode) print("🙈 App hidden");
+
+        break;
+    }
   }
 
 // Replace your existing mapThemeStyle method:
