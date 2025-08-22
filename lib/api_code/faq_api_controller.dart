@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
 
 import 'package:fluttertoast/fluttertoast.dart';
@@ -72,7 +73,7 @@ class FaqApiController extends GetxController implements GetxService {
       }
       else{
         Get.back();
-        Fluttertoast.showToast(msg: "${data["message"]}");
+        CustomNotification.show(message: "${data["message"]}", type: NotificationType.info);;
       }
     }
     else{

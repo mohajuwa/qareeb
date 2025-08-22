@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
@@ -94,32 +95,24 @@ class VihicalRideCompleteOrderApiController extends GetxController
           print("++hahaha++:- (${dropsubtitle})");
           print("++hahaha++:- (${droptitlelist})");
 
-          Fluttertoast.showToast(
-            msg: responsnessaj["message"],
-          );
+          CustomNotification.show(message: responsnessaj["message"], type: NotificationType.info);;
 
           // Return the complete response including request_id
           return responsnessaj;
         } else {
           orederloader = false;
-          Fluttertoast.showToast(
-            msg: responsnessaj["message"],
-          );
+          CustomNotification.show(message: responsnessaj["message"], type: NotificationType.info);;
           return responsnessaj;
         }
       } else {
         orederloader = false;
-        Fluttertoast.showToast(
-          msg: responsnessaj["message"],
-        );
+        CustomNotification.show(message: responsnessaj["message"], type: NotificationType.info);;
         return responsnessaj;
       }
     } catch (e) {
       orederloader = false;
       print("Error in vihicalridecomplete: $e");
-      Fluttertoast.showToast(
-        msg: "Something went wrong!",
-      );
+      CustomNotification.show(message: "Something went wrong!", type: NotificationType.error);;
       return null;
     }
   }

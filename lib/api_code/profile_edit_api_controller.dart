@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
@@ -74,18 +75,16 @@ class ProfileeditApiController extends GetxController implements GetxService {
       if(responsnessaj["Result"] == true){
         isLoading = false;
 
-        Fluttertoast.showToast(msg: responsnessaj["message"],);
+        CustomNotification.show(message: responsnessaj["message"], type: NotificationType.info);;
         return responsnessaj;
       }
       else{
-        Fluttertoast.showToast(msg: responsnessaj["message"],);
+        CustomNotification.show(message: responsnessaj["message"], type: NotificationType.info);;
       }
 
     }
     else{
-      Fluttertoast.showToast(
-        msg: responsnessaj["message"],
-      );
+      CustomNotification.show(message: responsnessaj["message"], type: NotificationType.info);;
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
@@ -44,7 +45,9 @@ class WalletApiController extends GetxController implements GetxService {
     if (response.statusCode == 200) {
       walletAddApiModel = walletAddApiModelFromJson(response.body);
       if (data["Result"] == true) {
-        Fluttertoast.showToast(msg: walletAddApiModel!.message.toString());
+        CustomNotification.show(
+            message: walletAddApiModel!.message.toString(),
+            type: NotificationType.info);
         showModalBottomSheet(
           isDismissible: false,
           shape: const RoundedRectangleBorder(
@@ -54,9 +57,9 @@ class WalletApiController extends GetxController implements GetxService {
           builder: (BuildContext context) {
             return Container(
               height: 330,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: const BorderRadius.only(
+                  borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(15),
                       topRight: Radius.circular(15))),
               child: Column(
@@ -78,7 +81,7 @@ class WalletApiController extends GetxController implements GetxService {
                   ),
                   Text(
                     'Top up $currencybol${walletController.text}.00',
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold,
                         color: Colors.black),
@@ -86,7 +89,7 @@ class WalletApiController extends GetxController implements GetxService {
                   const SizedBox(
                     height: 5,
                   ),
-                  Text(
+                  const Text(
                     'Successfuly',
                     style: TextStyle(
                         fontSize: 30,
@@ -127,7 +130,7 @@ class WalletApiController extends GetxController implements GetxService {
                               Get.back();
                               // Get.back();
                             },
-                            child: Text('Done For Now',
+                            child: const Text('Done For Now',
                                 style: TextStyle(color: Colors.black)),
                           ),
                         ),
@@ -167,10 +170,14 @@ class WalletApiController extends GetxController implements GetxService {
         update();
         return jsonDecode(response.body);
       } else {
-        Fluttertoast.showToast(msg: "${data["message"]}");
+        CustomNotification.show(
+            message: "${data["message"]}", type: NotificationType.info);
+        ;
       }
     } else {
-      Fluttertoast.showToast(msg: "Something went Wrong....!!!");
+      CustomNotification.show(
+          message: "Something went Wrong....!!!", type: NotificationType.info);
+      ;
     }
   }
 }

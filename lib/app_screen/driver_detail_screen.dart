@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_notification.dart';
 // ignore_for_file: avoid_print
 // ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
@@ -773,7 +774,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
     //     //                                     border: Border.all(color: Colors.grey.withOpacity(0.4)),
     //     //                                     borderRadius: BorderRadius.circular(30),
     //     //                                   ),
-    //     //                                   child: const Center(child: Text("Trip Details"),),
+    //     //                                   child: const Center(child: Text("Trip Details".tr),),
     //     //                                 ),
     //     //                               ),
     //     //                             )
@@ -814,10 +815,10 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
         throw 'Could not launch $url';
       }
     } else if (status.isPermanentlyDenied) {
-      Fluttertoast.showToast(msg: "Please allow calls Permission");
+      CustomNotification.show(message: "Please allow calls Permission", type: NotificationType.info);;
       await openAppSettings();
     } else {
-      Fluttertoast.showToast(msg: "Please allow calls Permission");
+      CustomNotification.show(message: "Please allow calls Permission", type: NotificationType.info);;
       await openAppSettings();
     }
   }
@@ -1284,7 +1285,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      "Trip Details".tr,
+                                      "Trip Details".tr.tr,
                                       style:
                                           TextStyle(color: notifier.textColor),
                                     ),

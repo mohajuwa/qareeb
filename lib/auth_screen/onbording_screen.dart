@@ -1,3 +1,5 @@
+import 'package:qareeb/common_code/custom_loading_widget.dart';
+import 'package:qareeb/common_code/custom_notification.dart';
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
@@ -341,7 +343,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
       containcolore: theamcolore,
       onPressed1: _handleContinue,
       context: context,
-      txt1: "Continue".tr,
+      txt1: "Continue".tr.tr,
     );
   }
 
@@ -366,7 +368,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
         height: Get.height,
         width: Get.width,
         alignment: Alignment.center,
-        child: CircularProgressIndicator(color: theamcolore),
+        child: CustomLoadingWidget(),
       ),
     );
   }
@@ -409,7 +411,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
         _navigateToOnboarding3();
         break;
       default:
-        Fluttertoast.showToast(msg: "No Service".tr);
+        CustomNotification.show(message: "No Service".tr, type: NotificationType.info);;
     }
   }
 
@@ -513,7 +515,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
                 _buildForgotPhoneField(notifier),
                 const SizedBox(height: 20),
                 CommonButton(
-                  txt1: 'Continue'.tr,
+                  txt1: 'Continue'.tr.tr,
                   containcolore: theamcolore,
                   context: context,
                   onPressed1: _handleForgotPassword,
@@ -570,7 +572,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
 
   void _handleForgotPassword() {
     if (_forgotPhoneController.text.isEmpty) {
-      Fluttertoast.showToast(msg: 'Enter Mobile Number...!!!'.tr);
+      CustomNotification.show(message: 'Enter Mobile Number...!!!'.tr, type: NotificationType.info);;
       return;
     }
 
@@ -596,10 +598,10 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
           _showCreatePasswordBottomSheet();
           break;
         default:
-          Fluttertoast.showToast(msg: "No Service".tr);
+          CustomNotification.show(message: "No Service".tr, type: NotificationType.info);;
       }
     } else {
-      Fluttertoast.showToast(msg: "${value['message']}");
+      CustomNotification.show(message: "${value['message']}", type: NotificationType.info);;
     }
   }
 
@@ -711,7 +713,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
     if (expectedOtp == _otpVariableForgot) {
       _showCreatePasswordBottomSheet();
     } else {
-      Fluttertoast.showToast(msg: "Incorrect OTP. Please try again.".tr);
+      CustomNotification.show(message: "Incorrect OTP. Please try again.".tr, type: NotificationType.info);;
     }
   }
 
@@ -755,7 +757,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
               const SizedBox(height: 15),
               CommonButton(
                 containcolore: theamcolore,
-                txt1: 'Confirm'.tr,
+                txt1: 'Confirm'.tr.tr,
                 context: context,
                 onPressed1: _handlePasswordReset,
               ),
@@ -768,7 +770,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
 
   void _handlePasswordReset() {
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      Fluttertoast.showToast(msg: "Please enter current password".tr);
+      CustomNotification.show(message: "Please enter current password".tr, type: NotificationType.info);;
       return;
     }
 
@@ -783,7 +785,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
       if (value["ResponseCode"] == "200") {
         Get.back();
       }
-      Fluttertoast.showToast(msg: value["message"]);
+      CustomNotification.show(message: value["message"], type: NotificationType.info);;
     });
   }
 

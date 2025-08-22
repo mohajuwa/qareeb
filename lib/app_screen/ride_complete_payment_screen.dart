@@ -1,3 +1,5 @@
+import 'package:qareeb/common_code/custom_loading_widget.dart';
+import 'package:qareeb/common_code/custom_notification.dart';
 // ignore_for_file: avoid_print
 // ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
@@ -192,15 +194,11 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
   }
 
   void handlePaymentError(PaymentFailureResponse response) {
-    Fluttertoast.showToast(
-        msg: 'ERROR HERE: ${response.code} - ${response.message}',
-        timeInSecForIosWeb: 4);
+    CustomNotification.show(message: 'ERROR HERE: ${response.code} - ${response.message}', type: NotificationType.error);;
   }
 
   void handleExternalWallet(ExternalWalletResponse response) {
-    Fluttertoast.showToast(
-        msg: 'EXTERNAL_WALLET IS: ${response.walletName}',
-        timeInSecForIosWeb: 4);
+    CustomNotification.show(message: 'EXTERNAL_WALLET IS: ${response.walletName}', type: NotificationType.info);;
   }
 
   File? _selectedImage;
@@ -490,8 +488,7 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                             containcolore:
                                                 theamcolore.withOpacity(0.1),
                                             onPressed1: () {
-                                              Fluttertoast.showToast(
-                                                  msg: "Please Select Image");
+                                              CustomNotification.show(message: "Please Select Image", type: NotificationType.info);;
                                             },
                                             context: context,
                                             txt1: "Next"),
@@ -691,9 +688,7 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                             containcolore:
                                                 theamcolore.withOpacity(0.1),
                                             onPressed1: () {
-                                              Fluttertoast.showToast(
-                                                msg: "Please Select Image",
-                                              );
+                                              CustomNotification.show(message: "Please Select Image", type: NotificationType.info);;
                                             },
                                             context: context,
                                             txt1: "Next"),
@@ -1024,7 +1019,7 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                   ),
                   child: paymentGetApiController.isLoading
                       ? Center(
-                          child: CircularProgressIndicator(color: theamcolore))
+                          child: CustomLoadingWidget())
                       : Padding(
                           padding: const EdgeInsets.only(
                               left: 10, right: 10, bottom: 10),

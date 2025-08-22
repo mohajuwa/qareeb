@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
 
 import 'package:fluttertoast/fluttertoast.dart';
@@ -38,19 +39,13 @@ class WalletReportApiController extends GetxController implements GetxService {
           isLoading = false;
           update();
         } else {
-          Fluttertoast.showToast(
-            msg: "${walletReportApiModel!.message}",
-          );
+          CustomNotification.show(message: "${walletReportApiModel!.message}", type: NotificationType.info);;
         }
       } else {
-        Fluttertoast.showToast(
-          msg: "${data["ResponseMsg"]}",
-        );
+        CustomNotification.show(message: "${data["ResponseMsg"]}", type: NotificationType.info);;
       }
     } else {
-      Fluttertoast.showToast(
-        msg: "Somthing went wrong!.....",
-      );
+      CustomNotification.show(message: "Somthing went wrong!.....", type: NotificationType.info);;
     }
   }
 }

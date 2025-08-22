@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
 
 import 'package:fluttertoast/fluttertoast.dart';
@@ -42,20 +43,14 @@ class HomeApiController extends GetxController implements GetxService {
           update();
           return data;
         } else {
-          Fluttertoast.showToast(
-            msg: "${homeapimodel!.message}",
-          );
+          CustomNotification.show(message: "${homeapimodel!.message}", type: NotificationType.info);;
           return data;
         }
       } else {
-        Fluttertoast.showToast(
-          msg: "${data["message"]}",
-        );
+        CustomNotification.show(message: "${data["message"]}", type: NotificationType.info);;
       }
     } else {
-      Fluttertoast.showToast(
-        msg: "Somthing went wrong!.....",
-      );
+      CustomNotification.show(message: "Somthing went wrong!.....", type: NotificationType.info);;
     }
   }
 }

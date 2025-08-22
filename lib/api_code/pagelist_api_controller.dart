@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -32,7 +33,7 @@ class pagelistApiController extends GetxController implements GetxService {
       }
       else{
         Get.back();
-        Fluttertoast.showToast(msg: "${data["Result"]}");
+        CustomNotification.show(message: "${data["Result"]}", type: NotificationType.info);;
       }
     }
     else{

@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_loading_widget.dart';
 // ignore_for_file: camel_case_types
 
 import 'package:flutter/material.dart';
@@ -52,7 +53,7 @@ class _Page_List_descriptionState extends State<Page_List_description> {
                     height: MediaQuery.of(context).size.height,
                     width: MediaQuery.of(context).size.width,
                     child: Center(
-                        child: CircularProgressIndicator(color: theamcolore)),
+                        child: CustomLoadingWidget()),
                   );
                 },
                 widget.description,

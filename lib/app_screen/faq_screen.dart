@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_loading_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
@@ -44,7 +45,7 @@ class _FaqScreenState extends State<FaqScreen> {
         builder: (faqApiController) {
           return faqApiController.isLoading
               ? Center(
-                  child: CircularProgressIndicator(color: theamcolore),
+                  child: CustomLoadingWidget(),
                 )
               : SingleChildScrollView(
                   scrollDirection: Axis.vertical,

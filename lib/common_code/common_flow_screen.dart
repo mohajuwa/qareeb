@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_loading_widget.dart';
 // ignore_for_file: avoid_print
 // ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
@@ -123,9 +124,7 @@ Future commonbottomsheetrequestsend({required context}) {
                       const SizedBox(height: 10),
                       cancelloader == true
                           ? Center(
-                              child: CircularProgressIndicator(
-                                color: theamcolore,
-                              ),
+                              child: CustomLoadingWidget(),
                             )
                           : CommonOutLineButton(
                               bordercolore: theamcolore,
@@ -193,7 +192,7 @@ Future commonbottomsheetrequestsend({required context}) {
             //         color: Colors.white,
             //         borderRadius: BorderRadius.circular(30),
             //       ),
-            //       child: const Text("Cancel",style: TextStyle(
+            //       child: const Text("Cancel".tr,style: TextStyle(
             //         color: Colors.black,
             //         fontSize: 14,
             //         letterSpacing: 0.5,
@@ -1058,7 +1057,7 @@ Future commonbottomsheetcancelflow({required context}) {
                         Get.back();
                       },
                       context: context,
-                      txt1: "Back",
+                      txt1: "Back".tr,
                     ),
                     const SizedBox(height: 10),
                   ],
@@ -1402,7 +1401,7 @@ Future rateBottomSheet() {
     GetBuilder<ReviewDataApiController>(
       builder: (reviewDataApiController) {
         return reviewDataApiController.isLoading
-            ? Center(child: CircularProgressIndicator(color: theamcolore))
+            ? Center(child: CustomLoadingWidget())
             : StatefulBuilder(
                 builder: (context, setState) {
                   return Stack(

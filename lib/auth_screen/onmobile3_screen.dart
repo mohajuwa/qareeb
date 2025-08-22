@@ -26,8 +26,8 @@ class _Onmobile3ScreenState extends State<Onmobile3Screen> {
     'Female',
   ];
   List radiolist = [
-    'No',
-    'Yes',
+    'No'.tr,
+    'Yes'.tr,
   ];
 
   int selected = 0;

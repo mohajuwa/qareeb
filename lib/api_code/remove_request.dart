@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
 
 import 'package:fluttertoast/fluttertoast.dart';
@@ -36,9 +37,7 @@ class RemoveRequest extends GetxController implements GetxService {
         removeVihicalRequest = removeVihicalRequestFromJson(response.body);
         if (removeVihicalRequest!.result == true) {
           isLoading = false;
-          Fluttertoast.showToast(
-            msg: "${removeVihicalRequest!.message}",
-          );
+          CustomNotification.show(message: "${removeVihicalRequest!.message}", type: NotificationType.info);;
           update();
           return data;
         } else {
@@ -52,9 +51,7 @@ class RemoveRequest extends GetxController implements GetxService {
         // );
       }
     } else {
-      Fluttertoast.showToast(
-        msg: "Somthing went wrong!.....",
-      );
+      CustomNotification.show(message: "Somthing went wrong!.....", type: NotificationType.info);;
     }
   }
 }

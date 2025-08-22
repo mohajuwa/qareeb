@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_notification.dart';
 // ignore_for_file: avoid_print
 // ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
@@ -200,7 +201,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //         // Navigator.push(context, MaterialPageRoute(builder: (context) => const Onmobile2Screen()));
           //
           //         if(signupmobilecontroller.text.isEmpty){
-          //           Fluttertoast.showToast(msg: "All fields are required.".tr);
+          //           CustomNotification.show(message: "All fields are required.".tr, type: NotificationType.info);;
           //         }else{
           //
           //          setState(() {
@@ -226,7 +227,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //
           //               }
           //               else {
-          //                 Fluttertoast.showToast(msg: "No Service".tr);
+          //                 CustomNotification.show(message: "No Service".tr, type: NotificationType.info);;
           //               }
           //
           //             }
@@ -241,15 +242,15 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //              }else{
           //
           //                if(loginpassword.text.isEmpty){
-          //                  Fluttertoast.showToast(msg: "Enter Password".tr);
+          //                  CustomNotification.show(message: "Enter Password".tr, type: NotificationType.info);;
           //                }else{
-          //                  Fluttertoast.showToast(msg: "All fields are required.".tr);
+          //                  CustomNotification.show(message: "All fields are required.".tr, type: NotificationType.info);;
           //                }
           //
           //              }
           //
           //               // print("not done condition");
-          //               // Fluttertoast.showToast(msg: "${value['message']}".tr);
+          //               // CustomNotification.show(message: "${value['message']}".tr, type: NotificationType.info);;
           //             }
           //
           //           },);
@@ -261,7 +262,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //
           //
           //
-          //       },context: context,txt1: "Continue"),
+          //       },context: context,txt1: "Continue".tr),
           //       SizedBox(height: 15,),
           //       Row(
           //         children: [
@@ -324,10 +325,10 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                               },
           //                             ),
           //                             const SizedBox(height: 20,),
-          //                             CommonButton(txt1: 'Continue'.tr,containcolore: theamcolore,context: context,onPressed1: () async{
+          //                             CommonButton(txt1: 'Continue'.tr.tr,containcolore: theamcolore,context: context,onPressed1: () async{
           //
           //                               if(forgotmobile.text.isEmpty){
-          //                                 Fluttertoast.showToast(msg: 'Enter Mobile Number...!!!'.tr,);
+          //                                 CustomNotification.show(message: 'Enter Mobile Number...!!!'.tr, type: NotificationType.info);;
           //                               }else{
           //
           //
@@ -407,7 +408,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                                                                 const SizedBox(height: 15,),
           //                                                                 CommonTextfiled2(txt: 'Confirm Password'.tr,controller: conformpasswordController,context: context),
           //                                                                 const SizedBox(height: 15,),
-          //                                                                 CommonButton(containcolore: theamcolore,txt1: 'Confirm'.tr,context: context,onPressed1: () {
+          //                                                                 CommonButton(containcolore: theamcolore,txt1: 'Confirm'.tr.tr,context: context,onPressed1: () {
           //                                                                   if(newpasswordController.text.compareTo(conformpasswordController.text) == 0){
           //                                                                     forgotController.forgotApi(phone: forgotmobile.text, password: conformpasswordController.text, ccode: ccodeforgot).then((value) {
           //                                                                       // print("++++++$value");
@@ -436,7 +437,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                                                           ),
           //                                                         ));
           //                                                       } else {
-          //                                                         Fluttertoast.showToast(msg: "Incorrect OTP. Please try again.".tr);
+          //                                                         CustomNotification.show(message: "Incorrect OTP. Please try again.".tr, type: NotificationType.info);;
           //                                                       }
           //
           //
@@ -525,7 +526,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                                                                 const SizedBox(height: 15,),
           //                                                                 CommonTextfiled2(txt: 'Confirm Password'.tr,controller: conformpasswordController,context: context),
           //                                                                 const SizedBox(height: 15,),
-          //                                                                 CommonButton(containcolore: theamcolore,txt1: 'Confirm'.tr,context: context,onPressed1: () {
+          //                                                                 CommonButton(containcolore: theamcolore,txt1: 'Confirm'.tr.tr,context: context,onPressed1: () {
           //                                                                   if(newpasswordController.text.compareTo(conformpasswordController.text) == 0){
           //                                                                     forgotController.forgotApi(phone: forgotmobile.text, password: conformpasswordController.text, ccode: ccodeforgot).then((value) {
           //                                                                       print("++++++$value");
@@ -554,7 +555,7 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //                                                           ),
           //                                                         ));
           //                                                       } else {
-          //                                                         Fluttertoast.showToast(msg: "Incorrect OTP. Please try again.".tr);
+          //                                                         CustomNotification.show(message: "Incorrect OTP. Please try again.".tr, type: NotificationType.info);;
           //                                                       }
           //
           //
@@ -570,11 +571,11 @@ class _Onmobile1ScreenState extends State<Onmobile1Screen> {
           //
           //                                     }
           //                                     else {
-          //                                       Fluttertoast.showToast(msg: "No Service".tr);
+          //                                       CustomNotification.show(message: "No Service".tr, type: NotificationType.info);;
           //                                     }
           //                                   }
           //                                   else{
-          //                                     Fluttertoast.showToast(msg: "${value['message']}",);
+          //                                     CustomNotification.show(message: "${value['message']}", type: NotificationType.info);;
           //                                   }
           //
           //                                 },);

@@ -1,3 +1,5 @@
+import 'package:qareeb/common_code/custom_notification.dart';
+import 'package:qareeb/common_code/custom_loading_widget.dart';
 // ignore_for_file: avoid_print
 // ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
@@ -1027,7 +1029,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                   },
                                 );
                               },
-                              txt1: "Cancel".tr,
+                              txt1: "Cancel".tr.tr,
                               context: context),
                           const SizedBox(
                             height: 10,
@@ -2034,18 +2036,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       body: GetBuilder<HomeApiController>(
         builder: (homeApiController) {
           return homeApiController.isLoading
-              ? Center(
-                  child: CircularProgressIndicator(
-                  color: theamcolore,
-                ))
+              ? Center(child: CustomLoadingWidget())
               : Stack(
                   children: [
-                    // pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty ? lathome == null ? Center(child: CircularProgressIndicator(color: theamcolore,)) :
+                    // pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty ? lathome == null ? Center(child: CustomLoadingWidget()) :
                     lathome == null
-                        ? Center(
-                            child: CircularProgressIndicator(
-                            color: theamcolore,
-                          ))
+                        ? Center(child: CustomLoadingWidget())
                         : GoogleMap(
                             gestureRecognizers: {
                               Factory<OneSequenceGestureRecognizer>(
@@ -3264,10 +3260,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   ],
                 ),
                 homeApiController.isLoading
-                    ? Center(
-                        child: CircularProgressIndicator(
-                        color: theamcolore,
-                      ))
+                    ? Center(child: CustomLoadingWidget())
                     : InkWell(
                         onTap: () {
                           Navigator.of(context).push(MaterialPageRoute(
@@ -3707,7 +3700,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                               const WidgetStatePropertyAll(
                                                   Colors.white)),
                                       onPressed: () => Navigator.pop(context),
-                                      child: Text('Cancel'.tr,
+                                      child: Text('Cancel'.tr.tr,
                                           style: const TextStyle(
                                               color: Colors.black)),
                                     ),
@@ -3793,17 +3786,17 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   Buttonpresebottomshhet() {
     if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
-      Fluttertoast.showToast(
-        msg: "Select Pickup and Drop",
-      );
+      CustomNotification.show(
+          message: "Select Pickup and Drop", type: NotificationType.info);
+      ;
     } else if (amountresponse == "false") {
-      Fluttertoast.showToast(
-        msg: "Address is not in the zone!",
-      );
+      CustomNotification.show(
+          message: "Address is not in the zone!", type: NotificationType.info);
+      ;
     } else if (dropprice == 0) {
-      Fluttertoast.showToast(
-        msg: responsemessage,
-      );
+      CustomNotification.show(
+          message: responsemessage, type: NotificationType.info);
+      ;
     } else {
       toast = 0;
       amountcontroller.text = dropprice.toString();
@@ -3884,10 +3877,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
-                                    Fluttertoast.showToast(
-                                      msg:
-                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                    );
+                                    CustomNotification.show(
+                                        message:
+                                            "Your current request is in progress. You can either wait for it to complete or cancel to perform this action."
+                                                .tr,
+                                        type: NotificationType.info);
+                                    ;
                                   } else {
                                     Get.back();
                                   }
@@ -3925,10 +3920,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
-                                    Fluttertoast.showToast(
-                                      msg:
-                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                    );
+                                    CustomNotification.show(
+                                        message:
+                                            "Your current request is in progress. You can either wait for it to complete or cancel to perform this action."
+                                                .tr,
+                                        type: NotificationType.info);
+                                    ;
                                   } else {
                                     if (double.parse(dropprice.toString()) >
                                         minprice) {
@@ -3989,10 +3986,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                   onTap: () {
                                     controller != null &&
                                             controller!.isAnimating
-                                        ? Fluttertoast.showToast(
-                                            msg:
-                                                "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                          )
+                                        ? CustomNotification.show(
+                                            message:
+                                                "Your current request is in progress. You can either wait for it to complete or cancel to perform this action."
+                                                    .tr,
+                                            type: NotificationType.info)
                                         : "";
                                   },
                                   onSubmitted: (value) {
@@ -4026,10 +4024,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 setState(() {
                                   if (controller != null &&
                                       controller!.isAnimating) {
-                                    Fluttertoast.showToast(
-                                      msg:
-                                          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                    );
+                                    CustomNotification.show(
+                                        message:
+                                            "Your current request is in progress. You can either wait for it to complete or cancel to perform this action."
+                                                .tr,
+                                        type: NotificationType.info);
+                                    ;
                                   } else {
                                     if (double.parse(dropprice.toString()) <
                                         maxprice) {
@@ -4121,10 +4121,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                 onChanged: controller != null &&
                                         controller!.isAnimating
                                     ? (bool value) {
-                                        Fluttertoast.showToast(
-                                          msg:
-                                              "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.",
-                                        );
+                                        CustomNotification.show(
+                                            message:
+                                                "Your current request is in progress. You can either wait for it to complete or cancel to perform this action."
+                                                    .tr,
+                                            type: NotificationType.info);
+                                        ;
                                       }
                                     : (bool value) {
                                         setState(() {
@@ -5055,9 +5057,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                             builder: (context, setState) {
                               return cancelloader
                                   ? Center(
-                                      child: CircularProgressIndicator(
-                                        color: theamcolore,
-                                      ),
+                                      child: CustomLoadingWidget(),
                                     )
                                   : CommonOutLineButton(
                                       bordercolore: theamcolore,

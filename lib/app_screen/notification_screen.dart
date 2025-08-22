@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_loading_widget.dart';
 // ignore_for_file: avoid_print
 // ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
@@ -41,7 +42,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         iconTheme: IconThemeData(
           color: notifier.textColor,
         ),
-        title: Text('Notification'.tr,
+        title: Text('Notification'.tr.tr,
             style: TextStyle(
                 color: notifier.textColor,
                 fontFamily: "SofiaProBold",
@@ -52,9 +53,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         builder: (notificationApiController) {
           return notificationApiController.isLoading
               ? Center(
-                  child: CircularProgressIndicator(
-                  color: theamcolore,
-                ))
+                  child: CustomLoadingWidget())
               : notificationApiController.notiFicationApiModel!.ndata!.isEmpty
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,

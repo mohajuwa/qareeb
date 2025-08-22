@@ -1,3 +1,4 @@
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -67,11 +68,7 @@ void showToastForDuration(String message, int durationInSeconds) {
     if (elapsed >= durationInSeconds) {
       timer.cancel();
     } else {
-      Fluttertoast.showToast(
-        msg: message,
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-      );
+      CustomNotification.show(message: message, type: NotificationType.info);;
       elapsed += interval;
     }
   });

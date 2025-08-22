@@ -539,7 +539,7 @@ class _CounterBottomSheetState extends State<CounterBottomSheet> {
                                     },
                                   );
                                 },
-                                txt1: "Cancel",
+                                txt1: "Cancel".tr,
                                 context: context),
                             const SizedBox(
                               height: 10,
