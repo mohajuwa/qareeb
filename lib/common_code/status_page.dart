@@ -48,7 +48,7 @@ class ModernStatusPage extends StatefulWidget {
   final bool isFullScreen;
 
   const ModernStatusPage({
-    Key? key,
+    super.key,
     required this.statusType,
     this.customTitle,
     this.customSubtitle,
@@ -58,7 +58,7 @@ class ModernStatusPage extends StatefulWidget {
     this.customAccentColor,
     this.showRetryButton = true,
     this.isFullScreen = true,
-  }) : super(key: key);
+  });
 
   @override
   State<ModernStatusPage> createState() => _ModernStatusPageState();
@@ -79,12 +79,12 @@ class _ModernStatusPageState extends State<ModernStatusPage>
     super.initState();
 
     _pulseController = AnimationController(
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat();
 
     _fadeController = AnimationController(
-      duration: Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
@@ -135,14 +135,14 @@ class _ModernStatusPageState extends State<ModernStatusPage>
           end: Alignment.bottomRight,
           colors: notifier.isDark
               ? [
-                  Color(0xFF1a1a1a),
-                  Color(0xFF2d2d2d),
-                  Color(0xFF1f1f1f),
+                  const Color(0xFF1a1a1a),
+                  const Color(0xFF2d2d2d),
+                  const Color(0xFF1f1f1f),
                 ]
               : [
-                  Color(0xFFF8F9FA),
-                  Color(0xFFFFFFFF),
-                  Color(0xFFF1F3F4),
+                  const Color(0xFFF8F9FA),
+                  const Color(0xFFFFFFFF),
+                  const Color(0xFFF1F3F4),
                 ],
         ),
       ),
@@ -159,32 +159,32 @@ class _ModernStatusPageState extends State<ModernStatusPage>
 
                   _buildAppLogo(notifier, config),
 
-                  SizedBox(height: 50),
+                  const SizedBox(height: 50),
 
                   // Status Icon with animation
 
                   _buildStatusIcon(config),
 
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
 
                   // Title
 
                   _buildTitle(notifier, config),
 
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
                   // Subtitle
 
                   _buildSubtitle(notifier, config),
 
-                  SizedBox(height: 60),
+                  const SizedBox(height: 60),
 
                   // Action Button
 
                   if (widget.showRetryButton && widget.onRetry != null)
                     _buildActionButton(config),
 
-                  SizedBox(height: 30),
+                  const SizedBox(height: 30),
 
                   // Connection Status
 
@@ -209,7 +209,7 @@ class _ModernStatusPageState extends State<ModernStatusPage>
           child: Container(
             width: 140,
             height: 140,
-            padding: EdgeInsets.all(25),
+            padding: const EdgeInsets.all(25),
             decoration: BoxDecoration(
               color: config.accentColor.withOpacity(0.1),
               shape: BoxShape.circle,
@@ -275,7 +275,7 @@ class _ModernStatusPageState extends State<ModernStatusPage>
             return Container(
               width: 100,
               height: 100,
-              padding: EdgeInsets.all(25),
+              padding: const EdgeInsets.all(25),
               decoration: BoxDecoration(
                 color: config.accentColor.withOpacity(0.15),
                 shape: BoxShape.circle,
@@ -296,7 +296,7 @@ class _ModernStatusPageState extends State<ModernStatusPage>
 
   Widget _buildTitle(ColorNotifier notifier, StatusConfig config) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 30),
+      padding: const EdgeInsets.symmetric(horizontal: 30),
       child: Text(
         (widget.customTitle ?? config.title).tr, // ✅ Added .tr
 
@@ -315,7 +315,7 @@ class _ModernStatusPageState extends State<ModernStatusPage>
 
   Widget _buildSubtitle(ColorNotifier notifier, StatusConfig config) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 50),
+      padding: const EdgeInsets.symmetric(horizontal: 50),
       child: Text(
         (widget.customSubtitle ?? config.subtitle).tr, // ✅ Added .tr
 
@@ -341,7 +341,7 @@ class _ModernStatusPageState extends State<ModernStatusPage>
           BoxShadow(
             color: config.accentColor.withOpacity(0.4),
             blurRadius: 20,
-            offset: Offset(0, 10),
+            offset: const Offset(0, 10),
           )
         ],
       ),
@@ -363,11 +363,11 @@ class _ModernStatusPageState extends State<ModernStatusPage>
               size: 24,
               color: Colors.white,
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Text(
               (widget.customButtonText ?? config.buttonText).tr, // ✅ Added .tr
 
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -388,8 +388,8 @@ class _ModernStatusPageState extends State<ModernStatusPage>
         bool isConnected = snapshot.data ?? false;
 
         return AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
             color: notifier.containercolore.withOpacity(0.8),
             borderRadius: BorderRadius.circular(25),
@@ -410,7 +410,7 @@ class _ModernStatusPageState extends State<ModernStatusPage>
             mainAxisSize: MainAxisSize.min,
             children: [
               AnimatedContainer(
-                duration: Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 300),
                 width: 12,
                 height: 12,
                 decoration: BoxDecoration(
@@ -426,10 +426,10 @@ class _ModernStatusPageState extends State<ModernStatusPage>
                   ],
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Text(
                 isConnected
-                    ? "Connected".tr + " • " + NetworkService().connectionType
+                    ? "${"Connected".tr} • ${NetworkService().connectionType}"
                     : "No Connection".tr,
                 style: TextStyle(
                   color: notifier.textColor.withOpacity(0.9),
@@ -491,7 +491,7 @@ class _ModernStatusPageState extends State<ModernStatusPage>
           subtitle:
               "There's no data to show right now. Please try again later or refresh to check for updates.",
           icon: Icons.inbox_rounded,
-          accentColor: Colors.blue,
+          accentColor: theamcolore,
           buttonText: "Refresh",
           buttonIcon: Icons.refresh,
         );
@@ -502,7 +502,7 @@ class _ModernStatusPageState extends State<ModernStatusPage>
           subtitle:
               "Please wait while we fetch your data. This should only take a moment.",
           icon: Icons.hourglass_empty_rounded,
-          accentColor: Colors.blue,
+          accentColor: theamcolore,
           buttonText: "Loading",
           buttonIcon: Icons.hourglass_empty,
         );

@@ -76,7 +76,7 @@ class StatusHelper {
       isDismissible: false,
       enableDrag: false,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      builder: (context) => SizedBox(
         height: MediaQuery.of(context).size.height * 0.7,
         child: ModernStatusPage(
           statusType: statusType,

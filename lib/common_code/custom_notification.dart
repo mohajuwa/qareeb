@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
+import 'package:qareeb/common_code/colore_screen.dart';
 
 enum NotificationType { success, error, info, warning }
 
@@ -42,7 +43,7 @@ class CustomNotification {
         break;
       case NotificationType.info:
       default:
-        bg = Colors.blue.shade700;
+        bg = theamcolore;
         lottiePath = 'assets/lottie/searching.json';
         title ??= 'Info'.tr.tr;
         break;

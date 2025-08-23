@@ -325,7 +325,10 @@ class AppTranslations extends Translations {
           "Ethernet": "Ethernet",
           "No Connection": "No Connection",
           "Unknown": "Unknown",
+          "Calculating Price": "Calculating Price",
           "Connected": "Connected",
+          "Fetching fare for Calculation...":
+              "Fetching fare for Calculation...",
           "Disconnected": "Disconnected",
           "No Internet Connection": "No Internet Connection",
           "Please check your internet connection and try again. Make sure you're connected to Wi-Fi or mobile data.":
@@ -682,7 +685,10 @@ class AppTranslations extends Translations {
           "Ethernet": "إيثرنت",
           "No Connection": "لا يوجد اتصال",
           "Unknown": "غير معروف",
+          "Calculating Price": "جارٍ حساب ا لسعر",
           "Connected": "متصل",
+          "Fetching fare for Calculation...":
+              "استخراج السعر لهذا النوع من المركبات",
           "Disconnected": "غير متصل",
           "No Internet Connection": "لا يوجد اتصال بالإنترنت",
           "Please check your internet connection and try again. Make sure you're connected to Wi-Fi or mobile data.":

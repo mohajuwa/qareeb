@@ -21,6 +21,8 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/status_helper.dart';
+import 'package:qareeb/common_code/status_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import '../api_code/coupon_payment_api_contoller.dart';
@@ -2599,47 +2601,44 @@ class _MapScreenState extends State<MapScreen>
               ? Center(child: CustomLoadingWidget())
               : Stack(
                   children: [
-                    lathome == null
-                        ? Center(child: CustomLoadingWidget())
-                        : GoogleMap(
-                            gestureRecognizers: {
-                              Factory<OneSequenceGestureRecognizer>(
-                                  () => EagerGestureRecognizer())
-                            },
-                            initialCameraPosition: pickupcontroller
-                                        .text.isEmpty ||
-                                    dropcontroller.text.isEmpty
-                                ? CameraPosition(
-                                    target: LatLng(lathome, longhome), zoom: 13)
-                                : CameraPosition(
-                                    target: LatLng(latitudepick, longitudepick),
-                                    zoom: 13),
-                            mapType: MapType.normal,
-                            markers: pickupcontroller.text.isEmpty ||
-                                    dropcontroller.text.isEmpty
-                                ? Set<Marker>.of(markers.values)
-                                : Set<Marker>.of(markers11.values),
-                            onTap: (argument) async {
-                              setState(() {
-                                _onAddMarkerButtonPressed(
-                                    argument.latitude, argument.longitude);
-                              });
+                    GoogleMap(
+                      gestureRecognizers: {
+                        Factory<OneSequenceGestureRecognizer>(
+                            () => EagerGestureRecognizer())
+                      },
+                      initialCameraPosition: pickupcontroller.text.isEmpty ||
+                              dropcontroller.text.isEmpty
+                          ? CameraPosition(
+                              target: LatLng(lathome, longhome), zoom: 13)
+                          : CameraPosition(
+                              target: LatLng(latitudepick, longitudepick),
+                              zoom: 13),
+                      mapType: MapType.normal,
+                      markers: pickupcontroller.text.isEmpty ||
+                              dropcontroller.text.isEmpty
+                          ? Set<Marker>.of(markers.values)
+                          : Set<Marker>.of(markers11.values),
+                      onTap: (argument) async {
+                        setState(() {
+                          _onAddMarkerButtonPressed(
+                              argument.latitude, argument.longitude);
+                        });
 
-                              await _refreshVehiclesForLocation(
-                                  argument.latitude, argument.longitude);
-                            },
-                            myLocationEnabled: false,
-                            zoomGesturesEnabled: true,
-                            tiltGesturesEnabled: true,
-                            zoomControlsEnabled: true,
-                            onMapCreated: (controller) {
-                              setState(() {
-                                controller.setMapStyle(themeForMap);
-                                mapController1 = controller;
-                              });
-                            },
-                            polylines: Set<Polyline>.of(polylines11.values),
-                          ),
+                        await _refreshVehiclesForLocation(
+                            argument.latitude, argument.longitude);
+                      },
+                      myLocationEnabled: false,
+                      zoomGesturesEnabled: true,
+                      tiltGesturesEnabled: true,
+                      zoomControlsEnabled: true,
+                      onMapCreated: (controller) {
+                        setState(() {
+                          controller.setMapStyle(themeForMap);
+                          mapController1 = controller;
+                        });
+                      },
+                      polylines: Set<Polyline>.of(polylines11.values),
+                    ),
                     Padding(
                       padding:
                           const EdgeInsets.only(top: 60, left: 10, right: 10),
@@ -2804,93 +2803,256 @@ class _MapScreenState extends State<MapScreen>
                                     height:
                                         101, // THIS FIXED HEIGHT IS CAUSING OVERFLOW
                                     child: ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      clipBehavior: Clip.none,
-                                      itemCount: homeApiController
-                                          .homeapimodel!.categoryList!.length,
-                                      shrinkWrap: true,
-                                      itemBuilder: (context, index) {
-                                        return InkWell(
-                                          onTap: () async {
-                                            setState(() {
-                                              select1 = index;
+                                        scrollDirection: Axis.horizontal,
+                                        clipBehavior: Clip.none,
+                                        itemCount: homeApiController
+                                            .homeapimodel!.categoryList!.length,
+                                        shrinkWrap: true,
+                                        itemBuilder: (context, index) {
+                                          return // Replace the existing vehicle selection ListView.builder onTap in the improved map screen with this:
 
-                                              mid = homeApiController
-                                                  .homeapimodel!
-                                                  .categoryList![index]
-                                                  .id
-                                                  .toString();
+                                              InkWell(
+                                            onTap: () async {
+                                              if (_isDisposed || !mounted)
+                                                return;
 
-                                              mroal = homeApiController
-                                                  .homeapimodel!
-                                                  .categoryList![index]
-                                                  .role
-                                                  .toString();
-                                            });
+                                              setState(() {
+                                                select1 = index;
+                                                mid = homeApiController
+                                                    .homeapimodel!
+                                                    .categoryList![index]
+                                                    .id
+                                                    .toString();
+                                                mroal = homeApiController
+                                                    .homeapimodel!
+                                                    .categoryList![index]
+                                                    .role
+                                                    .toString();
+                                              });
 
-                                            if (kDebugMode) {
-                                              print(
-                                                  "🚗 Selected category $index: ${homeApiController.homeapimodel!.categoryList![index].name}");
+                                              if (kDebugMode) {
+                                                print(
+                                                    "🚗 Selected category $index: ${homeApiController.homeapimodel!.categoryList![index].name}");
+                                                print("📋 Category ID: $mid");
+                                              }
 
-                                              print("📋 Category ID: $mid");
-                                            }
+                                              // Show loading dialog for price calculation
+                                              StatusHelper.showStatusDialog(
+                                                context,
+                                                statusType: StatusType.loading,
+                                                customTitle:
+                                                    "Calculating Price".tr,
+                                                customSubtitle:
+                                                    "Fetching fare for Calculation..."
+                                                        .tr,
+                                                barrierDismissible: false,
+                                              );
 
-                                            await _loadVehiclesOptimized();
-                                          },
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(4),
-                                            child: Container(
-                                              height: 50,
-                                              decoration: BoxDecoration(
-                                                color: select1 == index
-                                                    ? theamcolore
-                                                        .withOpacity(0.08)
-                                                    : notifier.containercolore,
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: Column(
-                                                  crossAxisAlignment: select1 ==
-                                                          index
-                                                      ? CrossAxisAlignment.start
-                                                      : CrossAxisAlignment
-                                                          .center,
-                                                  children: [
-                                                    Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        SizedBox(
-                                                          height: 40,
-                                                          width: 40,
-                                                          child: Image(
-                                                            image: NetworkImage(
-                                                                "${Config.imageurl}${homeApiController.homeapimodel!.categoryList![index].image}"),
+                                              try {
+                                                // Load vehicles for selected category
+                                                await _loadVehiclesOptimized();
+
+                                                // MAIN FIX: Calculate price if pickup and drop locations exist
+                                                if (pickupcontroller
+                                                        .text.isNotEmpty &&
+                                                    dropcontroller
+                                                        .text.isNotEmpty) {
+                                                  if (kDebugMode) {
+                                                    print(
+                                                        "🧮 Calculating price for selected vehicle...");
+                                                  }
+
+                                                  final value =
+                                                      await calculateController
+                                                          .calculateApi(
+                                                    context: context,
+                                                    uid: userid.toString(),
+                                                    mid: mid,
+                                                    mrole: mroal,
+                                                    pickup_lat_lon:
+                                                        "$latitudepick,$longitudepick",
+                                                    drop_lat_lon:
+                                                        "$latitudedrop,$longitudedrop",
+                                                    drop_lat_lon_list: onlypass,
+                                                  );
+
+                                                  if (_isDisposed || !mounted)
+                                                    return;
+
+                                                  // Hide loading dialog
+                                                  if (Navigator.canPop(
+                                                      context)) {
+                                                    Navigator.pop(context);
+                                                  }
+
+                                                  if (value["Result"] == true) {
+                                                    // Update all price-related variables in setState
+                                                    setState(() {
+                                                      amountresponse = "true";
+                                                      dropprice =
+                                                          value["drop_price"];
+                                                      minimumfare =
+                                                          value["vehicle"]
+                                                              ["minimum_fare"];
+                                                      maximumfare =
+                                                          value["vehicle"]
+                                                              ["maximum_fare"];
+                                                      responsemessage =
+                                                          value["message"];
+
+                                                      tot_hour =
+                                                          value["tot_hour"]
+                                                              .toString();
+                                                      tot_time =
+                                                          value["tot_minute"]
+                                                              .toString();
+                                                      vehicle_id =
+                                                          value["vehicle"]["id"]
+                                                              .toString();
+                                                      vihicalrice =
+                                                          double.parse(value[
+                                                                  "drop_price"]
+                                                              .toString());
+                                                      totalkm = double.parse(
+                                                          value["tot_km"]
+                                                              .toString());
+                                                      tot_secound = "0";
+
+                                                      vihicalimage =
+                                                          value["vehicle"]
+                                                                  ["map_img"]
+                                                              .toString();
+                                                      vihicalname =
+                                                          value["vehicle"]
+                                                                  ["name"]
+                                                              .toString();
+                                                    });
+
+                                                    if (kDebugMode) {
+                                                      print(
+                                                          "✅ Price calculation completed:");
+                                                      print(
+                                                          "   Vehicle: $vihicalname");
+                                                      print(
+                                                          "   Price: ${globalcurrency}$dropprice");
+                                                      print(
+                                                          "   Min Fare: $minimumfare, Max Fare: $maximumfare");
+                                                    }
+
+                                                    // Show success message with new price
+                                                  } else {
+                                                    setState(() {
+                                                      amountresponse = "false";
+                                                    });
+
+                                                    if (kDebugMode) {
+                                                      print(
+                                                          "❌ Price calculation failed for vehicle");
+                                                    }
+
+                                                    StatusHelper
+                                                        .showStatusDialog(
+                                                      context,
+                                                      statusType:
+                                                          StatusType.error,
+                                                      customTitle:
+                                                          "Calculation Failed",
+                                                      customSubtitle:
+                                                          "Unable to calculate fare for this vehicle. Please try again.",
+                                                      barrierDismissible: true,
+                                                    );
+                                                  }
+                                                } else {
+                                                  // Hide loading dialog if no pickup/drop locations
+                                                  if (Navigator.canPop(
+                                                      context)) {
+                                                    Navigator.pop(context);
+                                                  }
+
+                                                  if (kDebugMode) {
+                                                    print(
+                                                        "⚠️ No pickup/drop locations available for price calculation");
+                                                  }
+                                                }
+                                              } catch (error) {
+                                                // Hide loading dialog on error
+                                                if (Navigator.canPop(context)) {
+                                                  Navigator.pop(context);
+                                                }
+
+                                                if (kDebugMode) {
+                                                  print(
+                                                      "❌ Vehicle selection error: $error");
+                                                }
+
+                                                StatusHelper.showStatusDialog(
+                                                  context,
+                                                  statusType:
+                                                      StatusType.noInternet,
+                                                  customTitle: "Network Error",
+                                                  customSubtitle:
+                                                      "Please check your connection and try again.",
+                                                  onRetry: () {
+                                                    Navigator.of(context).pop();
+                                                    // Optionally retry the vehicle selection
+                                                  },
+                                                );
+                                              }
+                                            },
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4),
+                                              child: Container(
+                                                height: 50,
+                                                decoration: BoxDecoration(
+                                                  color: select1 == index
+                                                      ? theamcolore
+                                                          .withOpacity(0.08)
+                                                      : notifier
+                                                          .containercolore,
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        select1 == index
+                                                            ? CrossAxisAlignment
+                                                                .start
+                                                            : CrossAxisAlignment
+                                                                .center,
+                                                    children: [
+                                                      Row(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          SizedBox(
                                                             height: 40,
+                                                            width: 40,
+                                                            child: Image(
+                                                              image: NetworkImage(
+                                                                  "${Config.imageurl}${homeApiController.homeapimodel!.categoryList![index].image}"),
+                                                              height: 40,
+                                                            ),
                                                           ),
-                                                        ),
-                                                        select1 == index
-                                                            ? const SizedBox(
-                                                                width: 5,
-                                                              )
-                                                            : const SizedBox(),
-                                                        select1 == index
-                                                            ? InkWell(
-                                                                onTap: () {
-                                                                  setState(() {
-                                                                    vihicalInformationApiController
-                                                                        .vihicalinformationApi(
-                                                                            vehicle_id:
-                                                                                homeApiController.homeapimodel!.categoryList![index].id.toString())
-                                                                        .then(
-                                                                      (value) {
+                                                          select1 == index
+                                                              ? const SizedBox(
+                                                                  width: 5)
+                                                              : const SizedBox(),
+                                                          select1 == index
+                                                              ? InkWell(
+                                                                  onTap: () {
+                                                                    setState(
+                                                                        () {
+                                                                      vihicalInformationApiController
+                                                                          .vihicalinformationApi(
+                                                                              vehicle_id: homeApiController.homeapimodel!.categoryList![index].id.toString())
+                                                                          .then((value) {
                                                                         Get.bottomSheet(
                                                                           StatefulBuilder(
                                                                             builder:
@@ -2917,16 +3079,12 @@ class _MapScreenState extends State<MapScreen>
                                                                                         "${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.name}",
                                                                                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: notifier.textColor),
                                                                                       ),
-                                                                                      const SizedBox(
-                                                                                        height: 10,
-                                                                                      ),
+                                                                                      const SizedBox(height: 10),
                                                                                       Text(
                                                                                         "${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.description}",
                                                                                         style: TextStyle(fontSize: 16, color: notifier.textColor),
                                                                                       ),
-                                                                                      const SizedBox(
-                                                                                        height: 20,
-                                                                                      ),
+                                                                                      const SizedBox(height: 20),
                                                                                       CommonOutLineButton(
                                                                                           bordercolore: theamcolore,
                                                                                           onPressed1: () {
@@ -2941,37 +3099,34 @@ class _MapScreenState extends State<MapScreen>
                                                                             },
                                                                           ),
                                                                         );
-                                                                      },
-                                                                    );
-                                                                  });
-                                                                },
-                                                                child: Image(
-                                                                  image: const AssetImage(
-                                                                      "assets/info-circle.png"),
-                                                                  height: 20,
-                                                                  color:
-                                                                      theamcolore,
-                                                                ))
-                                                            : const SizedBox(),
-                                                      ],
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 10,
-                                                    ),
-                                                    Text(
-                                                      "${homeApiController.homeapimodel!.categoryList![index].name}",
-                                                      style: TextStyle(
-                                                          color: notifier
-                                                              .textColor),
-                                                    ),
-                                                  ],
+                                                                      });
+                                                                    });
+                                                                  },
+                                                                  child: Image(
+                                                                    image: const AssetImage(
+                                                                        "assets/info-circle.png"),
+                                                                    height: 20,
+                                                                    color:
+                                                                        theamcolore,
+                                                                  ))
+                                                              : const SizedBox(),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(
+                                                          height: 10),
+                                                      Text(
+                                                        "${homeApiController.homeapimodel!.categoryList![index].name}",
+                                                        style: TextStyle(
+                                                            color: notifier
+                                                                .textColor),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                    ),
+                                          );
+                                        }),
                                   ),
                                 ),
                                 const SizedBox(
@@ -3056,10 +3211,10 @@ class _MapScreenState extends State<MapScreen>
                                     ),
                                   ),
                                 ),
-                                textfieldlist.length > 0
+                                textfieldlist.isNotEmpty
                                     ? const SizedBox(height: 0)
                                     : const SizedBox(height: 10),
-                                textfieldlist.length > 0
+                                textfieldlist.isNotEmpty
                                     ? InkWell(
                                         onTap: () {
                                           showModalBottomSheet(
@@ -4246,6 +4401,7 @@ class _MapScreenState extends State<MapScreen>
                                               ? "Automatic booking enabled".tr
                                               : "Manual driver selection".tr,
                                         );
+                                        offerpluse = true;
 
                                         if (kDebugMode) {
                                           print(
