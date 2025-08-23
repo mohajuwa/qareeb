@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -105,7 +105,10 @@ class _MapScreenState extends State<MapScreen>
   List<bool> couponadd = [];
 
   // bool timeout = false;
-
+  bool get isAutomaticBookingEnabled => switchValue && biddautostatus == "true";
+  String get currentBookingModeDescription => isAutomaticBookingEnabled
+      ? "Automatic booking is ON - nearest driver will be auto-accepted"
+      : "Manual selection is ON - you'll choose from available drivers";
   String themeForMap = "";
 
   bool isLoad = false;
@@ -166,13 +169,14 @@ class _MapScreenState extends State<MapScreen>
   Timer? _animationTimer;
   bool _isDisposed = false;
 
+  bool _showingLogoPlaceholders = false;
+  Timer? _logoPlaceholderTimer;
+
   void resetMapScreenState() {
     if (kDebugMode) print("🔄 Resetting map screen state...");
 
     if (mounted) {
       setState(() {
-        // Reset animation states
-
         isanimation = false;
 
         isControllerDisposed = true;
@@ -181,17 +185,11 @@ class _MapScreenState extends State<MapScreen>
 
         loadertimer = false;
 
-        // Reset bidding data
-
         vehicle_bidding_driver.clear();
 
         vehicle_bidding_secounde.clear();
 
-        // Reset driver data
-
         driveridloader = false;
-
-        // Reset request state
 
         if (calculateController.calCulateModel != null) {
           calculateController.calCulateModel!.driverId?.clear();
@@ -199,19 +197,13 @@ class _MapScreenState extends State<MapScreen>
       });
     }
 
-    // Cancel any running timers
-
     _mainTimer?.cancel();
 
     _mainTimer = null;
 
-    // Cancel animation timer if exists
-
     _animationTimer?.cancel();
 
     _animationTimer = null;
-
-    // Dispose animation controller safely
 
     if (controller != null && !isControllerDisposed) {
       try {
@@ -229,8 +221,6 @@ class _MapScreenState extends State<MapScreen>
       }
     }
 
-    // Reset socket listeners if needed
-
     _reconnectSocketIfNeeded();
 
     if (kDebugMode) print("✅ Map screen state reset completed");
@@ -244,8 +234,6 @@ class _MapScreenState extends State<MapScreen>
         if (kDebugMode) print("🔌 Reconnecting socket...");
 
         socket.connect();
-
-        // Re-establish critical socket listeners
 
         _connectSocket();
       }
@@ -301,8 +289,6 @@ class _MapScreenState extends State<MapScreen>
     if (_isDisposed) return;
 
     try {
-      SharedPreferences preferences = await SharedPreferences.getInstance();
-
       socket.onConnect((data) {
         if (kDebugMode) print('Connection established Connected map screen');
       });
@@ -315,7 +301,6 @@ class _MapScreenState extends State<MapScreen>
         if (kDebugMode) print('Socket.IO server disconnected map screen');
       });
 
-      // ✅ NEW: Listen for screen state reset events
       socket.on("reset_customer_state$useridgloable", (data) {
         if (_isDisposed || !mounted) return;
 
@@ -323,7 +308,6 @@ class _MapScreenState extends State<MapScreen>
         resetMapScreenState();
       });
 
-      // Wallet API call with safety checks
       if (!_isDisposed && userid != null) {
         homeWalletApiController
             .homwwalleteApi(uid: userid.toString(), context: context)
@@ -343,7 +327,6 @@ class _MapScreenState extends State<MapScreen>
         });
       }
 
-      // Home API call with safety checks
       if (!_isDisposed &&
           userid != null &&
           lathome != null &&
@@ -364,7 +347,6 @@ class _MapScreenState extends State<MapScreen>
         });
       }
 
-      // ✅ ENHANCED: Driver location updates
       socket.on("Driver_location_On", (Driver_location_On) async {
         if (_isDisposed || !mounted) return;
 
@@ -399,7 +381,6 @@ class _MapScreenState extends State<MapScreen>
         }
       });
 
-      // ✅ ENHANCED: Driver location updates
       socket.on("Driver_location_Update", (Driver_location_Update) async {
         if (_isDisposed || !mounted) return;
 
@@ -432,7 +413,6 @@ class _MapScreenState extends State<MapScreen>
               markers[markerId] = updatedMarker;
             }
 
-            // Update markers11 as well
             markers11[markerId] = marker;
             if (markers11.containsKey(markerId)) {
               final Marker oldMarker = markers11[markerId]!;
@@ -453,6 +433,8 @@ class _MapScreenState extends State<MapScreen>
 
         if (kDebugMode) {
           print("++++++ Vehicle_Bidding ++++ :---  $Vehicle_Bidding");
+
+          print("🚗 Current booking mode: $currentBookingModeDescription");
         }
 
         setState(() {
@@ -466,38 +448,41 @@ class _MapScreenState extends State<MapScreen>
           }
         });
 
-        // ✅ CRITICAL: Ensure proper navigation cleanup before going to DriverList
-
-        if (Get.isDialogOpen == true) {
-          Get.back();
-        }
-
-        // ✅ FIXED: Use regular Navigator.push instead of pushReplacement
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const DriverListScreen()),
-        ).then((_) {
-          // ✅ CRITICAL: Reset state when returning from DriverListScreen
-
+        if (!isAutomaticBookingEnabled) {
           if (kDebugMode) {
-            print("📱 Returned from DriverListScreen, resetting state");
+            print("📱 Manual mode active - navigating to DriverListScreen");
           }
 
-          resetMapScreenState();
-        });
+          if (Get.isDialogOpen == true) {
+            Get.back();
+          }
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const DriverListScreen()),
+          ).then((_) {
+            if (kDebugMode) {
+              print("📱 Returned from DriverListScreen, resetting state");
+            }
+
+            resetMapScreenState();
+          });
+        } else {
+          if (kDebugMode) {
+            print(
+                "🤖 Automatic mode active - backend should auto-accept nearest driver");
+          }
+        }
 
         if (vehicle_bidding_driver.isEmpty) {
           Get.back();
 
           Buttonpresebottomshhet();
         }
-      });
-      // ✅ ENHANCED: Vehicle request acceptance with cleanup
+      }); // ✅ ENHANCED: Vehicle request acceptance with cleanup
       socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
         if (_isDisposed || !mounted) return;
 
-        // ✅ CRITICAL: Cleanup before processing acceptance
         resetMapScreenState();
 
         socket.close();
@@ -514,7 +499,6 @@ class _MapScreenState extends State<MapScreen>
           loadertimer = true;
         });
 
-        // Safely dispose controller
         if (controller != null && controller!.isAnimating) {
           try {
             controller!.dispose();
@@ -549,15 +533,12 @@ class _MapScreenState extends State<MapScreen>
         }
       });
 
-      // ✅ NEW: Listen for bidding responses from drivers
       socket.on("Accept_Bidding_Response$useridgloable", (response) {
         if (_isDisposed || !mounted) return;
 
         if (kDebugMode) {
           print("🎯 Accept_Bidding_Response received in map: $response");
         }
-
-        // This will be handled by DriverListScreen, but we can log it here
       });
 
       socket.on("Bidding_decline_Response$useridgloable", (response) {
@@ -566,11 +547,8 @@ class _MapScreenState extends State<MapScreen>
         if (kDebugMode) {
           print("❌ Bidding_decline_Response received in map: $response");
         }
-
-        // This will be handled by DriverListScreen, but we can log it here
       });
 
-      // ✅ NEW: Handle customer data removal (ride cancelled/completed)
       socket.on("removecustomerdata$useridgloable", (removecustomerdata) {
         if (_isDisposed || !mounted) return;
 
@@ -578,17 +556,12 @@ class _MapScreenState extends State<MapScreen>
           print("🗑️ removecustomerdata received in map: $removecustomerdata");
         }
 
-        // Reset map state when ride is removed
         resetMapScreenState();
 
-        // Close any open dialogs
         if (Get.isDialogOpen == true) {
           Get.back();
         }
       });
-
-      // ✅ EXISTING: Your other socket listeners (add any others you have)
-      // Add any other socket.on() listeners you might have in your original code here...
     } catch (e) {
       if (kDebugMode) print("_connectSocket error: $e");
     }
@@ -612,9 +585,7 @@ class _MapScreenState extends State<MapScreen>
         return;
       }
 
-      setState(() {
-        // Your timer logic here
-      });
+      setState(() {});
     });
   }
 
@@ -712,7 +683,6 @@ class _MapScreenState extends State<MapScreen>
               print("*****value data******:--- ${value["driverid"]}");
             }
 
-            // Your existing bottom sheet code here, but wrap any setState calls with setState
             Get.bottomSheet(
               isDismissible: false,
               enableDrag: false,
@@ -862,7 +832,6 @@ class _MapScreenState extends State<MapScreen>
                                               ? const Offset(0, 0)
                                               : const Offset(0, -10),
                                           child: ListTile(
-                                            // isThreeLine: true,
                                             contentPadding: EdgeInsets.zero,
                                             title: Text(
                                                 "${picktitle == "" ? addresspickup : picktitle}"),
@@ -880,7 +849,6 @@ class _MapScreenState extends State<MapScreen>
                                         Transform.translate(
                                           offset: const Offset(0, -30),
                                           child: ListTile(
-                                            // isThreeLine: true,
                                             contentPadding: EdgeInsets.zero,
                                             title: Text(droptitle),
                                             subtitle: Text(
@@ -923,7 +891,6 @@ class _MapScreenState extends State<MapScreen>
                                                   offset: const Offset(-5, -25),
                                                   child: Column(
                                                     children: [
-                                                      // const SizedBox(height: 4,),
                                                       Container(
                                                         height: 10,
                                                         width: 3,
@@ -993,13 +960,7 @@ class _MapScreenState extends State<MapScreen>
                                               offset: const Offset(0, -15),
                                               child: Column(
                                                 children: [
-                                                  // Transform.translate(
-                                                  //   offset: const Offset(0, -7),
-                                                  //   child: Text("${droptitlelist[index]["title"]}"),
-                                                  // ),
-                                                  // const SizedBox(height: 5,),
                                                   ListTile(
-                                                    // isThreeLine: true,
                                                     contentPadding:
                                                         EdgeInsets.zero,
                                                     title: Text(
@@ -1020,34 +981,10 @@ class _MapScreenState extends State<MapScreen>
                                     },
                                   ),
                                 ),
-                          // SizedBox(height: 30,),
                           CommonButton(
                               containcolore: theamcolore,
                               onPressed1: () {
                                 Get.back();
-
-                                // removeRequest.removeApi(uid: userid.toString()).then((value) {
-                                //   Get.back();
-                                //   print("+++ removeApi +++:- ${value["driver_list"]}");
-                                //   socket.emit('Vehicle_Ride_Cancel',{
-                                //     'uid': "$useridgloable",
-                                //     'driverid' : value["driver_list"],
-                                //   });
-                                // },);
-
-                                // isanimation = true;
-                                // resendRequestApiController.resendrequestApi(uid: userid.toString(), driverid: calculateController.calCulateModel!.driverId!).then((value) {
-                                //   print("+++ resendrequestApi +++ :- ${value["driver_list"]}");
-                                //   Get.back();
-                                //   socket.emit('vehiclerequest',{
-                                //     'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
-                                //     'driverid' : value["driver_list"],
-                                //   });
-                                //   if (controller != null && controller.isAnimating) {
-                                //     controller.dispose();
-                                //   }
-                                //   requesttime();
-                                // },);
                               },
                               txt1: "Try Again".tr,
                               context: context),
@@ -1104,179 +1041,699 @@ class _MapScreenState extends State<MapScreen>
       if (response.statusCode == 200) {
         return response.bodyBytes;
       } else {
-        // Return default marker icon as bytes if network image fails
         final ByteData data = await rootBundle.load('assets/logo.png');
         return data.buffer.asUint8List();
       }
     } catch (e) {
       if (kDebugMode) print("Error loading network image: $e");
-      // Return default marker icon as bytes
+
       final ByteData data = await rootBundle.load('assets/logo.png');
       return data.buffer.asUint8List();
     }
   }
 
   void updateBiddingMode(bool isAutomatic) {
+    if (!mounted || _isDisposed) {
+      if (kDebugMode) {
+        print("⚠️  Widget not mounted, skipping bidding mode update");
+      }
+
+      return;
+    }
+
     setState(() {
       switchValue = isAutomatic;
+
       biddautostatus = isAutomatic ? "true" : "false";
     });
 
     if (kDebugMode) {
       print("🔧 Bidding mode updated:");
+
       print("   Switch Value: $switchValue");
+
       print("   Bidding Status: $biddautostatus");
+
       print("   Mode: ${isAutomatic ? 'Automatic' : 'Manual'}");
+
+      print(
+          "   Next Action: ${isAutomatic ? 'Auto-accept nearest driver' : 'Show DriverListScreen for manual selection'}");
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
+  Future<void> _saveAutomaticBookingPreference(bool isAutomatic) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    _isDisposed = false; // Initialize disposal flag
-    WidgetsBinding.instance.addObserver(this);
+      await prefs.setBool("automaticBooking", isAutomatic);
 
-    // Your existing initState code, but replace setState calls with setState
-
-    if (widget.selectvihical == true) {
       if (kDebugMode) {
-        print("TRUETRUETRUTRUETRUETRUETRUETRUEWTRUWEUETEWUETRUETR");
+        print("💾 Saved automatic booking preference: $isAutomatic");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error saving automatic booking preference: $e");
+      }
+    }
+  }
+
+// Load automatic booking preference from SharedPreferences
+
+  Future<void> _loadAutomaticBookingPreference() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      bool? savedPreference = prefs.getBool("automaticBooking");
+
+      if (savedPreference != null) {
+        setState(() {
+          switchValue = savedPreference;
+
+          biddautostatus = savedPreference ? "true" : "false";
+        });
+
+        if (kDebugMode) {
+          print("📱 Loaded automatic booking preference: $savedPreference");
+
+          print("🔧 Updated switchValue: $switchValue");
+
+          print("🚗 Updated biddautostatus: $biddautostatus");
+        }
+      } else {
+        setState(() {
+          switchValue = false;
+
+          biddautostatus = "false";
+        });
+
+        if (kDebugMode) {
+          print("🏠 No saved preference found, defaulting to manual mode");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error loading automatic booking preference: $e");
       }
 
-      select1 = 0;
+      setState(() {
+        switchValue = false;
 
-      homeApiController
-          .homeApi(
-              uid: userid.toString(),
-              lat: lathome.toString(),
-              lon: longhome.toString())
-          .then((value) {
-        if (_isDisposed || !mounted) return;
-
-        mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
-
-        mroal =
-            homeApiController.homeapimodel!.categoryList![0].role.toString();
-
-        calculateController
-            .calculateApi(
-                context: context,
-                uid: userid.toString(),
-                mid: mid,
-                mrole: mroal,
-                pickup_lat_lon: "$latitudepick,$longitudepick",
-                drop_lat_lon: "$latitudedrop,$longitudedrop",
-                drop_lat_lon_list: onlypass)
-            .then((value) {
-          if (_isDisposed || !mounted) return;
-
-          dropprice = 0;
-
-          minimumfare = 0;
-
-          maximumfare = 0;
-
-          if (value["Result"] == true) {
-            amountresponse = "true";
-
-            dropprice = value["drop_price"];
-
-            minimumfare = value["vehicle"]["minimum_fare"];
-
-            maximumfare = value["vehicle"]["maximum_fare"];
-
-            responsemessage = value["message"];
-
-            tot_hour = value["tot_hour"].toString();
-
-            tot_time = value["tot_minute"].toString();
-
-            vehicle_id = value["vehicle"]["id"].toString();
-
-            vihicalrice = double.parse(value["drop_price"].toString());
-
-            totalkm = double.parse(value["tot_km"].toString());
-
-            tot_secound = "0";
-
-            vihicalimage = value["vehicle"]["map_img"].toString();
-
-            vihicalname = value["vehicle"]["name"].toString();
-
-            setState(() {});
-          } else {
-            amountresponse = "false";
-
-            if (kDebugMode) {
-              print("jojojojojojojojojojojojojojojojojojojojojojojojo");
-            }
-
-            setState(() {});
-          }
-
-          if (kDebugMode) {
-            print("********** dropprice **********:----- $dropprice");
-
-            print("********** minimumfare **********:----- $minimumfare");
-
-            print("********** maximumfare **********:----- $maximumfare");
-          }
-        }).catchError((error) {
-          if (kDebugMode) print("Calculate API error in initState: $error");
-        });
-      }).catchError((error) {
-        if (kDebugMode) print("Home API error in initState: $error");
+        biddautostatus = "false";
       });
     }
+  }
 
-    if (controller == null || !controller!.isAnimating) {
-      if (kDebugMode) print("DURATION SECOUNDE : - $durationInSeconds");
+  Future<void> _refreshVehiclesForLocation(double lat, double lon) async {
+    if (_isDisposed || !mounted) return;
 
-      controller = AnimationController(
-        duration: Duration(seconds: durationInSeconds),
-        vsync: this,
-      );
+    try {
+      lathome = lat;
+
+      longhome = lon;
+
+      if (kDebugMode) {
+        print("📍 Location changed: lat=$lat, lon=$lon - refreshing vehicles");
+      }
+
+      // Use the optimized vehicle loading
+
+      await _loadVehiclesOptimized();
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error refreshing vehicles for location: $e");
+      }
     }
+  }
 
-    mapThemeStyle(context: context);
+  void _debugVehicleState() {
+    if (kDebugMode) {
+      print("🐛 DEBUG Vehicle State:");
 
-    isControllerDisposed = false;
+      print("   Total vehicles: ${vihicallocations.length}");
 
-    plusetimer = "";
+      print("   Total icons: ${_iconPaths.length}");
 
-    calculateController
-        .calculateApi(
+      print("   Total markers: ${markers.length}");
+
+      print("   Selected category: $select1");
+
+      print("   Category ID: $mid");
+
+      print("   Category role: $mroal");
+
+      print("   Current location: lat=$lathome, lon=$longhome");
+
+      if (homeMapController.homeMapApiModel?.list != null) {
+        print(
+            "   Available in API: ${homeMapController.homeMapApiModel!.list!.length}");
+      } else {
+        print("   API Model: null");
+      }
+    }
+  }
+
+  Future<void> _initializeParallelOperations() async {
+    if (_isDisposed || !mounted) return;
+
+    try {
+      // Start all non-blocking operations in parallel
+
+      List<Future> parallelOperations = [
+        _loadPaymentMethods(),
+        _loadPageList(),
+      ];
+
+      // Start location loading but don't wait for it
+
+      _loadLocation();
+
+      // Only add calculate API if in vehicle selection mode
+
+      if (widget.selectvihical == true) {
+        parallelOperations.add(_loadCalculateAPI());
+      }
+
+      // Don't await - let them run in background
+
+      Future.wait(parallelOperations).catchError((error) {
+        if (kDebugMode) print("❌ Parallel operations error: $error");
+      });
+
+      if (kDebugMode) {
+        print("✅ Started ${parallelOperations.length} parallel operations");
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error starting parallel operations: $e");
+    }
+  }
+
+  Future<void> _loadCalculateAPI() async {
+    if (widget.selectvihical != true) return;
+
+    try {
+      // Wait for home API data first
+
+      int attempts = 0;
+
+      while (homeApiController.homeapimodel?.categoryList == null &&
+          attempts < 10) {
+        await Future.delayed(Duration(milliseconds: 100));
+
+        attempts++;
+
+        if (_isDisposed || !mounted) return;
+      }
+
+      if (homeApiController.homeapimodel?.categoryList == null) {
+        if (kDebugMode)
+          print("❌ Home API data not available for calculate API");
+
+        return;
+      }
+
+      mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+
+      mroal = homeApiController.homeapimodel!.categoryList![0].role.toString();
+
+      if (kDebugMode) {
+        print("🧮 Loading Calculate API in background");
+
+        print("   Category ID: $mid");
+
+        print("   Role: $mroal");
+      }
+
+      // Only proceed if we have pickup and drop locations
+
+      if (pickupcontroller.text.isNotEmpty && dropcontroller.text.isNotEmpty) {
+        final value = await calculateController.calculateApi(
             context: context,
-            uid: useridgloable.toString(),
+            uid: userid.toString(),
             mid: mid,
             mrole: mroal,
             pickup_lat_lon: "$latitudepick,$longitudepick",
             drop_lat_lon: "$latitudedrop,$longitudedrop",
-            drop_lat_lon_list: onlypass)
-        .then((value) {
-      if (kDebugMode) print("eeeeeeeeeeeeee");
-    }).catchError((error) {
-      if (kDebugMode) print("Calculate API error: $error");
-    });
+            drop_lat_lon_list: onlypass);
 
-    setState(() {});
+        if (_isDisposed || !mounted) return;
 
-    fun().then((value) {
+        if (value["Result"] == true) {
+          amountresponse = "true";
+
+          dropprice = value["drop_price"];
+
+          minimumfare = value["vehicle"]["minimum_fare"];
+
+          maximumfare = value["vehicle"]["maximum_fare"];
+
+          responsemessage = value["message"];
+
+          tot_hour = value["tot_hour"].toString();
+
+          tot_time = value["tot_minute"].toString();
+
+          vehicle_id = value["vehicle"]["id"].toString();
+
+          vihicalrice = double.parse(value["drop_price"].toString());
+
+          totalkm = double.parse(value["tot_km"].toString());
+
+          tot_secound = "0";
+
+          vihicalimage = value["vehicle"]["map_img"].toString();
+
+          vihicalname = value["vehicle"]["name"].toString();
+
+          setState(() {});
+
+          if (kDebugMode) {
+            print("✅ Calculate API completed successfully");
+
+            print("   Drop price: $dropprice");
+
+            print("   Min fare: $minimumfare");
+
+            print("   Max fare: $maximumfare");
+          }
+        } else {
+          amountresponse = "false";
+
+          if (kDebugMode) {
+            print("❌ Calculate API returned false result");
+          }
+
+          setState(() {});
+        }
+      } else {
+        if (kDebugMode) {
+          print("⚠️ Pickup or drop location not available for calculate API");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Calculate API loading error: $e");
+    }
+  }
+
+// ✅ OPTIMIZED: Fast vehicle loading with fallback
+  Future<void> _fastVehicleLoad() async {
+    try {
+      if (kDebugMode) {
+        print("🚀 Starting fast vehicle load...");
+      }
+
+      // First, try to load vehicles with any available location data
+      if (lathomecurrent != null && longhomecurrent != null) {
+        // Use cached location immediately
+        lathome = lathomecurrent;
+        longhome = longhomecurrent;
+        if (kDebugMode) {
+          print("📍 Using cached location: lat=$lathome, lon=$longhome");
+        }
+        await _loadVehiclesQuick();
+      } else if (lathome != null && longhome != null) {
+        // Use any available location
+        if (kDebugMode) {
+          print("📍 Using available location: lat=$lathome, lon=$longhome");
+        }
+        await _loadVehiclesQuick();
+      } else {
+        // Load with default coordinates and update later
+        if (kDebugMode) {
+          print("📍 Using default location for initial load");
+        }
+        lathome = 13.9673941; // Default to current location from logs
+        longhome = 44.1545032;
+        await _loadVehiclesQuick();
+
+        // Update with real location when available
+        _updateLocationAndRefreshVehicles();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Fast vehicle load error: $e");
+      }
+    }
+  }
+
+// ✅ NEW: Quick vehicle loading with minimal API calls
+  Future<void> _loadVehiclesQuick() async {
+    if (_isDisposed || !mounted) return;
+
+    try {
+      // Load home API data if not available
+      if (homeApiController.homeapimodel?.categoryList == null) {
+        final homeData = await homeApiController.homeApi(
+          uid: userid.toString(),
+          lat: lathome.toString(),
+          lon: longhome.toString(),
+        );
+
+        if (homeData == null || homeData["Result"] != true) {
+          if (kDebugMode) print("❌ Home API failed");
+          return;
+        }
+      }
+
+      // Set category data
+      if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
+        mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+        mroal =
+            homeApiController.homeapimodel!.categoryList![0].role.toString();
+      } else {
+        return;
+      }
+
+      // Load vehicles with optimized method
+      await _loadVehiclesOptimized();
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Quick vehicle load error: $e");
+      }
+    }
+  }
+
+// ✅ OPTIMIZED: Load vehicles with performance improvements
+  Future<void> _loadVehiclesOptimized() async {
+    if (_isDisposed || !mounted) return;
+
+    try {
+      if (kDebugMode) {
+        final stopwatch = Stopwatch()..start();
+        print("🚗 Loading vehicles optimized - category: $mid");
+      }
+
+      // Validate data
+      if (mid.isEmpty || lathome == null || longhome == null) {
+        if (kDebugMode) print("⚠️ Missing required data for vehicle loading");
+        return;
+      }
+
+      // Call home map API
+      final value = await homeMapController.homemapApi(
+        mid: mid,
+        lat: lathome.toString(),
+        lon: longhome.toString(),
+      );
+
+      if (!_isDisposed && mounted && value != null && value["Result"] == true) {
+        // Clear existing vehicles
+        setState(() {
+          vihicallocations.clear();
+          _iconPaths.clear();
+          // Don't clear all markers, just vehicle markers
+          markers.removeWhere((key, value) => key.value.startsWith('vehicle_'));
+        });
+
+        // Process vehicle data
+        if (homeMapController.homeMapApiModel?.list != null &&
+            homeMapController.homeMapApiModel!.list!.isNotEmpty) {
+          final vehicleList = homeMapController.homeMapApiModel!.list!;
+
+          // Add vehicle locations
+          for (int i = 0; i < vehicleList.length; i++) {
+            vihicallocations.add(LatLng(
+                double.parse(vehicleList[i].latitude.toString()),
+                double.parse(vehicleList[i].longitude.toString())));
+            _iconPaths.add("${Config.imageurl}${vehicleList[i].image}");
+          }
+
+          // ✅ FAST: Add markers with optimized loading
+          _addMarkersOptimized();
+
+          if (kDebugMode) {
+            print("✅ Loaded ${vihicallocations.length} vehicles optimized");
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Optimized vehicle loading error: $e");
+      }
+    }
+  }
+
+// ✅ OPTIMIZED: Fast marker loading with async image handling
+  void _addMarkersOptimized() {
+    if (_isDisposed || !mounted) return;
+
+    try {
+      if (vihicallocations.isEmpty) {
+        if (kDebugMode) print("⚠️ No vehicles to display");
+
+        return;
+      }
+
+      if (kDebugMode) {
+        print(
+            "🔄 Adding ${vihicallocations.length} markers with logo placeholders...");
+      }
+
+      setState(() {
+        _showingLogoPlaceholders = true;
+
+        // Add vehicles with logo placeholders first (instant)
+
+        for (var i = 0; i < vihicallocations.length; i++) {
+          if (i < homeMapController.homeMapApiModel!.list!.length) {
+            MarkerId markerId = MarkerId(
+                "vehicle_${homeMapController.homeMapApiModel!.list![i].id}");
+
+            // ✅ NEW: Create logo placeholder marker
+
+            Marker marker = Marker(
+              markerId: markerId,
+              icon: _createLogoPlaceholder(),
+              position: vihicallocations[i],
+              infoWindow: InfoWindow(
+                title: "Loading Vehicle...",
+                snippet: "Please wait",
+              ),
+            );
+
+            markers[markerId] = marker;
+          }
+        }
+      });
+
+      if (kDebugMode) {
+        print("✅ Added ${markers.length} logo placeholder markers");
+      }
+
+      // ✅ NEW: Start timer to show logo for 5 seconds, then transition to vehicle icons
+
+      _startLogoPlaceholderTimer();
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Logo placeholder marker adding error: $e");
+      }
+    }
+  }
+
+// ✅ NEW: Timer for logo placeholder transition
+
+  void _startLogoPlaceholderTimer() {
+    // Cancel any existing timer
+
+    _logoPlaceholderTimer?.cancel();
+
+    if (kDebugMode) {
+      print("⏰ Starting 5-second logo placeholder timer...");
+    }
+
+    _logoPlaceholderTimer = Timer(Duration(seconds: 5), () {
       if (_isDisposed || !mounted) return;
 
-      setState(() {});
+      if (kDebugMode) {
+        print(
+            "🔄 Logo placeholder timer completed - transitioning to vehicle icons");
+      }
 
-      getCurrentLatAndLong(lathome, longhome);
+      // Transition to actual vehicle icons
 
-      socketConnect();
-    }).catchError((error) {
-      if (kDebugMode) print("Fun error: $error");
+      _transitionToVehicleIcons();
     });
+  }
 
-    // Continue with rest of your initState but replace setState with setState
+// ✅ NEW: Smooth transition from logo to vehicle icons
 
-    paymentGetApiController.paymentlistApi(context).then((value) {
+  void _transitionToVehicleIcons() async {
+    if (_isDisposed || !mounted || _iconPaths.isEmpty) return;
+
+    try {
+      setState(() {
+        _showingLogoPlaceholders = false;
+      });
+
+      if (kDebugMode) {
+        print("🎨 Transitioning to vehicle icons...");
+      }
+
+      // Load vehicle icons one by one with smooth updates
+
+      for (int i = 0;
+          i < _iconPaths.length && i < vihicallocations.length;
+          i++) {
+        if (_isDisposed || !mounted) break;
+
+        try {
+          final icon = await _loadSingleIcon(_iconPaths[i]);
+
+          if (_isDisposed || !mounted) break;
+
+          // Update specific marker with vehicle icon
+
+          if (i < homeMapController.homeMapApiModel!.list!.length) {
+            MarkerId markerId = MarkerId(
+                "vehicle_${homeMapController.homeMapApiModel!.list![i].id}");
+
+            if (markers.containsKey(markerId)) {
+              setState(() {
+                Marker existingMarker = markers[markerId]!;
+
+                Marker updatedMarker = existingMarker.copyWith(
+                  iconParam: icon,
+                  infoWindowParam: InfoWindow(
+                    title: "Available Vehicle",
+                    snippet: homeMapController.homeMapApiModel!.list![i].name ??
+                        "Vehicle",
+                  ),
+                );
+
+                markers[markerId] = updatedMarker;
+              });
+
+              if (kDebugMode) {
+                print("✅ Updated marker $i with vehicle icon");
+              }
+            }
+          }
+
+          // Small delay for smooth transition effect
+
+          await Future.delayed(Duration(milliseconds: 200));
+        } catch (e) {
+          if (kDebugMode) print("❌ Icon transition error for index $i: $e");
+        }
+      }
+
+      if (kDebugMode) {
+        print("🎉 Vehicle icon transition completed!");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Vehicle icon transition error: $e");
+      }
+    }
+  }
+
+// ✅ NEW: Load custom icons in background without blocking UI
+  void _loadCustomIconsAsync() async {
+    if (_isDisposed || !mounted || _iconPaths.isEmpty) return;
+
+    try {
+      if (kDebugMode) {
+        print("🎨 Loading custom icons in background...");
+      }
+
+      // Load icons one by one to avoid blocking
+      for (int i = 0;
+          i < _iconPaths.length && i < vihicallocations.length;
+          i++) {
+        if (_isDisposed || !mounted) break;
+
+        try {
+          final icon = await _loadSingleIcon(_iconPaths[i]);
+
+          if (_isDisposed || !mounted) break;
+
+          // Update specific marker with custom icon
+          if (i < homeMapController.homeMapApiModel!.list!.length) {
+            MarkerId markerId = MarkerId(
+                "vehicle_${homeMapController.homeMapApiModel!.list![i].id}");
+
+            if (markers.containsKey(markerId)) {
+              setState(() {
+                Marker existingMarker = markers[markerId]!;
+                Marker updatedMarker = existingMarker.copyWith(
+                  iconParam: icon,
+                );
+                markers[markerId] = updatedMarker;
+              });
+            }
+          }
+
+          // Small delay to prevent blocking UI
+          await Future.delayed(Duration(milliseconds: 50));
+        } catch (e) {
+          if (kDebugMode) print("❌ Icon loading error for index $i: $e");
+          // Continue with next icon
+        }
+      }
+
+      if (kDebugMode) {
+        print("✅ Custom icons loaded in background");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Background icon loading error: $e");
+      }
+    }
+  }
+
+// ✅ OPTIMIZED: Load single icon with caching
+  Future<BitmapDescriptor> _loadSingleIcon(String url) async {
+    try {
+      if (url.isEmpty || url.contains("undefined")) {
+        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+      }
+
+      final response =
+          await http.get(Uri.parse(url)).timeout(Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final Uint8List bytes = response.bodyBytes;
+        final ui.Codec codec = await ui.instantiateImageCodec(bytes,
+            targetWidth: 40, // Slightly larger for better visibility
+            targetHeight: 60);
+        final ui.FrameInfo frameInfo = await codec.getNextFrame();
+        final ByteData? byteData =
+            await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+        return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+      } else {
+        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+      }
+    } catch (e) {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+    }
+  }
+
+// ✅ BACKGROUND: Load location and update vehicles
+  Future<void> _updateLocationAndRefreshVehicles() async {
+    try {
+      // Get accurate location in background
+      final location = await fun();
+
+      if (_isDisposed || !mounted) return;
+
+      // Update vehicles with accurate location
+      if (lathome != null && longhome != null) {
+        if (kDebugMode) {
+          print(
+              "📍 Updated location: lat=$lathome, lon=$longhome - refreshing vehicles");
+        }
+        await _loadVehiclesOptimized();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Location update error: $e");
+      }
+    }
+  }
+
+// ✅ BACKGROUND: Load payment methods
+  Future<void> _loadPaymentMethods() async {
+    try {
+      final value = await paymentGetApiController.paymentlistApi(context);
       if (_isDisposed || !mounted) return;
 
       for (int i = 1;
@@ -1288,36 +1745,125 @@ class _MapScreenState extends State<MapScreen>
           setState(() {
             payment =
                 paymentGetApiController.paymentgetwayapi!.paymentList![i].id!;
-
             paymentname =
                 paymentGetApiController.paymentgetwayapi!.paymentList![i].name!;
-
             if (kDebugMode) {
-              print("+++++$payment");
-
-              print("+++++$i");
+              print("💳 Default payment: $payment ($paymentname)");
             }
           });
+          break;
         }
       }
-    }).catchError((error) {
-      if (kDebugMode) print("Payment API error: $error");
+    } catch (e) {
+      if (kDebugMode) print("❌ Payment loading error: $e");
+    }
+  }
+
+// ✅ BACKGROUND: Load page list
+  Future<void> _loadPageList() async {
+    try {
+      await pagelistcontroller.pagelistttApi(context);
+    } catch (e) {
+      if (kDebugMode) print("❌ Page list loading error: $e");
+    }
+  }
+
+  Future<void> _loadLocation() async {
+    try {
+      // Don't block on location - get it in background
+
+      final position = await fun().timeout(Duration(seconds: 10));
+
+      if (_isDisposed || !mounted) return;
+
+      getCurrentLatAndLong(lathome, longhome);
+
+      // Only refresh vehicles if we got a significantly different location
+
+      if (lathome != null && longhome != null) {
+        await _loadVehiclesOptimized();
+      }
+
+      // Connect socket after location is ready
+
+      socketConnect();
+
+      if (kDebugMode) {
+        print("✅ Location and socket initialized");
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Location loading error: $e");
+
+      // Even if location fails, try to connect socket
+
+      try {
+        socketConnect();
+      } catch (socketError) {
+        if (kDebugMode) print("❌ Socket connection error: $socketError");
+      }
+    }
+  }
+// ✅ PERFORMANCE FIX: Simplified initState (replace your current one)
+
+  @override
+  void initState() {
+    super.initState();
+
+    _isDisposed = false;
+
+    WidgetsBinding.instance.addObserver(this);
+
+    // Load automatic booking preference
+
+    _loadAutomaticBookingPreference();
+
+    if (kDebugMode) {
+      print("🚀 MapScreen initialized - Fast loading mode");
+
+      print("🔧 selectvihical parameter: ${widget.selectvihical}");
+    }
+
+    select1 = 0;
+
+    // ✅ PERFORMANCE: Start all operations in parallel immediately
+
+    Future.microtask(() {
+      _initializeParallelOperations();
+
+      _fastVehicleLoad();
     });
 
-    // Rest of your initState code...
+    // Initialize animation controller
+
+    if (controller == null || !controller!.isAnimating) {
+      if (kDebugMode) print("⏱️ DURATION SECONDS: $durationInSeconds");
+
+      controller = AnimationController(
+        duration: Duration(seconds: durationInSeconds),
+        vsync: this,
+      );
+    }
+
+    // Initialize theme and other settings
+
+    mapThemeStyle(context: context);
+
+    isControllerDisposed = false;
+
+    plusetimer = "";
+
+    // Initialize drop off points and markers
 
     _dropOffPoints = [];
 
     _dropOffPoints = destinationlat;
 
-    if (kDebugMode) print("****////***:-----  $_dropOffPoints");
+    if (kDebugMode) print("📍 Drop off points: $_dropOffPoints");
 
-    /// origin marker
+    // Add route markers
 
     _addMarker11(LatLng(latitudepick, longitudepick), "origin",
         BitmapDescriptor.defaultMarker);
-
-    /// destination marker
 
     _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
         BitmapDescriptor.defaultMarkerWithHue(90));
@@ -1326,51 +1872,42 @@ class _MapScreenState extends State<MapScreen>
       _addMarker3("destination");
     }
 
+    // Get directions
+
     getDirections11(
         lat1: PointLatLng(latitudepick, longitudepick),
         lat2: PointLatLng(latitudedrop, longitudedrop),
         dropOffPoints: _dropOffPoints);
 
-    pagelistcontroller.pagelistttApi(context);
+    // Reset state after frame
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       resetMapScreenState();
     });
   }
 
+// ✅ ENHANCED: Update dispose method to clean up timer
   @override
   void dispose() {
     if (kDebugMode) print("MapScreen dispose called");
 
     _isDisposed = true;
 
-    // ✅ NEW: Remove observer
+    // ✅ NEW: Cancel logo placeholder timer
+    _logoPlaceholderTimer?.cancel();
 
     WidgetsBinding.instance.removeObserver(this);
-
-    // ✅ CRITICAL: Comprehensive cleanup
-
     resetMapScreenState();
-
-    // Remove socket listeners
 
     try {
       socket.off("Vehicle_Bidding$userid");
-
       socket.off("acceptvehrequest$useridgloable");
-
       socket.off("reset_customer_state$useridgloable");
-
       socket.off("Vehicle_Location_update$userid");
-
       socket.off("Accept_Bidding_Response$useridgloable");
-
       socket.off("Bidding_decline_Response$useridgloable");
-
       socket.off("removecustomerdata$useridgloable");
-
       socket.off("Driver_location_On");
-
       socket.off("Driver_location_Update");
     } catch (e) {
       if (kDebugMode) print("Error removing socket listeners: $e");
@@ -1379,13 +1916,61 @@ class _MapScreenState extends State<MapScreen>
     super.dispose();
   }
 
+// ✅ STEP 2: Create SVG logo markers (Advanced Implementation)
+// Add this method to convert SVG to BitmapDescriptor
+
+  Future<BitmapDescriptor> _createSVGLogoMarker() async {
+    try {
+      // Determine which logo to use based on theme
+      String logoPath = notifier.isDark
+          ? "assets/svgpicture/app_logo_dark.svg"
+          : "assets/svgpicture/app_logo_light.svg";
+
+      if (kDebugMode) {
+        print("🎨 Creating SVG logo marker: $logoPath");
+      }
+
+      // Load and render SVG (you'll need to add flutter_svg import)
+      final svgString = await rootBundle.loadString(logoPath);
+
+      // Convert SVG to image bytes
+      final pictureInfo =
+          await vg.loadPicture(SvgStringLoader(svgString), null);
+      final image = await pictureInfo.picture.toImage(60, 60); // 60x60 size
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final uint8List = byteData!.buffer.asUint8List();
+
+      return BitmapDescriptor.fromBytes(uint8List);
+    } catch (e) {
+      if (kDebugMode) print("❌ Error creating SVG logo marker: $e");
+
+      // Fallback to colored default marker
+      return BitmapDescriptor.defaultMarkerWithHue(notifier.isDark
+          ? BitmapDescriptor.hueBlue
+          : BitmapDescriptor.hueAzure);
+    }
+  }
+
+// ✅ SIMPLE VERSION: If SVG conversion is complex, use this simpler approach
+  BitmapDescriptor _createThemedLogoPlaceholder() {
+    // Use different colored markers based on theme
+    if (notifier.isDark) {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue);
+    } else {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+    }
+  }
+
+// ✅ UPDATE: Replace _createLogoPlaceholder() with themed version
+  BitmapDescriptor _createLogoPlaceholder() {
+    return _createThemedLogoPlaceholder();
+    // Future enhancement: return _createSVGLogoMarker(); when SVG conversion is ready
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
-
-        // App came back to foreground
-
         if (kDebugMode) print("🔄 App resumed, checking map state");
 
         resetMapScreenState();
@@ -1393,33 +1978,21 @@ class _MapScreenState extends State<MapScreen>
         break;
 
       case AppLifecycleState.paused:
-
-        // App went to background
-
         if (kDebugMode) print("⏸️ App paused");
 
         break;
 
       case AppLifecycleState.detached:
-
-        // App is being terminated
-
         if (kDebugMode) print("🔚 App detached");
 
         break;
 
       case AppLifecycleState.inactive:
-
-        // App is inactive (e.g., phone call)
-
         if (kDebugMode) print("😴 App inactive");
 
         break;
 
       case AppLifecycleState.hidden:
-
-        // App is hidden
-
         if (kDebugMode) print("🙈 App hidden");
 
         break;
@@ -1604,7 +2177,6 @@ class _MapScreenState extends State<MapScreen>
       final Uint8List markIcon = await getImages("assets/drop_marker.png", 80);
       MarkerId markerId = MarkerId(id[a]);
 
-      // Assuming _dropOffPoints[a] is of type PointLatLng, convert it to LatLng
       LatLng position =
           LatLng(_dropOffPoints[a].latitude, _dropOffPoints[a].longitude);
 
@@ -1675,10 +2247,6 @@ class _MapScreenState extends State<MapScreen>
       required List<PointLatLng> dropOffPoints}) async {
     markers.remove(const MarkerId("my_1"));
 
-    // polylines11.clear();
-
-    // pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty ?  polylines11.clear() : "";
-
     List<LatLng> polylineCoordinates = [];
     List<PointLatLng> allPoints = [lat1, lat2, ...dropOffPoints];
 
@@ -1697,9 +2265,7 @@ class _MapScreenState extends State<MapScreen>
         for (var point in result.points) {
           polylineCoordinates.add(LatLng(point.latitude, point.longitude));
         }
-      } else {
-        // Handle the case where no route is found
-      }
+      } else {}
     }
 
     addPolyLine11(polylineCoordinates);
@@ -1710,7 +2276,6 @@ class _MapScreenState extends State<MapScreen>
     Polyline polyline = Polyline(
       polylineId: id,
       color: theamcolore,
-      // points: [...polylineCoordinates,..._dropOffPoints],
       points: polylineCoordinates,
       width: 3,
     );
@@ -1718,102 +2283,10 @@ class _MapScreenState extends State<MapScreen>
     setState(() {});
   }
 
-  void _addMarkers() async {
-    // Future<BitmapDescriptor> _loadIcon(String url) async {
-    //   try {
-    //     if (url.isEmpty || url.contains("undefined")) {
-    //       // Fallback to a default icon if the URL is invalid
-    //       return BitmapDescriptor.defaultMarker;
-    //     }
-    //
-    //     final http.Response response = await http.get(Uri.parse(url));
-    //     if (response.statusCode == 200) {
-    //       final Uint8List bytes = response.bodyBytes;
-    //
-    //       // Decode image and resize it
-    //       final ui.Codec codec = await ui.instantiateImageCodec(bytes, targetWidth: 30,targetHeight: 50);
-    //       final ui.FrameInfo frameInfo = await codec.getNextFrame();
-    //       final ByteData? byteData = await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-    //
-    //       return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-    //     } else {
-    //       throw Exception('Failed to load image from $url');
-    //     }
-    //   } catch (e) {
-    //     // Log the error and return a default icon
-    //     print("Error loading icon from $url: $e");
-    //     return BitmapDescriptor.defaultMarker;
-    //   }
-    // }
-
-    Future<BitmapDescriptor> _loadIcon(String url,
-        {int targetWidth = 30, int targetHeight = 50}) async {
-      try {
-        if (url.isEmpty || url.contains("undefined")) {
-          // Fallback to a default icon if the URL is invalid
-          return BitmapDescriptor.defaultMarker;
-        }
-
-        final http.Response response = await http.get(Uri.parse(url));
-        if (response.statusCode == 200) {
-          final Uint8List bytes = response.bodyBytes;
-
-          // Decode image and resize it
-          final ui.Codec codec = await ui.instantiateImageCodec(bytes,
-              targetWidth: targetWidth, targetHeight: targetHeight);
-          final ui.FrameInfo frameInfo = await codec.getNextFrame();
-          final ByteData? byteData =
-              await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-
-          return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-        } else {
-          throw Exception('Failed to load image from $url');
-        }
-      } catch (e) {
-        // Log the error and return a default icon
-        print("Error loading icon from $url: $e");
-        return BitmapDescriptor.defaultMarker;
-      }
-    }
-
-    // Load all icons
-    final List<BitmapDescriptor> _icons = await Future.wait(
-      _iconPaths.map((path) => _loadIcon(path)),
-    );
-
-    setState(() {
-      pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty
-          ? setState(() {
-              polylines11.clear();
-            })
-          : "";
-
-      // vihicallocations = [];
-      for (var i = 0; i < vihicallocations.length; i++) {
-        print("qqqqqqqqq:-- ${homeMapController.homeMapApiModel!.list![i].id}");
-        print("aaaaaaaaa:-- ${vihicallocations.length}");
-        MarkerId markerId =
-            MarkerId("${homeMapController.homeMapApiModel!.list![i].id}");
-        Marker marker = Marker(
-          markerId: markerId,
-          icon: _icons[i],
-          position: LatLng(
-              double.parse(homeMapController.homeMapApiModel!.list![i].latitude
-                  .toString()),
-              double.parse(homeMapController.homeMapApiModel!.list![i].longitude
-                  .toString())),
-        );
-        markers[markerId] = marker;
-        setState(() {});
-      }
-    });
-  }
-
   void _addMarkers2() async {
     Future<BitmapDescriptor> _loadIcon(String url) async {
       try {
         if (url.isEmpty || url.contains("undefined")) {
-          // Fallback to a default icon if the URL is invalid
           return BitmapDescriptor.defaultMarker;
         }
 
@@ -1821,7 +2294,6 @@ class _MapScreenState extends State<MapScreen>
         if (response.statusCode == 200) {
           final Uint8List bytes = response.bodyBytes;
 
-          // Decode image and resize it
           final ui.Codec codec = await ui.instantiateImageCodec(bytes,
               targetWidth: 30, targetHeight: 50);
           final ui.FrameInfo frameInfo = await codec.getNextFrame();
@@ -1833,13 +2305,11 @@ class _MapScreenState extends State<MapScreen>
           throw Exception('Failed to load image from $url');
         }
       } catch (e) {
-        // Log the error and return a default icon
         print("Error loading icon from $url: $e");
         return BitmapDescriptor.defaultMarker;
       }
     }
 
-    // Load all icons
     final List<BitmapDescriptor> _icons = await Future.wait(
       _iconPathsbiddingon.map((path) => _loadIcon(path)),
     );
@@ -1850,7 +2320,6 @@ class _MapScreenState extends State<MapScreen>
       _addMarker11(LatLng(latitudepick, longitudepick), "origin",
           BitmapDescriptor.defaultMarker);
 
-      /// destination marker
       _addMarker2(LatLng(latitudedrop, longitudedrop), "destination",
           BitmapDescriptor.defaultMarkerWithHue(90));
 
@@ -1864,12 +2333,10 @@ class _MapScreenState extends State<MapScreen>
           dropOffPoints: _dropOffPoints);
 
       for (var i = 0; i < vihicallocationsbiddingon.length; i++) {
-        // final markerId = MarkerId('marker_$i');
         final markerId =
             MarkerId('${homeMapController.homeMapApiModel!.list![i].id}');
         final marker = Marker(
           markerId: markerId,
-          // position: vihicallocationsbiddingon[i],
           position: LatLng(
               double.parse(homeMapController.homeMapApiModel!.list![i].latitude
                   .toString()),
@@ -1900,7 +2367,6 @@ class _MapScreenState extends State<MapScreen>
       currentLocation.longitude,
     );
     print("????????????${currentLocation.longitude}");
-    // print("SECOND USER CURRENT LOCATION : --  ${addresshome}");
   }
 
   Future<Position> locateUser() async {
@@ -1921,8 +2387,6 @@ class _MapScreenState extends State<MapScreen>
 
     longhomecurrent = longitude;
 
-    // First set coordinate-based fallback immediately
-
     String fallbackAddress =
         "Location ${latitude.toStringAsFixed(4)}, ${longitude.toStringAsFixed(4)}";
 
@@ -1935,8 +2399,6 @@ class _MapScreenState extends State<MapScreen>
     }
 
     try {
-      // Try to get detailed address in background
-
       List<Placemark> placemarks =
           await placemarkFromCoordinates(lathome, longhome)
               .timeout(const Duration(seconds: 6));
@@ -1947,11 +2409,7 @@ class _MapScreenState extends State<MapScreen>
         String detailedAddress =
             '${placemark.name ?? "Unknown Location"}, ${placemark.locality ?? "Unknown Area"}, ${placemark.country ?? "Unknown Country"}';
 
-        // Update with detailed address if we got one
-
         addresshome = detailedAddress;
-
-        // Update pickup controller if it still has the fallback text
 
         if (pickupcontroller.text == fallbackAddress && !_isDisposed) {
           pickupcontroller.text = addresshome;
@@ -1982,50 +2440,6 @@ class _MapScreenState extends State<MapScreen>
 
   Future<void> _onAddMarkerButtonPressed(double? lat, long) async {
     final Uint8List markIcon = await getImages("assets/pickup_marker.png", 80);
-    // markers.add(Marker(
-    //   markerId: const MarkerId("1"),
-    //   position: LatLng(double.parse(lat.toString()),double.parse(long.toString())),
-    //   onTap: () {
-    //     showDialog(
-    //       barrierColor: Colors.transparent,
-    //       context: context,
-    //       builder: (context) {
-    //         return StatefulBuilder(builder: (context, setState) {
-    //           return Dialog(
-    //             alignment: const Alignment(0,-0.22),
-    //             shape: RoundedRectangleBorder(
-    //               borderRadius: BorderRadius.circular(15),
-    //             ),
-    //             elevation: 0,
-    //             child: Container(
-    //               padding: const EdgeInsets.all(10),
-    //               decoration: BoxDecoration(
-    //                 borderRadius: BorderRadius.circular(15),
-    //                 color: Colors.white,
-    //               ),
-    //               child: Column(
-    //                 mainAxisSize: MainAxisSize.min,
-    //                 children: [
-    //                   Text(
-    //                     "$addresshome",
-    //                     maxLines: 1,
-    //                     style: const TextStyle(
-    //                       color: Colors.black,
-    //                       fontSize: 14,
-    //                       overflow: TextOverflow.ellipsis,
-    //                     ),
-    //                   ),
-    //                 ],
-    //               ),
-    //             ),
-    //           );
-    //         },);
-    //       },
-    //     );
-    //   },
-    //   // icon: BitmapDescriptor.defaultMarker,
-    //   icon: BitmapDescriptor.fromBytes(markIcon),
-    // ));
 
     Marker marker = Marker(
       markerId: const MarkerId("my_1"),
@@ -2102,7 +2516,6 @@ class _MapScreenState extends State<MapScreen>
   socateempt() {
     print("SOCATE SCOCATDFJH");
     socket.emit('vehiclerequest', {
-      // 'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
       'requestid': request_id,
       'driverid': calculateController.calCulateModel!.driverId,
       'c_id': useridgloable
@@ -2137,7 +2550,6 @@ class _MapScreenState extends State<MapScreen>
     "Faq".tr,
     "Notifications".tr,
     "Dark Mode".tr,
-    // "Invite friends",
   ];
 
   List drowerimage = [
@@ -2165,7 +2577,6 @@ class _MapScreenState extends State<MapScreen>
               ? Center(child: CustomLoadingWidget())
               : Stack(
                   children: [
-                    // pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty ? lathome == null ? Center(child: CustomLoadingWidget()) :
                     lathome == null
                         ? Center(child: CustomLoadingWidget())
                         : GoogleMap(
@@ -2181,75 +2592,19 @@ class _MapScreenState extends State<MapScreen>
                                 : CameraPosition(
                                     target: LatLng(latitudepick, longitudepick),
                                     zoom: 13),
-                            // initialCameraPosition:  CameraPosition(target: LatLng(21.2408,72.8806), zoom: 13),
                             mapType: MapType.normal,
-                            // markers: markers.,
                             markers: pickupcontroller.text.isEmpty ||
                                     dropcontroller.text.isEmpty
                                 ? Set<Marker>.of(markers.values)
                                 : Set<Marker>.of(markers11.values),
-                            // markers: Set<Marker>.of(markers.values),
-                            onTap: (argument) {
+                            onTap: (argument) async {
                               setState(() {
                                 _onAddMarkerButtonPressed(
                                     argument.latitude, argument.longitude);
-                                lathome = argument.latitude;
-                                longhome = argument.longitude;
-                                getCurrentLatAndLong(
-                                  lathome,
-                                  longhome,
-                                );
-                                homeMapController
-                                    .homemapApi(
-                                        mid: mid,
-                                        lat: lathome.toString(),
-                                        lon: longhome.toString())
-                                    .then((value) {
-                                  setState(() {});
-                                  print("///:---  ${value["Result"]}");
-
-                                  if (value["Result"] == false) {
-                                    setState(() {
-                                      vihicallocations.clear();
-                                      markers.clear();
-                                      _addMarkers();
-                                      print(
-                                          "***if condition+++:---  $vihicallocations");
-                                    });
-                                  } else {
-                                    setState(() {});
-                                    vihicallocations.clear();
-                                    for (int i = 0;
-                                        i <
-                                            homeMapController
-                                                .homeMapApiModel!.list!.length;
-                                        i++) {
-                                      vihicallocations.add(LatLng(
-                                          double.parse(homeMapController
-                                              .homeMapApiModel!
-                                              .list![i]
-                                              .latitude
-                                              .toString()),
-                                          double.parse(homeMapController
-                                              .homeMapApiModel!
-                                              .list![i]
-                                              .longitude
-                                              .toString())));
-                                      _iconPaths.add(
-                                          "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                                    }
-                                    _addMarkers();
-                                  }
-
-                                  print(
-                                      "******-**:::::------ in Build$vihicallocations");
-                                });
                               });
 
-                              // print("***lato****:--- $lathome");
-                              // print("+++longo+++:--- $longhome");
-                              // print("--------------------------------------");
-                              // print("hfgjhvhjwfvhjuyfvf:-=---  $addresshome");
+                              await _refreshVehiclesForLocation(
+                                  argument.latitude, argument.longitude);
                             },
                             myLocationEnabled: false,
                             zoomGesturesEnabled: true,
@@ -2263,21 +2618,6 @@ class _MapScreenState extends State<MapScreen>
                             },
                             polylines: Set<Polyline>.of(polylines11.values),
                           ),
-                    //   : GoogleMap(
-                    //   initialCameraPosition: CameraPosition(
-                    //     target: LatLng(latitudepick, longitudepick),
-                    //     zoom: 15,
-                    //   ),
-                    //   myLocationEnabled: true,
-                    //   tiltGesturesEnabled: true,
-                    //   compassEnabled: true,
-                    //   scrollGesturesEnabled: true,
-                    //   zoomGesturesEnabled: true,
-                    //   onMapCreated: _onMapCreated11,
-                    //   markers: Set<Marker>.of(markers11.values),
-                    //   polylines: Set<Polyline>.of(polylines11.values),
-                    // ),
-
                     Padding(
                       padding:
                           const EdgeInsets.only(top: 60, left: 10, right: 10),
@@ -2293,7 +2633,6 @@ class _MapScreenState extends State<MapScreen>
                               },
                               child: Container(
                                 height: 50,
-                                // width: 50,
                                 decoration: BoxDecoration(
                                     color: notifier.containercolore,
                                     shape: BoxShape.circle),
@@ -2314,7 +2653,7 @@ class _MapScreenState extends State<MapScreen>
                                   borderRadius: BorderRadius.circular(25)),
                               child: TextField(
                                 onTap: () {
-                                  _addMarkers();
+                                  _addMarkersOptimized();
                                   fun().then((value) {
                                     setState(() {});
                                     getCurrentLatAndLong(lathome, longhome)
@@ -2330,11 +2669,8 @@ class _MapScreenState extends State<MapScreen>
                                         );
                                       },
                                     );
-                                    // socketConnect();
                                   });
-                                  // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
                                 },
-                                // controller: controller,
                                 readOnly: true,
                                 style: const TextStyle(color: Colors.black),
                                 decoration: InputDecoration(
@@ -2375,21 +2711,7 @@ class _MapScreenState extends State<MapScreen>
                                     ),
                                     suffixIcon: InkWell(
                                         onTap: () {
-                                          // fun().then((value) {
-                                          //   setState(() {
-                                          //   });
-                                          //   getCurrentLatAndLong(lathome, longhome);
-                                          //   mapController1.animateCamera(
-                                          //     CameraUpdate.newCameraPosition(
-                                          //       CameraPosition(
-                                          //         target: LatLng(lathome, longhome),
-                                          //         zoom: 14.0,
-                                          //       ),
-                                          //     ),
-                                          //   );
-                                          // });
-
-                                          _addMarkers();
+                                          _addMarkersOptimized();
                                           fun().then((value) {
                                             setState(() {});
                                             getCurrentLatAndLong(
@@ -2408,7 +2730,6 @@ class _MapScreenState extends State<MapScreen>
                                                 );
                                               },
                                             );
-                                            // socketConnect();
                                           });
                                         },
                                         child: SvgPicture.asset(
@@ -2421,7 +2742,6 @@ class _MapScreenState extends State<MapScreen>
                       ),
                     ),
                     DraggableScrollableSheet(
-                      // initialChildSize:  homeApiController.homeapimodel!.categoryList![select1].bidding == "1" ? 0.37 : 0.30, // Set the default height to 50% of the screen
                       initialChildSize:
                           0.45, // Set the default height to 50% of the screen
                       minChildSize: 0.2, // Minimum height
@@ -2429,10 +2749,8 @@ class _MapScreenState extends State<MapScreen>
                       controller: sheetController,
                       builder: (BuildContext context, scrollController) {
                         return Container(
-                          // height: 100,
                           clipBehavior: Clip.hardEdge,
                           decoration: BoxDecoration(
-                            // color: Colors.white,
                             color: notifier.containercolore,
                             borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(25),
@@ -2459,7 +2777,6 @@ class _MapScreenState extends State<MapScreen>
                               ),
                               SliverList.list(children: [
                                 const SizedBox(height: 10),
-
                                 Padding(
                                   padding: const EdgeInsets.only(
                                       left: 10, right: 10),
@@ -2474,244 +2791,36 @@ class _MapScreenState extends State<MapScreen>
                                       shrinkWrap: true,
                                       itemBuilder: (context, index) {
                                         return InkWell(
-                                          onTap: () {
+                                          onTap: () async {
                                             setState(() {
                                               select1 = index;
-                                              // dropcontroller.clear();
+
                                               mid = homeApiController
                                                   .homeapimodel!
                                                   .categoryList![index]
                                                   .id
                                                   .toString();
+
                                               mroal = homeApiController
                                                   .homeapimodel!
                                                   .categoryList![index]
                                                   .role
                                                   .toString();
-                                              print(
-                                                  "*****mid*-**:::::------$mid");
-                                              _iconPaths.clear();
-                                              vihicallocations.clear();
-                                              _iconPathsbiddingon.clear();
-                                              vihicallocationsbiddingon.clear();
-
-                                              pickupcontroller.text.isEmpty ||
-                                                      dropcontroller
-                                                          .text.isEmpty
-                                                  ? markers.clear()
-                                                  : "";
-                                              pickupcontroller.text.isEmpty ||
-                                                      dropcontroller
-                                                          .text.isEmpty
-                                                  ? fun().then((value) {
-                                                      setState(() {});
-                                                      getCurrentLatAndLong(
-                                                          lathome, longhome);
-                                                      // _loadMapStyles();
-                                                      // socketConnect();
-                                                    })
-                                                  : "";
-
-                                              // vihicallocations.clear();
-                                              // markers.clear();
-                                              // _addMarkers();
-
-                                              pickupcontroller.text.isEmpty ||
-                                                      dropcontroller
-                                                          .text.isEmpty
-                                                  ? homeMapController
-                                                      .homemapApi(
-                                                          mid: mid,
-                                                          lat: lathome
-                                                              .toString(),
-                                                          lon: longhome
-                                                              .toString())
-                                                      .then(
-                                                      (value) {
-                                                        setState(() {});
-                                                        print(
-                                                            "///:---  ${value["Result"]}");
-
-                                                        if (value["Result"] ==
-                                                            false) {
-                                                          setState(() {
-                                                            vihicallocations
-                                                                .clear();
-                                                            markers.clear();
-                                                            _addMarkers();
-                                                            fun().then((value) {
-                                                              setState(() {});
-                                                              getCurrentLatAndLong(
-                                                                  lathome,
-                                                                  longhome);
-                                                              // socketConnect();
-                                                            });
-                                                            print(
-                                                                "***if condition+++:---  $vihicallocations");
-                                                          });
-                                                        } else {
-                                                          setState(() {});
-                                                          for (int i = 0;
-                                                              i <
-                                                                  homeMapController
-                                                                      .homeMapApiModel!
-                                                                      .list!
-                                                                      .length;
-                                                              i++) {
-                                                            vihicallocations.add(LatLng(
-                                                                double.parse(homeMapController
-                                                                    .homeMapApiModel!
-                                                                    .list![i]
-                                                                    .latitude
-                                                                    .toString()),
-                                                                double.parse(homeMapController
-                                                                    .homeMapApiModel!
-                                                                    .list![i]
-                                                                    .longitude
-                                                                    .toString())));
-                                                            _iconPaths.add(
-                                                                "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                                                          }
-                                                          _addMarkers();
-                                                        }
-
-                                                        print(
-                                                            "******-**:::::------ Build 2$vihicallocations");
-                                                      },
-                                                    )
-                                                  : homeMapController
-                                                      .homemapApi(
-                                                          mid: mid,
-                                                          lat: lathome
-                                                              .toString(),
-                                                          lon: longhome
-                                                              .toString())
-                                                      .then(
-                                                      (value) {
-                                                        setState(() {});
-                                                        print(
-                                                            "///:---  ${value["Result"]}");
-
-                                                        if (value["Result"] ==
-                                                            false) {
-                                                          setState(() {
-                                                            vihicallocationsbiddingon
-                                                                .clear();
-                                                            markers.clear();
-                                                            _addMarkers2();
-                                                            print(
-                                                                "***if condition+++:---  $vihicallocationsbiddingon");
-                                                          });
-                                                        } else {
-                                                          setState(() {});
-                                                          for (int i = 0;
-                                                              i <
-                                                                  homeMapController
-                                                                      .homeMapApiModel!
-                                                                      .list!
-                                                                      .length;
-                                                              i++) {
-                                                            vihicallocationsbiddingon.add(LatLng(
-                                                                double.parse(homeMapController
-                                                                    .homeMapApiModel!
-                                                                    .list![i]
-                                                                    .latitude
-                                                                    .toString()),
-                                                                double.parse(homeMapController
-                                                                    .homeMapApiModel!
-                                                                    .list![i]
-                                                                    .longitude
-                                                                    .toString())));
-                                                            _iconPathsbiddingon.add(
-                                                                "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                                                          }
-                                                          _addMarkers2();
-                                                        }
-
-                                                        print(
-                                                            "******-**:::::------ Build 3$vihicallocationsbiddingon");
-                                                      },
-                                                    );
-
-                                              calculateController
-                                                  .calculateApi(
-                                                      context: context,
-                                                      uid: userid.toString(),
-                                                      mid: mid,
-                                                      mrole: mroal,
-                                                      pickup_lat_lon:
-                                                          "$latitudepick,$longitudepick",
-                                                      drop_lat_lon:
-                                                          "$latitudedrop,$longitudedrop",
-                                                      drop_lat_lon_list:
-                                                          onlypass)
-                                                  .then(
-                                                (value) {
-                                                  dropprice = 0;
-                                                  minimumfare = 0;
-                                                  maximumfare = 0;
-
-                                                  if (value["Result"] == true) {
-                                                    amountresponse = "true";
-                                                    dropprice =
-                                                        value["drop_price"];
-                                                    minimumfare =
-                                                        value["vehicle"]
-                                                            ["minimum_fare"];
-                                                    maximumfare =
-                                                        value["vehicle"]
-                                                            ["maximum_fare"];
-                                                    responsemessage =
-                                                        value["message"];
-
-                                                    tot_hour = value["tot_hour"]
-                                                        .toString();
-                                                    tot_time =
-                                                        value["tot_minute"]
-                                                            .toString();
-                                                    vehicle_id =
-                                                        value["vehicle"]["id"]
-                                                            .toString();
-                                                    vihicalrice = double.parse(
-                                                        value["drop_price"]
-                                                            .toString());
-                                                    totalkm = double.parse(
-                                                        value["tot_km"]
-                                                            .toString());
-                                                    tot_secound = "0";
-
-                                                    vihicalimage =
-                                                        value["vehicle"]
-                                                                ["map_img"]
-                                                            .toString();
-                                                    vihicalname =
-                                                        value["vehicle"]["name"]
-                                                            .toString();
-
-                                                    setState(() {});
-                                                  } else {
-                                                    amountresponse = "false";
-                                                    print(
-                                                        "jojojojojojojojojojojojojojojojojojojojojojojojo");
-                                                    setState(() {});
-                                                  }
-
-                                                  print(
-                                                      "********** dropprice **********:----- $dropprice");
-                                                  print(
-                                                      "********** minimumfare **********:----- $minimumfare");
-                                                  print(
-                                                      "********** maximumfare **********:----- $maximumfare");
-                                                },
-                                              );
-                                              // Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen()));
                                             });
+
+                                            if (kDebugMode) {
+                                              print(
+                                                  "🚗 Selected category $index: ${homeApiController.homeapimodel!.categoryList![index].name}");
+
+                                              print("📋 Category ID: $mid");
+                                            }
+
+                                            await _loadVehiclesOptimized();
                                           },
                                           child: Padding(
                                             padding: const EdgeInsets.all(4),
                                             child: Container(
                                               height: 50,
-                                              // width: 100,
                                               decoration: BoxDecoration(
                                                 color: select1 == index
                                                     ? theamcolore
@@ -2763,17 +2872,12 @@ class _MapScreenState extends State<MapScreen>
                                                                         .then(
                                                                       (value) {
                                                                         Get.bottomSheet(
-                                                                          // isScrollControlled: true,
-                                                                          // isDismissible: false,
-                                                                          // enableDrag: false,
                                                                           StatefulBuilder(
                                                                             builder:
                                                                                 (context, setState) {
                                                                               return Container(
                                                                                 clipBehavior: Clip.hardEdge,
-                                                                                // height: 260,
                                                                                 width: Get.width,
-                                                                                // padding: const EdgeInsets.all(12),
                                                                                 decoration: BoxDecoration(
                                                                                   color: notifier.containercolore,
                                                                                   borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
@@ -2855,7 +2959,6 @@ class _MapScreenState extends State<MapScreen>
                                 ),
                                 InkWell(
                                   onTap: () {
-                                    // _navigateAndRefresh();
                                     showModalBottomSheet(
                                       isScrollControlled: true,
                                       shape: const RoundedRectangleBorder(
@@ -2875,7 +2978,6 @@ class _MapScreenState extends State<MapScreen>
                                               )),
                                           child: Column(
                                             children: [
-                                              // _navigateAndRefresh();
                                               Expanded(
                                                   child: PickupDropPoint(
                                                 pagestate: false,
@@ -2898,11 +3000,9 @@ class _MapScreenState extends State<MapScreen>
                                       height: 50,
                                       decoration: BoxDecoration(
                                         color: Colors.grey.withOpacity(0.05),
-                                        // color: Colors.red,
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: ListTile(
-                                        // contentPadding: EdgeInsets.zero,
                                         contentPadding:
                                             const EdgeInsets.only(left: 10),
                                         leading: Container(
@@ -2932,19 +3032,6 @@ class _MapScreenState extends State<MapScreen>
                                                       color:
                                                           notifier.textColor),
                                                 )),
-                                        // trailing: InkWell(
-                                        //   onTap: () {
-                                        //     // Navigator.push(context, MaterialPageRoute(builder: (context) => DriverListScreen(),));
-                                        //   },
-                                        //   child: Container(
-                                        //     padding: const EdgeInsets.all(10),
-                                        //     decoration: BoxDecoration(
-                                        //       color: theamcolore.withOpacity(0.05),
-                                        //       borderRadius: BorderRadius.circular(35),
-                                        //     ),
-                                        //     child: Text("Entrance",style: TextStyle(color: theamcolore)),
-                                        //   ),
-                                        // ),
                                       ),
                                     ),
                                   ),
@@ -2955,7 +3042,6 @@ class _MapScreenState extends State<MapScreen>
                                 textfieldlist.length > 0
                                     ? InkWell(
                                         onTap: () {
-                                          // _navigateAndRefresh();
                                           showModalBottomSheet(
                                             isScrollControlled: true,
                                             shape: const RoundedRectangleBorder(
@@ -2969,7 +3055,6 @@ class _MapScreenState extends State<MapScreen>
                                                 height: 750,
                                                 child: Column(
                                                   children: [
-                                                    // _navigateAndRefresh();
                                                     Expanded(
                                                         child: PickupDropPoint(
                                                       pagestate: false,
@@ -2985,7 +3070,6 @@ class _MapScreenState extends State<MapScreen>
                                               );
                                             },
                                           );
-                                          // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
                                         },
                                         child: Padding(
                                           padding: const EdgeInsets.only(
@@ -2995,7 +3079,6 @@ class _MapScreenState extends State<MapScreen>
                                             decoration: BoxDecoration(
                                               color:
                                                   Colors.grey.withOpacity(0.05),
-                                              // color: Colors.red,
                                               borderRadius:
                                                   BorderRadius.circular(10),
                                             ),
@@ -3035,7 +3118,6 @@ class _MapScreenState extends State<MapScreen>
                                             left: 20, right: 20),
                                         child: InkWell(
                                           onTap: () {
-                                            // _navigateAndRefresh();
                                             showModalBottomSheet(
                                               isScrollControlled: true,
                                               shape:
@@ -3050,10 +3132,8 @@ class _MapScreenState extends State<MapScreen>
                                               builder: (context) {
                                                 return SizedBox(
                                                   height: 750,
-                                                  // color: Colors.red,
                                                   child: Column(
                                                     children: [
-                                                      // _navigateAndRefresh();
                                                       Expanded(
                                                           child:
                                                               PickupDropPoint(
@@ -3071,7 +3151,6 @@ class _MapScreenState extends State<MapScreen>
                                                 );
                                               },
                                             );
-                                            // Navigator.push(context, MaterialPageRoute(builder: (context) => const PickupDropPoint(),));
                                           },
                                           child: Container(
                                             height: 50,
@@ -3085,8 +3164,6 @@ class _MapScreenState extends State<MapScreen>
                                               padding: const EdgeInsets.only(
                                                   left: 10, right: 10),
                                               child: Row(
-                                                // crossAxisAlignment: CrossAxisAlignment.start,
-                                                // mainAxisAlignment: MainAxisAlignment.start,
                                                 children: [
                                                   Image(
                                                     image: const AssetImage(
@@ -3143,22 +3220,6 @@ class _MapScreenState extends State<MapScreen>
                                             left: 20, right: 20),
                                         child: InkWell(
                                           onTap: () {
-                                            // bottomshhetopen = true;
-                                            // if(isLoad){
-                                            //   return;
-                                            // }else{
-                                            //   isLoad = true;
-                                            // }
-                                            // homeApiController.homeApi(uid: userid.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
-                                            //   if(value["Result"] == true){
-                                            //     setState(() {
-                                            //       Buttonpresebottomshhet();
-                                            //       isLoad = false;
-                                            //     });
-                                            //   }else{
-                                            //
-                                            //   }
-                                            // },);
                                             Buttonpresebottomshhet();
                                           },
                                           child: Container(
@@ -3210,7 +3271,6 @@ class _MapScreenState extends State<MapScreen>
                                         ),
                                       )
                                     : const SizedBox(),
-                                // const SizedBox(height: 20,),
                                 pickupcontroller.text.isEmpty ||
                                         dropcontroller.text.isEmpty
                                     ? Padding(
@@ -3218,11 +3278,7 @@ class _MapScreenState extends State<MapScreen>
                                         child: CommonButton(
                                             containcolore:
                                                 theamcolore.withOpacity(0.2),
-                                            onPressed1: () {
-                                              // rateBottomSheet();
-                                              // rateBottomSheet();
-                                              // Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen()));
-                                            },
+                                            onPressed1: () {},
                                             context: context,
                                             txt1: "Find a driver".tr),
                                       )
@@ -3236,22 +3292,6 @@ class _MapScreenState extends State<MapScreen>
                                                         .bidding ==
                                                     "1"
                                                 ? () {
-                                                    // if(isLoad){
-                                                    //   return;
-                                                    // }else{
-                                                    //   isLoad = true;
-                                                    // }
-                                                    // homeApiController.homeApi(uid: userid.toString(),lat: lathome.toString(),lon: longhome.toString()).then((value) {
-                                                    //   if(value["Result"] == true){
-                                                    //    setState(() {
-                                                    //      Buttonpresebottomshhet();
-                                                    //      isLoad = false;
-                                                    //    });
-                                                    //   }else{
-                                                    //
-                                                    //   }
-                                                    // },);
-
                                                     Buttonpresebottomshhet();
                                                   }
                                                 : () {
@@ -3338,7 +3378,6 @@ class _MapScreenState extends State<MapScreen>
                                                             "GOGOGOGOGOGOGOGOGOGOGOGOG:- $midseconde");
                                                         print(
                                                             "GOGOGOGOGOGOGOGOGOGOGOGOG:- $vihicalrice");
-                                                        // setState((){});
                                                       },
                                                     );
                                                   },
@@ -3441,7 +3480,6 @@ class _MapScreenState extends State<MapScreen>
                 Center(
                   child: Container(
                     height: 25,
-                    // width: 50,
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
@@ -3497,7 +3535,6 @@ class _MapScreenState extends State<MapScreen>
                 Divider(
                   color: Colors.grey.withOpacity(0.4),
                 ),
-                // const SizedBox(height: 5,),
                 ListView.builder(
                   padding: EdgeInsets.zero,
                   shrinkWrap: true,
@@ -3508,7 +3545,6 @@ class _MapScreenState extends State<MapScreen>
                       onTap: () {
                         switch (index) {
                           case 0:
-                            // Get.back();
                             pickupcontroller.text = "";
                             dropcontroller.text = "";
                             latitudepick = 0.00;
@@ -3569,7 +3605,6 @@ class _MapScreenState extends State<MapScreen>
                                   height: 25,
                                   color: notifier.textColor,
                                 ),
-                                // const Image(image: AssetImage("assets/info-circle.png"),height: 25,),
                                 const SizedBox(
                                   width: 15,
                                 ),
@@ -3591,8 +3626,6 @@ class _MapScreenState extends State<MapScreen>
                                             value: notifier.isDark,
                                             activeColor: theamcolore,
                                             onChanged: (bool value) async {
-                                              // Check if widget is still mounted before setState
-
                                               if (!mounted || _isDisposed) {
                                                 return;
                                               }
@@ -3607,8 +3640,6 @@ class _MapScreenState extends State<MapScreen>
 
                                                 notifier.isAvailable(value);
 
-                                                // Check mounted again before setState
-
                                                 if (!mounted || _isDisposed) {
                                                   return;
                                                 }
@@ -3616,8 +3647,6 @@ class _MapScreenState extends State<MapScreen>
                                                 setState(() {
                                                   darkMode = value;
                                                 });
-
-                                                // Navigate after setState completes
 
                                                 Get.offAll(MapScreen(
                                                     selectvihical: false));
@@ -3690,7 +3719,6 @@ class _MapScreenState extends State<MapScreen>
                                             height: 25,
                                             color: notifier.textColor,
                                           ),
-                                          // const Image(image: AssetImage("assets/svgpicture/pagelist.svg"),height: 25,),
                                           const SizedBox(
                                             width: 15,
                                           ),
@@ -3701,14 +3729,6 @@ class _MapScreenState extends State<MapScreen>
                                                 color: notifier.textColor),
                                           ),
                                           const Spacer(),
-                                          // index == 3 ? Container(
-                                          //    height: 8,
-                                          //    width: 8,
-                                          //    decoration: const BoxDecoration(
-                                          //      color: Colors.red,
-                                          //      shape: BoxShape.circle
-                                          //    ),
-                                          //  ) : const SizedBox()
                                         ],
                                       ),
                                     ],
@@ -3718,13 +3738,6 @@ class _MapScreenState extends State<MapScreen>
                             });
                   },
                 ),
-                // Padding(
-                //   padding: const EdgeInsets.only(left: 10,top: 15,right: 10),
-                //   child: CommonOutLineButton(bordercolore: theamcolore, onPressed1: () {
-                //     loginSharedPreferencesSet(true);
-                //     Get.offAll(const OnbordingScreen());
-                //   },context: context,txt1: "Log Out"),
-                // ),
                 InkWell(
                   onTap: () {
                     loginSharedPreferencesSet(true);
@@ -3849,7 +3862,6 @@ class _MapScreenState extends State<MapScreen>
                                               WidgetStatePropertyAll(
                                                   theamcolore)),
                                       onPressed: () => {
-                                        // resetNew(),
                                         loginSharedPreferencesSet(true),
                                         deleteAccount
                                             .deleteaccountApi(
@@ -3859,12 +3871,6 @@ class _MapScreenState extends State<MapScreen>
                                             Get.offAll(OnbordingScreen());
                                           },
                                         ),
-                                        // Delete_Api_Class(uid: userData["id"]).then((value) {
-                                        //   ScaffoldMessenger.of(context).showSnackBar(
-                                        //     SnackBar(content: Text(value["ResponseMsg"]),behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),),
-                                        //   );
-                                        // }),
-                                        // Navigator.push(context, MaterialPageRoute(builder: (context) => const Login_Screen(),))
                                       },
                                       child: Text('Yes,Remove'.tr,
                                           style: const TextStyle(
@@ -3926,14 +3932,11 @@ class _MapScreenState extends State<MapScreen>
     } else {
       toast = 0;
       amountcontroller.text = dropprice.toString();
-      // var maxprice =  dropprice + (dropprice * int.parse(maximumfare) / 100);
-      // var minprice =  dropprice - (dropprice * int.parse(minimumfare) / 100);
+
       int maxprice = int.parse(maximumfare);
       int minprice = int.parse(minimumfare);
       print("**maxprice**:-- $maxprice");
       print("**maxprice**:-- $minprice");
-      // controller.reset();
-      // controller.dispose();
 
       Get.bottomSheet(
         enableDrag: false,
@@ -3942,7 +3945,6 @@ class _MapScreenState extends State<MapScreen>
         StatefulBuilder(
           builder: (context, setState) {
             return Container(
-              // height: 460,
               width: Get.width,
               decoration: BoxDecoration(
                 color: notifier.containercolore,
@@ -3963,29 +3965,11 @@ class _MapScreenState extends State<MapScreen>
                             ? const SizedBox()
                             : lottie.Lottie.asset("assets/lottie/loading.json",
                                 height: 30),
-
                         const SizedBox(
                           height: 20,
                         ),
                         Row(
                           children: [
-                            // Spacer(),
-                            // homeApiController.homeapimodel!.runnigRide!.isEmpty ? SizedBox() :
-                            // InkWell(
-                            //   onTap: () {
-                            //     setState((){
-                            //       socatloadbidinfdata();
-                            //     });
-                            //   },
-                            //   child: Container(
-                            //     padding: EdgeInsets.all(10),
-                            //     decoration: BoxDecoration(
-                            //       borderRadius: BorderRadius.all(Radius.circular(10)),
-                            //       border: Border.all(color: theamcolore),
-                            //     ),
-                            //     child: Center(child: Text("Driver Bid",style: TextStyle(color: theamcolore,fontSize: 12),),),
-                            //   ),
-                            // ),
                             Spacer(),
                             SizedBox(
                               width: 40,
@@ -4036,9 +4020,6 @@ class _MapScreenState extends State<MapScreen>
                         ),
                         Text("💡Raise the fare, increase your chances.".tr,
                             style: const TextStyle(color: Colors.grey)),
-                        // const SizedBox(height: 2,),
-                        // const Text("amount goes to the captain",style: TextStyle(color: Colors.grey)),
-                        // SizedBox(height: 30,),
                         Row(
                           children: [
                             InkWell(
@@ -4067,14 +4048,8 @@ class _MapScreenState extends State<MapScreen>
                                         }
                                       }
 
-                                      // couponadd[couponindex!] = false;
                                       couponname = "";
                                       couponId = "";
-                                      // if (controller != null && controller.isAnimating) {
-                                      //   controller.dispose();
-                                      // }
-                                      // controller.reset();
-                                      // controller.dispose();
                                     }
                                   }
                                 });
@@ -4099,7 +4074,6 @@ class _MapScreenState extends State<MapScreen>
                               child: SizedBox(
                                 width: 150,
                                 child: TextField(
-                                  // focusNode: _focusNode,
                                   keyboardType: TextInputType.number,
                                   controller: amountcontroller,
                                   textAlign: TextAlign.center,
@@ -4137,7 +4111,6 @@ class _MapScreenState extends State<MapScreen>
                                         dropprice =
                                             int.parse(amountcontroller.text);
                                         mainamount = amountcontroller.text;
-                                        // dropprice = amountcontroller.text;
                                       }
                                     });
                                   },
@@ -4159,7 +4132,6 @@ class _MapScreenState extends State<MapScreen>
                                   } else {
                                     if (double.parse(dropprice.toString()) <
                                         maxprice) {
-                                      // dropprice = amountcontroller.text;
                                       dropprice += 1;
                                       amountcontroller.text =
                                           dropprice.toString();
@@ -4173,11 +4145,6 @@ class _MapScreenState extends State<MapScreen>
 
                                       couponname = "";
                                       couponId = "";
-                                      // if (controller != null && controller.isAnimating) {
-                                      //   controller.dispose();
-                                      // }
-                                      // controller.reset();
-                                      // controller.dispose();
                                     }
                                   }
 
@@ -4220,10 +4187,6 @@ class _MapScreenState extends State<MapScreen>
                         ),
                         ListTile(
                           contentPadding: EdgeInsets.zero,
-                          // leading: const Padding(
-                          //   padding: EdgeInsets.only(left: 10),
-                          //   child: Icon(Icons.telegram,size: 30,),
-                          // ),
                           leading: const Image(
                             image: AssetImage("assets/automatically.png"),
                             height: 30,
@@ -4241,27 +4204,39 @@ class _MapScreenState extends State<MapScreen>
                             child: Transform.scale(
                               scale: 0.9,
                               child: CupertinoSwitch(
-                                // This bool value toggles the switch.
-                                value: light,
+                                value: switchValue,
                                 activeColor: theamcolore,
                                 onChanged: controller != null &&
                                         controller!.isAnimating
                                     ? (bool value) {
                                         CustomNotification.show(
-                                            message:
-                                                "Your current request is in progress. You can either wait for it to complete or cancel to perform this action."
-                                                    .tr,
-                                            type: NotificationType.info);
-                                        ;
+                                          message:
+                                              "Your current request is in progress. You can either wait for it to complete or cancel to perform this action."
+                                                  .tr,
+                                        );
                                       }
-                                    : (bool value) {
-                                        setState(() {
-                                          light = value;
-                                          offerpluse = true;
-                                          biddautostatus = value.toString();
+                                    : (bool value) async {
+                                        updateBiddingMode(value);
+
+                                        await _saveAutomaticBookingPreference(
+                                            value);
+
+                                        CustomNotification.show(
+                                          message: value
+                                              ? "Automatic booking enabled".tr
+                                              : "Manual driver selection".tr,
+                                        );
+
+                                        if (kDebugMode) {
                                           print(
-                                              "****:--BIDSTATUS (${biddautostatus})");
-                                        });
+                                              "🔄 Auto-booking toggled: ${value ? 'ON' : 'OFF'}");
+
+                                          print(
+                                              "📱 UI State - switchValue: $switchValue");
+
+                                          print(
+                                              "🚗 Backend State - biddautostatus: $biddautostatus");
+                                        }
                                       },
                               ),
                             ),
@@ -4273,13 +4248,9 @@ class _MapScreenState extends State<MapScreen>
                       ],
                     ),
                   ),
-                  // Spacer(),
-
                   Container(
-                    // height: 190,
                     decoration: BoxDecoration(
                         color: notifier.containercolore,
-                        // border: Border.all(color: Colors.grey.withOpacity(0.4))
                         boxShadow: const [
                           BoxShadow(
                               color: Colors.grey,
@@ -4295,18 +4266,7 @@ class _MapScreenState extends State<MapScreen>
                               Expanded(
                                 child: InkWell(
                                   onTap: () {
-                                    // for(int i=1; i<paymentGetApiController.paymentgetwayapi!.paymentList!.length; i++){
-                                    //   if(int.parse(paymentGetApiController.paymentgetwayapi!.defaultPayment.toString()) == paymentGetApiController.paymentgetwayapi!.paymentList![i].id){
-                                    //     setState((){
-                                    //       payment = paymentGetApiController.paymentgetwayapi!.paymentList![i].id!;
-                                    //       print("+++++$payment");
-                                    //       print("+++++$i");
-                                    //     });
-                                    //   }
-                                    // }
-
                                     showModalBottomSheet(
-                                      // isDismissible: false,
                                       shape: const RoundedRectangleBorder(
                                         borderRadius: BorderRadius.only(
                                             topLeft: Radius.circular(15),
@@ -4340,13 +4300,11 @@ class _MapScreenState extends State<MapScreen>
                                                       Get.back();
                                                       Get.back();
                                                       Buttonpresebottomshhet();
-                                                      // Get.back();
                                                     },
                                                     txt1: "CONTINUE".tr,
                                                     context: context),
                                               ),
                                               body: Container(
-                                                // height: 450,
                                                 decoration: BoxDecoration(
                                                   color:
                                                       notifier.containercolore,
@@ -4459,7 +4417,6 @@ class _MapScreenState extends State<MapScreen>
                                                                     onTap: () {
                                                                       setState(
                                                                           () {
-                                                                        // payment = index;
                                                                         payment = paymentGetApiController
                                                                             .paymentgetwayapi!
                                                                             .paymentList![index]
@@ -4468,7 +4425,6 @@ class _MapScreenState extends State<MapScreen>
                                                                             .paymentgetwayapi!
                                                                             .paymentList![index]
                                                                             .name!;
-                                                                        // paymentmethodId = paymentGetApiController.paymentgetwayapi!.paymentdata[index].id;
                                                                       });
                                                                     },
                                                                     child: paymentGetApiController.paymentgetwayapi!.paymentList![index].status ==
@@ -4486,7 +4442,6 @@ class _MapScreenState extends State<MapScreen>
                                                                                 const EdgeInsets.all(5),
                                                                             decoration:
                                                                                 BoxDecoration(
-                                                                              // color: Colors.yellowAccent,
                                                                               border: Border.all(color: payment == paymentGetApiController.paymentgetwayapi!.paymentList![index].id! ? theamcolore : Colors.grey.withOpacity(0.4)),
                                                                               borderRadius: BorderRadius.circular(15),
                                                                             ),
@@ -4547,7 +4502,6 @@ class _MapScreenState extends State<MapScreen>
                                   },
                                   child: ListTile(
                                     contentPadding: EdgeInsets.zero,
-                                    // leading: const Icon(Icons.card_giftcard_sharp),
                                     leading: const Image(
                                       image: AssetImage("assets/payment.png"),
                                       height: 30,
@@ -4602,7 +4556,6 @@ class _MapScreenState extends State<MapScreen>
 
                                       showModalBottomSheet(
                                         isScrollControlled: true,
-                                        // isDismissible: true,
                                         shape: const RoundedRectangleBorder(
                                           borderRadius: BorderRadius.only(
                                               topLeft: Radius.circular(15),
@@ -4687,7 +4640,6 @@ class _MapScreenState extends State<MapScreen>
                                                         itemBuilder:
                                                             (context, index) {
                                                           return Container(
-                                                            // height: 230,
                                                             margin:
                                                                 const EdgeInsets
                                                                     .only(
@@ -4813,7 +4765,6 @@ class _MapScreenState extends State<MapScreen>
                                                                           ? InkWell(
                                                                               onTap: () {
                                                                                 setState(() {
-                                                                                  // couponindex = index;
                                                                                   couponadd[index] = false;
                                                                                   dropprice = mainamount;
                                                                                   amountcontroller.text = mainamount;
@@ -4845,11 +4796,9 @@ class _MapScreenState extends State<MapScreen>
                                                                           : InkWell(
                                                                               onTap: () {
                                                                                 if (double.parse(amountcontroller.text.toString()) >= double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].minAmount.toString())) {
-                                                                                  // cartController.checkCouponDataApi(cid: cartController.cartDataInfo?.couponList[index].id);
-
                                                                                   setState(() {
                                                                                     couponAmt = int.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString());
-                                                                                    // couponadd[index] = true;
+
                                                                                     couponindex = index;
                                                                                     if (couponadd[index] == false) {
                                                                                       for (int i = 0; i < couponadd.length; i++) {
@@ -4863,16 +4812,12 @@ class _MapScreenState extends State<MapScreen>
                                                                                     }
                                                                                   });
 
-                                                                                  // amountcontroller.text = "${double.parse(amountcontroller.text) - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString())}";
-                                                                                  // amountcontroller.text = "${double.parse(amountcontroller.text) - double.parse(paymentGetApiController.paymentgetwayapi!.couponList![index].discountAmount.toString())}";
-
                                                                                   print("----------------------------------------${double.parse(amountcontroller.text.toString())}");
                                                                                   couponname = paymentGetApiController.paymentgetwayapi!.couponList![index].title.toString();
                                                                                   couponId = paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString();
 
                                                                                   print("xjsbchjscvsgchsvcscsc  $couponId");
 
-                                                                                  // Get.back(result: paymentGetApiController.paymentgetwayapi!.couponList![index].code);
                                                                                   Get.back(result: {
                                                                                     "coupAdded": paymentGetApiController.paymentgetwayapi!.couponList![index].title,
                                                                                     "couponid": paymentGetApiController.paymentgetwayapi!.couponList![index].id.toString(),
@@ -4923,7 +4868,6 @@ class _MapScreenState extends State<MapScreen>
                                                         },
                                                       ),
                                                     )
-                                                    // Listview
                                                   ],
                                                 ),
                                               ),
@@ -4935,10 +4879,6 @@ class _MapScreenState extends State<MapScreen>
                                   },
                                   child: ListTile(
                                     contentPadding: EdgeInsets.zero,
-                                    // leading: const Padding(
-                                    //   padding: EdgeInsets.only(top: 8),
-                                    //   child: Icon(Icons.circle_notifications_sharp),
-                                    // ),
                                     leading: const Padding(
                                       padding: EdgeInsets.only(top: 6),
                                       child: Image(
@@ -4947,7 +4887,6 @@ class _MapScreenState extends State<MapScreen>
                                         width: 30,
                                       ),
                                     ),
-
                                     title: couponname == ""
                                         ? Transform.translate(
                                             offset: const Offset(-15, 10),
@@ -4979,10 +4918,6 @@ class _MapScreenState extends State<MapScreen>
                                       height: 30,
                                       color: notifier.textColor,
                                     ),
-
-                                    // title: Transform.translate(offset: const Offset(-15, 0),child: const Text("BIKE50")),
-                                    // subtitle: Transform.translate(offset: const Offset(-15, 0),child: const Text("Coupon applied",style: TextStyle(fontSize: 12),)),
-                                    // trailing: const Image(image: AssetImage("assets/angle-right-small.png"),height: 30,),
                                   ),
                                 ),
                               ),
@@ -5010,7 +4945,6 @@ class _MapScreenState extends State<MapScreen>
                                         offerpluse = false;
                                         requesttime();
                                         orderfunction();
-                                        // dropprice = amountcontroller.text;
                                       }
                                     });
                                   },
@@ -5059,7 +4993,6 @@ class _MapScreenState extends State<MapScreen>
                                                 print("hhhhh");
                                               } else {
                                                 if (offerpluse == true) {
-                                                  // refreshAnimation();
                                                   if (controller != null &&
                                                       controller!.isAnimating) {
                                                     controller!.dispose();
@@ -5071,10 +5004,7 @@ class _MapScreenState extends State<MapScreen>
 
                                                   offerpluse = false;
                                                 } else {}
-                                                // dropprice = amountcontroller.text;
                                               }
-
-                                              // refreshAnimation();
 
                                               if (double.parse(
                                                       amountcontroller.text) >
@@ -5094,7 +5024,7 @@ class _MapScreenState extends State<MapScreen>
                                                 print("hhhhh");
                                               } else {
                                                 toast = 0;
-                                                // dropprice =
+
                                                 dropprice = double.parse(
                                                     amountcontroller.text);
                                                 mainamount =
@@ -5164,7 +5094,6 @@ class _MapScreenState extends State<MapScreen>
                                       bordercolore: theamcolore,
                                       onPressed1: () {
                                         setState(() {
-                                          // socket.connect();
                                           homeApiController
                                               .homeapimodel!
                                               .runnigRide![0]
@@ -5203,10 +5132,7 @@ class _MapScreenState extends State<MapScreen>
                                                 'driverid': calculateController
                                                     .calCulateModel!.driverId!,
                                               });
-                                              // socket.emit('Vehicle_Ride_Cancel',{
-                                              //   'uid': "$useridgloable",
-                                              //   'driverid' : value["driver_list"],
-                                              // });
+
                                               Future.delayed(
                                                   Duration(microseconds: 500),
                                                   () {
@@ -5237,10 +5163,6 @@ class _MapScreenState extends State<MapScreen>
                       ),
                     ),
                   ),
-                  // CommonButton(containcolore: theamcolore, onPressed1: () {
-                  //   Get.back();
-                  // },txt1: "Book Auto for \$45",context: context),
-                  // const SizedBox(height: 10,),
                 ],
               ),
             );
@@ -5265,9 +5187,7 @@ class _MapScreenState extends State<MapScreen>
         print("[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
       },
     );
-    // refreshAnimation();
 
-    // print("111111111dd111111111 ${calculateController.calCulateModel!.driverId}");
     print("111111111 amountcontroller.text 111111111 ${amountcontroller.text}");
 
     percentValue.clear();
@@ -5277,7 +5197,6 @@ class _MapScreenState extends State<MapScreen>
     }
     setState(() {
       currentStoryIndex = 0;
-      // loadertimer = false;
     });
 
     priceyourfare = double.parse(amountcontroller.text);
@@ -5300,7 +5219,6 @@ class _MapScreenState extends State<MapScreen>
       coupon_id: couponId,
       payment_id: "$payment",
       driverid: calculateController.calCulateModel!.driverId!,
-      // driverid: [29,14],
       price: amountcontroller.text,
       pickup: "$latitudepick,$longitudepick",
       drop: "$latitudedrop,$longitudedrop",
@@ -5326,11 +5244,6 @@ class _MapScreenState extends State<MapScreen>
             drop_lat_lon_list: onlypass)
         .then(
       (value) {
-        // print("********** value **********:----- ${value}");
-        // print("********** value **********:----- ${value["drop_price"]}");
-        // print("********** value **********:----- ${value["vehicle"]["minimum_fare"]}");
-        // print("********** value **********:----- ${value["vehicle"]["maximum_fare"]}");
-
         dropprice = 0;
         minimumfare = 0;
         maximumfare = 0;

@@ -7,7 +7,7 @@ import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:get/get.dart';
 import 'package:otp_text_field/otp_field.dart';
 import 'package:otp_text_field/otp_field_style.dart';
@@ -281,10 +281,16 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                             builder: (context) => const Onmobile3Screen(),
                           ));
                     } else {
-                      CustomNotification.show(message: "Incorrect OTP. Please try again.".tr, type: NotificationType.info);;
+                      CustomNotification.show(
+                          message: "Incorrect OTP. Please try again.".tr,
+                          type: NotificationType.info);
+                      ;
                     }
                   } else {
-                    CustomNotification.show(message: "Please Enter Otp.".tr, type: NotificationType.info);;
+                    CustomNotification.show(
+                        message: "Please Enter Otp.".tr,
+                        type: NotificationType.info);
+                    ;
                   }
                 },
                 context: context,

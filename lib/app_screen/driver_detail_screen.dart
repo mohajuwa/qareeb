@@ -6,7 +6,7 @@ import 'package:qareeb/common_code/custom_notification.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -815,10 +815,16 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
         throw 'Could not launch $url';
       }
     } else if (status.isPermanentlyDenied) {
-      CustomNotification.show(message: "Please allow calls Permission", type: NotificationType.info);;
+      CustomNotification.show(
+          message: "Please allow calls Permission",
+          type: NotificationType.info);
+      ;
       await openAppSettings();
     } else {
-      CustomNotification.show(message: "Please allow calls Permission", type: NotificationType.info);;
+      CustomNotification.show(
+          message: "Please allow calls Permission",
+          type: NotificationType.info);
+      ;
       await openAppSettings();
     }
   }

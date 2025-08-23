@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/network_service.dart';
 import 'auth_screen/splase_screen.dart';
 import 'common_code/colore_screen.dart';
 import 'common_code/language_translate.dart';
 
-Future<void> main() async {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await NetworkService().initialize();
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatefulWidget {

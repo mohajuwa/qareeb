@@ -3,7 +3,7 @@ import 'package:qareeb/common_code/custom_notification.dart';
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:get/get.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:lottie/lottie.dart';
@@ -411,7 +411,9 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
         _navigateToOnboarding3();
         break;
       default:
-        CustomNotification.show(message: "No Service".tr, type: NotificationType.info);;
+        CustomNotification.show(
+            message: "No Service".tr, type: NotificationType.info);
+        ;
     }
   }
 
@@ -572,7 +574,9 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
 
   void _handleForgotPassword() {
     if (_forgotPhoneController.text.isEmpty) {
-      CustomNotification.show(message: 'Enter Mobile Number...!!!'.tr, type: NotificationType.info);;
+      CustomNotification.show(
+          message: 'Enter Mobile Number...!!!'.tr, type: NotificationType.info);
+      ;
       return;
     }
 
@@ -598,10 +602,14 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
           _showCreatePasswordBottomSheet();
           break;
         default:
-          CustomNotification.show(message: "No Service".tr, type: NotificationType.info);;
+          CustomNotification.show(
+              message: "No Service".tr, type: NotificationType.info);
+          ;
       }
     } else {
-      CustomNotification.show(message: "${value['message']}", type: NotificationType.info);;
+      CustomNotification.show(
+          message: "${value['message']}", type: NotificationType.info);
+      ;
     }
   }
 
@@ -713,7 +721,10 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
     if (expectedOtp == _otpVariableForgot) {
       _showCreatePasswordBottomSheet();
     } else {
-      CustomNotification.show(message: "Incorrect OTP. Please try again.".tr, type: NotificationType.info);;
+      CustomNotification.show(
+          message: "Incorrect OTP. Please try again.".tr,
+          type: NotificationType.info);
+      ;
     }
   }
 
@@ -770,7 +781,10 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
 
   void _handlePasswordReset() {
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      CustomNotification.show(message: "Please enter current password".tr, type: NotificationType.info);;
+      CustomNotification.show(
+          message: "Please enter current password".tr,
+          type: NotificationType.info);
+      ;
       return;
     }
 
@@ -785,7 +799,9 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
       if (value["ResponseCode"] == "200") {
         Get.back();
       }
-      CustomNotification.show(message: value["message"], type: NotificationType.info);;
+      CustomNotification.show(
+          message: value["message"], type: NotificationType.info);
+      ;
     });
   }
 

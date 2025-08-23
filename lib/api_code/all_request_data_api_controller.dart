@@ -1,7 +1,7 @@
 import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
@@ -61,7 +61,10 @@ class AllRequestDataApiController extends GetxController
           isLoading = false;
           update();
         } else {
-          CustomNotification.show(message: "${allRequestDataModelupcoming!.message}", type: NotificationType.info);;
+          CustomNotification.show(
+              message: "${allRequestDataModelupcoming!.message}",
+              type: NotificationType.info);
+          ;
         }
       } else {
         showToastForDuration("${data["message"]}", 2);

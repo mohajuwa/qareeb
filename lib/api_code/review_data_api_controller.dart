@@ -1,7 +1,7 @@
 import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import '../common_code/config.dart';
@@ -30,7 +30,9 @@ class ReviewDataApiController extends GetxController implements GetxService {
         return data;
       } else {
         Get.back();
-        CustomNotification.show(message: "${data["message"]}", type: NotificationType.info);;
+        CustomNotification.show(
+            message: "${data["message"]}", type: NotificationType.info);
+        ;
       }
     } else {
       Get.back();

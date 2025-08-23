@@ -1,7 +1,6 @@
 import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
 
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
@@ -49,36 +48,36 @@ import '../common_code/config.dart';
 //   }
 // }
 
-
-
-
-
 class FaqApiController extends GetxController implements GetxService {
   FaqApiiimodel? faqApiiimodel;
   bool isLoading = true;
 
-  Future faqlistapi(context) async{
-
-    Map<String,String> userHeader = {"Content-type": "application/json", "Accept": "application/json"};
-    var response = await http.get(Uri.parse(Config.baseurl + Config.faqapi),headers: userHeader);
+  Future faqlistapi(context) async {
+    Map<String, String> userHeader = {
+      "Content-type": "application/json",
+      "Accept": "application/json"
+    };
+    var response = await http.get(Uri.parse(Config.baseurl + Config.faqapi),
+        headers: userHeader);
 
     print("++++payment++++:-- ${response.body}");
 
     var data = jsonDecode(response.body);
-    if(response.statusCode == 200){
-      if(data["Result"] == true){
+    if (response.statusCode == 200) {
+      if (data["Result"] == true) {
         faqApiiimodel = faqApiiimodelFromJson(response.body);
         isLoading = false;
         update();
-      }
-      else{
+      } else {
         Get.back();
-        CustomNotification.show(message: "${data["message"]}", type: NotificationType.info);;
+        CustomNotification.show(
+            message: "${data["message"]}", type: NotificationType.info);
+        ;
       }
-    }
-    else{
+    } else {
       Get.back();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Something went Wrong....!!!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Something went Wrong....!!!")));
     }
   }
 }

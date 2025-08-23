@@ -1,6 +1,6 @@
 import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
-import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
@@ -36,17 +36,27 @@ class DeleteAccount extends GetxController implements GetxService {
         deleteApiModel = accountDeleteApiModelFromJson(response.body);
         if (deleteApiModel!.result == true) {
           isLoading = false;
-          CustomNotification.show(message: "${deleteApiModel!.message}", type: NotificationType.info);;
+          CustomNotification.show(
+              message: "${deleteApiModel!.message}",
+              type: NotificationType.info);
+          ;
           update();
           return data;
         } else {
-          CustomNotification.show(message: "${deleteApiModel!.message}", type: NotificationType.info);;
+          CustomNotification.show(
+              message: "${deleteApiModel!.message}",
+              type: NotificationType.info);
+          ;
         }
       } else {
-        CustomNotification.show(message: "${data["message"]}", type: NotificationType.info);;
+        CustomNotification.show(
+            message: "${data["message"]}", type: NotificationType.info);
+        ;
       }
     } else {
-      CustomNotification.show(message: "Somthing went wrong!.....", type: NotificationType.info);;
+      CustomNotification.show(
+          message: "Somthing went wrong!.....", type: NotificationType.info);
+      ;
     }
   }
 }

@@ -10,7 +10,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -194,11 +194,17 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
   }
 
   void handlePaymentError(PaymentFailureResponse response) {
-    CustomNotification.show(message: 'ERROR HERE: ${response.code} - ${response.message}', type: NotificationType.error);;
+    CustomNotification.show(
+        message: 'ERROR HERE: ${response.code} - ${response.message}',
+        type: NotificationType.error);
+    ;
   }
 
   void handleExternalWallet(ExternalWalletResponse response) {
-    CustomNotification.show(message: 'EXTERNAL_WALLET IS: ${response.walletName}', type: NotificationType.info);;
+    CustomNotification.show(
+        message: 'EXTERNAL_WALLET IS: ${response.walletName}',
+        type: NotificationType.info);
+    ;
   }
 
   File? _selectedImage;
@@ -488,7 +494,11 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                             containcolore:
                                                 theamcolore.withOpacity(0.1),
                                             onPressed1: () {
-                                              CustomNotification.show(message: "Please Select Image", type: NotificationType.info);;
+                                              CustomNotification.show(
+                                                  message:
+                                                      "Please Select Image",
+                                                  type: NotificationType.info);
+                                              ;
                                             },
                                             context: context,
                                             txt1: "Next"),
@@ -688,7 +698,11 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                             containcolore:
                                                 theamcolore.withOpacity(0.1),
                                             onPressed1: () {
-                                              CustomNotification.show(message: "Please Select Image", type: NotificationType.info);;
+                                              CustomNotification.show(
+                                                  message:
+                                                      "Please Select Image",
+                                                  type: NotificationType.info);
+                                              ;
                                             },
                                             context: context,
                                             txt1: "Next"),
@@ -1018,8 +1032,7 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                         topRight: Radius.circular(15)),
                   ),
                   child: paymentGetApiController.isLoading
-                      ? Center(
-                          child: CustomLoadingWidget())
+                      ? Center(child: CustomLoadingWidget())
                       : Padding(
                           padding: const EdgeInsets.only(
                               left: 10, right: 10, bottom: 10),

@@ -303,7 +303,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         flagsButtonPadding: EdgeInsets.zero,
                         showCountryFlag: false,
                         showDropdownIcon: false,
-                        initialCountryCode: 'IN',
+                        initialCountryCode: 'YE',
                         dropdownTextStyle:
                             TextStyle(color: notifier.textColor, fontSize: 15),
                         // style: const TextStyle(color: Colors.black,fontSize: 16),

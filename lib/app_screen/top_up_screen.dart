@@ -10,7 +10,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -123,15 +123,24 @@ class _TopUpScreenState extends State<TopUpScreen> {
       // homeApiController.homeApi(uid: userdata['id'],latitude: lathome.toString(),logitude: longhome.toString());
     });
 
-    CustomNotification.show(message: 'SUCCESS PAYMENT : ${response.paymentId}', type: NotificationType.info);;
+    CustomNotification.show(
+        message: 'SUCCESS PAYMENT : ${response.paymentId}',
+        type: NotificationType.info);
+    ;
   }
 
   void handlePaymentError(PaymentFailureResponse response) {
-    CustomNotification.show(message: 'ERROR HERE: ${response.code} - ${response.message}', type: NotificationType.error);;
+    CustomNotification.show(
+        message: 'ERROR HERE: ${response.code} - ${response.message}',
+        type: NotificationType.error);
+    ;
   }
 
   void handleExternalWallet(ExternalWalletResponse response) {
-    CustomNotification.show(message: 'EXTERNAL_WALLET IS: ${response.walletName}', type: NotificationType.info);;
+    CustomNotification.show(
+        message: 'EXTERNAL_WALLET IS: ${response.walletName}',
+        type: NotificationType.info);
+    ;
   }
 
   String amountvarable = "";
@@ -158,8 +167,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
       body: GetBuilder<WalletReportApiController>(
         builder: (walletReportApiController) {
           return walletReportApiController.isLoading
-              ? Center(
-                  child: CustomLoadingWidget())
+              ? Center(child: CustomLoadingWidget())
               : Padding(
                   padding: const EdgeInsets.all(15),
                   child: Column(
@@ -364,11 +372,12 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                     .text
                                                                     .isEmpty
                                                                 ? () {
-                                                                    Fluttertoast
-                                                                        .showToast(
-                                                                      msg: "Enter Amount!!!"
-                                                                          .tr,
-                                                                    );
+                                                                    CustomNotification.show(
+                                                                        message:
+                                                                            "Enter Amount!!!"
+                                                                                .tr,
+                                                                        type: NotificationType
+                                                                            .warning);
                                                                   }
                                                                 : () {
                                                                     setState(
@@ -439,7 +448,8 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    CustomNotification.show(message: status, type: NotificationType.info);;
+                                                                                    CustomNotification.show(message: status, type: NotificationType.info);
+                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -483,7 +493,8 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    CustomNotification.show(message: status, type: NotificationType.info);;
+                                                                                    CustomNotification.show(message: status, type: NotificationType.info);
+                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -527,7 +538,8 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    CustomNotification.show(message: status, type: NotificationType.info);;
+                                                                                    CustomNotification.show(message: status, type: NotificationType.info);
+                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -571,7 +583,8 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    CustomNotification.show(message: status, type: NotificationType.info);;
+                                                                                    CustomNotification.show(message: status, type: NotificationType.info);
+                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -615,7 +628,8 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    CustomNotification.show(message: status, type: NotificationType.info);;
+                                                                                    CustomNotification.show(message: status, type: NotificationType.info);
+                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -659,7 +673,8 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    CustomNotification.show(message: status, type: NotificationType.info);;
+                                                                                    CustomNotification.show(message: status, type: NotificationType.info);
+                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -703,7 +718,8 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                   } else {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
-                                                                                    CustomNotification.show(message: status, type: NotificationType.info);;
+                                                                                    CustomNotification.show(message: status, type: NotificationType.info);
+                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }

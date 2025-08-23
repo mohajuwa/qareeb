@@ -1,62 +1,68 @@
-
-// lib/common_code/custom_loading_widget.dart
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+
+import 'package:provider/provider.dart';
+
+import 'colore_screen.dart';
+
+import 'status_page.dart';
 
 class CustomLoadingWidget extends StatelessWidget {
-  final double? width;
-  final double? height;
-  final bool showOverlay;
-  final Color backgroundColor;
+  final String? loadingText;
+
+  final double size;
+
+  final bool showAppLogo;
 
   const CustomLoadingWidget({
     super.key,
-    this.width = 80,
-    this.height = 80,
-    this.showOverlay = false,
-    this.backgroundColor = Colors.transparent,
+    this.loadingText,
+    this.size = 50,
+    this.showAppLogo = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final loading = Lottie.asset(
-      'assets/lottie/loading.json',
-      width: width,
-      height: height,
-      fit: BoxFit.contain,
-    );
+    if (showAppLogo) {
+      // Use the modern status page for app-wide loading
 
-    if (showOverlay) {
-      return Container(
-        color: backgroundColor.withOpacity(0.3),
-        child: Center(child: loading),
+      return ModernStatusPage(
+        statusType: StatusType.loading,
+        customTitle: loadingText ?? "Loading...",
+        showRetryButton: false,
+        isFullScreen: false,
       );
     }
-    return loading;
-  }
-}
 
-class CustomLoadingOverlay extends StatelessWidget {
-  final Widget child;
-  final bool isLoading;
+    // Simple loading indicator
 
-  const CustomLoadingOverlay({
-    super.key,
-    required this.child,
-    required this.isLoading,
-  });
+    final notifier = Provider.of<ColorNotifier>(context);
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        child,
-        if (isLoading)
-          Container(
-            color: Colors.black54,
-            child: const Center(child: CustomLoadingWidget(width: 100, height: 100)),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: size,
+            height: size,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                notifier.isDark ? Colors.white : Colors.black,
+              ),
+            ),
           ),
-      ],
+          if (loadingText != null) ...[
+            SizedBox(height: 16),
+            Text(
+              loadingText!,
+              style: TextStyle(
+                color: notifier.textColor.withOpacity(0.7),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

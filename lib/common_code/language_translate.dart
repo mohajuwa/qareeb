@@ -319,7 +319,48 @@ class AppTranslations extends Translations {
           "Are you sure?": "Are you sure?",
           "No results found": "No results found",
           "Connection error": "Connection error",
-          "Server error": "Server error"
+          "Server error": "Server error",
+          "WiFi": "WiFi",
+          "Mobile Data": "Mobile Data",
+          "Ethernet": "Ethernet",
+          "No Connection": "No Connection",
+          "Unknown": "Unknown",
+          "Connected": "Connected",
+          "Disconnected": "Disconnected",
+          "No Internet Connection": "No Internet Connection",
+          "Please check your internet connection and try again. Make sure you're connected to Wi-Fi or mobile data.":
+              "Please check your internet connection and try again. Make sure you're connected to Wi-Fi or mobile data.",
+          "Server Error": "Server Error",
+          "We're having trouble connecting to our servers. Our team has been notified and is working on a fix.":
+              "We're having trouble connecting to our servers. Our team has been notified and is working on a fix.",
+          "Request Timeout": "Request Timeout",
+          "The request is taking longer than expected. Please check your connection and try again.":
+              "The request is taking longer than expected. Please check your connection and try again.",
+          "No Data Available": "No Data Available",
+          "There's no data to show right now. Please try again later or refresh to check for updates.":
+              "There's no data to show right now. Please try again later or refresh to check for updates.",
+          "Please wait while we fetch your data. This should only take a moment.":
+              "Please wait while we fetch your data. This should only take a moment.",
+          "Under Maintenance": "Under Maintenance",
+          "We're currently performing maintenance to improve your experience. Please try again shortly.":
+              "We're currently performing maintenance to improve your experience. Please try again shortly.",
+          "Something Went Wrong": "Something Went Wrong",
+          "We encountered an unexpected error. Please try again or contact support if the problem persists.":
+              "We encountered an unexpected error. Please try again or contact support if the problem persists.",
+          "Retry": "Retry",
+          "Refresh": "Refresh",
+          "Check Again": "Check Again",
+          "Loading": "Loading",
+          "No internet connection available. Please check your network and try again.":
+              "No internet connection available. Please check your network and try again.",
+          "Request timed out. Please check your connection and try again.":
+              "Request timed out. Please check your connection and try again.",
+          "API returned false result": "API returned false result",
+          "API request failed": "API request failed",
+          "Something went wrong! Please try again.":
+              "Something went wrong! Please try again.",
+          "Server error. Please try again later.":
+              "Server error. Please try again later."
         },
         'ur_arabic': {
           "Captains are busy": "القادة مشغولون",
@@ -635,7 +676,48 @@ class AppTranslations extends Translations {
           "Are you sure?": "هل أنت متأكد؟",
           "No results found": "لم يتم العثور على نتائج",
           "Connection error": "خطأ في الاتصال",
-          "Server error": "خطأ في الخادم"
+          "Server error": "خطأ في الخادم",
+          "WiFi": "واي فاي",
+          "Mobile Data": "بيانات الجوال",
+          "Ethernet": "إيثرنت",
+          "No Connection": "لا يوجد اتصال",
+          "Unknown": "غير معروف",
+          "Connected": "متصل",
+          "Disconnected": "غير متصل",
+          "No Internet Connection": "لا يوجد اتصال بالإنترنت",
+          "Please check your internet connection and try again. Make sure you're connected to Wi-Fi or mobile data.":
+              "يرجى فحص اتصال الإنترنت والمحاولة مرة أخرى. تأكد من الاتصال بالواي فاي أو بيانات الجوال.",
+          "Server Error": "خطأ في الخادم",
+          "We're having trouble connecting to our servers. Our team has been notified and is working on a fix.":
+              "نواجه مشكلة في الاتصال بخوادمنا. تم إبلاغ فريقنا ويعمل على حل المشكلة.",
+          "Request Timeout": "انتهت مهلة الطلب",
+          "The request is taking longer than expected. Please check your connection and try again.":
+              "يستغرق الطلب وقتاً أطول من المتوقع. يرجى فحص الاتصال والمحاولة مرة أخرى.",
+          "No Data Available": "لا توجد بيانات متاحة",
+          "There's no data to show right now. Please try again later or refresh to check for updates.":
+              "لا توجد بيانات للعرض حالياً. يرجى المحاولة لاحقاً أو التحديث للبحث عن تحديثات.",
+          "Please wait while we fetch your data. This should only take a moment.":
+              "يرجى الانتظار بينما نحضر بياناتك. يجب أن يستغرق هذا لحظة فقط.",
+          "Under Maintenance": "تحت الصيانة",
+          "We're currently performing maintenance to improve your experience. Please try again shortly.":
+              "نقوم حالياً بصيانة لتحسين تجربتك. يرجى المحاولة قريباً.",
+          "Something Went Wrong": "حدث خطأ ما",
+          "We encountered an unexpected error. Please try again or contact support if the problem persists.":
+              "واجهنا خطأ غير متوقع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم إذا استمرت المشكلة.",
+          "Retry": "إعادة المحاولة",
+          "Refresh": "تحديث",
+          "Check Again": "تحقق مرة أخرى",
+          "Loading": "جاري التحميل",
+          "No internet connection available. Please check your network and try again.":
+              "لا يوجد اتصال إنترنت متاح. يرجى فحص الشبكة والمحاولة مرة أخرى.",
+          "Request timed out. Please check your connection and try again.":
+              "انتهت مهلة الطلب. يرجى فحص الاتصال والمحاولة مرة أخرى.",
+          "API returned false result": "أرجع API نتيجة خاطئة",
+          "API request failed": "فشل طلب API",
+          "Something went wrong! Please try again.":
+              "حدث خطأ ما! يرجى المحاولة مرة أخرى.",
+          "Server error. Please try again later.":
+              "خطأ في الخادم. يرجى المحاولة لاحقاً."
         }
       };
 }
