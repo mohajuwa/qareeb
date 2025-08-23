@@ -1,56 +1,103 @@
+// ===== NOTIFICATION API CONTROLLER =====
+
+// lib/api_code/notification_api_controller.dart
+
 import 'dart:async';
+
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+
 import 'package:http/http.dart' as http;
+
 import '../common_code/config.dart';
-import '../api_model/driver_detail_api_model.dart';
+
+import '../common_code/network_service.dart';
+
 import '../api_model/notification_api_model.dart';
-import 'calculate_api_controller.dart';
+
+import '../utils/show_toast.dart';
 
 class NotificationApiController extends GetxController implements GetxService {
   NotiFicationApiModel? notiFicationApiModel;
+
   bool isLoading = true;
 
   Future notificationApi({required String uid}) async {
-    Map body = {
-      "uid": uid,
-    };
+    // ✅ Network check
+
+    if (!await NetworkService().hasInternetConnection()) {
+      throw Exception(
+          'No internet connection available. Please check your network and try again.'
+              .tr);
+    }
+
+    Map body = {"uid": uid};
 
     Map<String, String> userHeader = {
       "Content-type": "application/json",
       "Accept": "application/json"
     };
 
-    var response = await http.post(
-        Uri.parse(Config.baseurl + Config.notificationurl),
-        body: jsonEncode(body),
-        headers: userHeader);
+    try {
+      isLoading = true;
 
-    print('+ + + + + Notification Api Controller + + + + + + :--- $body');
-    print(
-        '- - - - - Notification Api Controller - - - - - - :--- ${response.body}');
+      update();
 
-    var data = jsonDecode(response.body);
+      var response = await http
+          .post(Uri.parse(Config.baseurl + Config.notificationurl),
+              body: jsonEncode(body), headers: userHeader)
+          .timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception(
+              'Request timed out. Please check your connection and try again.'
+                  .tr);
+        },
+      );
 
-    if (response.statusCode == 200) {
-      if (data["Result"] == true) {
-        notiFicationApiModel = notiFicationApiModelFromJson(response.body);
-        if (notiFicationApiModel!.result == true) {
-          update();
-          isLoading = false;
-          return data;
+      if (kDebugMode) {
+        print('+ + + + + Notification Api Controller + + + + + + :--- $body');
+
+        print(
+            '- - - - - Notification Api Controller - - - - - - :--- ${response.body}');
+      }
+
+      var data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        if (data["Result"] == true) {
+          notiFicationApiModel = notiFicationApiModelFromJson(response.body);
+
+          if (notiFicationApiModel!.result == true) {
+            update();
+
+            isLoading = false;
+
+            return data;
+          } else {
+            showToastForDuration("${data["message"]}", 2);
+
+            return data;
+          }
         } else {
           showToastForDuration("${data["message"]}", 2);
+
           return data;
         }
       } else {
-        showToastForDuration("${data["message"]}", 2);
-        return data;
+        showToastForDuration("Something went wrong!.....", 2);
       }
-    } else {
-      showToastForDuration("Somthing went wrong!.....", 2);
+    } catch (e) {
+      isLoading = false;
+
+      update();
+
+      if (kDebugMode) print('Notification API Error: $e');
+
+      rethrow;
     }
   }
 }

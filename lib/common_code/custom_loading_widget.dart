@@ -1,68 +1,62 @@
+// lib/common_code/custom_loading_widget.dart
 import 'package:flutter/material.dart';
-
-import 'package:provider/provider.dart';
-
-import 'colore_screen.dart';
-
-import 'status_page.dart';
+import 'package:lottie/lottie.dart';
 
 class CustomLoadingWidget extends StatelessWidget {
-  final String? loadingText;
-
-  final double size;
-
-  final bool showAppLogo;
+  final double? width;
+  final double? height;
+  final bool showOverlay;
+  final Color backgroundColor;
 
   const CustomLoadingWidget({
     super.key,
-    this.loadingText,
-    this.size = 50,
-    this.showAppLogo = false,
+    this.width = 80,
+    this.height = 80,
+    this.showOverlay = false,
+    this.backgroundColor = Colors.transparent,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (showAppLogo) {
-      // Use the modern status page for app-wide loading
+    final loading = Lottie.asset(
+      'assets/lottie/loading.json',
+      width: width,
+      height: height,
+      fit: BoxFit.contain,
+    );
 
-      return ModernStatusPage(
-        statusType: StatusType.loading,
-        customTitle: loadingText ?? "Loading...",
-        showRetryButton: false,
-        isFullScreen: false,
+    if (showOverlay) {
+      return Container(
+        color: backgroundColor.withOpacity(0.3),
+        child: Center(child: loading),
       );
     }
+    return loading;
+  }
+}
 
-    // Simple loading indicator
+class CustomLoadingOverlay extends StatelessWidget {
+  final Widget child;
+  final bool isLoading;
 
-    final notifier = Provider.of<ColorNotifier>(context);
+  const CustomLoadingOverlay({
+    super.key,
+    required this.child,
+    required this.isLoading,
+  });
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: size,
-            height: size,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                notifier.isDark ? Colors.white : Colors.black,
-              ),
-            ),
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        if (isLoading)
+          Container(
+            color: Colors.black54,
+            child: const Center(
+                child: CustomLoadingWidget(width: 100, height: 100)),
           ),
-          if (loadingText != null) ...[
-            SizedBox(height: 16),
-            Text(
-              loadingText!,
-              style: TextStyle(
-                color: notifier.textColor.withOpacity(0.7),
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ],
-      ),
+      ],
     );
   }
 }

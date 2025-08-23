@@ -1,12 +1,25 @@
+// ===== VIHICAL DRIVER DETAIL API CONTROLLER =====
+
+// lib/api_code/vihical_driver_detail_api_controller.dart
+
 import 'dart:async';
+
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+
 import 'package:http/http.dart' as http;
+import 'package:qareeb/api_model/driver_detail_api_model.dart';
+
 import '../common_code/config.dart';
-import '../api_model/driver_detail_api_model.dart';
-import 'calculate_api_controller.dart';
+
+import '../common_code/network_service.dart';
+
+import '../api_model/vihical_driver_detail_api_model.dart';
+
+import '../utils/show_toast.dart';
 
 class DriverDetailApiController extends GetxController implements GetxService {
   DriverDetailApiModel? driverDetailApiModel;
@@ -22,34 +35,85 @@ class DriverDetailApiController extends GetxController implements GetxService {
       "Accept": "application/json"
     };
 
-    var response = await http.post(
-        Uri.parse(Config.baseurl + Config.driverdetailprofile),
-        body: jsonEncode(body),
-        headers: userHeader);
+    // ✅ Network check
 
-    print('+ + + + + DriverDetailApiController + + + + + + :--- $body');
-    print(
-        '- - - - - DriverDetailApiController - - - - - - :--- ${response.body}');
+    if (!await NetworkService().hasInternetConnection()) {
+      throw Exception(
+          'No internet connection available. Please check your network and try again.'
+              .tr);
+    }
 
-    var data = jsonDecode(response.body);
+    try {
+      isLoading = true;
 
-    if (response.statusCode == 200) {
-      if (data["Result"] == true) {
-        driverDetailApiModel = driverDetailApiModelFromJson(response.body);
-        if (driverDetailApiModel!.result == true) {
-          update();
-          isLoading = false;
-          return data;
+      update();
+
+      var response = await http
+          .post(Uri.parse(Config.baseurl + Config.vihicaldriverdetail),
+              body: jsonEncode(body), headers: userHeader)
+          .timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception(
+              'Request timed out. Please check your connection and try again.'
+                  .tr);
+        },
+      );
+
+      if (kDebugMode) {
+        print('+ + + + + DriverDetailApiController + + + + + + :--- $body');
+
+        print(
+            '- - - - - DriverDetailApiController - - - - - - :--- ${response.body}');
+      }
+
+      var data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        if (data["Result"] == true) {
+          driverDetailApiModel = driverDetailApiModelFromJson(response.body);
+
+          if (driverDetailApiModel!.result == true) {
+            isLoading = false;
+
+            update();
+
+            showToastForDuration("${data["message"]}", 2);
+
+            return data;
+          } else {
+            isLoading = false;
+
+            update();
+
+            showToastForDuration("${data["message"]}", 2);
+
+            return data;
+          }
         } else {
+          isLoading = false;
+
+          update();
+
           showToastForDuration("${data["message"]}", 2);
+
           return data;
         }
       } else {
-        showToastForDuration("${data["message"]}", 2);
-        return data;
+        isLoading = false;
+
+        update();
+
+        showToastForDuration("Something went wrong!.....", 2);
       }
-    } else {
-      showToastForDuration("Somthing went wrong!.....", 2);
+    } catch (e) {
+      isLoading = false;
+
+      update();
+
+      if (kDebugMode) print('VihicalDriverDetail API Error: $e');
+
+      rethrow;
     }
   }
 }

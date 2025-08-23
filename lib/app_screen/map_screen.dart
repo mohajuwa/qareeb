@@ -1473,20 +1473,23 @@ class _MapScreenState extends State<MapScreen>
   }
 
 // ✅ OPTIMIZED: Fast marker loading with async image handling
-  void _addMarkersOptimized() {
-    if (_isDisposed || !mounted) return;
+  void _addMarkersOptimized() async {
+    // ADDED async KEYWORD
 
+    if (_isDisposed || !mounted) return;
     try {
       if (vihicallocations.isEmpty) {
         if (kDebugMode) print("⚠️ No vehicles to display");
-
         return;
       }
-
       if (kDebugMode) {
         print(
             "🔄 Adding ${vihicallocations.length} markers with logo placeholders...");
       }
+
+      // Await the placeholder creation to ensure it's ready
+
+      final BitmapDescriptor placeholderIcon = await _createLogoMarker();
 
       setState(() {
         _showingLogoPlaceholders = true;
@@ -1498,18 +1501,17 @@ class _MapScreenState extends State<MapScreen>
             MarkerId markerId = MarkerId(
                 "vehicle_${homeMapController.homeMapApiModel!.list![i].id}");
 
-            // ✅ NEW: Create logo placeholder marker
+            // ✅ CORRECTED: Use the awaited BitmapDescriptor
 
             Marker marker = Marker(
               markerId: markerId,
-              icon: _createLogoPlaceholder(),
+              icon: placeholderIcon,
               position: vihicallocations[i],
               infoWindow: InfoWindow(
                 title: "Loading Vehicle...",
                 snippet: "Please wait",
               ),
             );
-
             markers[markerId] = marker;
           }
         }
@@ -1519,7 +1521,7 @@ class _MapScreenState extends State<MapScreen>
         print("✅ Added ${markers.length} logo placeholder markers");
       }
 
-      // ✅ NEW: Start timer to show logo for 5 seconds, then transition to vehicle icons
+      // Start timer to show logo for 5 seconds, then transition to vehicle icons
 
       _startLogoPlaceholderTimer();
     } catch (e) {
@@ -1528,7 +1530,6 @@ class _MapScreenState extends State<MapScreen>
       }
     }
   }
-
 // ✅ NEW: Timer for logo placeholder transition
 
   void _startLogoPlaceholderTimer() {
@@ -1917,54 +1918,75 @@ class _MapScreenState extends State<MapScreen>
   }
 
 // ✅ STEP 2: Create SVG logo markers (Advanced Implementation)
-// Add this method to convert SVG to BitmapDescriptor
 
-  Future<BitmapDescriptor> _createSVGLogoMarker() async {
+  Future<BitmapDescriptor> _createLogoMarker() async {
     try {
-      // Determine which logo to use based on theme
+      // Select logo path
       String logoPath = notifier.isDark
-          ? "assets/svgpicture/app_logo_dark.svg"
-          : "assets/svgpicture/app_logo_light.svg";
+          ? 'assets/app_logo_dark.png'
+          : 'assets/app_logo_light.png';
 
-      if (kDebugMode) {
-        print("🎨 Creating SVG logo marker: $logoPath");
-      }
+      // Load the logo as bytes
+      final ByteData byteData = await rootBundle.load(logoPath);
+      final Uint8List imageBytes = byteData.buffer.asUint8List();
 
-      // Load and render SVG (you'll need to add flutter_svg import)
-      final svgString = await rootBundle.loadString(logoPath);
+      // Decode original image
+      final ui.Codec codec = await ui.instantiateImageCodec(
+        imageBytes,
+        targetWidth: 80,
+        targetHeight: 80,
+      );
+      final ui.FrameInfo frameInfo = await codec.getNextFrame();
+      final ui.Image logoImage = frameInfo.image;
 
-      // Convert SVG to image bytes
-      final pictureInfo =
-          await vg.loadPicture(SvgStringLoader(svgString), null);
-      final image = await pictureInfo.picture.toImage(60, 60); // 60x60 size
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      final uint8List = byteData!.buffer.asUint8List();
+      // Canvas size
+      const int size = 80; // marker size
+      final ui.PictureRecorder recorder = ui.PictureRecorder();
+      final ui.Canvas canvas = ui.Canvas(recorder);
 
-      return BitmapDescriptor.fromBytes(uint8List);
+      // Draw circular background
+      final ui.Paint backgroundPaint = ui.Paint()
+        ..color = notifier.isDark
+            ? const ui.Color(0xFFFFFFFF).withOpacity(0.8)
+            : const ui.Color(0xFF000000).withOpacity(0.7)
+        ..style = ui.PaintingStyle.fill;
+
+      canvas.drawCircle(
+        const ui.Offset(size / 2, size / 2),
+        size / 2,
+        backgroundPaint,
+      );
+
+      // Draw logo in center
+      final double logoSize = 60;
+      final double offset = (size - logoSize) / 2;
+      canvas.drawImageRect(
+        logoImage,
+        ui.Rect.fromLTWH(
+            0, 0, logoImage.width.toDouble(), logoImage.height.toDouble()),
+        ui.Rect.fromLTWH(offset, offset, logoSize, logoSize),
+        ui.Paint(),
+      );
+
+      // Convert to PNG
+      final ui.Image finalImage =
+          await recorder.endRecording().toImage(size, size);
+      final ByteData? byteDataMarker =
+          await finalImage.toByteData(format: ui.ImageByteFormat.png);
+
+      return BitmapDescriptor.fromBytes(byteDataMarker!.buffer.asUint8List());
     } catch (e) {
-      if (kDebugMode) print("❌ Error creating SVG logo marker: $e");
-
-      // Fallback to colored default marker
-      return BitmapDescriptor.defaultMarkerWithHue(notifier.isDark
-          ? BitmapDescriptor.hueBlue
-          : BitmapDescriptor.hueAzure);
-    }
-  }
-
-// ✅ SIMPLE VERSION: If SVG conversion is complex, use this simpler approach
-  BitmapDescriptor _createThemedLogoPlaceholder() {
-    // Use different colored markers based on theme
-    if (notifier.isDark) {
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue);
-    } else {
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+      if (kDebugMode) print("❌ Error creating marker with background: $e");
+      return BitmapDescriptor.defaultMarkerWithHue(
+        notifier.isDark ? BitmapDescriptor.hueBlue : BitmapDescriptor.hueAzure,
+      );
     }
   }
 
 // ✅ UPDATE: Replace _createLogoPlaceholder() with themed version
-  BitmapDescriptor _createLogoPlaceholder() {
-    return _createThemedLogoPlaceholder();
-    // Future enhancement: return _createSVGLogoMarker(); when SVG conversion is ready
+  _createLogoPlaceholder() {
+    // return _createThemedLogoPlaceholder();
+    return _createLogoMarker();
   }
 
   @override
@@ -2688,9 +2710,7 @@ class _MapScreenState extends State<MapScreen>
                                             color: notifier.background)),
                                     hintText: "Your Current Location".tr,
                                     hintStyle: const TextStyle(
-                                        color: Colors.grey,
-                                        fontFamily: "SofiaProBold",
-                                        fontSize: 14),
+                                        color: Colors.grey, fontSize: 14),
                                     focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(25)),

@@ -1,17 +1,41 @@
-import 'package:qareeb/common_code/custom_notification.dart';
+// ===== REMOVE REQUEST API CONTROLLER =====
+
+// lib/api_code/remove_request.dart
+
+import 'dart:async';
+
 import 'dart:convert';
 
-import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'package:flutter/foundation.dart';
+
+import 'package:get/get.dart';
+
 import 'package:http/http.dart' as http;
+import 'package:qareeb/api_model/remove_request_api_model.dart';
+
 import '../common_code/config.dart';
-import '../api_model/remove_request_api_model.dart';
+
+import '../common_code/network_service.dart';
+
+import '../utils/show_toast.dart';
 
 class RemoveRequest extends GetxController implements GetxService {
   RemoveVihicalRequest? removeVihicalRequest;
-  bool isLoading = true;
 
-  Future removeApi({required String uid}) async {
+  bool isLoading = false;
+
+  Future removeApi({
+    context,
+    required String uid,
+  }) async {
+    // ✅ Network check
+
+    if (!await NetworkService().hasInternetConnection()) {
+      throw Exception(
+          'No internet connection available. Please check your network and try again.'
+              .tr);
+    }
+
     Map body = {
       "uid": uid,
     };
@@ -21,41 +45,76 @@ class RemoveRequest extends GetxController implements GetxService {
       "Accept": "application/json"
     };
 
-    var response = await http.post(
-        Uri.parse(Config.baseurl + Config.removerequestapi),
-        body: jsonEncode(body),
-        headers: userHeader);
+    try {
+      isLoading = true;
 
-    print('+ + + + + Remove + + + + + + $body');
-    print('- - - - - Remove - - - - - - ${response.body}');
+      update();
 
-    var data = jsonDecode(response.body);
+      var response = await http
+          .post(Uri.parse(Config.baseurl + Config.removerequestapi),
+              body: jsonEncode(body), headers: userHeader)
+          .timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception(
+              'Request timed out. Please check your connection and try again.'
+                  .tr);
+        },
+      );
 
-    if (response.statusCode == 200) {
-      if (data["Result"] == true) {
-        removeVihicalRequest = removeVihicalRequestFromJson(response.body);
-        if (removeVihicalRequest!.result == true) {
-          isLoading = false;
-          CustomNotification.show(
-              message: "${removeVihicalRequest!.message}",
-              type: NotificationType.info);
-          ;
-          update();
-          return data;
+      if (kDebugMode) {
+        print('+ + + + + RemoveRequest + + + + + + :--- $body');
+
+        print('- - - - - RemoveRequest - - - - - - :--- ${response.body}');
+      }
+
+      var data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        if (data["Result"] == true) {
+          removeVihicalRequest = removeVihicalRequestFromJson(response.body);
+
+          if (removeVihicalRequest!.result == true) {
+            isLoading = false;
+
+            update();
+
+            showToastForDuration("${data["message"]}", 2);
+
+            return data;
+          } else {
+            isLoading = false;
+
+            update();
+
+            showToastForDuration("${data["message"]}", 2);
+
+            return data;
+          }
         } else {
-          // Fluttertoast.showToast(
-          //   msg: "${removeVihicalRequest!.message}",
-          // );
+          isLoading = false;
+
+          update();
+
+          showToastForDuration("${data["message"]}", 2);
+
+          return data;
         }
       } else {
-        // Fluttertoast.showToast(
-        //   msg: "${data["ResponseMsg"]}",
-        // );
+        isLoading = false;
+
+        update();
+
+        showToastForDuration("Something went wrong!.....", 2);
       }
-    } else {
-      CustomNotification.show(
-          message: "Somthing went wrong!.....", type: NotificationType.info);
-      ;
+    } catch (e) {
+      isLoading = false;
+
+      update();
+
+      if (kDebugMode) print('RemoveRequest API Error: $e');
+
+      rethrow;
     }
   }
 }

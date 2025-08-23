@@ -1,16 +1,20 @@
+// ===== ADD VEHICAL API CONTROLLER =====
+// lib/api_code/add_vehical_api_controller.dart
+
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
+import 'package:qareeb/api_model/add_vihical_api_model.dart';
 import '../common_code/config.dart';
-import '../api_model/add_vihical_api_model.dart';
-import 'calculate_api_controller.dart';
+import '../common_code/network_service.dart';
+import '../utils/show_toast.dart';
 
 class AddVihicalCalculateController extends GetxController
     implements GetxService {
   AddVihicalCalculateModel? addVihicalCalculateModel;
+  bool isLoading = false;
 
   Future addvihicalcalculateApi(
       {context,
@@ -50,41 +54,72 @@ class AddVihicalCalculateController extends GetxController
       "coupon_id": coupon_id,
       "bidd_auto_status": bidd_auto_status,
     };
+    // ✅ Network check
+    if (!await NetworkService().hasInternetConnection()) {
+      throw Exception(
+          'No internet connection available. Please check your network and try again.'
+              .tr);
+    }
 
     Map<String, String> userHeader = {
       "Content-type": "application/json",
       "Accept": "application/json"
     };
 
-    var response = await http.post(
-        Uri.parse(Config.baseurl + Config.addvihicalcalculate),
-        body: jsonEncode(body),
-        headers: userHeader);
+    try {
+      isLoading = true;
+      update();
 
-    print('+ + + + + AddVihicalCalCulate + + + + + + :--- $body');
-    print('- - - - - AddVihicalCalCulate - - - - - - :--- ${response.body}');
+      var response = await http
+          .post(Uri.parse(Config.baseurl + Config.addvihicalcalculate),
+              body: jsonEncode(body), headers: userHeader)
+          .timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception(
+              'Request timed out. Please check your connection and try again.'
+                  .tr);
+        },
+      );
 
-    var data = jsonDecode(response.body);
+      if (kDebugMode) {
+        print('+ + + + + AddVihicalCalculate + + + + + + :--- $body');
+        print(
+            '- - - - - AddVihicalCalculate - - - - - - :--- ${response.body}');
+      }
 
-    if (response.statusCode == 200) {
-      if (data["Result"] == true) {
-        addVihicalCalculateModel =
-            addVihicalCalculateModelFromJson(response.body);
-        if (addVihicalCalculateModel!.result == true) {
-          // Get.offAll(BoardingPage());
-          update();
-          showToastForDuration("${data["message"]}", 2);
-          return data;
+      var data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        if (data["Result"] == true) {
+          addVihicalCalculateModel =
+              addVihicalCalculateModelFromJson(response.body);
+          if (addVihicalCalculateModel!.result == true) {
+            isLoading = false;
+            update();
+            return data;
+          } else {
+            isLoading = false;
+            update();
+            showToastForDuration("${addVihicalCalculateModel!.message}", 2);
+            return data;
+          }
         } else {
+          isLoading = false;
+          update();
           showToastForDuration("${data["message"]}", 2);
           return data;
         }
       } else {
-        showToastForDuration("${data["message"]}", 2);
-        return data;
+        isLoading = false;
+        update();
+        showToastForDuration("Something went wrong!.....", 2);
       }
-    } else {
-      showToastForDuration("Somthing went wrong!.....", 2);
+    } catch (e) {
+      isLoading = false;
+      update();
+      if (kDebugMode) print('AddVihical API Error: $e');
+      rethrow;
     }
   }
 }

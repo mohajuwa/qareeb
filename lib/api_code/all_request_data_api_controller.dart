@@ -1,14 +1,24 @@
-import 'package:qareeb/common_code/custom_notification.dart';
+// ===== ALL REQUEST DATA API CONTROLLER =====
+
+// lib/api_code/all_request_data_api_controller.dart
+
 import 'dart:async';
+
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+
 import 'package:http/http.dart' as http;
+
 import '../common_code/config.dart';
+
+import '../common_code/network_service.dart';
+
 import '../api_model/all_request_api_model.dart';
-import 'calculate_api_controller.dart';
+
+import '../utils/show_toast.dart';
 
 class AllRequestDataApiController extends GetxController
     implements GetxService {
@@ -23,55 +33,89 @@ class AllRequestDataApiController extends GetxController
       "uid": uid,
       "status": status,
     };
+    // ✅ Network check
+
+    if (!await NetworkService().hasInternetConnection()) {
+      throw Exception(
+          'No internet connection available. Please check your network and try again.'
+              .tr);
+    }
 
     Map<String, String> userHeader = {
       "Content-type": "application/json",
       "Accept": "application/json"
     };
 
-    var response = await http.post(
-        Uri.parse(Config.baseurl + Config.allrequest),
-        body: jsonEncode(body),
-        headers: userHeader);
+    try {
+      isLoading = true;
 
-    print('+ + + + + AddVihicalCalCulate + + + + + + :--- $body');
-    print('- - - - - AddVihicalCalCulate - - - - - - :--- ${response.body}');
+      update();
 
-    var data = jsonDecode(response.body);
+      var response = await http
+          .post(Uri.parse(Config.baseurl + Config.allrequest),
+              body: jsonEncode(body), headers: userHeader)
+          .timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception(
+              'Request timed out. Please check your connection and try again.'
+                  .tr);
+        },
+      );
 
-    if (response.statusCode == 200) {
-      if (data["Result"] == true) {
-        if (status == "upcoming") {
-          print("+++++ upcoming +++++");
-          allRequestDataModelupcoming =
-              allRequestDataModelFromJson(response.body);
-        } else if (status == "completed") {
-          print("+++++ completed +++++");
-          allRequestDataModelcompleted =
-              allRequestDataModelFromJson(response.body);
-        } else {
-          print("+++++ cancelled +++++");
-          allRequestDataModelcancelled =
-              allRequestDataModelFromJson(response.body);
-        }
+      if (kDebugMode) {
+        print('+ + + + + AddVihicalCalCulate + + + + + + :--- $body');
 
-        update();
+        print(
+            '- - - - - AddVihicalCalCulate - - - - - - :--- ${response.body}');
+      }
 
-        if (allRequestDataModelupcoming!.result == true) {
-          isLoading = false;
+      var data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        if (data["Result"] == true) {
+          if (status == "upcoming") {
+            if (kDebugMode) print("+++++ upcoming +++++");
+
+            allRequestDataModelupcoming =
+                allRequestDataModelFromJson(response.body);
+          } else if (status == "completed") {
+            if (kDebugMode) print("+++++ completed +++++");
+
+            allRequestDataModelcompleted =
+                allRequestDataModelFromJson(response.body);
+          } else {
+            if (kDebugMode) print("+++++ cancelled +++++");
+
+            allRequestDataModelcancelled =
+                allRequestDataModelFromJson(response.body);
+          }
+
           update();
+
+          if (allRequestDataModelupcoming!.result == true) {
+            isLoading = false;
+
+            update();
+          } else {
+            showToastForDuration("${allRequestDataModelupcoming!.message}", 2);
+          }
         } else {
-          CustomNotification.show(
-              message: "${allRequestDataModelupcoming!.message}",
-              type: NotificationType.info);
-          ;
+          showToastForDuration("${data["message"]}", 2);
+
+          return data;
         }
       } else {
-        showToastForDuration("${data["message"]}", 2);
-        return data;
+        showToastForDuration("Something went wrong!.....", 2);
       }
-    } else {
-      showToastForDuration("Somthing went wrong!.....", 2);
+    } catch (e) {
+      isLoading = false;
+
+      update();
+
+      if (kDebugMode) print('AllRequestData API Error: $e');
+
+      rethrow;
     }
   }
 }
