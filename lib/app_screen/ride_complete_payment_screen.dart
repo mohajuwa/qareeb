@@ -197,14 +197,12 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
     CustomNotification.show(
         message: 'ERROR HERE: ${response.code} - ${response.message}',
         type: NotificationType.error);
-    ;
   }
 
   void handleExternalWallet(ExternalWalletResponse response) {
     CustomNotification.show(
         message: 'EXTERNAL_WALLET IS: ${response.walletName}',
         type: NotificationType.info);
-    ;
   }
 
   File? _selectedImage;
@@ -498,7 +496,6 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                                   message:
                                                       "Please Select Image",
                                                   type: NotificationType.info);
-                                              ;
                                             },
                                             context: context,
                                             txt1: "Next"),
@@ -702,7 +699,6 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                                   message:
                                                       "Please Select Image",
                                                   type: NotificationType.info);
-                                              ;
                                             },
                                             context: context,
                                             txt1: "Next"),

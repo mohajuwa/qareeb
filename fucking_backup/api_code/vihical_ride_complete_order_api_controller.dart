@@ -24,7 +24,7 @@ class VihicalRideCompleteOrderApiController extends GetxController
       required String request_id,
       required String wallet,
       context}) async {
-    print("vvvpayment_imgvvv:-- ${payment_img}");
+    print("vvvpayment_imgvvv:-- $payment_img");
 
     if (orederloader) {
       return;
@@ -87,15 +87,15 @@ class VihicalRideCompleteOrderApiController extends GetxController
 
         print("++hahaha++:- (${pickupcontroller.text})");
         print("++hahaha++:- (${dropcontroller.text})");
-        print("++hahaha++:- (${latitudepick})");
-        print("++hahaha++:- (${longitudepick})");
-        print("++hahaha++:- (${latitudedrop})");
-        print("++hahaha++:- (${longitudedrop})");
-        print("++hahaha++:- (${picktitle})");
-        print("++hahaha++:- (${picksubtitle})");
-        print("++hahaha++:- (${droptitle})");
-        print("++hahaha++:- (${dropsubtitle})");
-        print("++hahaha++:- (${droptitlelist})");
+        print("++hahaha++:- ($latitudepick)");
+        print("++hahaha++:- ($longitudepick)");
+        print("++hahaha++:- ($latitudedrop)");
+        print("++hahaha++:- ($longitudedrop)");
+        print("++hahaha++:- ($picktitle)");
+        print("++hahaha++:- ($picksubtitle)");
+        print("++hahaha++:- ($droptitle)");
+        print("++hahaha++:- ($dropsubtitle)");
+        print("++hahaha++:- ($droptitlelist)");
 
         Notifier.success("${responsnessaj["message"]}");
       } else {

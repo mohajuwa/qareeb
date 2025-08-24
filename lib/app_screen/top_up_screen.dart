@@ -126,21 +126,18 @@ class _TopUpScreenState extends State<TopUpScreen> {
     CustomNotification.show(
         message: 'SUCCESS PAYMENT : ${response.paymentId}',
         type: NotificationType.info);
-    ;
   }
 
   void handlePaymentError(PaymentFailureResponse response) {
     CustomNotification.show(
         message: 'ERROR HERE: ${response.code} - ${response.message}',
         type: NotificationType.error);
-    ;
   }
 
   void handleExternalWallet(ExternalWalletResponse response) {
     CustomNotification.show(
         message: 'EXTERNAL_WALLET IS: ${response.walletName}',
         type: NotificationType.info);
-    ;
   }
 
   String amountvarable = "";
@@ -449,7 +446,6 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
                                                                                     CustomNotification.show(message: status, type: NotificationType.info);
-                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -494,7 +490,6 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
                                                                                     CustomNotification.show(message: status, type: NotificationType.info);
-                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -539,7 +534,6 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
                                                                                     CustomNotification.show(message: status, type: NotificationType.info);
-                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -584,7 +578,6 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
                                                                                     CustomNotification.show(message: status, type: NotificationType.info);
-                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -629,7 +622,6 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
                                                                                     CustomNotification.show(message: status, type: NotificationType.info);
-                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -674,7 +666,6 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
                                                                                     CustomNotification.show(message: status, type: NotificationType.info);
-                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }
@@ -719,7 +710,6 @@ class _TopUpScreenState extends State<TopUpScreen> {
                                                                                     print("Purchase failed with status: $status.");
                                                                                     Navigator.pop(context);
                                                                                     CustomNotification.show(message: status, type: NotificationType.info);
-                                                                                    ;
                                                                                     return NavigationDecision.prevent;
                                                                                   }
                                                                                 }

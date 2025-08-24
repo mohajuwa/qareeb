@@ -284,13 +284,11 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                       CustomNotification.show(
                           message: "Incorrect OTP. Please try again.".tr,
                           type: NotificationType.info);
-                      ;
                     }
                   } else {
                     CustomNotification.show(
                         message: "Please Enter Otp.".tr,
                         type: NotificationType.info);
-                    ;
                   }
                 },
                 context: context,

@@ -1618,7 +1618,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     //   }
     // }
 
-    Future<BitmapDescriptor> _loadIcon(String url,
+    Future<BitmapDescriptor> loadIcon(String url,
         {int targetWidth = 30, int targetHeight = 50}) async {
       try {
         if (url.isEmpty || url.contains("undefined")) {
@@ -1649,8 +1649,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
 
     // Load all icons
-    final List<BitmapDescriptor> _icons = await Future.wait(
-      _iconPaths.map((path) => _loadIcon(path)),
+    final List<BitmapDescriptor> icons = await Future.wait(
+      _iconPaths.map((path) => loadIcon(path)),
     );
 
     setState(() {
@@ -1668,7 +1668,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             MarkerId("${homeMapController.homeMapApiModel!.list![i].id}");
         Marker marker = Marker(
           markerId: markerId,
-          icon: _icons[i],
+          icon: icons[i],
           position: LatLng(
               double.parse(homeMapController.homeMapApiModel!.list![i].latitude
                   .toString()),
@@ -1682,7 +1682,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   void _addMarkers2() async {
-    Future<BitmapDescriptor> _loadIcon(String url) async {
+    Future<BitmapDescriptor> loadIcon(String url) async {
       try {
         if (url.isEmpty || url.contains("undefined")) {
           // Fallback to a default icon if the URL is invalid
@@ -1712,8 +1712,8 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
 
     // Load all icons
-    final List<BitmapDescriptor> _icons = await Future.wait(
-      _iconPathsbiddingon.map((path) => _loadIcon(path)),
+    final List<BitmapDescriptor> icons = await Future.wait(
+      _iconPathsbiddingon.map((path) => loadIcon(path)),
     );
 
     setState(() {
@@ -1747,7 +1747,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                   .toString()),
               double.parse(homeMapController.homeMapApiModel!.list![i].longitude
                   .toString())),
-          icon: _icons[i],
+          icon: icons[i],
         );
         markers11[markerId] = marker; // Add marker to the map
       }
@@ -2827,10 +2827,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                     ),
                                   ),
                                 ),
-                                textfieldlist.length > 0
+                                textfieldlist.isNotEmpty
                                     ? const SizedBox(height: 0)
                                     : const SizedBox(height: 10),
-                                textfieldlist.length > 0
+                                textfieldlist.isNotEmpty
                                     ? InkWell(
                                         onTap: () {
                                           // _navigateAndRefresh();
@@ -3064,7 +3064,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                                               fontSize: 16),
                                                         )
                                                       : Text(
-                                                          "${currencyy ?? globalcurrency} ${dropprice == null ? "" : dropprice}",
+                                                          "${currencyy ?? globalcurrency} ${dropprice ?? ""}",
                                                           style: TextStyle(
                                                               color: notifier
                                                                   .textColor,

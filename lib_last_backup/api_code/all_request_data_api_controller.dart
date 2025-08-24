@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
 import '../common_code/config.dart';
 import '../api_model/all_request_api_model.dart';

@@ -85,7 +85,12 @@ var longhomecurrent;
 String biddautostatus = "false";
 
 AnimationController? controller;
+
 late Animation<Color?> colorAnimation;
+
+Timer? timer;
+
+bool _isDisposed = false;
 
 int durationInSeconds = 0;
 
@@ -243,8 +248,8 @@ class _MapScreenState extends State<MapScreen>
       if (kDebugMode) print("Socket reconnection error: $e");
     }
   }
-
   // socate code
+
   socketConnect() async {
     if (_isDisposed) return;
 
@@ -287,7 +292,6 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// Replace your existing _connectSocket method:
   _connectSocket() async {
     if (_isDisposed) return;
 
@@ -306,7 +310,13 @@ class _MapScreenState extends State<MapScreen>
         if (kDebugMode) print('Socket.IO server disconnected map screen');
       });
 
-      // Wallet API call with safety checks
+      socket.on("reset_customer_state$useridgloable", (data) {
+        if (_isDisposed || !mounted) return;
+
+        if (kDebugMode) print("🔄 Received reset state command");
+        resetMapScreenState();
+      });
+
       if (!_isDisposed && userid != null) {
         homeWalletApiController
             .homwwalleteApi(uid: userid.toString(), context: context)
@@ -326,7 +336,6 @@ class _MapScreenState extends State<MapScreen>
         });
       }
 
-      // Home API call with safety checks
       if (!_isDisposed &&
           userid != null &&
           lathome != null &&
@@ -529,7 +538,6 @@ class _MapScreenState extends State<MapScreen>
               markers[markerId] = updatedMarker;
             }
 
-            // Update markers11 as well
             markers11[markerId] = marker;
             if (markers11.containsKey(markerId)) {
               final Marker oldMarker = markers11[markerId]!;
@@ -545,71 +553,18 @@ class _MapScreenState extends State<MapScreen>
           if (kDebugMode) print("Driver location update error: $e");
         }
       });
-      _autoAcceptBid(Map bestBid) async {
-        if (kDebugMode) print("Auto-accepting bid: $bestBid");
-
-        try {
-          final response = await http.post(
-            Uri.parse('${Config.imageurl}/driver/accept_vehicle_ride'),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({
-              'request_id': request_id.toString(),
-              'd_id': bestBid["id"].toString(),
-              'c_id': useridgloable.toString(),
-              'price': bestBid["price"].toString(),
-            }),
-          );
-
-          if (response.statusCode == 200) {
-            final responseData = json.decode(response.body);
-            if (responseData['ResponseCode'] == "200") {
-              // Emit socket events
-              socket.emit('Accept_Bidding', {
-                'uid': useridgloable,
-                'd_id': bestBid["id"],
-                'request_id': request_id,
-                'price': bestBid["price"],
-              });
-
-              socket.emit('driver_accept_ride', {
-                'request_id': request_id,
-                'd_id': bestBid["id"],
-                'c_id': useridgloable,
-                'status': 'accepted',
-              });
-
-              if (kDebugMode) print("Auto-acceptance successful");
-
-              // Navigate directly to driver detail
-              globalDriverAcceptClass.driverdetailfunction(
-                context: context,
-                lat: latitudepick,
-                long: longitudepick,
-                d_id: bestBid["id"].toString(),
-                request_id: request_id.toString(),
-              );
-            }
-          }
-        } catch (e) {
-          if (kDebugMode) print("Auto-accept error: $e");
-          // Fallback to manual selection
-          Get.back();
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const DriverListScreen()));
-        }
-      }
-
       socket.on("Vehicle_Bidding$userid", (Vehicle_Bidding) {
         if (_isDisposed || !mounted) return;
 
         if (kDebugMode) {
           print("++++++ Vehicle_Bidding ++++ :---  $Vehicle_Bidding");
+
+          print("🚗 Current booking mode: $currentBookingModeDescription");
         }
 
         setState(() {
           vehicle_bidding_driver = Vehicle_Bidding["bidding_list"];
+
           vehicle_bidding_secounde = [];
 
           for (int i = 0; i < vehicle_bidding_driver.length; i++) {
@@ -618,49 +573,60 @@ class _MapScreenState extends State<MapScreen>
           }
         });
 
-        // AUTO-ACCEPTANCE: Accept first/best bid automatically
-        if (vehicle_bidding_driver.isNotEmpty) {
-          // Sort by price (ascending) to get cheapest bid
-          vehicle_bidding_driver.sort((a, b) =>
-              double.parse(a["price"].toString())
-                  .compareTo(double.parse(b["price"].toString())));
+        if (!isAutomaticBookingEnabled) {
+          if (kDebugMode) {
+            print("📱 Manual mode active - navigating to DriverListScreen");
+          }
 
-          final bestBid = vehicle_bidding_driver[0];
+          if (Get.isDialogOpen == true) {
+            Get.back();
+          }
 
-          // Auto-accept the best bid
-          _autoAcceptBid(bestBid);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const DriverListScreen()),
+          ).then((_) {
+            if (kDebugMode) {
+              print("📱 Returned from DriverListScreen, resetting state");
+            }
+
+            resetMapScreenState();
+          });
         } else {
+          if (kDebugMode) {
+            print(
+                "🤖 Automatic mode active - backend should auto-accept nearest driver");
+          }
+        }
+
+        if (vehicle_bidding_driver.isEmpty) {
           Get.back();
+
           Buttonpresebottomshhet();
         }
-      });
-
-      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) async {
+      }); // ✅ ENHANCED: Vehicle request acceptance with cleanup
+      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
         if (_isDisposed || !mounted) return;
+
+        resetMapScreenState();
 
         socket.close();
 
         if (kDebugMode) {
           print("++++++ /acceptvehrequest map/ ++++ :---  $acceptvehrequest");
-
           print(
               "acceptvehrequest is of type map: ${acceptvehrequest.runtimeType}");
         }
 
         setState(() {
           isanimation = false;
-
           isControllerDisposed = true;
-
           loadertimer = true;
         });
-
-        // Safely dispose controller
 
         if (controller != null && controller!.isAnimating) {
           try {
             controller!.dispose();
-
             controller = null;
           } catch (e) {
             if (kDebugMode) print("Error disposing controller in socket: $e");
@@ -677,14 +643,9 @@ class _MapScreenState extends State<MapScreen>
             .toString()
             .contains(useridgloable.toString())) {
           if (kDebugMode) print("condition done");
-
           driveridloader = false;
 
           if (!_isDisposed && mounted) {
-            // Add a small delay to allow database transaction to complete
-
-            await Future.delayed(const Duration(milliseconds: 800));
-
             globalDriverAcceptClass.driverdetailfunction(
                 context: context,
                 lat: latitudepick,
@@ -694,6 +655,36 @@ class _MapScreenState extends State<MapScreen>
           }
         } else {
           if (kDebugMode) print("condition not done");
+        }
+      });
+
+      socket.on("Accept_Bidding_Response$useridgloable", (response) {
+        if (_isDisposed || !mounted) return;
+
+        if (kDebugMode) {
+          print("🎯 Accept_Bidding_Response received in map: $response");
+        }
+      });
+
+      socket.on("Bidding_decline_Response$useridgloable", (response) {
+        if (_isDisposed || !mounted) return;
+
+        if (kDebugMode) {
+          print("❌ Bidding_decline_Response received in map: $response");
+        }
+      });
+
+      socket.on("removecustomerdata$useridgloable", (removecustomerdata) {
+        if (_isDisposed || !mounted) return;
+
+        if (kDebugMode) {
+          print("🗑️ removecustomerdata received in map: $removecustomerdata");
+        }
+
+        resetMapScreenState();
+
+        if (Get.isDialogOpen == true) {
+          Get.back();
         }
       });
     } catch (e) {
@@ -750,420 +741,6 @@ class _MapScreenState extends State<MapScreen>
       isTimerRunning = false;
 
       if (kDebugMode) print("Timer canceled");
-    }
-  }
-
-  requesttime() {
-    if (_isDisposed) return;
-
-    durationInSeconds = int.parse(
-        calculateController.calCulateModel!.offerExpireTime.toString());
-    if (kDebugMode) print("DURATION IN SECONDS : - $durationInSeconds");
-
-    startTimer();
-
-    if (_isDisposed) return;
-
-    controller = AnimationController(
-      vsync: this,
-      duration: Duration(
-        seconds: int.parse(
-          calculateController.calCulateModel!.offerExpireTime.toString(),
-        ),
-      ),
-    );
-
-    colorAnimation = ColorTween(
-      begin: Colors.blue,
-      end: Colors.green,
-    ).animate(controller!);
-
-    if (kDebugMode) print('Animation Duration: $durationInSeconds seconds');
-
-    controller!.addStatusListener((status) {
-      if (_isDisposed || !mounted) return;
-
-      if (status == AnimationStatus.completed) {
-        if (kDebugMode) print("Timer finished!");
-
-        if (isControllerDisposed) {
-          if (kDebugMode) {
-            print(
-                "Controller has already been disposed. Skipping further actions.");
-          }
-          return;
-        }
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted || _isDisposed) return;
-
-          cancelTimer();
-          if (kDebugMode) print("Timer finished 111 !");
-
-          setState(() {
-            isanimation = false;
-          });
-
-          Get.back();
-
-          timeoutRequestApiController
-              .timeoutrequestApi(
-                  uid: userid.toString(), request_id: request_id.toString())
-              .then((value) {
-            if (_isDisposed || !mounted) return;
-
-            if (kDebugMode) {
-              print("*****value data******:--- $value");
-              print("*****value data******:--- ${value["driverid"]}");
-            }
-
-            Get.bottomSheet(
-              isDismissible: false,
-              enableDrag: false,
-              StatefulBuilder(
-                builder: (context, setState) {
-                  return Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(15),
-                          topRight: Radius.circular(15)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 15, right: 15),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              SvgPicture.asset(
-                                "assets/svgpicture/exclamation-circle.svg",
-                                height: 25,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                "Captains are busy".tr,
-                                style: const TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 30,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        top: 16, bottom: 20, left: 0),
-                                    child: Column(
-                                      children: [
-                                        Container(
-                                          height: 15,
-                                          width: 15,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                                color: Colors.green, width: 4),
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          height: 4,
-                                        ),
-                                        Container(
-                                          height: 10,
-                                          width: 3,
-                                          decoration: BoxDecoration(
-                                              color:
-                                                  Colors.grey.withOpacity(0.4),
-                                              borderRadius:
-                                                  BorderRadius.circular(10)),
-                                        ),
-                                        const SizedBox(
-                                          height: 4,
-                                        ),
-                                        Container(
-                                          height: 10,
-                                          width: 3,
-                                          decoration: BoxDecoration(
-                                              color:
-                                                  Colors.grey.withOpacity(0.4),
-                                              borderRadius:
-                                                  BorderRadius.circular(10)),
-                                        ),
-                                        const SizedBox(
-                                          height: 4,
-                                        ),
-                                        textfieldlist.isNotEmpty
-                                            ? const SizedBox()
-                                            : Container(
-                                                height: 10,
-                                                width: 3,
-                                                decoration: BoxDecoration(
-                                                    color: Colors.grey
-                                                        .withOpacity(0.4),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10)),
-                                              ),
-                                        const SizedBox(
-                                          height: 4,
-                                        ),
-                                        Container(
-                                          height: 15,
-                                          width: 15,
-                                          decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                  color: Colors.red, width: 4)),
-                                        ),
-                                        const SizedBox(
-                                          height: 4,
-                                        ),
-                                        textfieldlist.isEmpty
-                                            ? const SizedBox()
-                                            : Container(
-                                                height: 10,
-                                                width: 3,
-                                                decoration: BoxDecoration(
-                                                    color: Colors.grey
-                                                        .withOpacity(0.4),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10)),
-                                              ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Expanded(
-                                  flex: 12,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 10),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Transform.translate(
-                                          offset: picktitle == ""
-                                              ? const Offset(0, 0)
-                                              : const Offset(0, -10),
-                                          child: ListTile(
-                                            contentPadding: EdgeInsets.zero,
-                                            title: Text(
-                                                "${picktitle == "" ? addresspickup : picktitle}"),
-                                            subtitle: Text(
-                                              picksubtitle,
-                                              style: const TextStyle(
-                                                  color: Colors.grey),
-                                              maxLines: 1,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          height: 5,
-                                        ),
-                                        Transform.translate(
-                                          offset: const Offset(0, -30),
-                                          child: ListTile(
-                                            contentPadding: EdgeInsets.zero,
-                                            title: Text(droptitle),
-                                            subtitle: Text(
-                                              dropsubtitle,
-                                              style: const TextStyle(
-                                                  color: Colors.grey),
-                                              maxLines: 1,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          textfieldlist.isEmpty
-                              ? const SizedBox()
-                              : Transform.translate(
-                                  offset: const Offset(0, -30),
-                                  child: ListView.builder(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    padding: EdgeInsets.zero,
-                                    shrinkWrap: true,
-                                    itemCount: textfieldlist.length,
-                                    itemBuilder: (context, index) {
-                                      return Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: ListView.builder(
-                                              padding: EdgeInsets.zero,
-                                              clipBehavior: Clip.none,
-                                              shrinkWrap: true,
-                                              itemCount: 1,
-                                              itemBuilder: (context, index) {
-                                                return Transform.translate(
-                                                  offset: const Offset(-5, -25),
-                                                  child: Column(
-                                                    children: [
-                                                      Container(
-                                                        height: 10,
-                                                        width: 3,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: Colors.grey
-                                                              .withOpacity(0.4),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 4,
-                                                      ),
-                                                      Container(
-                                                        height: 10,
-                                                        width: 3,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: Colors.grey
-                                                              .withOpacity(0.4),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 4,
-                                                      ),
-                                                      Container(
-                                                        height: 15,
-                                                        width: 15,
-                                                        decoration: BoxDecoration(
-                                                            color: Colors.white,
-                                                            shape:
-                                                                BoxShape.circle,
-                                                            border: Border.all(
-                                                                color:
-                                                                    Colors.red,
-                                                                width: 4)),
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 4,
-                                                      ),
-                                                      Container(
-                                                        height: 10,
-                                                        width: 3,
-                                                        decoration: BoxDecoration(
-                                                            color: Colors.grey
-                                                                .withOpacity(
-                                                                    0.4),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        10)),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 9,
-                                            child: Transform.translate(
-                                              offset: const Offset(0, -15),
-                                              child: Column(
-                                                children: [
-                                                  ListTile(
-                                                    contentPadding:
-                                                        EdgeInsets.zero,
-                                                    title: Text(
-                                                        "${droptitlelist[index]["title"]}"),
-                                                    subtitle: Text(
-                                                      "${droptitlelist[index]["subt"]}",
-                                                      style: const TextStyle(
-                                                          color: Colors.grey),
-                                                      maxLines: 1,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ),
-                          CommonButton(
-                              containcolore: theamcolore,
-                              onPressed1: () {
-                                Get.back();
-                              },
-                              txt1: "Try Again".tr,
-                              context: context),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          CommonOutLineButton(
-                              bordercolore: theamcolore,
-                              onPressed1: () {
-                                removeRequest
-                                    .removeApi(uid: userid.toString())
-                                    .then(
-                                  (value) {
-                                    Get.back();
-                                    print(
-                                        "+++ removeApi +++:- ${value["driver_list"]}");
-
-                                    socket.emit('Vehicle_Ride_Cancel', {
-                                      'uid': "$useridgloable",
-                                      'driverid': value["driver_list"],
-                                    });
-                                  },
-                                );
-                              },
-                              txt1: "Cancel".tr.tr,
-                              context: context),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            );
-          }).catchError((error) {
-            if (kDebugMode) print("Timeout API error: $error");
-          });
-        });
-      }
-    });
-
-    if (!_isDisposed) {
-      controller!.forward();
     }
   }
 
@@ -1364,8 +941,9 @@ class _MapScreenState extends State<MapScreen>
       }
 
       if (homeApiController.homeapimodel?.categoryList == null) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print("❌ Home API data not available for calculate API");
+        }
 
         return;
       }
@@ -1925,63 +1503,270 @@ class _MapScreenState extends State<MapScreen>
   }
 // ✅ PERFORMANCE FIX: Simplified initState (replace your current one)
 
+  void _handleRequestTimeout() async {
+    if (!mounted || _isDisposed) return;
+
+    try {
+      if (kDebugMode) print("⏰ Handling request timeout...");
+
+      // Cancel animation
+
+      if (controller != null && controller!.isAnimating) {
+        controller!.stop();
+      }
+
+      setState(() {
+        isanimation = false;
+
+        loadertimer = true;
+      });
+
+      // Close any open bottom sheets
+
+      if (Get.isBottomSheetOpen == true) {
+        Get.back();
+      }
+
+      // ✅ CALL TIMEOUT API WITH RETRY
+
+      try {
+        await timeoutRequestApiController
+            .timeoutrequestApi(
+                uid: userid.toString(), request_id: request_id.toString())
+            .timeout(Duration(seconds: 15), onTimeout: () {
+          throw TimeoutException('Timeout API call timed out');
+        });
+
+        if (kDebugMode) print("✅ Timeout API call successful");
+      } catch (timeoutApiError) {
+        if (kDebugMode) print("❌ Timeout API error: $timeoutApiError");
+
+        // Show user-friendly message
+
+        CustomNotification.show(
+            message: "Request expired. Please try booking again.".tr,
+            type: NotificationType.warning);
+      }
+
+      // ✅ SHOW TIMEOUT BOTTOM SHEET
+
+      _showTimeoutBottomSheet();
+    } catch (timeoutHandlerError) {
+      if (kDebugMode) print("💥 Timeout handler error: $timeoutHandlerError");
+
+      // Fallback: simple state reset
+
+      setState(() {
+        isanimation = false;
+
+        loadertimer = true;
+      });
+    }
+  }
+
+// ✅ TIMEOUT BOTTOM SHEET
+
+  void _showTimeoutBottomSheet() {
+    if (!mounted) return;
+
+    Get.bottomSheet(
+      isDismissible: false,
+      enableDrag: false,
+      Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(15), topRight: Radius.circular(15)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.access_time,
+                size: 48,
+                color: Colors.orange,
+              ),
+              SizedBox(height: 16),
+              Text(
+                "Request Timeout".tr,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "No drivers responded to your request. Would you like to try again?"
+                    .tr,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+              SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Get.back();
+
+                        // Reset to initial state
+
+                        setState(() {
+                          isanimation = false;
+
+                          loadertimer = true;
+                        });
+                      },
+                      child: Text("Cancel".tr),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+
+                        // Retry the order
+
+                        orderfunction();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theamcolore,
+                      ),
+                      child: Text("Try Again".tr),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+// ========================================
+// FIXED: Replace your requesttime() method with this
+// ========================================
+
+  void requesttime() {
+    try {
+      if (kDebugMode) print("⏰ Starting request timer...");
+
+      // Safety check
+      if (!mounted || _isDisposed) {
+        if (kDebugMode) print("❌ Widget not ready for timer");
+        return;
+      }
+
+      // Clear any existing timer
+      if (timer != null && timer!.isActive) {
+        timer!.cancel();
+      }
+
+      // Get duration from API or use default
+      int duration = durationInSeconds > 0 ? durationInSeconds : 180;
+      if (kDebugMode) print("⏰ Timer duration: ${duration} seconds");
+
+      // ✅ ALWAYS RECREATE CONTROLLER TO AVOID DISPOSAL ISSUES
+      if (controller != null) {
+        try {
+          controller!.dispose();
+        } catch (e) {
+          if (kDebugMode) print("⚠️ Old controller disposal: $e");
+        }
+      }
+
+      // Create fresh controller
+      if (mounted && !_isDisposed) {
+        try {
+          controller = AnimationController(
+            duration: Duration(seconds: duration),
+            vsync: this,
+          );
+
+          colorAnimation = ColorTween(
+            begin: Colors.blue,
+            end: Colors.red,
+          ).animate(controller!);
+
+          // Start animation
+          controller!.forward();
+          if (kDebugMode) print("✅ Animation started successfully");
+        } catch (controllerError) {
+          if (kDebugMode)
+            print("❌ Controller creation error: $controllerError");
+          // Continue without animation
+        }
+      }
+
+      // Set up timeout handling
+      timer = Timer(Duration(seconds: duration), () {
+        if (!mounted || _isDisposed) return;
+
+        if (kDebugMode) print("⏰ Request timer expired - handling timeout");
+        _handleRequestTimeout();
+      });
+
+      if (kDebugMode) print("✅ Request timer started successfully");
+    } catch (timerError) {
+      if (kDebugMode) print("❌ Request timer error: $timerError");
+
+      // Fallback: set a basic timer
+      timer = Timer(Duration(seconds: 180), () {
+        if (mounted) _handleRequestTimeout();
+      });
+    }
+  }
+
+// ========================================
+// ALSO UPDATE: Your initState() method - REMOVE the controller creation
+// ========================================
+
   @override
   void initState() {
     super.initState();
+    if (widget.selectvihical == true) {
+      if (kDebugMode) {
+        print("TRUETRUETRUTRUETRUETRUETRUETRUETRUEWTRUWEUETEWUETRUETR");
+      }
+    }
 
     _isDisposed = false;
-
     WidgetsBinding.instance.addObserver(this);
 
     // Load automatic booking preference
-
     _loadAutomaticBookingPreference();
 
     if (kDebugMode) {
       print("🚀 MapScreen initialized - Fast loading mode");
-
       print("🔧 selectvihical parameter: ${widget.selectvihical}");
     }
 
     select1 = 0;
 
     // ✅ PERFORMANCE: Start all operations in parallel immediately
-
     Future.microtask(() {
       _initializeParallelOperations();
-
       _fastVehicleLoad();
     });
 
-    // Initialize animation controller
-
-    if (controller == null || !controller!.isAnimating) {
-      if (kDebugMode) print("⏱️ DURATION SECONDS: $durationInSeconds");
-
-      controller = AnimationController(
-        duration: Duration(seconds: durationInSeconds),
-        vsync: this,
-      );
-    }
+    // ✅ REMOVED: Don't initialize controller here - let requesttime() handle it
+    if (kDebugMode) print("⏱️ DURATION SECONDS: $durationInSeconds");
 
     // Initialize theme and other settings
-
     mapThemeStyle(context: context);
-
     isControllerDisposed = false;
-
     plusetimer = "";
 
     // Initialize drop off points and markers
-
     _dropOffPoints = [];
-
     _dropOffPoints = destinationlat;
 
     if (kDebugMode) print("📍 Drop off points: $_dropOffPoints");
 
     // Add route markers
-
     _addMarker11(LatLng(latitudepick, longitudepick), "origin",
         BitmapDescriptor.defaultMarker);
 
@@ -1993,50 +1778,60 @@ class _MapScreenState extends State<MapScreen>
     }
 
     // Get directions
-
     getDirections11(
         lat1: PointLatLng(latitudepick, longitudepick),
         lat2: PointLatLng(latitudedrop, longitudedrop),
         dropOffPoints: _dropOffPoints);
 
     // Reset state after frame
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       resetMapScreenState();
     });
   }
 
-// ✅ ENHANCED: Update dispose method to clean up timer
+// ========================================
+// UPDATED: Enhanced dispose method
+// ========================================
+
   @override
   void dispose() {
-    if (kDebugMode) print("MapScreen dispose called");
+    if (kDebugMode) print("🧹 Disposing MapScreen resources...");
 
     _isDisposed = true;
 
-    // ✅ NEW: Cancel logo placeholder timer
-    _logoPlaceholderTimer?.cancel();
-
-    WidgetsBinding.instance.removeObserver(this);
-    resetMapScreenState();
-
-    try {
-      socket.off("Vehicle_Bidding$userid");
-      socket.off("acceptvehrequest$useridgloable");
-      socket.off("reset_customer_state$useridgloable");
-      socket.off("Vehicle_Location_update$userid");
-      socket.off("Accept_Bidding_Response$useridgloable");
-      socket.off("Bidding_decline_Response$useridgloable");
-      socket.off("removecustomerdata$useridgloable");
-      socket.off("Driver_location_On");
-      socket.off("Driver_location_Update");
-    } catch (e) {
-      if (kDebugMode) print("Error removing socket listeners: $e");
+    // Cancel timer
+    if (timer != null && timer!.isActive) {
+      timer!.cancel();
+      timer = null;
     }
 
-    super.dispose();
-  }
+    // Dispose animation controller safely
+    if (controller != null) {
+      try {
+        controller!.dispose();
+        if (kDebugMode) print("✅ Controller disposed successfully");
+      } catch (e) {
+        if (kDebugMode) print("⚠️ Controller disposal error: $e");
+      }
+      controller = null;
+    }
 
-// ✅ STEP 2: Create SVG logo markers (Advanced Implementation)
+    // Close socket connection
+    try {
+      if (socket.connected) {
+        socket.disconnect();
+        if (kDebugMode) print("✅ Socket disconnected");
+      }
+    } catch (e) {
+      if (kDebugMode) print("⚠️ Socket disposal error: $e");
+    }
+
+    // Remove observer
+    WidgetsBinding.instance.removeObserver(this);
+
+    super.dispose();
+    if (kDebugMode) print("✅ MapScreen disposed successfully");
+  }
 
   Future<BitmapDescriptor> _createLogoMarker() async {
     try {
@@ -2077,8 +1872,8 @@ class _MapScreenState extends State<MapScreen>
       );
 
       // Draw logo in center
-      final double logoSize = 60;
-      final double offset = (size - logoSize) / 2;
+      const double logoSize = 60;
+      const double offset = (size - logoSize) / 2;
       canvas.drawImageRect(
         logoImage,
         ui.Rect.fromLTWH(
@@ -2425,7 +2220,7 @@ class _MapScreenState extends State<MapScreen>
   }
 
   void _addMarkers2() async {
-    Future<BitmapDescriptor> _loadIcon(String url) async {
+    Future<BitmapDescriptor> loadIcon(String url) async {
       try {
         if (url.isEmpty || url.contains("undefined")) {
           return BitmapDescriptor.defaultMarker;
@@ -2451,8 +2246,8 @@ class _MapScreenState extends State<MapScreen>
       }
     }
 
-    final List<BitmapDescriptor> _icons = await Future.wait(
-      _iconPathsbiddingon.map((path) => _loadIcon(path)),
+    final List<BitmapDescriptor> icons = await Future.wait(
+      _iconPathsbiddingon.map((path) => loadIcon(path)),
     );
 
     setState(() {
@@ -2483,7 +2278,7 @@ class _MapScreenState extends State<MapScreen>
                   .toString()),
               double.parse(homeMapController.homeMapApiModel!.list![i].longitude
                   .toString())),
-          icon: _icons[i],
+          icon: icons[i],
         );
         markers11[markerId] = marker; // Add marker to the map
       }
@@ -2654,14 +2449,48 @@ class _MapScreenState extends State<MapScreen>
     setState(() {});
   }
 
-  socateempt() {
-    print("SOCATE SCOCATDFJH");
-    socket.emit('vehiclerequest', {
-      'requestid': request_id,
-      'driverid': calculateController.calCulateModel!.driverId,
-      'c_id': useridgloable
-    });
-    print("datadatatdatadtad:- ${socket}");
+// ✅ ENHANCED SOCKET EMIT METHOD
+
+  void socateempt() {
+    try {
+      if (socket.connected) {
+        socket.emit('vehiclerequest', {
+          'requestid':
+              addVihicalCalculateController.addVihicalCalculateModel!.id,
+          'driverid': calculateController.calCulateModel!.driverId,
+          'c_id': userid
+        });
+
+        if (kDebugMode) {
+          print("📡 Socket event 'vehiclerequest' emitted successfully");
+        }
+      } else {
+        if (kDebugMode) {
+          print("⚠️ Socket not connected - attempting to reconnect");
+        }
+
+        socket.connect();
+
+        // Retry emit after connection
+
+        Future.delayed(Duration(milliseconds: 500), () {
+          if (socket.connected) {
+            socket.emit('vehiclerequest', {
+              'requestid':
+                  addVihicalCalculateController.addVihicalCalculateModel!.id,
+              'driverid': calculateController.calCulateModel!.driverId,
+              'c_id': userid
+            });
+
+            if (kDebugMode) print("📡 Socket event emitted after reconnection");
+          }
+        });
+      }
+    } catch (socketError) {
+      if (kDebugMode) print("❌ Socket emit error: $socketError");
+
+      // Don't fail the entire operation for socket errors
+    }
   }
 
   socatloadbidinfdata() {
@@ -2930,8 +2759,9 @@ class _MapScreenState extends State<MapScreen>
 
                                               InkWell(
                                             onTap: () async {
-                                              if (_isDisposed || !mounted)
+                                              if (_isDisposed || !mounted) {
                                                 return;
+                                              }
 
                                               setState(() {
                                                 select1 = index;
@@ -2962,6 +2792,16 @@ class _MapScreenState extends State<MapScreen>
                                                         .text.isNotEmpty &&
                                                     dropcontroller
                                                         .text.isNotEmpty) {
+                                                  StatusHelper.showStatusDialog(
+                                                    context,
+                                                    statusType:
+                                                        StatusType.loading,
+                                                    customTitle:
+                                                        "Calculation Loading",
+                                                    customSubtitle:
+                                                        "Calculating fare for this vehicle...",
+                                                    barrierDismissible: true,
+                                                  );
                                                   if (kDebugMode) {
                                                     print(
                                                         "🧮 Calculating price for selected vehicle...");
@@ -2981,8 +2821,9 @@ class _MapScreenState extends State<MapScreen>
                                                     drop_lat_lon_list: onlypass,
                                                   );
 
-                                                  if (_isDisposed || !mounted)
+                                                  if (_isDisposed || !mounted) {
                                                     return;
+                                                  }
 
                                                   // Hide loading dialog
                                                   if (Navigator.canPop(
@@ -3527,7 +3368,7 @@ class _MapScreenState extends State<MapScreen>
                                                               fontSize: 16),
                                                         )
                                                       : Text(
-                                                          "${currencyy ?? globalcurrency} ${dropprice == null ? "" : dropprice}",
+                                                          "${currencyy ?? globalcurrency} ${dropprice ?? ""}",
                                                           style: TextStyle(
                                                               color: notifier
                                                                   .textColor,
@@ -4200,15 +4041,12 @@ class _MapScreenState extends State<MapScreen>
     if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
       CustomNotification.show(
           message: "Select Pickup and Drop", type: NotificationType.info);
-      ;
     } else if (amountresponse == "false") {
       CustomNotification.show(
           message: "Address is not in the zone!", type: NotificationType.info);
-      ;
     } else if (dropprice == 0) {
       CustomNotification.show(
           message: responsemessage, type: NotificationType.info);
-      ;
     } else {
       toast = 0;
       amountcontroller.text = dropprice.toString();
@@ -4272,7 +4110,6 @@ class _MapScreenState extends State<MapScreen>
                                             "Your current request is in progress. You can either wait for it to complete or cancel to perform this action."
                                                 .tr,
                                         type: NotificationType.info);
-                                    ;
                                   } else {
                                     Get.back();
                                   }
@@ -4312,7 +4149,6 @@ class _MapScreenState extends State<MapScreen>
                                             "Your current request is in progress. You can either wait for it to complete or cancel to perform this action."
                                                 .tr,
                                         type: NotificationType.info);
-                                    ;
                                   } else {
                                     if (double.parse(dropprice.toString()) >
                                         minprice) {
@@ -4408,7 +4244,6 @@ class _MapScreenState extends State<MapScreen>
                                             "Your current request is in progress. You can either wait for it to complete or cancel to perform this action."
                                                 .tr,
                                         type: NotificationType.info);
-                                    ;
                                   } else {
                                     if (double.parse(dropprice.toString()) <
                                         maxprice) {
@@ -5423,7 +5258,7 @@ class _MapScreenState extends State<MapScreen>
                                       onPressed1: () {
                                         setState(() {
                                           isanimation = false;
-
+                                          
                                           cancelloader = true;
                                           print(
                                               "++CANCEL LOADER++:- ${cancelloader}");
@@ -5477,105 +5312,374 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-  orderfunction() {
-    print("DRIVER ID:- ${calculateController.calCulateModel!.driverId!}");
-    print("PICK LOCATION:- ${pickupcontroller.text}");
-    print("DROP LOCATION:- ${dropcontroller.text}");
-    socket.connect();
-
-    homeWalletApiController
-        .homwwalleteApi(uid: userid.toString(), context: context)
-        .then(
-      (value) {
-        print("{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
-        walleteamount = double.parse(value["wallet_amount"]);
-        print("[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
-      },
-    );
-    // refreshAnimation();
-
-    // print("111111111dd111111111 ${calculateController.calCulateModel!.driverId}");
-    print("111111111 amountcontroller.text 111111111 ${amountcontroller.text}");
-
-    percentValue.clear();
-    percentValue = [];
-    for (int i = 0; i < 4; i++) {
-      percentValue.add(0);
+  void orderfunction() async {
+    if (kDebugMode) {
+      print("🚀 Starting orderfunction with enhanced error handling");
     }
-    setState(() {
-      currentStoryIndex = 0;
-      // loadertimer = false;
-    });
 
-    priceyourfare = double.parse(amountcontroller.text);
-    print("***price***::-(${priceyourfare})");
+    try {
+      // ✅ PRE-FLIGHT CHECKS
 
-    addVihicalCalculateController.addvihicalcalculateApi(
-      pickupadd: {
-        "title": "${picktitle == "" ? addresspickup : picktitle}",
-        "subt": picksubtitle
-      },
-      dropadd: {"title": droptitle, "subt": dropsubtitle},
-      droplistadd: droptitlelist,
-      context: context,
-      uid: useridgloable.toString(),
-      tot_km: "$totalkm",
-      vehicle_id: vehicle_id,
-      tot_minute: tot_time,
-      tot_hour: tot_hour,
-      m_role: mroal,
-      coupon_id: couponId,
-      payment_id: "$payment",
-      driverid: calculateController.calCulateModel!.driverId!,
-      // driverid: [29,14],
-      price: amountcontroller.text,
-      pickup: "$latitudepick,$longitudepick",
-      drop: "$latitudedrop,$longitudedrop",
-      droplist: onlypass,
-      bidd_auto_status: biddautostatus,
-    ).then(
-      (value) {
-        print("+++++${value["id"]}");
-        setState(() {});
-        request_id = value["id"].toString();
-        socateempt();
-      },
-    );
-
-    calculateController
-        .calculateApi(
-            context: context,
-            uid: userid.toString(),
-            mid: mid,
-            mrole: mroal,
-            pickup_lat_lon: "$latitudepick,$longitudepick",
-            drop_lat_lon: "$latitudedrop,$longitudedrop",
-            drop_lat_lon_list: onlypass)
-        .then(
-      (value) {
-        // print("********** value **********:----- ${value}");
-        // print("********** value **********:----- ${value["drop_price"]}");
-        // print("********** value **********:----- ${value["vehicle"]["minimum_fare"]}");
-        // print("********** value **********:----- ${value["vehicle"]["maximum_fare"]}");
-
-        dropprice = 0;
-        minimumfare = 0;
-        maximumfare = 0;
-
-        if (value["Result"] == true) {
-          amountresponse = "true";
-          dropprice = value["drop_price"];
-          minimumfare = value["vehicle"]["minimum_fare"];
-          maximumfare = value["vehicle"]["maximum_fare"];
-          responsemessage = value["message"];
-        } else {
-          amountresponse = "false";
-          print("jojojojojojojojojojojojojojojojojojojojojojojojo");
+      if (!mounted || _isDisposed) {
+        if (kDebugMode) {
+          print("❌ Widget disposed or not mounted - aborting orderfunction");
         }
 
-        print("********** dropprice **********:----- $dropprice");
-        print("********** minimumfare **********:----- $minimumfare");
-        print("********** maximumfare **********:----- $maximumfare");
+        return;
+      }
+
+      // ✅ VALIDATE ESSENTIAL DATA
+
+      if (userid == null || userid.toString().isEmpty) {
+        CustomNotification.show(
+            message: "User session error. Please login again.".tr,
+            type: NotificationType.error);
+
+        return;
+      }
+
+      if (calculateController.calCulateModel?.driverId == null ||
+          calculateController.calCulateModel!.driverId!.isEmpty) {
+        CustomNotification.show(
+            message: "No drivers available. Please try again.".tr,
+            type: NotificationType.error);
+
+        return;
+      }
+
+      // ✅ LOCATION VALIDATION
+
+      if (longitudepick == null) {
+        CustomNotification.show(
+            message: "Invalid pickup or drop location".tr,
+            type: NotificationType.error);
+
+        return;
+      }
+
+      // ✅ PRICE VALIDATION
+
+      double currentPrice;
+
+      try {
+        currentPrice = double.parse(amountcontroller.text);
+      } catch (e) {
+        CustomNotification.show(
+            message: "Invalid price amount".tr, type: NotificationType.error);
+
+        return;
+      }
+
+      if (currentPrice <= 0) {
+        CustomNotification.show(
+            message: "Price must be greater than zero".tr,
+            type: NotificationType.error);
+
+        return;
+      }
+
+      // ✅ SHOW LOADING STATE
+
+      setState(() {
+        isanimation = true;
+
+        loadertimer = false;
+      });
+
+      if (kDebugMode) {
+        print("🎯 Order Parameters:");
+
+        print("   User ID: $userid");
+
+        print("   Vehicle ID: $vehicle_id");
+
+        print("   Price: $currentPrice");
+
+        print(
+            "   Drivers: ${calculateController.calCulateModel!.driverId!.length}");
+
+        print("   Pickup: $latitudepick,$longitudepick");
+
+        print("   Drop: $latitudedrop,$longitudedrop");
+      }
+
+      // ✅ ENHANCED SOCKET PREPARATION
+
+      try {
+        if (kDebugMode) print("🔌 Preparing socket connection...");
+
+        socket.connect();
+
+        // Get wallet amount
+
+        await homeWalletApiController
+            .homwwalleteApi(uid: userid.toString(), context: context)
+            .then((value) {
+          if (value != null && value["wallet_amount"] != null) {
+            walleteamount = double.parse(value["wallet_amount"].toString());
+
+            if (kDebugMode) print("💰 Wallet amount: $walleteamount");
+          }
+        }).catchError((error) {
+          if (kDebugMode) print("⚠️ Wallet API error (non-critical): $error");
+
+          walleteamount = 0.0; // Default value
+        });
+
+        // Reset animation state
+
+        percentValue.clear();
+
+        percentValue = List.filled(4, 0.0);
+
+        currentStoryIndex = 0;
+
+        if (kDebugMode) print("🎬 Animation state reset");
+      } catch (socketError) {
+        if (kDebugMode) {
+          print("⚠️ Socket preparation error (non-critical): $socketError");
+        }
+      }
+
+      // ✅ MAIN API CALL WITH COMPREHENSIVE ERROR HANDLING
+
+      try {
+        if (kDebugMode) print("📡 Calling AddVihicalCalCulate API...");
+
+        final result =
+            await addVihicalCalculateController.addvihicalcalculateApi(
+          pickupadd: {
+            "title": "${picktitle.isEmpty ? addresspickup : picktitle}",
+            "subt": picksubtitle
+          },
+          dropadd: {"title": droptitle, "subt": dropsubtitle},
+          droplistadd: droptitlelist,
+          context: context,
+          uid: userid.toString(),
+          tot_km: "$totalkm",
+          vehicle_id: vehicle_id,
+          tot_minute: tot_time,
+          tot_hour: tot_hour,
+          m_role: mroal,
+          coupon_id: couponId,
+          payment_id: "$payment",
+          driverid: calculateController.calCulateModel!.driverId!,
+          price: amountcontroller.text,
+          pickup: "$latitudepick,$longitudepick",
+          drop: "$latitudedrop,$longitudedrop",
+          droplist: onlypass,
+          bidd_auto_status: biddautostatus,
+        );
+
+        // ✅ HANDLE SUCCESSFUL RESPONSE
+
+        if (result != null && result["Result"] == true) {
+          if (kDebugMode) print("🎉 Order created successfully!");
+
+          setState(() {
+            request_id = result["id"].toString();
+          });
+
+          // ✅ EMIT SOCKET EVENT SAFELY
+
+          try {
+            socateempt();
+
+            if (kDebugMode) print("📡 Socket event emitted successfully");
+          } catch (socketEmitError) {
+            if (kDebugMode) {
+              print("⚠️ Socket emit error (non-critical): $socketEmitError");
+            }
+          }
+
+          // ✅ START REQUEST TIMER
+
+          try {
+            requesttime();
+
+            if (kDebugMode) print("⏰ Request timer started");
+          } catch (timerError) {
+            if (kDebugMode) print("⚠️ Timer error (non-critical): $timerError");
+          }
+
+          // ✅ UPDATE UI STATE
+
+          setState(() {
+            offerpluse = false;
+
+            isanimation = false;
+          });
+
+          if (kDebugMode) print("✅ Order function completed successfully");
+        } else {
+          // Handle API failure
+
+          String errorMessage = result?["message"] ?? "Request failed";
+
+          setState(() {
+            isanimation = false;
+
+            loadertimer = true;
+          });
+
+          CustomNotification.show(
+              message: errorMessage.tr, type: NotificationType.error);
+
+          if (kDebugMode) print("❌ Order API failed: $errorMessage");
+        }
+      } catch (apiError) {
+        if (kDebugMode) print("💥 AddVihicalCalCulate API Error: $apiError");
+
+        setState(() {
+          isanimation = false;
+
+          loadertimer = true;
+        });
+
+        // ✅ ENHANCED ERROR CATEGORIZATION
+
+        String userMessage;
+
+        if (apiError.toString().contains('TimeoutException') ||
+            apiError.toString().contains('timeout')) {
+          userMessage =
+              "Request timed out. Please check your connection and try again."
+                  .tr;
+        } else if (apiError.toString().contains('SocketException')) {
+          userMessage =
+              "Network error. Please check your internet connection.".tr;
+        } else if (apiError.toString().contains('504') ||
+            apiError.toString().contains('Gateway Time-out')) {
+          userMessage = "Server is busy. Please try again in a moment.".tr;
+        } else if (apiError.toString().contains('No drivers available')) {
+          userMessage = "No drivers available in your area.".tr;
+        } else {
+          userMessage = "Something went wrong. Please try again.".tr;
+        }
+
+        CustomNotification.show(
+            message: userMessage, type: NotificationType.error);
+
+        // ✅ OFFER RETRY OPTION
+
+        _showRetryDialog(context);
+      }
+
+      // ✅ PARALLEL PRICE CALCULATION (NON-BLOCKING)
+
+      _calculatePriceInBackground();
+    } catch (generalError) {
+      if (kDebugMode) print("💥 General orderfunction error: $generalError");
+
+      setState(() {
+        isanimation = false;
+
+        loadertimer = true;
+      });
+
+      CustomNotification.show(
+          message: "An unexpected error occurred. Please try again.".tr,
+          type: NotificationType.error);
+    }
+  }
+
+  void _calculatePriceInBackground() async {
+    try {
+      if (kDebugMode) print("💰 Starting background price calculation...");
+
+      calculateController
+          .calculateApi(
+              context: context,
+              uid: userid.toString(),
+              mid: mid,
+              mrole: mroal,
+              pickup_lat_lon: "$latitudepick,$longitudepick",
+              drop_lat_lon: "$latitudedrop,$longitudedrop",
+              drop_lat_lon_list: onlypass)
+          .then((value) {
+        if (!mounted || _isDisposed) return;
+
+        setState(() {
+          dropprice = 0;
+
+          minimumfare = 0;
+
+          maximumfare = 0;
+
+          if (value["Result"] == true) {
+            amountresponse = "true";
+
+            dropprice = value["drop_price"];
+
+            minimumfare = value["vehicle"]["minimum_fare"];
+
+            maximumfare = value["vehicle"]["maximum_fare"];
+
+            responsemessage = value["message"];
+
+            if (kDebugMode) {
+              print("💰 Price calculation successful:");
+
+              print("   Drop price: $dropprice");
+
+              print("   Min fare: $minimumfare");
+
+              print("   Max fare: $maximumfare");
+            }
+          } else {
+            amountresponse = "false";
+
+            if (kDebugMode) print("❌ Price calculation failed");
+          }
+        });
+      }).catchError((error) {
+        if (kDebugMode) print("⚠️ Background price calculation error: $error");
+
+        // Don't show error to user for background calculation
+      });
+    } catch (e) {
+      if (kDebugMode) print("⚠️ Background calculation setup error: $e");
+    }
+  }
+
+// ✅ HELPER METHOD: Show Retry Dialog
+
+  void _showRetryDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Connection Error".tr),
+          content: Text(
+              "Failed to create ride request. Would you like to try again?".tr),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+
+                // Reset UI state
+
+                setState(() {
+                  isanimation = false;
+
+                  loadertimer = true;
+                });
+              },
+              child: Text("Cancel".tr),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+
+                // Retry the order
+
+                orderfunction();
+              },
+              child: Text("Retry".tr),
+            ),
+          ],
+        );
       },
     );
   }

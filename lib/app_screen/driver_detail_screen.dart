@@ -818,13 +818,11 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       CustomNotification.show(
           message: "Please allow calls Permission",
           type: NotificationType.info);
-      ;
       await openAppSettings();
     } else {
       CustomNotification.show(
           message: "Please allow calls Permission",
           type: NotificationType.info);
-      ;
       await openAppSettings();
     }
   }

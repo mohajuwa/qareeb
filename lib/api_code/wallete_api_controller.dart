@@ -117,12 +117,12 @@ class WalletApiController extends GetxController implements GetxService {
                           child: ElevatedButton(
                             style: const ButtonStyle(
                                 fixedSize:
-                                    MaterialStatePropertyAll(Size(0, 50)),
+                                    WidgetStatePropertyAll(Size(0, 50)),
                                 backgroundColor:
-                                    MaterialStatePropertyAll(Colors.white),
-                                side: MaterialStatePropertyAll(
+                                    WidgetStatePropertyAll(Colors.white),
+                                side: WidgetStatePropertyAll(
                                     BorderSide(color: Colors.black)),
-                                shape: MaterialStatePropertyAll(
+                                shape: WidgetStatePropertyAll(
                                     RoundedRectangleBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(30))))),
@@ -141,12 +141,12 @@ class WalletApiController extends GetxController implements GetxService {
                           child: ElevatedButton(
                             style: const ButtonStyle(
                                 fixedSize:
-                                    MaterialStatePropertyAll(Size(0, 50)),
+                                    WidgetStatePropertyAll(Size(0, 50)),
                                 backgroundColor:
-                                    MaterialStatePropertyAll(Colors.black),
-                                side: MaterialStatePropertyAll(
+                                    WidgetStatePropertyAll(Colors.black),
+                                side: WidgetStatePropertyAll(
                                     BorderSide(color: Colors.black)),
-                                shape: MaterialStatePropertyAll(
+                                shape: WidgetStatePropertyAll(
                                     RoundedRectangleBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(30))))),
@@ -172,12 +172,10 @@ class WalletApiController extends GetxController implements GetxService {
       } else {
         CustomNotification.show(
             message: "${data["message"]}", type: NotificationType.info);
-        ;
       }
     } else {
       CustomNotification.show(
           message: "Something went Wrong....!!!", type: NotificationType.info);
-      ;
     }
   }
 }

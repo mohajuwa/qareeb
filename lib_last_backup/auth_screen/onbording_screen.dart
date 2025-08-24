@@ -11,7 +11,6 @@ import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui' as ui;
 
-import 'onmobile1_screen.dart';
 import '../common_code/colore_screen.dart';
 import '../common_code/language_toggle_button.dart';
 import '../api_code/forgot_api_controller.dart';

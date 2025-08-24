@@ -368,7 +368,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
         height: Get.height,
         width: Get.width,
         alignment: Alignment.center,
-        child: CustomLoadingWidget(),
+        child: const CustomLoadingWidget(),
       ),
     );
   }
@@ -412,8 +412,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
         break;
       default:
         CustomNotification.show(
-            message: "No Service".tr, type: NotificationType.info);
-        ;
+            message: "No Service".tr, type: NotificationType.info); {}
     }
   }
 
@@ -576,7 +575,6 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
     if (_forgotPhoneController.text.isEmpty) {
       CustomNotification.show(
           message: 'Enter Mobile Number...!!!'.tr, type: NotificationType.info);
-      ;
       return;
     }
 
@@ -603,13 +601,11 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
           break;
         default:
           CustomNotification.show(
-              message: "No Service".tr, type: NotificationType.info);
-          ;
+              message: "No Service".tr, type: NotificationType.info); {}
       }
     } else {
       CustomNotification.show(
           message: "${value['message']}", type: NotificationType.info);
-      ;
     }
   }
 
@@ -724,7 +720,6 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
       CustomNotification.show(
           message: "Incorrect OTP. Please try again.".tr,
           type: NotificationType.info);
-      ;
     }
   }
 
@@ -784,7 +779,6 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
       CustomNotification.show(
           message: "Please enter current password".tr,
           type: NotificationType.info);
-      ;
       return;
     }
 
@@ -801,7 +795,6 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
       }
       CustomNotification.show(
           message: value["message"], type: NotificationType.info);
-      ;
     });
   }
 

@@ -82,15 +82,14 @@ class CustomNotification {
       messageText: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (lottiePath != null)
-            Padding(
-              padding: const EdgeInsetsDirectional.only(end: 8.0),
-              child: SizedBox(
-                width: 36,
-                height: 36,
-                child: Lottie.asset(lottiePath, fit: BoxFit.contain),
-              ),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 8.0),
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: Lottie.asset(lottiePath, fit: BoxFit.contain),
             ),
+          ),
           Expanded(
             child: Text(
               message.tr,

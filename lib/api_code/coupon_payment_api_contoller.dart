@@ -32,7 +32,6 @@ class PaymentGetApiController extends GetxController implements GetxService {
         Get.back();
         CustomNotification.show(
             message: "${data["message"]}", type: NotificationType.info);
-        ;
       }
     } else {
       Get.back();

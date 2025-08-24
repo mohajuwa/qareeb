@@ -17,7 +17,6 @@ import '../common_code/config.dart';
 
 import '../common_code/network_service.dart';
 
-import '../api_model/vihical_driver_detail_api_model.dart';
 
 import '../utils/show_toast.dart';
 

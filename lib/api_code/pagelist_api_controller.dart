@@ -36,7 +36,6 @@ class pagelistApiController extends GetxController implements GetxService {
         Get.back();
         CustomNotification.show(
             message: "${data["Result"]}", type: NotificationType.info);
-        ;
       }
     } else {
       Get.back();

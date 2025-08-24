@@ -80,17 +80,14 @@ class ProfileeditApiController extends GetxController implements GetxService {
 
         CustomNotification.show(
             message: responsnessaj["message"], type: NotificationType.info);
-        ;
         return responsnessaj;
       } else {
         CustomNotification.show(
             message: responsnessaj["message"], type: NotificationType.info);
-        ;
       }
     } else {
       CustomNotification.show(
           message: responsnessaj["message"], type: NotificationType.info);
-      ;
     }
   }
 }

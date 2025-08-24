@@ -63,7 +63,7 @@ class SignupController extends GetxController implements GetxService {
         loginSharedPreferencesSet(false);
 
         onesignalkey = data["general"]["one_app_id"];
-        print("==========:----- (${onesignalkey})");
+        print("==========:----- ($onesignalkey)");
         print("=====Config.oneSignel=====:----- (${Config.oneSignel})");
 
         // initPlatformState(context: context);

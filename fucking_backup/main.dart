@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
-import 'package:get/get_navigation/src/root/internacionalization.dart';
 import 'package:provider/provider.dart';
 import 'auth_screen/splase_screen.dart';
 import 'common_code/colore_screen.dart';

@@ -39,24 +39,20 @@ class DeleteAccount extends GetxController implements GetxService {
           CustomNotification.show(
               message: "${deleteApiModel!.message}",
               type: NotificationType.info);
-          ;
           update();
           return data;
         } else {
           CustomNotification.show(
               message: "${deleteApiModel!.message}",
               type: NotificationType.info);
-          ;
         }
       } else {
         CustomNotification.show(
             message: "${data["message"]}", type: NotificationType.info);
-        ;
       }
     } else {
       CustomNotification.show(
           message: "Somthing went wrong!.....", type: NotificationType.info);
-      ;
     }
   }
 }

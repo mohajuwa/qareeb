@@ -422,13 +422,11 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
       CustomNotification.show(
           message: "Please allow calls Permission",
           type: NotificationType.info);
-      ;
       await openAppSettings();
     } else {
       CustomNotification.show(
           message: "Please allow calls Permission",
           type: NotificationType.info);
-      ;
       await openAppSettings();
     }
   }

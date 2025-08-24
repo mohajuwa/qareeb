@@ -15,7 +15,7 @@ class MapSuggestGetApiController extends GetxController implements GetxService {
     // https://maps.googleapis.com/maps/api/place/textsearch/json?query=katargam%20pi&key=AIzaSyB-Vi0HNjZs8eNOMMTazt-T01Gw6EYckHg
     var response = await http.get(
         Uri.parse(
-            "https://maps.googleapis.com/maps/api/place/textsearch/json?query=${suggestkey}%20pi&key=${Config.mapkey}"),
+            "https://maps.googleapis.com/maps/api/place/textsearch/json?query=$suggestkey%20pi&key=${Config.mapkey}"),
         headers: userHeader);
 
     var data = jsonDecode(response.body);

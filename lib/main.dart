@@ -11,7 +11,7 @@ void main() async {
 
   await NetworkService().initialize();
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {

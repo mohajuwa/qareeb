@@ -44,7 +44,7 @@ class _FaqScreenState extends State<FaqScreen> {
       body: GetBuilder<FaqApiController>(
         builder: (faqApiController) {
           return faqApiController.isLoading
-              ? Center(
+              ? const Center(
                   child: CustomLoadingWidget(),
                 )
               : SingleChildScrollView(

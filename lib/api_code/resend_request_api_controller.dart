@@ -37,24 +37,20 @@ class ResendRequestApiController extends GetxController implements GetxService {
           CustomNotification.show(
               message: "${resendRequest!.message}",
               type: NotificationType.info);
-          ;
           update();
           return data;
         } else {
           CustomNotification.show(
               message: "${resendRequest!.message}",
               type: NotificationType.info);
-          ;
         }
       } else {
         CustomNotification.show(
             message: "${data["ResponseMsg"]}", type: NotificationType.info);
-        ;
       }
     } else {
       CustomNotification.show(
           message: "Somthing went wrong!.....", type: NotificationType.info);
-      ;
     }
   }
 }

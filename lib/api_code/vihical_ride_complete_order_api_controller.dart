@@ -25,7 +25,7 @@ class VihicalRideCompleteOrderApiController extends GetxController
     required String wallet,
     context,
   }) async {
-    print("vvvpayment_imgvvv:-- ${payment_img}");
+    print("vvvpayment_imgvvv:-- $payment_img");
 
     if (orederloader) {
       return null;
@@ -85,19 +85,18 @@ class VihicalRideCompleteOrderApiController extends GetxController
 
           print("++hahaha++:- (${pickupcontroller.text})");
           print("++hahaha++:- (${dropcontroller.text})");
-          print("++hahaha++:- (${latitudepick})");
-          print("++hahaha++:- (${longitudepick})");
-          print("++hahaha++:- (${latitudedrop})");
-          print("++hahaha++:- (${longitudedrop})");
-          print("++hahaha++:- (${picktitle})");
-          print("++hahaha++:- (${picksubtitle})");
-          print("++hahaha++:- (${droptitle})");
-          print("++hahaha++:- (${dropsubtitle})");
-          print("++hahaha++:- (${droptitlelist})");
+          print("++hahaha++:- ($latitudepick)");
+          print("++hahaha++:- ($longitudepick)");
+          print("++hahaha++:- ($latitudedrop)");
+          print("++hahaha++:- ($longitudedrop)");
+          print("++hahaha++:- ($picktitle)");
+          print("++hahaha++:- ($picksubtitle)");
+          print("++hahaha++:- ($droptitle)");
+          print("++hahaha++:- ($dropsubtitle)");
+          print("++hahaha++:- ($droptitlelist)");
 
           CustomNotification.show(
               message: responsnessaj["message"], type: NotificationType.info);
-          ;
 
           // Return the complete response including request_id
           return responsnessaj;
@@ -105,14 +104,12 @@ class VihicalRideCompleteOrderApiController extends GetxController
           orederloader = false;
           CustomNotification.show(
               message: responsnessaj["message"], type: NotificationType.info);
-          ;
           return responsnessaj;
         }
       } else {
         orederloader = false;
         CustomNotification.show(
             message: responsnessaj["message"], type: NotificationType.info);
-        ;
         return responsnessaj;
       }
     } catch (e) {
@@ -120,7 +117,6 @@ class VihicalRideCompleteOrderApiController extends GetxController
       print("Error in vihicalridecomplete: $e");
       CustomNotification.show(
           message: "Something went wrong!", type: NotificationType.error);
-      ;
       return null;
     }
   }
