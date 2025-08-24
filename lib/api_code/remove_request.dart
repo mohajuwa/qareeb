@@ -1,41 +1,17 @@
-// ===== REMOVE REQUEST API CONTROLLER =====
-
-// lib/api_code/remove_request.dart
-
-import 'dart:async';
-
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-
-import 'package:get/get.dart';
-
+import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
-import 'package:qareeb/api_model/remove_request_api_model.dart';
-
 import '../common_code/config.dart';
-
-import '../common_code/network_service.dart';
-
-import '../utils/show_toast.dart';
+import '../api_model/remove_request_api_model.dart';
 
 class RemoveRequest extends GetxController implements GetxService {
   RemoveVihicalRequest? removeVihicalRequest;
+  bool isLoading = true;
 
-  bool isLoading = false;
-
-  Future removeApi({
-    context,
-    required String uid,
-  }) async {
-    // ✅ Network check
-
-    if (!await NetworkService().hasInternetConnection()) {
-      throw Exception(
-          'No internet connection available. Please check your network and try again.'
-              .tr);
-    }
-
+  Future removeApi({required String uid}) async {
     Map body = {
       "uid": uid,
     };
@@ -45,76 +21,39 @@ class RemoveRequest extends GetxController implements GetxService {
       "Accept": "application/json"
     };
 
-    try {
-      isLoading = true;
+    var response = await http.post(
+        Uri.parse(Config.baseurl + Config.removerequestapi),
+        body: jsonEncode(body),
+        headers: userHeader);
 
-      update();
+    print('+ + + + + Remove + + + + + + $body');
+    print('- - - - - Remove - - - - - - ${response.body}');
 
-      var response = await http
-          .post(Uri.parse(Config.baseurl + Config.removerequestapi),
-              body: jsonEncode(body), headers: userHeader)
-          .timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw Exception(
-              'Request timed out. Please check your connection and try again.'
-                  .tr);
-        },
-      );
+    var data = jsonDecode(response.body);
 
-      if (kDebugMode) {
-        print('+ + + + + RemoveRequest + + + + + + :--- $body');
-
-        print('- - - - - RemoveRequest - - - - - - :--- ${response.body}');
-      }
-
-      var data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        if (data["Result"] == true) {
-          removeVihicalRequest = removeVihicalRequestFromJson(response.body);
-
-          if (removeVihicalRequest!.result == true) {
-            isLoading = false;
-
-            update();
-
-            showToastForDuration("${data["message"]}", 2);
-
-            return data;
-          } else {
-            isLoading = false;
-
-            update();
-
-            showToastForDuration("${data["message"]}", 2);
-
-            return data;
-          }
-        } else {
+    if (response.statusCode == 200) {
+      if (data["Result"] == true) {
+        removeVihicalRequest = removeVihicalRequestFromJson(response.body);
+        if (removeVihicalRequest!.result == true) {
           isLoading = false;
-
+          CustomNotification.show(
+              message: "${removeVihicalRequest!.message}",
+              type: NotificationType.info);
+          ;
           update();
-
-          showToastForDuration("${data["message"]}", 2);
-
           return data;
+        } else {
+          CustomNotification.show(
+              message: "${data['message']}", type: NotificationType.error);
         }
       } else {
-        isLoading = false;
-
-        update();
-
-        showToastForDuration("Something went wrong!.....", 2);
+        CustomNotification.show(
+            message: "${data['message']}", type: NotificationType.error);
       }
-    } catch (e) {
-      isLoading = false;
-
-      update();
-
-      if (kDebugMode) print('RemoveRequest API Error: $e');
-
-      rethrow;
+    } else {
+      CustomNotification.show(
+          message: "Somthing went wrong!.....", type: NotificationType.info);
+      ;
     }
   }
 }
