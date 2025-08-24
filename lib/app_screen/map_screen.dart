@@ -197,10 +197,6 @@ class _MapScreenState extends State<MapScreen>
         vehicle_bidding_secounde.clear();
 
         driveridloader = false;
-
-        if (calculateController.calCulateModel != null) {
-          calculateController.calCulateModel!.driverId?.clear();
-        }
       });
     }
 
@@ -310,13 +306,7 @@ class _MapScreenState extends State<MapScreen>
         if (kDebugMode) print('Socket.IO server disconnected map screen');
       });
 
-      socket.on("reset_customer_state$useridgloable", (data) {
-        if (_isDisposed || !mounted) return;
-
-        if (kDebugMode) print("🔄 Received reset state command");
-        resetMapScreenState();
-      });
-
+      // Wallet API call with safety checks
       if (!_isDisposed && userid != null) {
         homeWalletApiController
             .homwwalleteApi(uid: userid.toString(), context: context)
@@ -336,6 +326,7 @@ class _MapScreenState extends State<MapScreen>
         });
       }
 
+      // Home API call with safety checks
       if (!_isDisposed &&
           userid != null &&
           lathome != null &&
@@ -538,6 +529,7 @@ class _MapScreenState extends State<MapScreen>
               markers[markerId] = updatedMarker;
             }
 
+            // Update markers11 as well
             markers11[markerId] = marker;
             if (markers11.containsKey(markerId)) {
               final Marker oldMarker = markers11[markerId]!;
@@ -553,18 +545,71 @@ class _MapScreenState extends State<MapScreen>
           if (kDebugMode) print("Driver location update error: $e");
         }
       });
+      autoAcceptBid(Map bestBid) async {
+        if (kDebugMode) print("Auto-accepting bid: $bestBid");
+
+        try {
+          final response = await http.post(
+            Uri.parse('${Config.imageurl}/driver/accept_vehicle_ride'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'request_id': request_id.toString(),
+              'd_id': bestBid["id"].toString(),
+              'c_id': useridgloable.toString(),
+              'price': bestBid["price"].toString(),
+            }),
+          );
+
+          if (response.statusCode == 200) {
+            final responseData = json.decode(response.body);
+            if (responseData['ResponseCode'] == "200") {
+              // Emit socket events
+              socket.emit('Accept_Bidding', {
+                'uid': useridgloable,
+                'd_id': bestBid["id"],
+                'request_id': request_id,
+                'price': bestBid["price"],
+              });
+
+              socket.emit('driver_accept_ride', {
+                'request_id': request_id,
+                'd_id': bestBid["id"],
+                'c_id': useridgloable,
+                'status': 'accepted',
+              });
+
+              if (kDebugMode) print("Auto-acceptance successful");
+
+              // Navigate directly to driver detail
+              globalDriverAcceptClass.driverdetailfunction(
+                context: context,
+                lat: latitudepick,
+                long: longitudepick,
+                d_id: bestBid["id"].toString(),
+                request_id: request_id.toString(),
+              );
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) print("Auto-accept error: $e");
+          // Fallback to manual selection
+          Get.back();
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const DriverListScreen()));
+        }
+      }
+
       socket.on("Vehicle_Bidding$userid", (Vehicle_Bidding) {
         if (_isDisposed || !mounted) return;
 
         if (kDebugMode) {
           print("++++++ Vehicle_Bidding ++++ :---  $Vehicle_Bidding");
-
-          print("🚗 Current booking mode: $currentBookingModeDescription");
         }
 
         setState(() {
           vehicle_bidding_driver = Vehicle_Bidding["bidding_list"];
-
           vehicle_bidding_secounde = [];
 
           for (int i = 0; i < vehicle_bidding_driver.length; i++) {
@@ -573,60 +618,49 @@ class _MapScreenState extends State<MapScreen>
           }
         });
 
-        if (!isAutomaticBookingEnabled) {
-          if (kDebugMode) {
-            print("📱 Manual mode active - navigating to DriverListScreen");
-          }
+        // AUTO-ACCEPTANCE: Accept first/best bid automatically
+        if (vehicle_bidding_driver.isNotEmpty) {
+          // Sort by price (ascending) to get cheapest bid
+          vehicle_bidding_driver.sort((a, b) =>
+              double.parse(a["price"].toString())
+                  .compareTo(double.parse(b["price"].toString())));
 
-          if (Get.isDialogOpen == true) {
-            Get.back();
-          }
+          final bestBid = vehicle_bidding_driver[0];
 
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const DriverListScreen()),
-          ).then((_) {
-            if (kDebugMode) {
-              print("📱 Returned from DriverListScreen, resetting state");
-            }
-
-            resetMapScreenState();
-          });
+          // Auto-accept the best bid
+          autoAcceptBid(bestBid);
         } else {
-          if (kDebugMode) {
-            print(
-                "🤖 Automatic mode active - backend should auto-accept nearest driver");
-          }
-        }
-
-        if (vehicle_bidding_driver.isEmpty) {
           Get.back();
-
           Buttonpresebottomshhet();
         }
-      }); // ✅ ENHANCED: Vehicle request acceptance with cleanup
-      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
-        if (_isDisposed || !mounted) return;
+      });
 
-        resetMapScreenState();
+      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) async {
+        if (_isDisposed || !mounted) return;
 
         socket.close();
 
         if (kDebugMode) {
           print("++++++ /acceptvehrequest map/ ++++ :---  $acceptvehrequest");
+
           print(
               "acceptvehrequest is of type map: ${acceptvehrequest.runtimeType}");
         }
 
         setState(() {
           isanimation = false;
+
           isControllerDisposed = true;
+
           loadertimer = true;
         });
+
+        // Safely dispose controller
 
         if (controller != null && controller!.isAnimating) {
           try {
             controller!.dispose();
+
             controller = null;
           } catch (e) {
             if (kDebugMode) print("Error disposing controller in socket: $e");
@@ -643,9 +677,14 @@ class _MapScreenState extends State<MapScreen>
             .toString()
             .contains(useridgloable.toString())) {
           if (kDebugMode) print("condition done");
+
           driveridloader = false;
 
           if (!_isDisposed && mounted) {
+            // Add a small delay to allow database transaction to complete
+
+            await Future.delayed(const Duration(milliseconds: 800));
+
             globalDriverAcceptClass.driverdetailfunction(
                 context: context,
                 lat: latitudepick,
@@ -655,36 +694,6 @@ class _MapScreenState extends State<MapScreen>
           }
         } else {
           if (kDebugMode) print("condition not done");
-        }
-      });
-
-      socket.on("Accept_Bidding_Response$useridgloable", (response) {
-        if (_isDisposed || !mounted) return;
-
-        if (kDebugMode) {
-          print("🎯 Accept_Bidding_Response received in map: $response");
-        }
-      });
-
-      socket.on("Bidding_decline_Response$useridgloable", (response) {
-        if (_isDisposed || !mounted) return;
-
-        if (kDebugMode) {
-          print("❌ Bidding_decline_Response received in map: $response");
-        }
-      });
-
-      socket.on("removecustomerdata$useridgloable", (removecustomerdata) {
-        if (_isDisposed || !mounted) return;
-
-        if (kDebugMode) {
-          print("🗑️ removecustomerdata received in map: $removecustomerdata");
-        }
-
-        resetMapScreenState();
-
-        if (Get.isDialogOpen == true) {
-          Get.back();
         }
       });
     } catch (e) {
@@ -970,7 +979,7 @@ class _MapScreenState extends State<MapScreen>
             mrole: mroal,
             pickup_lat_lon: "$latitudepick,$longitudepick",
             drop_lat_lon: "$latitudedrop,$longitudedrop",
-            drop_lat_lon_list: onlypass);
+            drop_lat_lon_list: convertDroplist());
 
         if (_isDisposed || !mounted) return;
 
@@ -2455,8 +2464,7 @@ class _MapScreenState extends State<MapScreen>
     try {
       if (socket.connected) {
         socket.emit('vehiclerequest', {
-          'requestid':
-              addVihicalCalculateController.addVihicalCalculateModel!.id,
+          'requestid': request_id,
           'driverid': calculateController.calCulateModel!.driverId,
           'c_id': userid
         });
@@ -2818,7 +2826,8 @@ class _MapScreenState extends State<MapScreen>
                                                         "$latitudepick,$longitudepick",
                                                     drop_lat_lon:
                                                         "$latitudedrop,$longitudedrop",
-                                                    drop_lat_lon_list: onlypass,
+                                                    drop_lat_lon_list:
+                                                        convertDroplist(),
                                                   );
 
                                                   if (_isDisposed || !mounted) {
@@ -3444,7 +3453,7 @@ class _MapScreenState extends State<MapScreen>
                                                             drop_lat_lon:
                                                                 "$latitudedrop,$longitudedrop",
                                                             drop_lat_lon_list:
-                                                                onlypass)
+                                                                convertDroplist())
                                                         .then(
                                                       (value) {
                                                         midseconde =
@@ -5258,7 +5267,7 @@ class _MapScreenState extends State<MapScreen>
                                       onPressed1: () {
                                         setState(() {
                                           isanimation = false;
-                                          
+
                                           cancelloader = true;
                                           print(
                                               "++CANCEL LOADER++:- ${cancelloader}");
@@ -5313,279 +5322,62 @@ class _MapScreenState extends State<MapScreen>
   }
 
   void orderfunction() async {
-    if (kDebugMode) {
-      print("🚀 Starting orderfunction with enhanced error handling");
-    }
+    print("🚀 Starting orderfunction with enhanced error handling");
 
-    try {
-      // ✅ PRE-FLIGHT CHECKS
+    // Get the drivers list from the state, assuming calculateApi was already called.
 
-      if (!mounted || _isDisposed) {
-        if (kDebugMode) {
-          print("❌ Widget disposed or not mounted - aborting orderfunction");
-        }
+    final List<dynamic>? drivers = calculateController.calCulateModel?.driverId;
+    final String? errorMessage = calculateController.calCulateModel?.message;
 
-        return;
-      }
+    // Check if drivers are available before proceeding.
 
-      // ✅ VALIDATE ESSENTIAL DATA
+    if (drivers == null || drivers.isEmpty) {
+      // If no drivers are found, show a user-friendly error message.
 
-      if (userid == null || userid.toString().isEmpty) {
-        CustomNotification.show(
-            message: "User session error. Please login again.".tr,
-            type: NotificationType.error);
-
-        return;
-      }
-
-      if (calculateController.calCulateModel?.driverId == null ||
-          calculateController.calCulateModel!.driverId!.isEmpty) {
-        CustomNotification.show(
-            message: "No drivers available. Please try again.".tr,
-            type: NotificationType.error);
-
-        return;
-      }
-
-      // ✅ LOCATION VALIDATION
-
-      if (longitudepick == null) {
-        CustomNotification.show(
-            message: "Invalid pickup or drop location".tr,
-            type: NotificationType.error);
-
-        return;
-      }
-
-      // ✅ PRICE VALIDATION
-
-      double currentPrice;
-
-      try {
-        currentPrice = double.parse(amountcontroller.text);
-      } catch (e) {
-        CustomNotification.show(
-            message: "Invalid price amount".tr, type: NotificationType.error);
-
-        return;
-      }
-
-      if (currentPrice <= 0) {
-        CustomNotification.show(
-            message: "Price must be greater than zero".tr,
-            type: NotificationType.error);
-
-        return;
-      }
-
-      // ✅ SHOW LOADING STATE
-
-      setState(() {
-        isanimation = true;
-
-        loadertimer = false;
-      });
-
-      if (kDebugMode) {
-        print("🎯 Order Parameters:");
-
-        print("   User ID: $userid");
-
-        print("   Vehicle ID: $vehicle_id");
-
-        print("   Price: $currentPrice");
-
-        print(
-            "   Drivers: ${calculateController.calCulateModel!.driverId!.length}");
-
-        print("   Pickup: $latitudepick,$longitudepick");
-
-        print("   Drop: $latitudedrop,$longitudedrop");
-      }
-
-      // ✅ ENHANCED SOCKET PREPARATION
-
-      try {
-        if (kDebugMode) print("🔌 Preparing socket connection...");
-
-        socket.connect();
-
-        // Get wallet amount
-
-        await homeWalletApiController
-            .homwwalleteApi(uid: userid.toString(), context: context)
-            .then((value) {
-          if (value != null && value["wallet_amount"] != null) {
-            walleteamount = double.parse(value["wallet_amount"].toString());
-
-            if (kDebugMode) print("💰 Wallet amount: $walleteamount");
-          }
-        }).catchError((error) {
-          if (kDebugMode) print("⚠️ Wallet API error (non-critical): $error");
-
-          walleteamount = 0.0; // Default value
-        });
-
-        // Reset animation state
-
-        percentValue.clear();
-
-        percentValue = List.filled(4, 0.0);
-
-        currentStoryIndex = 0;
-
-        if (kDebugMode) print("🎬 Animation state reset");
-      } catch (socketError) {
-        if (kDebugMode) {
-          print("⚠️ Socket preparation error (non-critical): $socketError");
-        }
-      }
-
-      // ✅ MAIN API CALL WITH COMPREHENSIVE ERROR HANDLING
-
-      try {
-        if (kDebugMode) print("📡 Calling AddVihicalCalCulate API...");
-
-        final result =
-            await addVihicalCalculateController.addvihicalcalculateApi(
-          pickupadd: {
-            "title": "${picktitle.isEmpty ? addresspickup : picktitle}",
-            "subt": picksubtitle
-          },
-          dropadd: {"title": droptitle, "subt": dropsubtitle},
-          droplistadd: droptitlelist,
-          context: context,
-          uid: userid.toString(),
-          tot_km: "$totalkm",
-          vehicle_id: vehicle_id,
-          tot_minute: tot_time,
-          tot_hour: tot_hour,
-          m_role: mroal,
-          coupon_id: couponId,
-          payment_id: "$payment",
-          driverid: calculateController.calCulateModel!.driverId!,
-          price: amountcontroller.text,
-          pickup: "$latitudepick,$longitudepick",
-          drop: "$latitudedrop,$longitudedrop",
-          droplist: onlypass,
-          bidd_auto_status: biddautostatus,
-        );
-
-        // ✅ HANDLE SUCCESSFUL RESPONSE
-
-        if (result != null && result["Result"] == true) {
-          if (kDebugMode) print("🎉 Order created successfully!");
-
-          setState(() {
-            request_id = result["id"].toString();
-          });
-
-          // ✅ EMIT SOCKET EVENT SAFELY
-
-          try {
-            socateempt();
-
-            if (kDebugMode) print("📡 Socket event emitted successfully");
-          } catch (socketEmitError) {
-            if (kDebugMode) {
-              print("⚠️ Socket emit error (non-critical): $socketEmitError");
-            }
-          }
-
-          // ✅ START REQUEST TIMER
-
-          try {
-            requesttime();
-
-            if (kDebugMode) print("⏰ Request timer started");
-          } catch (timerError) {
-            if (kDebugMode) print("⚠️ Timer error (non-critical): $timerError");
-          }
-
-          // ✅ UPDATE UI STATE
-
-          setState(() {
-            offerpluse = false;
-
-            isanimation = false;
-          });
-
-          if (kDebugMode) print("✅ Order function completed successfully");
-        } else {
-          // Handle API failure
-
-          String errorMessage = result?["message"] ?? "Request failed";
-
-          setState(() {
-            isanimation = false;
-
-            loadertimer = true;
-          });
-
-          CustomNotification.show(
-              message: errorMessage.tr, type: NotificationType.error);
-
-          if (kDebugMode) print("❌ Order API failed: $errorMessage");
-        }
-      } catch (apiError) {
-        if (kDebugMode) print("💥 AddVihicalCalCulate API Error: $apiError");
-
-        setState(() {
-          isanimation = false;
-
-          loadertimer = true;
-        });
-
-        // ✅ ENHANCED ERROR CATEGORIZATION
-
-        String userMessage;
-
-        if (apiError.toString().contains('TimeoutException') ||
-            apiError.toString().contains('timeout')) {
-          userMessage =
-              "Request timed out. Please check your connection and try again."
-                  .tr;
-        } else if (apiError.toString().contains('SocketException')) {
-          userMessage =
-              "Network error. Please check your internet connection.".tr;
-        } else if (apiError.toString().contains('504') ||
-            apiError.toString().contains('Gateway Time-out')) {
-          userMessage = "Server is busy. Please try again in a moment.".tr;
-        } else if (apiError.toString().contains('No drivers available')) {
-          userMessage = "No drivers available in your area.".tr;
-        } else {
-          userMessage = "Something went wrong. Please try again.".tr;
-        }
-
-        CustomNotification.show(
-            message: userMessage, type: NotificationType.error);
-
-        // ✅ OFFER RETRY OPTION
-
-        _showRetryDialog(context);
-      }
-
-      // ✅ PARALLEL PRICE CALCULATION (NON-BLOCKING)
-
-      _calculatePriceInBackground();
-    } catch (generalError) {
-      if (kDebugMode) print("💥 General orderfunction error: $generalError");
+      print("⚠️ No drivers found. Aborting booking request.");
+      CustomNotification.show(
+          message: errorMessage ??
+              "No drivers are currently available for this route. Please try again."
+                  .tr,
+          type: NotificationType.info);
+      // You should also stop any loading animations and reset the UI.
 
       setState(() {
         isanimation = false;
-
         loadertimer = true;
       });
-
-      CustomNotification.show(
-          message: "An unexpected error occurred. Please try again.".tr,
-          type: NotificationType.error);
+      return; // Stop the function here.
     }
-  }
 
-  void _calculatePriceInBackground() async {
+    print("✅ Drivers found. Proceeding with booking request...");
+
+    // Assuming all other required data is correctly populated.
+
+    Map body = {
+      "uid": userid.toString(),
+      "driverid": drivers,
+      "price": amountcontroller.text,
+      "tot_km": "$totalkm",
+      "pickup": "$latitudepick,$longitudepick",
+      "drop": "$latitudedrop,$longitudedrop",
+      "droplist": convertDroplist(),
+      "pickupadd": {
+        "title": picktitle == "" ? addresspickup : picktitle,
+        "subt": picksubtitle
+      },
+      "dropadd": {"title": droptitle, "subt": dropsubtitle},
+      "droplistadd": droptitlelist ?? [],
+      "tot_hour": tot_hour,
+      "tot_minute": tot_time,
+      "vehicle_id": vehicle_id,
+      "payment_id": "$payment",
+      "m_role": mroal,
+      "coupon_id": couponId.isEmpty ? null : couponId,
+      "bidd_auto_status": biddautostatus,
+    };
+
     try {
-      if (kDebugMode) print("💰 Starting background price calculation...");
+      // Continue with calculate API call for fare calculation only
 
       calculateController
           .calculateApi(
@@ -5595,54 +5387,136 @@ class _MapScreenState extends State<MapScreen>
               mrole: mroal,
               pickup_lat_lon: "$latitudepick,$longitudepick",
               drop_lat_lon: "$latitudedrop,$longitudedrop",
-              drop_lat_lon_list: onlypass)
+              drop_lat_lon_list: convertDroplist())
           .then((value) {
-        if (!mounted || _isDisposed) return;
+        dropprice = 0;
+
+        minimumfare = 0;
+
+        maximumfare = 0;
+
+        if (value["Result"] == true) {
+          amountresponse = "true";
+
+          dropprice = value["drop_price"];
+
+          minimumfare = value["vehicle"]["minimum_fare"];
+
+          maximumfare = value["vehicle"]["maximum_fare"];
+
+          responsemessage = value["message"];
+        } else {
+          amountresponse = "false";
+
+          print("Calculate API returned false result");
+        }
+
+        print(
+            "📊 Calculate results - Price: $dropprice, Min: $minimumfare, Max: $maximumfare");
+      }).catchError((error) {
+        print("❌ Calculate API Error: $error");
+      });
+      print("📡 Calling AddVihicalCalCulate API...");
+
+      addVihicalCalculateController.addvihicalcalculateApi(
+        pickupadd: {
+          "title": "${picktitle == "" ? addresspickup : picktitle}",
+          "subt": picksubtitle
+        },
+        dropadd: {"title": droptitle, "subt": dropsubtitle},
+        droplistadd: droptitlelist ?? [],
+        context: context,
+        uid: userid.toString(),
+        tot_km: "$totalkm",
+        vehicle_id: vehicle_id,
+        tot_minute: tot_time,
+        tot_hour: tot_hour,
+        m_role: mroal,
+        coupon_id: couponId.isEmpty ? "null" : couponId,
+        payment_id: "$payment",
+        driverid: drivers,
+        price: amountcontroller.text,
+        pickup: "$latitudepick,$longitudepick",
+        drop: "$latitudedrop,$longitudedrop",
+        droplist: convertDroplist(),
+        bidd_auto_status: biddautostatus,
+      ).then((value) {
+        if (value != null && value["Result"] == true) {
+          print("🎉 Order created successfully!");
+
+          setState(() {
+            request_id = value["id"].toString();
+          });
+
+          // Emit socket event
+
+          try {
+            socateempt();
+
+            print("📡 Socket event emitted successfully");
+          } catch (socketError) {
+            print("⚠️ Socket emit error (non-critical): $socketError");
+          }
+
+          print("✅ Order function completed successfully");
+        } else {
+          print("❌ Order API failed: ${value?["message"] ?? "Unknown error"}");
+
+          setState(() {
+            isanimation = false;
+
+            loadertimer = true;
+          });
+
+          // Show user-friendly error message
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(value?["message"] ?? "فشل في إنشاء الطلب"),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }).catchError((error) {
+        print("💥 AddVihicalCalCulate API Error: $error");
 
         setState(() {
-          dropprice = 0;
+          isanimation = false;
 
-          minimumfare = 0;
-
-          maximumfare = 0;
-
-          if (value["Result"] == true) {
-            amountresponse = "true";
-
-            dropprice = value["drop_price"];
-
-            minimumfare = value["vehicle"]["minimum_fare"];
-
-            maximumfare = value["vehicle"]["maximum_fare"];
-
-            responsemessage = value["message"];
-
-            if (kDebugMode) {
-              print("💰 Price calculation successful:");
-
-              print("   Drop price: $dropprice");
-
-              print("   Min fare: $minimumfare");
-
-              print("   Max fare: $maximumfare");
-            }
-          } else {
-            amountresponse = "false";
-
-            if (kDebugMode) print("❌ Price calculation failed");
-          }
+          loadertimer = true;
         });
-      }).catchError((error) {
-        if (kDebugMode) print("⚠️ Background price calculation error: $error");
 
-        // Don't show error to user for background calculation
+        // Show user-friendly error message
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("حدث خطأ في الاتصال"),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
       });
     } catch (e) {
-      if (kDebugMode) print("⚠️ Background calculation setup error: $e");
+      print("💥 Critical error in orderfunction: $e");
+
+      setState(() {
+        isanimation = false;
+
+        loadertimer = true;
+      });
     }
   }
 
-// ✅ HELPER METHOD: Show Retry Dialog
+  List<String> convertDroplist() {
+    if (onlypass == null || onlypass.isEmpty) {
+      return [];
+    }
+
+    return onlypass
+        .map((point) => "${point.latitude},${point.longitude}")
+        .toList();
+  }
 
   void _showRetryDialog(BuildContext context) {
     showDialog(

@@ -93,11 +93,11 @@ class AddVihicalCalculateController extends GetxController
           .post(Uri.parse(Config.baseurl + Config.addvihicalcalculate),
               body: jsonEncode(body), headers: userHeader)
           .timeout(
-        const Duration(seconds: 60), // Increased timeout
+        const Duration(seconds: 10), // Increased timeout
         onTimeout: () {
           throw TimeoutException(
               'Request timed out. The server is taking longer than expected.',
-              const Duration(seconds: 60));
+              const Duration(seconds: 10));
         },
       );
 

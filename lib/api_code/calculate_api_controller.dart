@@ -53,7 +53,7 @@ class CalculateController extends GetxController implements GetxService {
           .post(Uri.parse(Config.baseurl + Config.calculate),
               body: jsonEncode(body), headers: userHeader)
           .timeout(
-        const Duration(seconds: 15), // ✅ Added timeout
+        const Duration(seconds: 10), // ✅ Added timeout
         onTimeout: () {
           throw Exception(
               'Request timed out. Please check your connection and try again.'
