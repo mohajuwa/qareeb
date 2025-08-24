@@ -64,10 +64,10 @@ class AllRequestDataApiController extends GetxController
       );
 
       if (kDebugMode) {
-        print('+ + + + + AddVihicalCalCulate + + + + + + :--- $body');
+        print('+ + + + + AddVihicalCalCulate + + + + + + :--- All Reqs $body');
 
         print(
-            '- - - - - AddVihicalCalCulate - - - - - - :--- ${response.body}');
+            '- - - - - AddVihicalCalCulate - - - - - - :--- All Reqs${response.body}');
       }
 
       var data = jsonDecode(response.body);

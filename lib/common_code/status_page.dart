@@ -301,7 +301,7 @@ class _ModernStatusPageState extends State<ModernStatusPage>
         (widget.customTitle ?? config.title).tr, // ✅ Added .tr
 
         style: TextStyle(
-          fontSize: 32,
+          fontSize: 22,
           fontWeight: FontWeight.bold,
           color: notifier.textColor,
           letterSpacing: -1.0,

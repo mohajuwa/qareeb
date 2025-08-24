@@ -243,8 +243,8 @@ class _MapScreenState extends State<MapScreen>
       if (kDebugMode) print("Socket reconnection error: $e");
     }
   }
-  // socate code
 
+  // socate code
   socketConnect() async {
     if (_isDisposed) return;
 
@@ -287,10 +287,13 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
+// Replace your existing _connectSocket method:
   _connectSocket() async {
     if (_isDisposed) return;
 
     try {
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+
       socket.onConnect((data) {
         if (kDebugMode) print('Connection established Connected map screen');
       });
@@ -303,13 +306,7 @@ class _MapScreenState extends State<MapScreen>
         if (kDebugMode) print('Socket.IO server disconnected map screen');
       });
 
-      socket.on("reset_customer_state$useridgloable", (data) {
-        if (_isDisposed || !mounted) return;
-
-        if (kDebugMode) print("🔄 Received reset state command");
-        resetMapScreenState();
-      });
-
+      // Wallet API call with safety checks
       if (!_isDisposed && userid != null) {
         homeWalletApiController
             .homwwalleteApi(uid: userid.toString(), context: context)
@@ -329,6 +326,7 @@ class _MapScreenState extends State<MapScreen>
         });
       }
 
+      // Home API call with safety checks
       if (!_isDisposed &&
           userid != null &&
           lathome != null &&
@@ -344,10 +342,126 @@ class _MapScreenState extends State<MapScreen>
           mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
           mroal =
               homeApiController.homeapimodel!.categoryList![0].role.toString();
+          var currency = preferences.getString("currenci");
+          if (currency != null) {
+            currencyy = jsonDecode(currency);
+          }
+          globalcurrency = currencyy;
+
+          // Continue with home map API calls but with safety checks
+          if (!_isDisposed &&
+              (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty)) {
+            homeMapController
+                .homemapApi(
+                    mid: mid, lat: lathome.toString(), lon: longhome.toString())
+                .then((value) {
+              if (_isDisposed || !mounted) return;
+
+              setState(() {
+                if (kDebugMode) print("///:---  ${value["Result"]}");
+
+                if (value["Result"] == false) {
+                  vihicallocations.clear();
+                  markers.clear();
+                  _addMarkersOptimized();
+                  if (kDebugMode) {
+                    print("***if condition+++:---  $vihicallocations");
+                  }
+                } else {
+                  for (int i = 0;
+                      i < homeMapController.homeMapApiModel!.list!.length;
+                      i++) {
+                    vihicallocations.add(LatLng(
+                        double.parse(homeMapController
+                            .homeMapApiModel!.list![i].latitude
+                            .toString()),
+                        double.parse(homeMapController
+                            .homeMapApiModel!.list![i].longitude
+                            .toString())));
+                    _iconPaths.add(
+                        "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                  }
+                  _addMarkersOptimized();
+                }
+                if (kDebugMode) {
+                  print("******-**:::::------ _connectSocket$vihicallocations");
+                }
+              });
+            }).catchError((error) {
+              if (kDebugMode) print("Home map API error: $error");
+            });
+          }
+
+          // Handle running ride data with safety checks
+          if (!_isDisposed &&
+              homeApiController.homeapimodel!.runnigRide!.isNotEmpty) {
+            // Your existing running ride logic here, but wrap setState calls with setState
+            pickupcontroller.text = homeApiController
+                .homeapimodel!.runnigRide![0].pickAdd!.title
+                .toString();
+            dropcontroller.text = homeApiController
+                .homeapimodel!.runnigRide![0].dropAdd!.title
+                .toString();
+
+            // Continue with rest of running ride logic...
+            calculateController
+                .calculateApi(
+                    context: context,
+                    uid: useridgloable.toString(),
+                    mid: mid,
+                    mrole: mroal,
+                    pickup_lat_lon: "$latitudepick,$longitudepick",
+                    drop_lat_lon: "$latitudedrop,$longitudedrop",
+                    drop_lat_lon_list: onlypass)
+                .then((value) {
+              if (_isDisposed || !mounted) return;
+
+              if (kDebugMode) print("CALCULATE DATA LOAD");
+              calculateController.calCulateModel!.offerExpireTime = int.parse(
+                  homeApiController.homeapimodel!.runnigRide![0].increasedTime
+                      .toString());
+              calculateController.calCulateModel!.driverId =
+                  homeApiController.homeapimodel!.runnigRide![0].dId;
+
+              setState(() {
+                isanimation = true;
+                loadertimer = true;
+                offerpluse = false;
+              });
+
+              if (!_isDisposed) {
+                requesttime();
+                Buttonpresebottomshhet();
+              }
+            }).catchError((error) {
+              if (kDebugMode) print("Calculate API error: $error");
+            });
+          }
+        }).catchError((error) {
+          if (kDebugMode) print("Home API error: $error");
+        });
+      }
+
+      // Socket event listeners with safety checks
+      socket.on('home', (messaj) {
+        if (_isDisposed || !mounted) return;
+        if (kDebugMode) print("++++++++++ :---  $messaj");
+
+        homeApiController
+            .homeApi(
+                uid: messaj['uid'].toString(),
+                lat: messaj['lat'].toString(),
+                lon: messaj['lon'].toString())
+            .then((value) {
+          if (_isDisposed || !mounted) return;
+
+          mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+          mroal =
+              homeApiController.homeapimodel!.categoryList![0].role.toString();
         }).catchError((error) {
           if (kDebugMode) print("Socket home event error: $error");
         });
-      }
+      });
 
       socket.on("Driver_location_On", (Driver_location_On) async {
         if (_isDisposed || !mounted) return;
@@ -415,6 +529,7 @@ class _MapScreenState extends State<MapScreen>
               markers[markerId] = updatedMarker;
             }
 
+            // Update markers11 as well
             markers11[markerId] = marker;
             if (markers11.containsKey(markerId)) {
               final Marker oldMarker = markers11[markerId]!;
@@ -430,18 +545,71 @@ class _MapScreenState extends State<MapScreen>
           if (kDebugMode) print("Driver location update error: $e");
         }
       });
+      _autoAcceptBid(Map bestBid) async {
+        if (kDebugMode) print("Auto-accepting bid: $bestBid");
+
+        try {
+          final response = await http.post(
+            Uri.parse('${Config.imageurl}/driver/accept_vehicle_ride'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'request_id': request_id.toString(),
+              'd_id': bestBid["id"].toString(),
+              'c_id': useridgloable.toString(),
+              'price': bestBid["price"].toString(),
+            }),
+          );
+
+          if (response.statusCode == 200) {
+            final responseData = json.decode(response.body);
+            if (responseData['ResponseCode'] == "200") {
+              // Emit socket events
+              socket.emit('Accept_Bidding', {
+                'uid': useridgloable,
+                'd_id': bestBid["id"],
+                'request_id': request_id,
+                'price': bestBid["price"],
+              });
+
+              socket.emit('driver_accept_ride', {
+                'request_id': request_id,
+                'd_id': bestBid["id"],
+                'c_id': useridgloable,
+                'status': 'accepted',
+              });
+
+              if (kDebugMode) print("Auto-acceptance successful");
+
+              // Navigate directly to driver detail
+              globalDriverAcceptClass.driverdetailfunction(
+                context: context,
+                lat: latitudepick,
+                long: longitudepick,
+                d_id: bestBid["id"].toString(),
+                request_id: request_id.toString(),
+              );
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) print("Auto-accept error: $e");
+          // Fallback to manual selection
+          Get.back();
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const DriverListScreen()));
+        }
+      }
+
       socket.on("Vehicle_Bidding$userid", (Vehicle_Bidding) {
         if (_isDisposed || !mounted) return;
 
         if (kDebugMode) {
           print("++++++ Vehicle_Bidding ++++ :---  $Vehicle_Bidding");
-
-          print("🚗 Current booking mode: $currentBookingModeDescription");
         }
 
         setState(() {
           vehicle_bidding_driver = Vehicle_Bidding["bidding_list"];
-
           vehicle_bidding_secounde = [];
 
           for (int i = 0; i < vehicle_bidding_driver.length; i++) {
@@ -450,60 +618,49 @@ class _MapScreenState extends State<MapScreen>
           }
         });
 
-        if (!isAutomaticBookingEnabled) {
-          if (kDebugMode) {
-            print("📱 Manual mode active - navigating to DriverListScreen");
-          }
+        // AUTO-ACCEPTANCE: Accept first/best bid automatically
+        if (vehicle_bidding_driver.isNotEmpty) {
+          // Sort by price (ascending) to get cheapest bid
+          vehicle_bidding_driver.sort((a, b) =>
+              double.parse(a["price"].toString())
+                  .compareTo(double.parse(b["price"].toString())));
 
-          if (Get.isDialogOpen == true) {
-            Get.back();
-          }
+          final bestBid = vehicle_bidding_driver[0];
 
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const DriverListScreen()),
-          ).then((_) {
-            if (kDebugMode) {
-              print("📱 Returned from DriverListScreen, resetting state");
-            }
-
-            resetMapScreenState();
-          });
+          // Auto-accept the best bid
+          _autoAcceptBid(bestBid);
         } else {
-          if (kDebugMode) {
-            print(
-                "🤖 Automatic mode active - backend should auto-accept nearest driver");
-          }
-        }
-
-        if (vehicle_bidding_driver.isEmpty) {
           Get.back();
-
           Buttonpresebottomshhet();
         }
-      }); // ✅ ENHANCED: Vehicle request acceptance with cleanup
-      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
-        if (_isDisposed || !mounted) return;
+      });
 
-        resetMapScreenState();
+      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) async {
+        if (_isDisposed || !mounted) return;
 
         socket.close();
 
         if (kDebugMode) {
           print("++++++ /acceptvehrequest map/ ++++ :---  $acceptvehrequest");
+
           print(
               "acceptvehrequest is of type map: ${acceptvehrequest.runtimeType}");
         }
 
         setState(() {
           isanimation = false;
+
           isControllerDisposed = true;
+
           loadertimer = true;
         });
+
+        // Safely dispose controller
 
         if (controller != null && controller!.isAnimating) {
           try {
             controller!.dispose();
+
             controller = null;
           } catch (e) {
             if (kDebugMode) print("Error disposing controller in socket: $e");
@@ -520,9 +677,14 @@ class _MapScreenState extends State<MapScreen>
             .toString()
             .contains(useridgloable.toString())) {
           if (kDebugMode) print("condition done");
+
           driveridloader = false;
 
           if (!_isDisposed && mounted) {
+            // Add a small delay to allow database transaction to complete
+
+            await Future.delayed(const Duration(milliseconds: 800));
+
             globalDriverAcceptClass.driverdetailfunction(
                 context: context,
                 lat: latitudepick,
@@ -532,36 +694,6 @@ class _MapScreenState extends State<MapScreen>
           }
         } else {
           if (kDebugMode) print("condition not done");
-        }
-      });
-
-      socket.on("Accept_Bidding_Response$useridgloable", (response) {
-        if (_isDisposed || !mounted) return;
-
-        if (kDebugMode) {
-          print("🎯 Accept_Bidding_Response received in map: $response");
-        }
-      });
-
-      socket.on("Bidding_decline_Response$useridgloable", (response) {
-        if (_isDisposed || !mounted) return;
-
-        if (kDebugMode) {
-          print("❌ Bidding_decline_Response received in map: $response");
-        }
-      });
-
-      socket.on("removecustomerdata$useridgloable", (removecustomerdata) {
-        if (_isDisposed || !mounted) return;
-
-        if (kDebugMode) {
-          print("🗑️ removecustomerdata received in map: $removecustomerdata");
-        }
-
-        resetMapScreenState();
-
-        if (Get.isDialogOpen == true) {
-          Get.back();
         }
       });
     } catch (e) {
@@ -1055,29 +1187,14 @@ class _MapScreenState extends State<MapScreen>
   }
 
   void updateBiddingMode(bool isAutomatic) {
-    if (!mounted || _isDisposed) {
-      if (kDebugMode) {
-        print("⚠️  Widget not mounted, skipping bidding mode update");
-      }
-
-      return;
-    }
-
-    setState(() {
-      switchValue = isAutomatic;
-
-      biddautostatus = isAutomatic ? "true" : "false";
-    });
+    // Don't call setState here since it's already called in the switch onChanged
+    biddautostatus = isAutomatic ? "true" : "false";
 
     if (kDebugMode) {
       print("🔧 Bidding mode updated:");
-
       print("   Switch Value: $switchValue");
-
       print("   Bidding Status: $biddautostatus");
-
       print("   Mode: ${isAutomatic ? 'Automatic' : 'Manual'}");
-
       print(
           "   Next Action: ${isAutomatic ? 'Auto-accept nearest driver' : 'Show DriverListScreen for manual selection'}");
     }
@@ -2836,18 +2953,6 @@ class _MapScreenState extends State<MapScreen>
                                                 print("📋 Category ID: $mid");
                                               }
 
-                                              // Show loading dialog for price calculation
-                                              StatusHelper.showStatusDialog(
-                                                context,
-                                                statusType: StatusType.loading,
-                                                customTitle:
-                                                    "Calculating Price".tr,
-                                                customSubtitle:
-                                                    "Fetching fare for Calculation..."
-                                                        .tr,
-                                                barrierDismissible: false,
-                                              );
-
                                               try {
                                                 // Load vehicles for selected category
                                                 await _loadVehiclesOptimized();
@@ -4391,27 +4496,50 @@ class _MapScreenState extends State<MapScreen>
                                         );
                                       }
                                     : (bool value) async {
-                                        updateBiddingMode(value);
+                                        // Check if widget is still mounted to avoid setState on disposed widget
+                                        if (!mounted) return;
 
-                                        await _saveAutomaticBookingPreference(
-                                            value);
+                                        try {
+                                          // Update UI immediately
+                                          setState(() {
+                                            switchValue = value;
+                                          });
 
-                                        CustomNotification.show(
-                                          message: value
-                                              ? "Automatic booking enabled".tr
-                                              : "Manual driver selection".tr,
-                                        );
-                                        offerpluse = true;
+                                          // Update the bidding mode
+                                          updateBiddingMode(value);
 
-                                        if (kDebugMode) {
-                                          print(
-                                              "🔄 Auto-booking toggled: ${value ? 'ON' : 'OFF'}");
+                                          // Save preference
+                                          await _saveAutomaticBookingPreference(
+                                              value);
 
-                                          print(
-                                              "📱 UI State - switchValue: $switchValue");
+                                          // Show notification
+                                          CustomNotification.show(
+                                            message: value
+                                                ? "Automatic booking enabled".tr
+                                                : "Manual driver selection".tr,
+                                          );
 
-                                          print(
-                                              "🚗 Backend State - biddautostatus: $biddautostatus");
+                                          offerpluse = true;
+
+                                          if (kDebugMode) {
+                                            print(
+                                                "🔄 Auto-booking toggled: ${value ? 'ON' : 'OFF'}");
+                                            print(
+                                                "📱 UI State - switchValue: $switchValue");
+                                            print(
+                                                "🚗 Backend State - biddautostatus: $biddautostatus");
+                                          }
+                                        } catch (e) {
+                                          if (kDebugMode) {
+                                            print(
+                                                "❌ Error updating switch: $e");
+                                          }
+                                          // Revert the switch if there was an error
+                                          if (mounted) {
+                                            setState(() {
+                                              switchValue = !value;
+                                            });
+                                          }
                                         }
                                       },
                               ),
@@ -5295,6 +5423,7 @@ class _MapScreenState extends State<MapScreen>
                                       onPressed1: () {
                                         setState(() {
                                           isanimation = false;
+
                                           cancelloader = true;
                                           print(
                                               "++CANCEL LOADER++:- ${cancelloader}");
@@ -5363,7 +5492,9 @@ class _MapScreenState extends State<MapScreen>
         print("[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
       },
     );
+    // refreshAnimation();
 
+    // print("111111111dd111111111 ${calculateController.calCulateModel!.driverId}");
     print("111111111 amountcontroller.text 111111111 ${amountcontroller.text}");
 
     percentValue.clear();
@@ -5373,6 +5504,7 @@ class _MapScreenState extends State<MapScreen>
     }
     setState(() {
       currentStoryIndex = 0;
+      // loadertimer = false;
     });
 
     priceyourfare = double.parse(amountcontroller.text);
@@ -5395,6 +5527,7 @@ class _MapScreenState extends State<MapScreen>
       coupon_id: couponId,
       payment_id: "$payment",
       driverid: calculateController.calCulateModel!.driverId!,
+      // driverid: [29,14],
       price: amountcontroller.text,
       pickup: "$latitudepick,$longitudepick",
       drop: "$latitudedrop,$longitudedrop",
@@ -5420,6 +5553,11 @@ class _MapScreenState extends State<MapScreen>
             drop_lat_lon_list: onlypass)
         .then(
       (value) {
+        // print("********** value **********:----- ${value}");
+        // print("********** value **********:----- ${value["drop_price"]}");
+        // print("********** value **********:----- ${value["vehicle"]["minimum_fare"]}");
+        // print("********** value **********:----- ${value["vehicle"]["maximum_fare"]}");
+
         dropprice = 0;
         minimumfare = 0;
         maximumfare = 0;
