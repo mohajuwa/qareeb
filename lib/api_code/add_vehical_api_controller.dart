@@ -103,43 +103,28 @@ class AddVihicalCalculateController extends GetxController
 
     Map<String, dynamic> body = {
       "uid": uid.trim(),
-
       "driverid": driverid
           .where((id) => id != null && id.toString().isNotEmpty)
           .toList(),
-
       "price": priceValue.toStringAsFixed(2),
-
       "tot_km": kmValue.toStringAsFixed(2),
-
       "pickup": pickup.trim(),
-
       "drop": drop.trim(),
-
       "droplist": droplist
           .where((item) => item != null && item.toString().isNotEmpty)
           .toList(),
-
       "pickupadd": _validateAddressObject(pickupadd),
-
       "dropadd": _validateAddressObject(dropadd),
-
-      "droplistadd": _validateAddressList(droplistadd),
-
+      "droplistadd": _validateAddressList(
+          droplistadd), // Ensure this matches droplist count
       "tot_hour": hourValue,
-
       "tot_minute": minuteValue,
-
       "vehicle_id": vehicle_id.trim(),
-
-      "payment_id": payment_id.trim().isEmpty
-          ? "9"
-          : payment_id.trim(), // Default to cash
-
+      "payment_id": payment_id.trim().isEmpty ? "9" : payment_id.trim(),
       "m_role": m_role.trim(),
-
-      "coupon_id": coupon_id.trim().isEmpty ? "0" : coupon_id.trim(),
-
+      "coupon_id": coupon_id.trim().isEmpty
+          ? null
+          : coupon_id.trim(), // Send null instead of "0"
       "bidd_auto_status": bidd_auto_status,
     };
 
@@ -197,7 +182,10 @@ class AddVihicalCalculateController extends GetxController
       update();
 
       // Enhanced status handling
-
+      if (droplist.length != droplistadd.length) {
+        showToastForDuration('Location data mismatch. Please try again.'.tr, 3);
+        return null;
+      }
       if (response.statusCode == 200) {
         if (data["Result"] == true) {
           addVihicalCalculateModel =
