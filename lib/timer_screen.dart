@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'common_code/colore_screen.dart';
 import 'app_screen/driver_startride_screen.dart';
 import 'app_screen/home_screen.dart';

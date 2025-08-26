@@ -2,14 +2,12 @@ import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../common_code/config.dart';
 import '../api_model/login_api_model.dart';
 import '../app_screen/map_screen.dart';
 import '../app_screen/permisiion_scren.dart';
 import '../common_code/common_button.dart';
-import '../common_code/push_notification.dart';
 
 String onesignalkey = "44d5202c-02e8-4c86-98ec-fb2c018366c4";
 

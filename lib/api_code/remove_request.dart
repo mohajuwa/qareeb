@@ -39,7 +39,6 @@ class RemoveRequest extends GetxController implements GetxService {
           CustomNotification.show(
               message: "${removeVihicalRequest!.message}",
               type: NotificationType.info);
-          ;
           update();
           return data;
         } else {
@@ -53,7 +52,6 @@ class RemoveRequest extends GetxController implements GetxService {
     } else {
       CustomNotification.show(
           message: "Somthing went wrong!.....", type: NotificationType.info);
-      ;
     }
   }
 }

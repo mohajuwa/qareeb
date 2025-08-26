@@ -1,12 +1,6 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../common_code/config.dart';
 import '../api_model/sign_up_api_model.dart';
@@ -14,7 +8,6 @@ import 'package:http/http.dart' as http;
 import '../app_screen/map_screen.dart';
 import '../app_screen/permisiion_scren.dart';
 import '../common_code/common_button.dart';
-import '../common_code/push_notification.dart';
 import 'login_controller.dart';
 
 class SignupController extends GetxController implements GetxService {

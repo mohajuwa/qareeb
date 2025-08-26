@@ -11,7 +11,6 @@ import 'package:http/http.dart' as http;
 import 'package:qareeb/utils/show_toast.dart';
 import '../common_code/config.dart';
 import '../api_model/add_vihical_api_model.dart';
-import '../common_code/network_service.dart';
 
 class AddVihicalCalculateController extends GetxController
     implements GetxService {
@@ -115,18 +114,31 @@ class AddVihicalCalculateController extends GetxController
           .toList(),
       "pickupadd": _validateAddressObject(pickupadd),
       "dropadd": _validateAddressObject(dropadd),
-      "droplistadd": _validateAddressList(
-          droplistadd), // Ensure this matches droplist count
-      "tot_hour": hourValue,
-      "tot_minute": minuteValue,
+      "droplistadd": _validateAddressList(droplistadd),
+
+      // FIXED: Convert to strings
+      "tot_hour": hourValue.toString(), // Changed from hourValue
+      "tot_minute": minuteValue.toString(), // Changed from minuteValue
+
       "vehicle_id": vehicle_id.trim(),
       "payment_id": payment_id.trim().isEmpty ? "9" : payment_id.trim(),
       "m_role": m_role.trim(),
-      "coupon_id": coupon_id.trim().isEmpty
-          ? null
-          : coupon_id.trim(), // Send null instead of "0"
+      "coupon_id": coupon_id.trim().isEmpty ? null : coupon_id.trim(),
       "bidd_auto_status": bidd_auto_status,
     };
+// ADDITIONAL DEBUG: Add this before sending the request
+
+    if (kDebugMode) {
+      print('🔍 Validating address data:');
+
+      print('   pickupadd: ${body["pickupadd"]}');
+
+      print('   dropadd: ${body["dropadd"]}');
+
+      print('   droplistadd length: ${body["droplistadd"].length}');
+
+      print('   droplist length: ${body["droplist"].length}');
+    }
 
     Map<String, String> userHeader = {
       "Content-type": "application/json",
@@ -232,15 +244,32 @@ class AddVihicalCalculateController extends GetxController
 
   Map<String, dynamic> _validateAddressObject(Map addressObj) {
     if (addressObj.isEmpty) {
-      return {"title": "", "subt": ""};
+      return {"title": "Location", "subt": "Not specified"};
+    }
+
+    // Ensure both title and subt have valid values
+
+    String title = (addressObj["title"] ?? "").toString().trim();
+
+    String subt = (addressObj["subt"] ?? "").toString().trim();
+
+    // If subt is empty, use title or provide default
+
+    if (subt.isEmpty) {
+      subt = title.isNotEmpty ? title : "Not specified";
+    }
+
+    // If title is empty, provide default
+
+    if (title.isEmpty) {
+      title = "Location";
     }
 
     return {
-      "title": (addressObj["title"] ?? "").toString().trim(),
-      "subt": (addressObj["subt"] ?? "").toString().trim(),
+      "title": title,
+      "subt": subt,
     };
   }
-
   // Helper method to validate address list
 
   List<Map<String, dynamic>> _validateAddressList(List addressList) {
@@ -265,7 +294,7 @@ class AddVihicalCalculateController extends GetxController
       {int maxRetries = 3}) async {
     int attempt = 0;
 
-    Duration delay = Duration(seconds: 1);
+    Duration delay = const Duration(seconds: 1);
 
     while (attempt < maxRetries) {
       try {
@@ -278,7 +307,7 @@ class AddVihicalCalculateController extends GetxController
         var response = await http
             .post(Uri.parse(Config.baseurl + Config.addvihicalcalculate),
                 body: jsonEncode(body), headers: headers)
-            .timeout(Duration(seconds: 30));
+            .timeout(const Duration(seconds: 30));
 
         // If we get a successful response or a client error (4xx), don't retry
 

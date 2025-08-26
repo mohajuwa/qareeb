@@ -6,7 +6,6 @@ import 'package:qareeb/common_code/custom_loading_widget.dart';
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -2018,7 +2017,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         (value) {
                                           print("+++++${value!["id"]}");
                                           setState(() {});
-                                          request_id = value!["id"].toString();
+                                          request_id = value["id"].toString();
                                           socateempt();
                                         },
                                       );

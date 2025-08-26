@@ -802,7 +802,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// Load automatic booking preference from SharedPreferences
+  // Load automatic booking preference from SharedPreferences
 
   Future<void> _loadAutomaticBookingPreference() async {
     try {
@@ -1040,7 +1040,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ✅ OPTIMIZED: Fast vehicle loading with fallback
+  // ✅ OPTIMIZED: Fast vehicle loading with fallback
   Future<void> _fastVehicleLoad() async {
     try {
       if (kDebugMode) {
@@ -1081,7 +1081,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ✅ NEW: Quick vehicle loading with minimal API calls
+  // ✅ NEW: Quick vehicle loading with minimal API calls
   Future<void> _loadVehiclesQuick() async {
     if (_isDisposed || !mounted) return;
 
@@ -1118,7 +1118,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ✅ OPTIMIZED: Load vehicles with performance improvements
+  // ✅ OPTIMIZED: Load vehicles with performance improvements
   Future<void> _loadVehiclesOptimized() async {
     if (_isDisposed || !mounted) return;
 
@@ -1178,7 +1178,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ✅ OPTIMIZED: Fast marker loading with async image handling
+  // ✅ OPTIMIZED: Fast marker loading with async image handling
   void _addMarkersOptimized() async {
     // ADDED async KEYWORD
 
@@ -1236,7 +1236,7 @@ class _MapScreenState extends State<MapScreen>
       }
     }
   }
-// ✅ NEW: Timer for logo placeholder transition
+  // ✅ NEW: Timer for logo placeholder transition
 
   void _startLogoPlaceholderTimer() {
     // Cancel any existing timer
@@ -1261,7 +1261,7 @@ class _MapScreenState extends State<MapScreen>
     });
   }
 
-// ✅ NEW: Smooth transition from logo to vehicle icons
+  // ✅ NEW: Smooth transition from logo to vehicle icons
 
   void _transitionToVehicleIcons() async {
     if (_isDisposed || !mounted || _iconPaths.isEmpty) return;
@@ -1333,7 +1333,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ✅ NEW: Load custom icons in background without blocking UI
+  // ✅ NEW: Load custom icons in background without blocking UI
   void _loadCustomIconsAsync() async {
     if (_isDisposed || !mounted || _iconPaths.isEmpty) return;
 
@@ -1387,7 +1387,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ✅ OPTIMIZED: Load single icon with caching
+  // ✅ OPTIMIZED: Load single icon with caching
   Future<BitmapDescriptor> _loadSingleIcon(String url) async {
     try {
       if (url.isEmpty || url.contains("undefined")) {
@@ -1414,7 +1414,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ✅ BACKGROUND: Load location and update vehicles
+  // ✅ BACKGROUND: Load location and update vehicles
   Future<void> _updateLocationAndRefreshVehicles() async {
     try {
       // Get accurate location in background
@@ -1437,7 +1437,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ✅ BACKGROUND: Load payment methods
+  // ✅ BACKGROUND: Load payment methods
   Future<void> _loadPaymentMethods() async {
     try {
       final value = await paymentGetApiController.paymentlistApi(context);
@@ -1466,7 +1466,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ✅ BACKGROUND: Load page list
+  // ✅ BACKGROUND: Load page list
   Future<void> _loadPageList() async {
     try {
       await pagelistcontroller.pagelistttApi(context);
@@ -1510,7 +1510,7 @@ class _MapScreenState extends State<MapScreen>
       }
     }
   }
-// ✅ PERFORMANCE FIX: Simplified initState (replace your current one)
+  // ✅ PERFORMANCE FIX: Simplified initState (replace your current one)
 
   void _handleRequestTimeout() async {
     if (!mounted || _isDisposed) return;
@@ -1573,7 +1573,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ✅ TIMEOUT BOTTOM SHEET
+  // ✅ TIMEOUT BOTTOM SHEET
 
   void _showTimeoutBottomSheet() {
     if (!mounted) return;
@@ -1655,9 +1655,9 @@ class _MapScreenState extends State<MapScreen>
       ),
     );
   }
-// ========================================
-// FIXED: Replace your requesttime() method with this
-// ========================================
+  // ========================================
+  // FIXED: Replace your requesttime() method with this
+  // ========================================
 
   void requesttime() {
     try {
@@ -1704,8 +1704,9 @@ class _MapScreenState extends State<MapScreen>
           controller!.forward();
           if (kDebugMode) print("✅ Animation started successfully");
         } catch (controllerError) {
-          if (kDebugMode)
+          if (kDebugMode) {
             print("❌ Controller creation error: $controllerError");
+          }
           // Continue without animation
         }
       }
@@ -1729,9 +1730,9 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ========================================
-// ALSO UPDATE: Your initState() method - REMOVE the controller creation
-// ========================================
+  // ========================================
+  // ALSO UPDATE: Your initState() method - REMOVE the controller creation
+  // ========================================
 
   @override
   void initState() {
@@ -1752,8 +1753,6 @@ class _MapScreenState extends State<MapScreen>
       print("🚀 MapScreen initialized - Fast loading mode");
       print("🔧 selectvihical parameter: ${widget.selectvihical}");
     }
-
-    select1 = 0;
 
     // ✅ PERFORMANCE: Start all operations in parallel immediately
     Future.microtask(() {
@@ -1798,9 +1797,9 @@ class _MapScreenState extends State<MapScreen>
     });
   }
 
-// ========================================
-// UPDATED: Enhanced dispose method
-// ========================================
+  // ========================================
+  // UPDATED: Enhanced dispose method
+  // ========================================
 
   @override
   void dispose() {
@@ -1906,7 +1905,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// ✅ UPDATE: Replace _createLogoPlaceholder() with themed version
+  // ✅ UPDATE: Replace _createLogoPlaceholder() with themed version
   _createLogoPlaceholder() {
     // return _createThemedLogoPlaceholder();
     return _createLogoMarker();
@@ -1944,7 +1943,7 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// Replace your existing mapThemeStyle method:
+  // Replace your existing mapThemeStyle method:
   mapThemeStyle({required BuildContext context}) {
     if (_isDisposed) return;
 
@@ -2319,7 +2318,7 @@ class _MapScreenState extends State<MapScreen>
         desiredAccuracy: LocationAccuracy.high);
   }
 
-// Optimized version with offline fallback
+  // Optimized version with offline fallback
 
   Future getCurrentLatAndLong(double latitude, double longitude) async {
     if (_isDisposed) return;
@@ -2458,7 +2457,7 @@ class _MapScreenState extends State<MapScreen>
     setState(() {});
   }
 
-// ✅ ENHANCED SOCKET EMIT METHOD
+  // ✅ ENHANCED SOCKET EMIT METHOD
 
   void socateempt() {
     try {
@@ -5509,7 +5508,7 @@ class _MapScreenState extends State<MapScreen>
   }
 
   List<String> convertDroplist() {
-    if (onlypass == null || onlypass.isEmpty) {
+    if (onlypass.isEmpty) {
       return [];
     }
 
