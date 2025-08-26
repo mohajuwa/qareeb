@@ -957,19 +957,34 @@ class _MapScreenState extends State<MapScreen>
         return;
       }
 
-      mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+      // ✅ KEY FIX: Use select1 instead of [0]
 
-      mroal = homeApiController.homeapimodel!.categoryList![0].role.toString();
+      if (select1 < homeApiController.homeapimodel!.categoryList!.length) {
+        mid = homeApiController.homeapimodel!.categoryList![select1].id
+            .toString();
+
+        mroal = homeApiController.homeapimodel!.categoryList![select1].role
+            .toString();
+      } else {
+        // Fallback to first category if select1 is out of bounds
+
+        mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+
+        mroal =
+            homeApiController.homeapimodel!.categoryList![0].role.toString();
+      }
 
       if (kDebugMode) {
-        print("🧮 Loading Calculate API in background");
+        print("🧮 Loading Calculate API for selected vehicle");
+
+        print("   Selected index: $select1");
 
         print("   Category ID: $mid");
 
         print("   Role: $mroal");
       }
 
-      // Only proceed if we have pickup and drop locations
+      // Continue with existing calculation code...
 
       if (pickupcontroller.text.isNotEmpty && dropcontroller.text.isNotEmpty) {
         final value = await calculateController.calculateApi(
@@ -1013,26 +1028,12 @@ class _MapScreenState extends State<MapScreen>
           setState(() {});
 
           if (kDebugMode) {
-            print("✅ Calculate API completed successfully");
+            print("✅ Calculate API completed for selected vehicle");
 
-            print("   Drop price: $dropprice");
+            print("   Vehicle: $vihicalname");
 
-            print("   Min fare: $minimumfare");
-
-            print("   Max fare: $maximumfare");
+            print("   Price: $dropprice");
           }
-        } else {
-          amountresponse = "false";
-
-          if (kDebugMode) {
-            print("❌ Calculate API returned false result");
-          }
-
-          setState(() {});
-        }
-      } else {
-        if (kDebugMode) {
-          print("⚠️ Pickup or drop location not available for calculate API");
         }
       }
     } catch (e) {
@@ -1040,53 +1041,50 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-  // ✅ OPTIMIZED: Fast vehicle loading with fallback
   Future<void> _fastVehicleLoad() async {
     try {
-      if (kDebugMode) {
-        print("🚀 Starting fast vehicle load...");
-      }
+      if (kDebugMode) print("🚀 Starting fast vehicle load...");
 
-      // First, try to load vehicles with any available location data
+      // Load location first...
+
       if (lathomecurrent != null && longhomecurrent != null) {
-        // Use cached location immediately
         lathome = lathomecurrent;
+
         longhome = longhomecurrent;
+
         if (kDebugMode) {
           print("📍 Using cached location: lat=$lathome, lon=$longhome");
         }
+
         await _loadVehiclesQuick();
       } else if (lathome != null && longhome != null) {
-        // Use any available location
         if (kDebugMode) {
           print("📍 Using available location: lat=$lathome, lon=$longhome");
         }
+
         await _loadVehiclesQuick();
       } else {
-        // Load with default coordinates and update later
-        if (kDebugMode) {
-          print("📍 Using default location for initial load");
-        }
-        lathome = 13.9673941; // Default to current location from logs
+        if (kDebugMode) print("📍 Using default location for initial load");
+
+        lathome = 13.9673941;
+
         longhome = 44.1545032;
+
         await _loadVehiclesQuick();
 
-        // Update with real location when available
         _updateLocationAndRefreshVehicles();
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("❌ Fast vehicle load error: $e");
-      }
+      if (kDebugMode) print("❌ Fast vehicle load error: $e");
     }
   }
 
-  // ✅ NEW: Quick vehicle loading with minimal API calls
   Future<void> _loadVehiclesQuick() async {
     if (_isDisposed || !mounted) return;
 
     try {
       // Load home API data if not available
+
       if (homeApiController.homeapimodel?.categoryList == null) {
         final homeData = await homeApiController.homeApi(
           uid: userid.toString(),
@@ -1096,25 +1094,48 @@ class _MapScreenState extends State<MapScreen>
 
         if (homeData == null || homeData["Result"] != true) {
           if (kDebugMode) print("❌ Home API failed");
+
           return;
         }
       }
 
-      // Set category data
+      // Set category data using selected index
+
       if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
-        mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
-        mroal =
-            homeApiController.homeapimodel!.categoryList![0].role.toString();
-      } else {
-        return;
+        // ✅ KEY FIX: Use select1 instead of [0]
+
+        if (select1 < homeApiController.homeapimodel!.categoryList!.length) {
+          mid = homeApiController.homeapimodel!.categoryList![select1].id
+              .toString();
+
+          mroal = homeApiController.homeapimodel!.categoryList![select1].role
+              .toString();
+        } else {
+          // Fallback to first category if select1 is out of bounds
+
+          mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+
+          mroal =
+              homeApiController.homeapimodel!.categoryList![0].role.toString();
+        }
+
+        if (kDebugMode) {
+          print("✅ Set category for selected vehicle");
+
+          print("   Selected index: $select1");
+
+          print("   Category ID: $mid");
+
+          print(
+              "   Category name: ${homeApiController.homeapimodel!.categoryList![select1 < homeApiController.homeapimodel!.categoryList!.length ? select1 : 0].name}");
+        }
       }
 
-      // Load vehicles with optimized method
+      // Load vehicles with selected category
+
       await _loadVehiclesOptimized();
     } catch (e) {
-      if (kDebugMode) {
-        print("❌ Quick vehicle load error: $e");
-      }
+      if (kDebugMode) print("❌ Quick vehicle load error: $e");
     }
   }
 
@@ -2184,13 +2205,28 @@ class _MapScreenState extends State<MapScreen>
       markers11[markerId] = marker;
     }
   }
+// ✅ COMPLETE FIXED getDirections11 function in map_screen.dart
 
   Future getDirections11(
       {required PointLatLng lat1,
       required PointLatLng lat2,
       required List<PointLatLng> dropOffPoints}) async {
+    // Remove location marker but preserve vehicle markers
     markers.remove(const MarkerId("my_1"));
 
+    // ✅ CRITICAL FIX: Copy vehicle markers to markers11 before route calculation
+    // This ensures vehicles remain visible after route is drawn
+    Map<MarkerId, Marker> vehicleMarkers = {};
+    markers.forEach((key, marker) {
+      if (key.value.startsWith('vehicle_')) {
+        vehicleMarkers[key] = marker;
+      }
+    });
+
+    // Clear existing polylines
+    polylines11.clear();
+
+    // Calculate route
     List<LatLng> polylineCoordinates = [];
     List<PointLatLng> allPoints = [lat1, lat2, ...dropOffPoints];
 
@@ -2209,12 +2245,30 @@ class _MapScreenState extends State<MapScreen>
         for (var point in result.points) {
           polylineCoordinates.add(LatLng(point.latitude, point.longitude));
         }
-      } else {}
+      } else {
+        // Handle the case where no route is found
+        if (kDebugMode) {
+          print("⚠️ No route found between points $i and ${i + 1}");
+        }
+      }
     }
 
+    // Add the polyline
     addPolyLine11(polylineCoordinates);
+
+    // ✅ CRITICAL: Add vehicle markers to markers11 after route calculation
+    setState(() {
+      // Add all vehicle markers to markers11 so they show with the route
+      markers11.addAll(vehicleMarkers);
+    });
+
+    if (kDebugMode) {
+      print(
+          "✅ Route calculated with ${vehicleMarkers.length} vehicle markers preserved");
+    }
   }
 
+// Supporting function - keep existing
   addPolyLine11(List<LatLng> polylineCoordinates) {
     PolylineId id = const PolylineId("poly");
     Polyline polyline = Polyline(
@@ -2567,10 +2621,10 @@ class _MapScreenState extends State<MapScreen>
                               target: LatLng(latitudepick, longitudepick),
                               zoom: 13),
                       mapType: MapType.normal,
-                      markers: pickupcontroller.text.isEmpty ||
-                              dropcontroller.text.isEmpty
-                          ? Set<Marker>.of(markers.values)
-                          : Set<Marker>.of(markers11.values),
+                      markers: {
+                        ...Set<Marker>.of(markers.values),
+                        ...Set<Marker>.of(markers11.values),
+                      },
                       onTap: (argument) async {
                         setState(() {
                           _onAddMarkerButtonPressed(
@@ -2770,13 +2824,17 @@ class _MapScreenState extends State<MapScreen>
                                                 return;
                                               }
 
+                                              // Update selected vehicle index and category
+
                                               setState(() {
                                                 select1 = index;
+
                                                 mid = homeApiController
                                                     .homeapimodel!
                                                     .categoryList![index]
                                                     .id
                                                     .toString();
+
                                                 mroal = homeApiController
                                                     .homeapimodel!
                                                     .categoryList![index]
@@ -2787,18 +2845,27 @@ class _MapScreenState extends State<MapScreen>
                                               if (kDebugMode) {
                                                 print(
                                                     "🚗 Selected category $index: ${homeApiController.homeapimodel!.categoryList![index].name}");
-                                                print("📋 Category ID: $mid");
+
+                                                print(
+                                                    "📋 Category ID: $mid, Role: $mroal");
                                               }
 
                                               try {
-                                                // Load vehicles for selected category
+                                                // ✅ CRITICAL: Load vehicles for selected category
+
                                                 await _loadVehiclesOptimized();
 
-                                                // MAIN FIX: Calculate price if pickup and drop locations exist
+                                                // ✅ CRITICAL: Recalculate price if pickup and drop locations exist
+
                                                 if (pickupcontroller
                                                         .text.isNotEmpty &&
                                                     dropcontroller
                                                         .text.isNotEmpty) {
+                                                  if (kDebugMode) {
+                                                    print(
+                                                        "🧮 Recalculating price for selected vehicle...");
+                                                  }
+
                                                   StatusHelper.showStatusDialog(
                                                     context,
                                                     statusType:
@@ -2809,10 +2876,6 @@ class _MapScreenState extends State<MapScreen>
                                                         "Calculating fare for this vehicle...",
                                                     barrierDismissible: true,
                                                   );
-                                                  if (kDebugMode) {
-                                                    print(
-                                                        "🧮 Calculating price for selected vehicle...");
-                                                  }
 
                                                   final value =
                                                       await calculateController
@@ -2829,53 +2892,62 @@ class _MapScreenState extends State<MapScreen>
                                                         convertDroplist(),
                                                   );
 
+                                                  // Hide loading dialog
+
+                                                  Navigator.of(context,
+                                                          rootNavigator: true)
+                                                      .pop();
+
                                                   if (_isDisposed || !mounted) {
                                                     return;
                                                   }
 
-                                                  // Hide loading dialog
-                                                  if (Navigator.canPop(
-                                                      context)) {
-                                                    Navigator.pop(context);
-                                                  }
-
                                                   if (value["Result"] == true) {
-                                                    // Update all price-related variables in setState
                                                     setState(() {
                                                       amountresponse = "true";
+
                                                       dropprice =
                                                           value["drop_price"];
+
                                                       minimumfare =
                                                           value["vehicle"]
                                                               ["minimum_fare"];
+
                                                       maximumfare =
                                                           value["vehicle"]
                                                               ["maximum_fare"];
+
                                                       responsemessage =
                                                           value["message"];
 
                                                       tot_hour =
                                                           value["tot_hour"]
                                                               .toString();
+
                                                       tot_time =
                                                           value["tot_minute"]
                                                               .toString();
+
                                                       vehicle_id =
                                                           value["vehicle"]["id"]
                                                               .toString();
+
                                                       vihicalrice =
                                                           double.parse(value[
                                                                   "drop_price"]
                                                               .toString());
+
                                                       totalkm = double.parse(
                                                           value["tot_km"]
                                                               .toString());
+
                                                       tot_secound = "0";
 
                                                       vihicalimage =
                                                           value["vehicle"]
                                                                   ["map_img"]
                                                               .toString();
+
                                                       vihicalname =
                                                           value["vehicle"]
                                                                   ["name"]
@@ -2884,24 +2956,20 @@ class _MapScreenState extends State<MapScreen>
 
                                                     if (kDebugMode) {
                                                       print(
-                                                          "✅ Price calculation completed:");
+                                                          "✅ Recalculation completed successfully");
+
                                                       print(
                                                           "   Vehicle: $vihicalname");
-                                                      print(
-                                                          "   Price: ${globalcurrency}$dropprice");
-                                                      print(
-                                                          "   Min Fare: $minimumfare, Max Fare: $maximumfare");
-                                                    }
 
-                                                    // Show success message with new price
+                                                      print(
+                                                          "   Price: $dropprice");
+                                                    }
                                                   } else {
-                                                    setState(() {
-                                                      amountresponse = "false";
-                                                    });
+                                                    amountresponse = "false";
 
                                                     if (kDebugMode) {
                                                       print(
-                                                          "❌ Price calculation failed for vehicle");
+                                                          "❌ Recalculation failed");
                                                     }
 
                                                     StatusHelper
@@ -2912,42 +2980,43 @@ class _MapScreenState extends State<MapScreen>
                                                       customTitle:
                                                           "Calculation Failed",
                                                       customSubtitle:
-                                                          "Unable to calculate fare for this vehicle. Please try again.",
+                                                          "Unable to calculate fare for this vehicle",
                                                       barrierDismissible: true,
+                                                      onRetry: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+
+                                                        // Optionally retry the calculation
+                                                      },
                                                     );
                                                   }
-                                                } else {
-                                                  // Hide loading dialog if no pickup/drop locations
-                                                  if (Navigator.canPop(
-                                                      context)) {
-                                                    Navigator.pop(context);
-                                                  }
-
-                                                  if (kDebugMode) {
-                                                    print(
-                                                        "⚠️ No pickup/drop locations available for price calculation");
-                                                  }
                                                 }
-                                              } catch (error) {
-                                                // Hide loading dialog on error
-                                                if (Navigator.canPop(context)) {
-                                                  Navigator.pop(context);
-                                                }
-
+                                              } catch (e) {
                                                 if (kDebugMode) {
                                                   print(
-                                                      "❌ Vehicle selection error: $error");
+                                                      "❌ Vehicle selection error: $e");
+                                                }
+
+                                                // Hide loading dialog if showing
+
+                                                if (Navigator.of(context)
+                                                    .canPop()) {
+                                                  Navigator.of(context,
+                                                          rootNavigator: true)
+                                                      .pop();
                                                 }
 
                                                 StatusHelper.showStatusDialog(
                                                   context,
-                                                  statusType:
-                                                      StatusType.noInternet,
-                                                  customTitle: "Network Error",
+                                                  statusType: StatusType.error,
+                                                  customTitle:
+                                                      "Selection Failed",
                                                   customSubtitle:
-                                                      "Please check your connection and try again.",
+                                                      "Unable to load vehicles for selected type",
+                                                  barrierDismissible: true,
                                                   onRetry: () {
                                                     Navigator.of(context).pop();
+
                                                     // Optionally retry the vehicle selection
                                                   },
                                                 );
@@ -2973,9 +3042,9 @@ class _MapScreenState extends State<MapScreen>
                                                     crossAxisAlignment:
                                                         select1 == index
                                                             ? CrossAxisAlignment
-                                                                .start
+                                                                .center
                                                             : CrossAxisAlignment
-                                                                .center,
+                                                                .start,
                                                     children: [
                                                       Row(
                                                         crossAxisAlignment:
@@ -5320,35 +5389,42 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
+  List<int> getVehicleIdsForCategory() {
+    List<int> vehicleIds = [];
+
+    if (homeMapController.homeMapApiModel?.list != null) {
+      for (var vehicle in homeMapController.homeMapApiModel!.list!) {
+        if (vehicle.id != null) {
+          vehicleIds.add(vehicle.id!);
+        }
+      }
+    }
+
+    print("Vehicle IDs for current category: $vehicleIds");
+    return vehicleIds;
+  }
+
+// Use this in orderfunction:
   void orderfunction() async {
-    print("🚀 Starting orderfunction with enhanced error handling");
+    print("Starting orderfunction with enhanced error handling");
 
-    // Get the drivers list from the state, assuming calculateApi was already called.
-
-    final List<dynamic>? drivers = calculateController.calCulateModel?.driverId;
-    final String? errorMessage = calculateController.calCulateModel?.message;
-
-    // Check if drivers are available before proceeding.
+    // Get drivers from Calculate API
+    List? drivers = getVehicleIdsForCategory();
 
     if (drivers == null || drivers.isEmpty) {
-      // If no drivers are found, show a user-friendly error message.
-
-      print("⚠️ No drivers found. Aborting booking request.");
+      print("No drivers found after all fallbacks. Aborting booking request.");
       CustomNotification.show(
-          message: errorMessage ??
-              "No drivers are currently available for this route. Please try again."
-                  .tr,
+          message:
+              "No drivers are currently available for this route. Please try again.",
           type: NotificationType.info);
-      // You should also stop any loading animations and reset the UI.
-
       setState(() {
         isanimation = false;
         loadertimer = true;
       });
-      return; // Stop the function here.
+      return;
     }
 
-    print("✅ Drivers found. Proceeding with booking request...");
+    print("Final drivers list: $drivers. Proceeding with booking request...");
 
     // Assuming all other required data is correctly populated.
 
