@@ -5389,42 +5389,35 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-  List<int> getVehicleIdsForCategory() {
-    List<int> vehicleIds = [];
-
-    if (homeMapController.homeMapApiModel?.list != null) {
-      for (var vehicle in homeMapController.homeMapApiModel!.list!) {
-        if (vehicle.id != null) {
-          vehicleIds.add(vehicle.id!);
-        }
-      }
-    }
-
-    print("Vehicle IDs for current category: $vehicleIds");
-    return vehicleIds;
-  }
-
-// Use this in orderfunction:
   void orderfunction() async {
-    print("Starting orderfunction with enhanced error handling");
+    print("🚀 Starting orderfunction with enhanced error handling");
 
-    // Get drivers from Calculate API
-    List? drivers = getVehicleIdsForCategory();
+    // Get the drivers list from the state, assuming calculateApi was already called.
+
+    final List<dynamic>? drivers = calculateController.calCulateModel?.driverId;
+    final String? errorMessage = calculateController.calCulateModel?.message;
+
+    // Check if drivers are available before proceeding.
 
     if (drivers == null || drivers.isEmpty) {
-      print("No drivers found after all fallbacks. Aborting booking request.");
+      // If no drivers are found, show a user-friendly error message.
+
+      print("⚠️ No drivers found. Aborting booking request.");
       CustomNotification.show(
-          message:
-              "No drivers are currently available for this route. Please try again.",
+          message: errorMessage ??
+              "No drivers are currently available for this route. Please try again."
+                  .tr,
           type: NotificationType.info);
+      // You should also stop any loading animations and reset the UI.
+
       setState(() {
         isanimation = false;
         loadertimer = true;
       });
-      return;
+      return; // Stop the function here.
     }
 
-    print("Final drivers list: $drivers. Proceeding with booking request...");
+    print("✅ Drivers found. Proceeding with booking request...");
 
     // Assuming all other required data is correctly populated.
 
