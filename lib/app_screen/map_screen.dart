@@ -339,9 +339,10 @@ class _MapScreenState extends State<MapScreen>
             .then((value) {
           if (_isDisposed || !mounted) return;
 
-          mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
-          mroal =
-              homeApiController.homeapimodel!.categoryList![0].role.toString();
+          mid = homeApiController.homeapimodel!.categoryList![select1].id
+              .toString();
+          mroal = homeApiController.homeapimodel!.categoryList![select1].role
+              .toString();
           var currency = preferences.getString("currenci");
           if (currency != null) {
             currencyy = jsonDecode(currency);
@@ -455,9 +456,10 @@ class _MapScreenState extends State<MapScreen>
             .then((value) {
           if (_isDisposed || !mounted) return;
 
-          mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
-          mroal =
-              homeApiController.homeapimodel!.categoryList![0].role.toString();
+          mid = homeApiController.homeapimodel!.categoryList![select1].id
+              .toString();
+          mroal = homeApiController.homeapimodel!.categoryList![select1].role
+              .toString();
         }).catchError((error) {
           if (kDebugMode) print("Socket home event error: $error");
         });
@@ -625,7 +627,7 @@ class _MapScreenState extends State<MapScreen>
               double.parse(a["price"].toString())
                   .compareTo(double.parse(b["price"].toString())));
 
-          final bestBid = vehicle_bidding_driver[0];
+          final bestBid = vehicle_bidding_driver[select1];
 
           // Auto-accept the best bid
           autoAcceptBid(bestBid);
@@ -957,7 +959,7 @@ class _MapScreenState extends State<MapScreen>
         return;
       }
 
-      // ✅ KEY FIX: Use select1 instead of [0]
+      // ✅ KEY FIX: Use select1 instead of [select1]
 
       if (select1 < homeApiController.homeapimodel!.categoryList!.length) {
         mid = homeApiController.homeapimodel!.categoryList![select1].id
@@ -968,10 +970,11 @@ class _MapScreenState extends State<MapScreen>
       } else {
         // Fallback to first category if select1 is out of bounds
 
-        mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+        mid = homeApiController.homeapimodel!.categoryList![select1].id
+            .toString();
 
-        mroal =
-            homeApiController.homeapimodel!.categoryList![0].role.toString();
+        mroal = homeApiController.homeapimodel!.categoryList![select1].role
+            .toString();
       }
 
       if (kDebugMode) {
@@ -1102,7 +1105,7 @@ class _MapScreenState extends State<MapScreen>
       // Set category data using selected index
 
       if (homeApiController.homeapimodel?.categoryList?.isNotEmpty == true) {
-        // ✅ KEY FIX: Use select1 instead of [0]
+        // ✅ KEY FIX: Use select1 instead of [select1]
 
         if (select1 < homeApiController.homeapimodel!.categoryList!.length) {
           mid = homeApiController.homeapimodel!.categoryList![select1].id
@@ -1113,10 +1116,11 @@ class _MapScreenState extends State<MapScreen>
         } else {
           // Fallback to first category if select1 is out of bounds
 
-          mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+          mid = homeApiController.homeapimodel!.categoryList![select1].id
+              .toString();
 
-          mroal =
-              homeApiController.homeapimodel!.categoryList![0].role.toString();
+          mroal = homeApiController.homeapimodel!.categoryList![select1].role
+              .toString();
         }
 
         if (kDebugMode) {
@@ -3490,14 +3494,117 @@ class _MapScreenState extends State<MapScreen>
                                                         .bidding ==
                                                     "1"
                                                 ? () {
+                                                    // This is the bidding flow, which is correct and unchanged.
                                                     Buttonpresebottomshhet();
                                                   }
-                                                : () {
-                                                    print("222222222222");
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) => HomeScreen(
+                                                : () async {
+                                                    // ✅ Make the function async
+                                                    if (kDebugMode) {
+                                                      print(
+                                                          "Requesting non-bidding ride...");
+                                                    }
+
+                                                    // 1. Show a loading indicator to the user.
+                                                    StatusHelper.showStatusDialog(
+                                                        context,
+                                                        statusType:
+                                                            StatusType.loading,
+                                                        customSubtitle:
+                                                            "Finding drivers...");
+
+                                                    try {
+                                                      // 2. AWAIT the API call to finish first. This is the critical fix.
+                                                      await modual_calculateController
+                                                          .modualcalculateApi(
+                                                        context: context,
+                                                        uid: userid.toString(),
+                                                        mid: mid,
+                                                        mrole: mroal,
+                                                        pickup_lat_lon:
+                                                            "$latitudepick,$longitudepick",
+                                                        drop_lat_lon:
+                                                            "$latitudedrop,$longitudedrop",
+                                                        drop_lat_lon_list:
+                                                            convertDroplist(),
+                                                      );
+
+                                                      // 3. Hide the loading indicator.
+                                                      if (mounted)
+                                                        Navigator.pop(context);
+
+                                                      // 4. Check if the API call was successful and returned drivers.
+                                                      if (modual_calculateController
+                                                                  .modualCalculateApiModel
+                                                                  ?.caldriver !=
+                                                              null &&
+                                                          modual_calculateController
+                                                              .modualCalculateApiModel!
+                                                              .caldriver!
+                                                              .isNotEmpty) {
+                                                        // Data is now ready. Set the variables.
+                                                        midseconde =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![
+                                                                    select1]
+                                                                .id!;
+                                                        vihicalrice = double.parse(
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![
+                                                                    select1]
+                                                                .dropPrice!
+                                                                .toString());
+                                                        totalkm = double.parse(
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![
+                                                                    select1]
+                                                                .dropKm!
+                                                                .toString());
+                                                        tot_time =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![
+                                                                    select1]
+                                                                .dropTime!
+                                                                .toString();
+                                                        tot_hour =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![
+                                                                    select1]
+                                                                .dropHour!
+                                                                .toString();
+                                                        vihicalname =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![
+                                                                    select1]
+                                                                .name!
+                                                                .toString();
+                                                        vihicalimage =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![
+                                                                    select1]
+                                                                .image!
+                                                                .toString();
+                                                        vehicle_id =
+                                                            modual_calculateController
+                                                                .modualCalculateApiModel!
+                                                                .caldriver![
+                                                                    select1]
+                                                                .id!
+                                                                .toString();
+
+                                                        // 5. NOW it is safe to navigate to the HomeScreen with all the data.
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder:
+                                                                (context) =>
+                                                                    HomeScreen(
                                                               latpic:
                                                                   latitudepick,
                                                               longpic:
@@ -3507,77 +3614,37 @@ class _MapScreenState extends State<MapScreen>
                                                               longdrop:
                                                                   longitudedrop,
                                                               destinationlat:
-                                                                  destinationlat)),
-                                                    );
-                                                    modual_calculateController
-                                                        .modualcalculateApi(
-                                                            context: context,
-                                                            uid: userid
-                                                                .toString(),
-                                                            mid: mid,
-                                                            mrole: mroal,
-                                                            pickup_lat_lon:
-                                                                "$latitudepick,$longitudepick",
-                                                            drop_lat_lon:
-                                                                "$latitudedrop,$longitudedrop",
-                                                            drop_lat_lon_list:
-                                                                convertDroplist())
-                                                        .then(
-                                                      (value) {
-                                                        midseconde =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .id!;
-                                                        vihicalrice = double.parse(
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropPrice!
-                                                                .toString());
-                                                        totalkm = double.parse(
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropKm!
-                                                                .toString());
-                                                        tot_time =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropTime!
-                                                                .toString();
-                                                        tot_hour =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .dropHour!
-                                                                .toString();
-                                                        vihicalname =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .name!
-                                                                .toString();
-                                                        vihicalimage =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .image!
-                                                                .toString();
-                                                        vehicle_id =
-                                                            modual_calculateController
-                                                                .modualCalculateApiModel!
-                                                                .caldriver![0]
-                                                                .id!
-                                                                .toString();
+                                                                  destinationlat,
+                                                            ),
+                                                          ),
+                                                        );
+                                                      } else {
+                                                        // Handle the case where no drivers are found.
+                                                        CustomNotification.show(
+                                                          message:
+                                                              "No drivers are currently available for this route."
+                                                                  .tr,
+                                                          type: NotificationType
+                                                              .info,
+                                                        );
+                                                      }
+                                                    } catch (e) {
+                                                      // Hide loading indicator on error.
+                                                      if (mounted)
+                                                        Navigator.pop(context);
 
+                                                      CustomNotification.show(
+                                                        message:
+                                                            "An error occurred while finding drivers. Please try again."
+                                                                .tr,
+                                                        type: NotificationType
+                                                            .error,
+                                                      );
+                                                      if (kDebugMode) {
                                                         print(
-                                                            "GOGOGOGOGOGOGOGOGOGOGOGOG:- $midseconde");
-                                                        print(
-                                                            "GOGOGOGOGOGOGOGOGOGOGOGOG:- $vihicalrice");
-                                                      },
-                                                    );
+                                                            "Error during non-bidding ride request: $e");
+                                                      }
+                                                    }
                                                   },
                                             context: context,
                                             txt1: "Find a driver".tr),
@@ -3639,7 +3706,8 @@ class _MapScreenState extends State<MapScreen>
                                   color: greaycolore, shape: BoxShape.circle),
                               child: decodeUid["profile_image"] == ""
                                   ? Center(
-                                      child: Text("${decodeUid["name"][0]}",
+                                      child: Text(
+                                          "${decodeUid["name"][select1]}",
                                           style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 25)))
@@ -4755,6 +4823,15 @@ class _MapScreenState extends State<MapScreen>
                                 child: InkWell(
                                   onTap: () {
                                     {
+                                      if (controller != null &&
+                                          controller!.isAnimating) {
+                                        CustomNotification.show(
+                                            message:
+                                                "Your current request is in progress."
+                                                    .tr,
+                                            type: NotificationType.info);
+                                        return; // Prevents the rest of the function from running
+                                      }
                                       setState(() {
                                         mainamount = dropprice.toString();
                                         if (couponadd.isEmpty) {
@@ -4980,6 +5057,10 @@ class _MapScreenState extends State<MapScreen>
                                                                               true
                                                                           ? InkWell(
                                                                               onTap: () {
+                                                                                if (controller != null && controller!.isAnimating) {
+                                                                                  CustomNotification.show(message: "Your current request is in progress.".tr, type: NotificationType.info);
+                                                                                  return; // Prevents the rest of the function from running
+                                                                                }
                                                                                 setState(() {
                                                                                   couponadd[index] = false;
                                                                                   dropprice = mainamount;
@@ -5389,193 +5470,112 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-  void orderfunction() async {
-    print("🚀 Starting orderfunction with enhanced error handling");
+// =================== 👇 PASTE THIS ENTIRE FUNCTION 👇 ===================
 
-    // Get the drivers list from the state, assuming calculateApi was already called.
+  orderfunction() {
+    print("DRIVER ID:- ${calculateController.calCulateModel!.driverId!}");
+    print("PICK LOCATION:- ${pickupcontroller.text}");
+    print("DROP LOCATION:- ${dropcontroller.text}");
+    socket.connect();
 
-    final List<dynamic>? drivers = calculateController.calCulateModel?.driverId;
-    final String? errorMessage = calculateController.calCulateModel?.message;
+    homeWalletApiController
+        .homwwalleteApi(uid: userid.toString(), context: context)
+        .then(
+      (value) {
+        print("{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
+        walleteamount = double.parse(value["wallet_amount"]);
+        print("[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
+      },
+    );
+    // refreshAnimation();
 
-    // Check if drivers are available before proceeding.
+    // print("111111111dd111111111 ${calculateController.calCulateModel!.driverId}");
+    print("111111111 amountcontroller.text 111111111 ${amountcontroller.text}");
 
-    if (drivers == null || drivers.isEmpty) {
-      // If no drivers are found, show a user-friendly error message.
-
-      print("⚠️ No drivers found. Aborting booking request.");
-      CustomNotification.show(
-          message: errorMessage ??
-              "No drivers are currently available for this route. Please try again."
-                  .tr,
-          type: NotificationType.info);
-      // You should also stop any loading animations and reset the UI.
-
-      setState(() {
-        isanimation = false;
-        loadertimer = true;
-      });
-      return; // Stop the function here.
+    percentValue.clear();
+    percentValue = [];
+    for (int i = 0; i < 4; i++) {
+      percentValue.add(0);
     }
+    setState(() {
+      currentStoryIndex = 0;
+      // loadertimer = false;
+    });
 
-    print("✅ Drivers found. Proceeding with booking request...");
+    priceyourfare = double.parse(amountcontroller.text);
+    print("***price***::-(${priceyourfare})");
 
-    // Assuming all other required data is correctly populated.
-
-    Map body = {
-      "uid": userid.toString(),
-      "driverid": drivers,
-      "price": amountcontroller.text,
-      "tot_km": "$totalkm",
-      "pickup": "$latitudepick,$longitudepick",
-      "drop": "$latitudedrop,$longitudedrop",
-      "droplist": convertDroplist(),
-      "pickupadd": {
-        "title": picktitle == "" ? addresspickup : picktitle,
+    addVihicalCalculateController.addvihicalcalculateApi(
+      pickupadd: {
+        "title": "${picktitle == "" ? addresspickup : picktitle}",
         "subt": picksubtitle
       },
-      "dropadd": {"title": droptitle, "subt": dropsubtitle},
-      "droplistadd": droptitlelist ?? [],
-      "tot_hour": tot_hour,
-      "tot_minute": tot_time,
-      "vehicle_id": vehicle_id,
-      "payment_id": "$payment",
-      "m_role": mroal,
-      "coupon_id": couponId.isEmpty ? null : couponId,
-      "bidd_auto_status": biddautostatus,
-    };
+      dropadd: {"title": droptitle, "subt": dropsubtitle},
+      droplistadd: droptitlelist,
+      context: context,
+      uid: useridgloable.toString(),
+      tot_km: "$totalkm",
+      vehicle_id: vehicle_id,
+      tot_minute: tot_time,
+      tot_hour: tot_hour,
+      m_role: mroal,
+      coupon_id: couponId,
+      payment_id: "$payment",
+      driverid: calculateController.calCulateModel!.driverId!,
+      // driverid: [29,14],
+      price: amountcontroller.text,
+      pickup: "$latitudepick,$longitudepick",
+      drop: "$latitudedrop,$longitudedrop",
+      droplist: onlypass,
+      bidd_auto_status: biddautostatus,
+    ).then(
+      (value) {
+        print("+++++${value!["id"]}");
+        setState(() {});
+        request_id = value!["id"].toString();
+        socateempt();
+      },
+    );
 
-    try {
-      // Continue with calculate API call for fare calculation only
+    calculateController
+        .calculateApi(
+            context: context,
+            uid: userid.toString(),
+            mid: mid,
+            mrole: mroal,
+            pickup_lat_lon: "$latitudepick,$longitudepick",
+            drop_lat_lon: "$latitudedrop,$longitudedrop",
+            drop_lat_lon_list: onlypass)
+        .then(
+      (value) {
+        // print("********** value **********:----- ${value}");
+        // print("********** value **********:----- ${value["drop_price"]}");
+        // print("********** value **********:----- ${value["vehicle"]["minimum_fare"]}");
+        // print("********** value **********:----- ${value["vehicle"]["maximum_fare"]}");
 
-      calculateController
-          .calculateApi(
-              context: context,
-              uid: userid.toString(),
-              mid: mid,
-              mrole: mroal,
-              pickup_lat_lon: "$latitudepick,$longitudepick",
-              drop_lat_lon: "$latitudedrop,$longitudedrop",
-              drop_lat_lon_list: convertDroplist())
-          .then((value) {
         dropprice = 0;
-
         minimumfare = 0;
-
         maximumfare = 0;
 
         if (value["Result"] == true) {
           amountresponse = "true";
-
           dropprice = value["drop_price"];
-
           minimumfare = value["vehicle"]["minimum_fare"];
-
           maximumfare = value["vehicle"]["maximum_fare"];
-
           responsemessage = value["message"];
         } else {
           amountresponse = "false";
-
-          print("Calculate API returned false result");
+          print("jojojojojojojojojojojojojojojojojojojojojojojojo");
         }
 
-        print(
-            "📊 Calculate results - Price: $dropprice, Min: $minimumfare, Max: $maximumfare");
-      }).catchError((error) {
-        print("❌ Calculate API Error: $error");
-      });
-      print("📡 Calling AddVihicalCalCulate API...");
-
-      addVihicalCalculateController.addvihicalcalculateApi(
-        pickupadd: {
-          "title": "${picktitle == "" ? addresspickup : picktitle}",
-          "subt": picksubtitle
-        },
-        dropadd: {"title": droptitle, "subt": dropsubtitle},
-        droplistadd: droptitlelist ?? [],
-        context: context,
-        uid: userid.toString(),
-        tot_km: "$totalkm",
-        vehicle_id: vehicle_id,
-        tot_minute: tot_time,
-        tot_hour: tot_hour,
-        m_role: mroal,
-        coupon_id: couponId.isEmpty ? "null" : couponId,
-        payment_id: "$payment",
-        driverid: drivers,
-        price: amountcontroller.text,
-        pickup: "$latitudepick,$longitudepick",
-        drop: "$latitudedrop,$longitudedrop",
-        droplist: convertDroplist(),
-        bidd_auto_status: biddautostatus,
-      ).then((value) {
-        if (value != null && value["Result"] == true) {
-          print("🎉 Order created successfully!");
-
-          setState(() {
-            request_id = value["id"].toString();
-          });
-
-          // Emit socket event
-
-          try {
-            socateempt();
-
-            print("📡 Socket event emitted successfully");
-          } catch (socketError) {
-            print("⚠️ Socket emit error (non-critical): $socketError");
-          }
-
-          print("✅ Order function completed successfully");
-        } else {
-          print("❌ Order API failed: ${value?["message"] ?? "Unknown error"}");
-
-          setState(() {
-            isanimation = false;
-
-            loadertimer = true;
-          });
-
-          // Show user-friendly error message
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(value?["message"] ?? "فشل في إنشاء الطلب"),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      }).catchError((error) {
-        print("💥 AddVihicalCalCulate API Error: $error");
-
-        setState(() {
-          isanimation = false;
-
-          loadertimer = true;
-        });
-
-        // Show user-friendly error message
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("حدث خطأ في الاتصال"),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      });
-    } catch (e) {
-      print("💥 Critical error in orderfunction: $e");
-
-      setState(() {
-        isanimation = false;
-
-        loadertimer = true;
-      });
-    }
+        print("********** dropprice **********:----- $dropprice");
+        print("********** minimumfare **********:----- $minimumfare");
+        print("********** maximumfare **********:----- $maximumfare");
+      },
+    );
   }
 
+// =================== 👆 END OF THE FUNCTION TO PASTE 👆 ===================
   List<String> convertDroplist() {
     if (onlypass.isEmpty) {
       return [];
