@@ -297,36 +297,29 @@ class _MapScreenState extends State<MapScreen>
       socket.onConnect((data) {
         if (kDebugMode) print('Connection established Connected map screen');
       });
-
       socket.onConnectError((data) {
         if (kDebugMode) print('Connect Error map screen: $data');
       });
-
       socket.onDisconnect((data) {
         if (kDebugMode) print('Socket.IO server disconnected map screen');
       });
 
-      // Wallet API call with safety checks
+      // 1. Fetch Wallet Data
+
       if (!_isDisposed && userid != null) {
         homeWalletApiController
             .homwwalleteApi(uid: userid.toString(), context: context)
             .then((value) {
           if (!_isDisposed && mounted && value != null) {
-            if (kDebugMode) {
-              print("{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
-            }
             walleteamount = double.parse(value["wallet_amount"]);
-            if (kDebugMode) {
-              print(
-                  "[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
-            }
           }
         }).catchError((error) {
           if (kDebugMode) print("Wallet API error: $error");
         });
       }
 
-      // Home API call with safety checks
+      // 2. Fetch Home API Data and Handle Ride State
+
       if (!_isDisposed &&
           userid != null &&
           lathome != null &&
@@ -349,62 +342,35 @@ class _MapScreenState extends State<MapScreen>
           }
           globalcurrency = currencyy;
 
-          // Continue with home map API calls but with safety checks
-          if (!_isDisposed &&
-              (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty)) {
-            homeMapController
-                .homemapApi(
-                    mid: mid, lat: lathome.toString(), lon: longhome.toString())
-                .then((value) {
-              if (_isDisposed || !mounted) return;
+          // ✅ CRITICAL FIX: Restore the "Running Ride" Logic
 
-              setState(() {
-                if (kDebugMode) print("///:---  ${value["Result"]}");
+          if (homeApiController.homeapimodel!.runnigRide!.isNotEmpty) {
+            if (kDebugMode)
+              print("🏃‍♂️ Found a running ride. Restoring state...");
 
-                if (value["Result"] == false) {
-                  vihicallocations.clear();
-                  markers.clear();
-                  _addMarkersOptimized();
-                  if (kDebugMode) {
-                    print("***if condition+++:---  $vihicallocations");
-                  }
-                } else {
-                  for (int i = 0;
-                      i < homeMapController.homeMapApiModel!.list!.length;
-                      i++) {
-                    vihicallocations.add(LatLng(
-                        double.parse(homeMapController
-                            .homeMapApiModel!.list![i].latitude
-                            .toString()),
-                        double.parse(homeMapController
-                            .homeMapApiModel!.list![i].longitude
-                            .toString())));
-                    _iconPaths.add(
-                        "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
-                  }
-                  _addMarkersOptimized();
-                }
-                if (kDebugMode) {
-                  print("******-**:::::------ _connectSocket$vihicallocations");
-                }
-              });
-            }).catchError((error) {
-              if (kDebugMode) print("Home map API error: $error");
-            });
-          }
+            final runningRide = homeApiController.homeapimodel!.runnigRide![0];
 
-          // Handle running ride data with safety checks
-          if (!_isDisposed &&
-              homeApiController.homeapimodel!.runnigRide!.isNotEmpty) {
-            // Your existing running ride logic here, but wrap setState calls with setState
-            pickupcontroller.text = homeApiController
-                .homeapimodel!.runnigRide![0].pickAdd!.title
-                .toString();
-            dropcontroller.text = homeApiController
-                .homeapimodel!.runnigRide![0].dropAdd!.title
-                .toString();
+            // ✅ THIS WAS THE MISSING PIECE: Assign the request_id
 
-            // Continue with rest of running ride logic...
+            request_id = runningRide.id.toString();
+            if (kDebugMode) print("✅ Restored request_id: $request_id");
+
+            pickupcontroller.text = runningRide.pickAdd!.title.toString();
+            dropcontroller.text = runningRide.dropAdd!.title.toString();
+
+            latitudepick = double.parse(homeApiController
+                .homeapimodel!.runnigRide![0].pickLatlon!.latitude
+                .toString());
+            longitudepick = double.parse(homeApiController
+                .homeapimodel!.runnigRide![0].pickLatlon!.longitude
+                .toString());
+            latitudedrop = double.parse(homeApiController
+                .homeapimodel!.runnigRide![0].dropLatlon!.latitude
+                .toString());
+            longitudedrop = double.parse(homeApiController
+                .homeapimodel!.runnigRide![0].dropLatlon!.longitude
+                .toString());
+
             calculateController
                 .calculateApi(
                     context: context,
@@ -417,12 +383,9 @@ class _MapScreenState extends State<MapScreen>
                 .then((value) {
               if (_isDisposed || !mounted) return;
 
-              if (kDebugMode) print("CALCULATE DATA LOAD");
-              calculateController.calCulateModel!.offerExpireTime = int.parse(
-                  homeApiController.homeapimodel!.runnigRide![0].increasedTime
-                      .toString());
-              calculateController.calCulateModel!.driverId =
-                  homeApiController.homeapimodel!.runnigRide![0].dId;
+              calculateController.calCulateModel!.offerExpireTime =
+                  int.parse(runningRide.increasedTime.toString());
+              calculateController.calCulateModel!.driverId = runningRide.dId;
 
               setState(() {
                 isanimation = true;
@@ -435,14 +398,55 @@ class _MapScreenState extends State<MapScreen>
                 Buttonpresebottomshhet();
               }
             }).catchError((error) {
-              if (kDebugMode) print("Calculate API error: $error");
+              if (kDebugMode)
+                print("Calculate API error during ride restore: $error");
             });
+          } else {
+            // This is the normal path for a new ride
+
+            if (kDebugMode)
+              print("🚗 No running ride found. Ready for new booking.");
+
+            if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
+              homeMapController
+                  .homemapApi(
+                      mid: mid,
+                      lat: lathome.toString(),
+                      lon: longhome.toString())
+                  .then((value) {
+                if (_isDisposed || !mounted) return;
+                setState(() {
+                  if (value["Result"] == false) {
+                    vihicallocations.clear();
+                    markers.clear();
+                  } else {
+                    vihicallocations.clear();
+                    _iconPaths.clear();
+                    for (int i = 0;
+                        i < homeMapController.homeMapApiModel!.list!.length;
+                        i++) {
+                      vihicallocations.add(LatLng(
+                          double.parse(homeMapController
+                              .homeMapApiModel!.list![i].latitude
+                              .toString()),
+                          double.parse(homeMapController
+                              .homeMapApiModel!.list![i].longitude
+                              .toString())));
+                      _iconPaths.add(
+                          "${Config.imageurl}${homeMapController.homeMapApiModel!.list![i].image}");
+                    }
+                  }
+                  _addMarkersOptimized();
+                });
+              }).catchError((error) {
+                if (kDebugMode) print("Home map API error: $error");
+              });
+            }
           }
         }).catchError((error) {
           if (kDebugMode) print("Home API error: $error");
         });
       }
-
       // Socket event listeners with safety checks
       socket.on('home', (messaj) {
         if (_isDisposed || !mounted) return;
@@ -456,10 +460,9 @@ class _MapScreenState extends State<MapScreen>
             .then((value) {
           if (_isDisposed || !mounted) return;
 
-          mid = homeApiController.homeapimodel!.categoryList![select1].id
-              .toString();
-          mroal = homeApiController.homeapimodel!.categoryList![select1].role
-              .toString();
+          mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
+          mroal =
+              homeApiController.homeapimodel!.categoryList![0].role.toString();
         }).catchError((error) {
           if (kDebugMode) print("Socket home event error: $error");
         });
@@ -547,61 +550,6 @@ class _MapScreenState extends State<MapScreen>
           if (kDebugMode) print("Driver location update error: $e");
         }
       });
-      autoAcceptBid(Map bestBid) async {
-        if (kDebugMode) print("Auto-accepting bid: $bestBid");
-
-        try {
-          final response = await http.post(
-            Uri.parse('${Config.imageurl}/driver/accept_vehicle_ride'),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({
-              'request_id': request_id.toString(),
-              'd_id': bestBid["id"].toString(),
-              'c_id': useridgloable.toString(),
-              'price': bestBid["price"].toString(),
-            }),
-          );
-
-          if (response.statusCode == 200) {
-            final responseData = json.decode(response.body);
-            if (responseData['ResponseCode'] == "200") {
-              // Emit socket events
-              socket.emit('Accept_Bidding', {
-                'uid': useridgloable,
-                'd_id': bestBid["id"],
-                'request_id': request_id,
-                'price': bestBid["price"],
-              });
-
-              socket.emit('driver_accept_ride', {
-                'request_id': request_id,
-                'd_id': bestBid["id"],
-                'c_id': useridgloable,
-                'status': 'accepted',
-              });
-
-              if (kDebugMode) print("Auto-acceptance successful");
-
-              // Navigate directly to driver detail
-              globalDriverAcceptClass.driverdetailfunction(
-                context: context,
-                lat: latitudepick,
-                long: longitudepick,
-                d_id: bestBid["id"].toString(),
-                request_id: request_id.toString(),
-              );
-            }
-          }
-        } catch (e) {
-          if (kDebugMode) print("Auto-accept error: $e");
-          // Fallback to manual selection
-          Get.back();
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const DriverListScreen()));
-        }
-      }
 
       socket.on("Vehicle_Bidding$userid", (Vehicle_Bidding) {
         if (_isDisposed || !mounted) return;
@@ -620,49 +568,37 @@ class _MapScreenState extends State<MapScreen>
           }
         });
 
-        // AUTO-ACCEPTANCE: Accept first/best bid automatically
-        if (vehicle_bidding_driver.isNotEmpty) {
-          // Sort by price (ascending) to get cheapest bid
-          vehicle_bidding_driver.sort((a, b) =>
-              double.parse(a["price"].toString())
-                  .compareTo(double.parse(b["price"].toString())));
+        Get.back();
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const DriverListScreen()));
 
-          final bestBid = vehicle_bidding_driver[select1];
-
-          // Auto-accept the best bid
-          autoAcceptBid(bestBid);
-        } else {
+        if (vehicle_bidding_driver.isEmpty) {
           Get.back();
           Buttonpresebottomshhet();
         }
       });
 
-      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) async {
+      socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
         if (_isDisposed || !mounted) return;
 
         socket.close();
 
         if (kDebugMode) {
           print("++++++ /acceptvehrequest map/ ++++ :---  $acceptvehrequest");
-
           print(
               "acceptvehrequest is of type map: ${acceptvehrequest.runtimeType}");
         }
 
         setState(() {
           isanimation = false;
-
           isControllerDisposed = true;
-
           loadertimer = true;
         });
 
         // Safely dispose controller
-
         if (controller != null && controller!.isAnimating) {
           try {
             controller!.dispose();
-
             controller = null;
           } catch (e) {
             if (kDebugMode) print("Error disposing controller in socket: $e");
@@ -679,14 +615,9 @@ class _MapScreenState extends State<MapScreen>
             .toString()
             .contains(useridgloable.toString())) {
           if (kDebugMode) print("condition done");
-
           driveridloader = false;
 
           if (!_isDisposed && mounted) {
-            // Add a small delay to allow database transaction to complete
-
-            await Future.delayed(const Duration(milliseconds: 800));
-
             globalDriverAcceptClass.driverdetailfunction(
                 context: context,
                 lat: latitudepick,
@@ -2522,7 +2453,7 @@ class _MapScreenState extends State<MapScreen>
       if (socket.connected) {
         socket.emit('vehiclerequest', {
           'requestid': request_id,
-          'driverid': calculateController.calCulateModel!.driverId,
+          'driverid': homeMapController.homeMapApiModel!.driverid!,
           'c_id': userid
         });
 
@@ -2543,7 +2474,7 @@ class _MapScreenState extends State<MapScreen>
             socket.emit('vehiclerequest', {
               'requestid':
                   addVihicalCalculateController.addVihicalCalculateModel!.id,
-              'driverid': calculateController.calCulateModel!.driverId,
+              'driverid': homeMapController.homeMapApiModel!.driverid!,
               'c_id': userid
             });
 
@@ -2562,7 +2493,7 @@ class _MapScreenState extends State<MapScreen>
     socket.emit('load_bidding_data', {
       'uid': useridgloable,
       'request_id': request_id,
-      'd_id': calculateController.calCulateModel!.driverId
+      'd_id': homeMapController.homeMapApiModel!.driverid!
     });
   }
 
@@ -3706,8 +3637,7 @@ class _MapScreenState extends State<MapScreen>
                                   color: greaycolore, shape: BoxShape.circle),
                               child: decodeUid["profile_image"] == ""
                                   ? Center(
-                                      child: Text(
-                                          "${decodeUid["name"][select1]}",
+                                      child: Text("${decodeUid["name"][0]}",
                                           style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 25)))
@@ -5473,7 +5403,7 @@ class _MapScreenState extends State<MapScreen>
 // =================== 👇 PASTE THIS ENTIRE FUNCTION 👇 ===================
 
   orderfunction() {
-    print("DRIVER ID:- ${calculateController.calCulateModel!.driverId!}");
+    print("DRIVER ID:- ${homeMapController.homeMapApiModel!.driverid}");
     print("PICK LOCATION:- ${pickupcontroller.text}");
     print("DROP LOCATION:- ${dropcontroller.text}");
     socket.connect();
@@ -5521,7 +5451,7 @@ class _MapScreenState extends State<MapScreen>
       m_role: mroal,
       coupon_id: couponId,
       payment_id: "$payment",
-      driverid: calculateController.calCulateModel!.driverId!,
+      driverid: homeMapController.homeMapApiModel!.driverid!,
       // driverid: [29,14],
       price: amountcontroller.text,
       pickup: "$latitudepick,$longitudepick",
@@ -5532,7 +5462,7 @@ class _MapScreenState extends State<MapScreen>
       (value) {
         print("+++++${value!["id"]}");
         setState(() {});
-        request_id = value!["id"].toString();
+        request_id = value["id"].toString();
         socateempt();
       },
     );

@@ -13,7 +13,6 @@ import '../api_model/calculate_api_model.dart';
 
 class CalculateController extends GetxController implements GetxService {
   CalCulateModel? calCulateModel;
-  bool isLoading = false; // ✅ Added loading state
 
   Future calculateApi(
       {context,
@@ -23,13 +22,6 @@ class CalculateController extends GetxController implements GetxService {
       required String pickup_lat_lon,
       required String drop_lat_lon,
       required List drop_lat_lon_list}) async {
-    // ✅ NEW: Network check with Arabic error message
-    if (!await NetworkService().hasInternetConnection()) {
-      throw Exception(
-          'No internet connection available. Please check your network and try again.'
-              .tr);
-    }
-
     Map body = {
       "uid": uid,
       "mid": mid,
@@ -44,110 +36,28 @@ class CalculateController extends GetxController implements GetxService {
       "Accept": "application/json"
     };
 
-    try {
-      // ✅ NEW: Set loading state
-      isLoading = true;
-      update();
+    var response = await http.post(Uri.parse(Config.baseurl + Config.calculate),
+        body: jsonEncode(body), headers: userHeader);
 
-      var response = await http
-          .post(Uri.parse(Config.baseurl + Config.calculate),
-              body: jsonEncode(body), headers: userHeader)
-          .timeout(
-        const Duration(seconds: 10), // ✅ Added timeout
-        onTimeout: () {
-          throw Exception(
-              'Request timed out. Please check your connection and try again.'
-                  .tr);
-        },
-      );
+    print('+ + + + + CalCulate + + + + + + :--- $body');
+    print('- - - - - CalCulate - - - - - - :--- ${response.body}');
 
-      print('+ + + + + CalCulate + + + + + + :--- $body');
-      print('- - - - - CalCulate - - - - - - :--- ${response.body}');
+    var data = jsonDecode(response.body);
 
-      var data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        if (data["Result"] == true) {
-          calCulateModel = calCulateModelFromJson(response.body);
-          if (calCulateModel!.result == true) {
-            isLoading = false;
-            update();
-
-            if (kDebugMode) {
-              print("✅ Calculate API successful");
-            }
-
-            return data;
-          } else {
-            isLoading = false;
-            update();
-
-            // ✅ Arabic error message
-            String errorMessage = data["message"] ?? "Calculation failed".tr;
-
-            CustomNotification.show(
-                message: errorMessage.tr, type: NotificationType.error);
-
-            throw Exception(errorMessage);
-          }
-        } else {
-          isLoading = false;
+    if (response.statusCode == 200) {
+      if (data["Result"] == true) {
+        calCulateModel = calCulateModelFromJson(response.body);
+        if (calCulateModel!.result == true) {
+          // Get.offAll(BoardingPage());
           update();
 
-          // ✅ Arabic error message
-          String errorMessage = data["message"] ?? "API request failed".tr;
-
-          CustomNotification.show(
-              message: errorMessage.tr, type: NotificationType.error);
-
-          throw Exception(errorMessage);
+          return data;
+        } else {
+          return data;
         }
       } else {
-        isLoading = false;
-        update();
-
-        // ✅ Arabic HTTP error message
-        String errorMessage = "Server error. Please try again later.".tr;
-
-        CustomNotification.show(
-            message: errorMessage, type: NotificationType.error);
-
-        throw Exception(
-            'Server error (${response.statusCode}). Please try again later.'
-                .tr);
+        return data;
       }
-    } catch (e) {
-      // ✅ Always reset loading state on error
-      isLoading = false;
-      update();
-
-      if (kDebugMode) print('Calculate API Error: $e');
-      rethrow; // Re-throw for StatusHelper to handle
-    }
-  }
-
-  // ✅ NEW: Retry method for convenience
-  Future<void> retryCalculateApi(
-      {context,
-      required String uid,
-      required String mid,
-      required String mrole,
-      required String pickup_lat_lon,
-      required String drop_lat_lon,
-      required List drop_lat_lon_list}) async {
-    try {
-      await calculateApi(
-        context: context,
-        uid: uid,
-        mid: mid,
-        mrole: mrole,
-        pickup_lat_lon: pickup_lat_lon,
-        drop_lat_lon: drop_lat_lon,
-        drop_lat_lon_list: drop_lat_lon_list,
-      );
-    } catch (e) {
-      if (kDebugMode) print('Calculate API retry failed: $e');
-      rethrow;
-    }
+    } else {}
   }
 }

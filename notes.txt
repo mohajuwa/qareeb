@@ -648,9 +648,6 @@ OrignalMapScreen  :
             }
           });
 
-          // {id: 14, profile_image: uploads/driver/17278697000221000029659.jpg, first_name: Pratik, last_name: Navapara, latitude: 21.2381916, longitude: 72.8879854, car_name: Bike, tot_review: 2, avg_star: 4, request_id: 1600, price: 500, tot_min: 0.07, tot_km: 2.1, diff_second: 59}
-          // {id: 3, profile_image: uploads/driver/1723093000931chris-benson-w8, first_name: test, last_name: patel, latitude: 21.2381972, longitude: 72.8880312, car_name: Bike, tot_review: 0, avg_star: 0, request_id: 1600, price: 23, tot_min: 0.07, tot_km: 2.11, diff_second: 48}
-          // {id: 14, profile_image: uploads/driver/17278697000221000029659.jpg, first_name: Pratik, last_name: Navapara, latitude: 21.2381916, longitude: 72.8879854, car_name: Bike, tot_review: 2, avg_star: 4, request_id: 1600, price: 500, tot_min: 0.07, tot_km: 2.1, diff_second: 10}
 
           socket.on("Vehicle_Bidding$userid", (Vehicle_Bidding) {
             print("++++++ Vehicle_Bidding ++++ :---  $Vehicle_Bidding");

@@ -828,7 +828,7 @@ Future commonbottomsheetcancelflow({required context}) {
                                                                               Clip.none,
                                                                           children: [
                                                                             Container(
-                                                                              height: 500,
+                                                                              height: 600,
                                                                               width: Get.width,
                                                                               decoration: BoxDecoration(
                                                                                 color: notifier.containercolore,
@@ -846,100 +846,102 @@ Future commonbottomsheetcancelflow({required context}) {
                                                                                   left: 15,
                                                                                   right: 15,
                                                                                 ),
-                                                                                child: Column(
-                                                                                  mainAxisAlignment: MainAxisAlignment.start,
-                                                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                                                  children: [
-                                                                                    const SizedBox(
-                                                                                      height: 10,
-                                                                                    ),
-                                                                                    Center(
-                                                                                      child: Container(
-                                                                                        height: 5,
-                                                                                        width: 50,
-                                                                                        decoration: BoxDecoration(
-                                                                                          color: Colors.grey.withOpacity(
-                                                                                            0.4,
-                                                                                          ),
-                                                                                          borderRadius: BorderRadius.circular(
-                                                                                            10,
+                                                                                child: Container(
+                                                                                  child: Column(
+                                                                                    mainAxisAlignment: MainAxisAlignment.start,
+                                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                    children: [
+                                                                                      const SizedBox(
+                                                                                        height: 10,
+                                                                                      ),
+                                                                                      Center(
+                                                                                        child: Container(
+                                                                                          height: 5,
+                                                                                          width: 50,
+                                                                                          decoration: BoxDecoration(
+                                                                                            color: Colors.grey.withOpacity(
+                                                                                              0.4,
+                                                                                            ),
+                                                                                            borderRadius: BorderRadius.circular(
+                                                                                              10,
+                                                                                            ),
                                                                                           ),
                                                                                         ),
                                                                                       ),
-                                                                                    ),
-                                                                                    // SizedBox(height: 20,),
-                                                                                    // const Image(image: AssetImage("assets/rapido.png")),
-                                                                                    lottie.Lottie.asset(
-                                                                                      "assets/lottie/canceljson.json",
-                                                                                    ),
-                                                                                    Text(
-                                                                                      "Are you sure you want to cancel this ride?",
-                                                                                      style: TextStyle(
-                                                                                        color: notifier.textColor,
-                                                                                        fontSize: 22,
+                                                                                      // SizedBox(height: 20,),
+                                                                                      // const Image(image: AssetImage("assets/rapido.png")),
+                                                                                      lottie.Lottie.asset(
+                                                                                        "assets/lottie/canceljson.json",
                                                                                       ),
-                                                                                      maxLines: 2,
-                                                                                    ),
-                                                                                    const SizedBox(
-                                                                                      height: 20,
-                                                                                    ),
-                                                                                    Text(
-                                                                                      "We have found captains near you, please wait for a while, your ride should be confirmed any minutes.",
-                                                                                      style: TextStyle(
-                                                                                        color: notifier.textColor,
-                                                                                        fontSize: 16,
+                                                                                      Text(
+                                                                                        "Are you sure you want to cancel this ride?",
+                                                                                        style: TextStyle(
+                                                                                          color: notifier.textColor,
+                                                                                          fontSize: 22,
+                                                                                        ),
+                                                                                        maxLines: 2,
                                                                                       ),
-                                                                                      maxLines: 2,
-                                                                                    ),
-                                                                                    const Spacer(),
-                                                                                    CommonOutLineButton(
-                                                                                      bordercolore: theamcolore,
-                                                                                      onPressed1: () {},
-                                                                                      context: context,
-                                                                                      txt1: "Keep searching",
-                                                                                    ),
-                                                                                    const SizedBox(
-                                                                                      height: 5,
-                                                                                    ),
-                                                                                    CommonButton(
-                                                                                      containcolore: theamcolore,
-                                                                                      onPressed1: () {
-                                                                                        vihicalCancelRideApiController
-                                                                                            .vihicalcancelapi(
-                                                                                          uid: useridgloable.toString(),
-                                                                                          lat: lathomecurrent.toString(),
-                                                                                          lon: longhomecurrent.toString(),
-                                                                                          cancel_id: cancel_id.toString(),
-                                                                                          request_id: request_id.toString(),
-                                                                                        )
-                                                                                            .then(
-                                                                                          (
-                                                                                            value,
-                                                                                          ) {
-                                                                                            socket.emit(
-                                                                                              'Vehicle_Ride_Cancel',
-                                                                                              {
-                                                                                                'uid': "$useridgloable",
-                                                                                                'driverid': value["driverid"],
-                                                                                              },
-                                                                                            );
-                                                                                            Get.close(
-                                                                                              2,
-                                                                                            );
-                                                                                            // Get.offAll(MapScreen());
-                                                                                            // Get.to(PickupDropPoint(pagestate: false,bidding: homeApiController.homeapimodel!.categoryList![select1].bidding.toString(),));
-                                                                                            // Get.to(HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,destinationlat: destinationlat));
-                                                                                            // vihicaleridecancelemit();
-                                                                                          },
-                                                                                        );
-                                                                                      },
-                                                                                      context: context,
-                                                                                      txt1: "Cancel my ride",
-                                                                                    ),
-                                                                                    const SizedBox(
-                                                                                      height: 5,
-                                                                                    ),
-                                                                                  ],
+                                                                                      const SizedBox(
+                                                                                        height: 20,
+                                                                                      ),
+                                                                                      Text(
+                                                                                        "We have found captains near you, please wait for a while, your ride should be confirmed any minutes.",
+                                                                                        style: TextStyle(
+                                                                                          color: notifier.textColor,
+                                                                                          fontSize: 16,
+                                                                                        ),
+                                                                                        maxLines: 2,
+                                                                                      ),
+                                                                                      const Spacer(),
+                                                                                      CommonOutLineButton(
+                                                                                        bordercolore: theamcolore,
+                                                                                        onPressed1: () {},
+                                                                                        context: context,
+                                                                                        txt1: "Keep searching",
+                                                                                      ),
+                                                                                      const SizedBox(
+                                                                                        height: 5,
+                                                                                      ),
+                                                                                      CommonButton(
+                                                                                        containcolore: theamcolore,
+                                                                                        onPressed1: () {
+                                                                                          vihicalCancelRideApiController
+                                                                                              .vihicalcancelapi(
+                                                                                            uid: useridgloable.toString(),
+                                                                                            lat: lathomecurrent.toString(),
+                                                                                            lon: longhomecurrent.toString(),
+                                                                                            cancel_id: cancel_id.toString(),
+                                                                                            request_id: request_id.toString(),
+                                                                                          )
+                                                                                              .then(
+                                                                                            (
+                                                                                              value,
+                                                                                            ) {
+                                                                                              socket.emit(
+                                                                                                'Vehicle_Ride_Cancel',
+                                                                                                {
+                                                                                                  'uid': "$useridgloable",
+                                                                                                  'driverid': value["driverid"],
+                                                                                                },
+                                                                                              );
+                                                                                              Get.close(
+                                                                                                2,
+                                                                                              );
+                                                                                              // Get.offAll(MapScreen());
+                                                                                              // Get.to(PickupDropPoint(pagestate: false,bidding: homeApiController.homeapimodel!.categoryList![select1].bidding.toString(),));
+                                                                                              // Get.to(HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,destinationlat: destinationlat));
+                                                                                              // vihicaleridecancelemit();
+                                                                                            },
+                                                                                          );
+                                                                                        },
+                                                                                        context: context,
+                                                                                        txt1: "Cancel my ride",
+                                                                                      ),
+                                                                                      const SizedBox(
+                                                                                        height: 5,
+                                                                                      ),
+                                                                                    ],
+                                                                                  ),
                                                                                 ),
                                                                               ),
                                                                             ),
