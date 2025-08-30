@@ -237,12 +237,9 @@ class _DriverListScreenState extends State<DriverListScreen>
     _connectSocket();
   }
 
-  _connectSocket() async {
+  void _connectSocket() async {
     if (_isDisposed) return;
 
-    if (kDebugMode) print("DriverListScreen connecting to socket...");
-
-    // ✅ Listen for bidding acceptance confirmation
     socket.on("Accept_Bidding_Response$useridgloable", (response) {
       if (_isDisposed || !mounted) return;
 
@@ -254,78 +251,38 @@ class _DriverListScreenState extends State<DriverListScreen>
         isProcessingOffer = false;
       });
 
-      if (response["success"] == true) {
-        // Bid accepted successfully
-        int driverId = response["driver_id"];
-        String requestId = response["request_id"];
-
-        if (!_isDisposed && mounted) {
-          // Proceed to driver detail screen
-          globalDriverAcceptClass.driverdetailfunction(
-            context: context,
-            lat: latitudepick,
-            long: longitudepick,
-            d_id: driverId.toString(),
-            request_id: requestId,
-          );
-        }
+      if (response["success"] == true || response["Result"] == true) {
+        Future.delayed(Duration(milliseconds: 1000), () {
+          if (!_isDisposed && mounted) {
+            globalDriverAcceptClass.driverdetailfunction(
+              context: context,
+              lat: latitudepick,
+              long: longitudepick,
+              d_id: d_id.toString(),
+              request_id: response["cart_id"]
+                  .toString(), // Changed from request_id to cart_id
+            );
+          }
+        });
       } else {
-        // Bid acceptance failed - show error
         if (mounted) {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: Text("Booking Failed"),
-              content:
-                  Text(response["message"] ?? "Unable to accept this offer."),
+              title: Text("خطأ في الحجز"), // Arabic: Booking Error
+
+              content: Text(response["message"] ??
+                  "غير قادر على قبول هذا العرض"), // Arabic: Unable to accept offer
+
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("OK"),
+
+                  child: Text("حسناً"), // Arabic: OK
                 ),
               ],
             ),
           );
-        }
-      }
-    });
-
-    // ✅ Listen for bidding decline confirmation
-    socket.on("Bidding_decline_Response$useridgloable", (response) {
-      if (_isDisposed || !mounted) return;
-
-      if (kDebugMode) {
-        print("❌ Bidding_decline_Response received: $response");
-      }
-
-      // Update UI to show declined state
-      int driverId = response["driver_id"];
-      for (int i = 0; i < vehicle_bidding_driver.length; i++) {
-        if (vehicle_bidding_driver[i]["id"] == driverId) {
-          if (mounted) {
-            setState(() {
-              declinedOffers[i] = true;
-            });
-          }
-          break;
-        }
-      }
-    });
-
-    // ✅ Handle removal of customer data (ride cancelled/completed)
-    socket.on("removecustomerdata$useridgloable", (removecustomerdata) {
-      if (_isDisposed || !mounted) return;
-
-      if (kDebugMode) {
-        print("🗑️ removecustomerdata received: $removecustomerdata");
-      }
-
-      if (removecustomerdata["requestid"] == request_id) {
-        if (kDebugMode) print("✅ REQUEST ID MATCH - closing driver list");
-
-        // Proper navigation back to map
-        if (mounted) {
-          Navigator.pop(context);
         }
       }
     });
@@ -335,7 +292,7 @@ class _DriverListScreenState extends State<DriverListScreen>
   void acceptsocate(int index) {
     if (_isDisposed || !mounted || isProcessingOffer) return;
 
-    // Final validation before emission
+    // Final validation
     if (isOfferExpired(vehicle_bidding_secounde[index])) {
       showOfferExpiredDialog();
       return;
@@ -346,23 +303,32 @@ class _DriverListScreenState extends State<DriverListScreen>
     });
 
     if (kDebugMode) {
-      print("🚀 Emitting Accept_Bidding:");
-      print("   uid: $useridgloable");
+      print("🎯 Accepting offer:");
       print("   d_id: $d_id");
-      print("   request_id: $request_id");
       print("   price: $price");
+      print("   driver_id: $driver_id");
     }
 
-    socket.emit('Accept_Bidding', {
-      'uid': useridgloable,
-      'd_id': d_id,
-      'request_id': request_id,
-      'price': price,
-    });
+    // ✅ FIX: Add delay to ensure backend processes accept
+    Future.delayed(Duration(milliseconds: 500), () {
+      if (kDebugMode) {
+        print("🚀 Emitting Accept_Bidding:");
+        print("   uid: $useridgloable");
+        print("   d_id: $d_id");
+        print("   request_id: $request_id");
+        print("   price: $price");
+      }
 
-    // Mark as accepted in UI
-    setState(() {
-      acceptedOffers[index] = true;
+      socket.emit('Accept_Bidding', {
+        'uid': useridgloable,
+        'd_id': d_id,
+        'request_id': request_id,
+        'price': price,
+      });
+
+      setState(() {
+        acceptedOffers[index] = true;
+      });
     });
   }
 
@@ -488,60 +454,41 @@ class _DriverListScreenState extends State<DriverListScreen>
   void _handleAcceptOffer(int index) {
     if (isProcessingOffer) return;
 
-    // Check if offer is expired
     if (isOfferExpired(vehicle_bidding_secounde[index])) {
       showOfferExpiredDialog();
+
       return;
     }
 
-    // Double-check timer (race condition protection)
-    if (vehicle_bidding_secounde[index] <= 0) {
-      showOfferExpiredDialog();
+    // ✅ FIX: Validate data before proceeding
+
+    if (vehicle_bidding_driver[index]["id"] == null) {
+      if (kDebugMode) print("❌ Invalid driver data");
+
       return;
     }
 
-    // Set driver details
     setState(() {
       d_id = vehicle_bidding_driver[index]["id"];
+
       driver_id = vehicle_bidding_driver[index]["id"].toString();
-      price = vehicle_bidding_driver[index]["price"];
-      vihicalrice =
-          double.parse(vehicle_bidding_driver[index]["price"].toString());
 
-      // ✅ CRITICAL: Properly disable animations
+      price = vehicle_bidding_driver[index]["price"] ?? 0;
+
+      vihicalrice = double.parse(price.toString());
+
       buttontimer = false;
-      isanimation = false;
-      isControllerDisposed = true;
 
-      if (controller != null && controller!.isAnimating) {
-        if (kDebugMode) print("🔧 Disposing animation controller");
-        try {
-          controller!.dispose();
-          controller = null;
-        } catch (e) {
-          if (kDebugMode) print("Error disposing controller: $e");
-        }
-      }
+      isanimation = false;
+
+      isControllerDisposed = true;
     });
 
-    if (kDebugMode) {
-      print("🎯 Accepting offer:");
-      print("   d_id: $d_id");
-      print("   price: $price");
-      print("   driver_id: $driver_id");
-    }
+    // ✅ FIX: Stop all timers before accepting
 
-    // Emit accept signal
+    countdownTimer?.cancel();
+
     acceptsocate(index);
-
-    // Navigate to driver detail
-    globalDriverAcceptClass.driverdetailfunction(
-      context: context,
-      lat: latitudepick,
-      long: longitudepick,
-      d_id: d_id.toString(),
-      request_id: request_id,
-    );
   }
 
   // ✅ Handle decline offer
@@ -797,21 +744,37 @@ class _DriverListScreenState extends State<DriverListScreen>
                                 Row(
                                   children: [
                                     // Driver Image
-                                    Container(
-                                      height: 60,
-                                      width: 60,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: theamcolore,
-                                          width: 2,
-                                        ),
-                                        image: DecorationImage(
-                                          image: NetworkImage(
-                                            "${Config.imageurl}${vehicle_bidding_driver[index]["profile_image"]}",
-                                          ),
-                                          fit: BoxFit.cover,
-                                        ),
+                                    ClipOval(
+                                      // To make the image circular
+                                      child: Image.network(
+                                        "${Config.imageurl}${vehicle_bidding_driver[index]["profile_image"]}",
+                                        height: 80,
+                                        width: 80,
+                                        fit: BoxFit.cover,
+
+                                        // This is shown while the image is loading
+                                        loadingBuilder:
+                                            (context, child, loadingProgress) {
+                                          if (loadingProgress == null) {
+                                            return child;
+                                          }
+                                          return Center(
+                                              child:
+                                                  CircularProgressIndicator());
+                                        },
+
+                                        // This is the key part for handling 404 errors
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return Container(
+                                            color: Colors.grey[300],
+                                            child: Icon(
+                                              Icons.person,
+                                              color: Colors.grey[600],
+                                              size: 40,
+                                            ),
+                                          );
+                                        },
                                       ),
                                     ),
                                     const SizedBox(width: 15),

@@ -345,8 +345,9 @@ class _MapScreenState extends State<MapScreen>
           // ✅ CRITICAL FIX: Restore the "Running Ride" Logic
 
           if (homeApiController.homeapimodel!.runnigRide!.isNotEmpty) {
-            if (kDebugMode)
+            if (kDebugMode) {
               print("🏃‍♂️ Found a running ride. Restoring state...");
+            }
 
             final runningRide = homeApiController.homeapimodel!.runnigRide![0];
 
@@ -398,14 +399,16 @@ class _MapScreenState extends State<MapScreen>
                 Buttonpresebottomshhet();
               }
             }).catchError((error) {
-              if (kDebugMode)
+              if (kDebugMode) {
                 print("Calculate API error during ride restore: $error");
+              }
             });
           } else {
             // This is the normal path for a new ride
 
-            if (kDebugMode)
+            if (kDebugMode) {
               print("🚗 No running ride found. Ready for new booking.");
+            }
 
             if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
               homeMapController
@@ -3460,8 +3463,9 @@ class _MapScreenState extends State<MapScreen>
                                                       );
 
                                                       // 3. Hide the loading indicator.
-                                                      if (mounted)
+                                                      if (mounted) {
                                                         Navigator.pop(context);
+                                                      }
 
                                                       // 4. Check if the API call was successful and returned drivers.
                                                       if (modual_calculateController
@@ -3561,8 +3565,9 @@ class _MapScreenState extends State<MapScreen>
                                                       }
                                                     } catch (e) {
                                                       // Hide loading indicator on error.
-                                                      if (mounted)
+                                                      if (mounted) {
                                                         Navigator.pop(context);
+                                                      }
 
                                                       CustomNotification.show(
                                                         message:

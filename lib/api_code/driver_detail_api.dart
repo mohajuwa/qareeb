@@ -17,7 +17,6 @@ import '../common_code/config.dart';
 
 import '../common_code/network_service.dart';
 
-
 import '../utils/show_toast.dart';
 
 class DriverDetailApiController extends GetxController implements GetxService {
@@ -34,85 +33,34 @@ class DriverDetailApiController extends GetxController implements GetxService {
       "Accept": "application/json"
     };
 
-    // ✅ Network check
+    var response = await http.post(
+        Uri.parse(Config.baseurl + Config.driverdetailprofile),
+        body: jsonEncode(body),
+        headers: userHeader);
 
-    if (!await NetworkService().hasInternetConnection()) {
-      throw Exception(
-          'No internet connection available. Please check your network and try again.'
-              .tr);
-    }
+    print('+ + + + + DriverDetailApiController + + + + + + :--- $body');
+    print(
+        '- - - - - DriverDetailApiController - - - - - - :--- ${response.body}');
 
-    try {
-      isLoading = true;
+    var data = jsonDecode(response.body);
 
-      update();
-
-      var response = await http
-          .post(Uri.parse(Config.baseurl + Config.vihicaldriverdetail),
-              body: jsonEncode(body), headers: userHeader)
-          .timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw Exception(
-              'Request timed out. Please check your connection and try again.'
-                  .tr);
-        },
-      );
-
-      if (kDebugMode) {
-        print('+ + + + + DriverDetailApiController + + + + + + :--- $body');
-
-        print(
-            '- - - - - DriverDetailApiController - - - - - - :--- ${response.body}');
-      }
-
-      var data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        if (data["Result"] == true) {
-          driverDetailApiModel = driverDetailApiModelFromJson(response.body);
-
-          if (driverDetailApiModel!.result == true) {
-            isLoading = false;
-
-            update();
-
-            showToastForDuration("${data["message"]}", 2);
-
-            return data;
-          } else {
-            isLoading = false;
-
-            update();
-
-            showToastForDuration("${data["message"]}", 2);
-
-            return data;
-          }
-        } else {
-          isLoading = false;
-
+    if (response.statusCode == 200) {
+      if (data["Result"] == true) {
+        driverDetailApiModel = driverDetailApiModelFromJson(response.body);
+        if (driverDetailApiModel!.result == true) {
           update();
-
+          isLoading = false;
+          return data;
+        } else {
           showToastForDuration("${data["message"]}", 2);
-
           return data;
         }
       } else {
-        isLoading = false;
-
-        update();
-
-        showToastForDuration("Something went wrong!.....", 2);
+        showToastForDuration("${data["message"]}", 2);
+        return data;
       }
-    } catch (e) {
-      isLoading = false;
-
-      update();
-
-      if (kDebugMode) print('VihicalDriverDetail API Error: $e');
-
-      rethrow;
+    } else {
+      showToastForDuration("Somthing went wrong!.....", 2);
     }
   }
 }

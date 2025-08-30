@@ -1642,32 +1642,7 @@ OrignalMapScreen  :
         }
 
         void _addMarkers() async {
-          // Future<BitmapDescriptor> _loadIcon(String url) async {
-          //   try {
-          //     if (url.isEmpty || url.contains("undefined")) {
-          //       // Fallback to a default icon if the URL is invalid
-          //       return BitmapDescriptor.defaultMarker;
-          //     }
-          //
-          //     final http.Response response = await http.get(Uri.parse(url));
-          //     if (response.statusCode == 200) {
-          //       final Uint8List bytes = response.bodyBytes;
-          //
-          //       // Decode image and resize it
-          //       final ui.Codec codec = await ui.instantiateImageCodec(bytes, targetWidth: 30,targetHeight: 50);
-          //       final ui.FrameInfo frameInfo = await codec.getNextFrame();
-          //       final ByteData? byteData = await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-          //
-          //       return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-          //     } else {
-          //       throw Exception('Failed to load image from $url');
-          //     }
-          //   } catch (e) {
-          //     // Log the error and return a default icon
-          //     print("Error loading icon from $url: $e");
-          //     return BitmapDescriptor.defaultMarker;
-          //   }
-          // }
+          
 
           Future<BitmapDescriptor> _loadIcon(String url,
               {int targetWidth = 30, int targetHeight = 50}) async {
