@@ -1642,7 +1642,7 @@ OrignalMapScreen  :
         }
 
         void _addMarkers() async {
-          
+
 
           Future<BitmapDescriptor> _loadIcon(String url,
               {int targetWidth = 30, int targetHeight = 50}) async {

@@ -1,13 +1,14 @@
 // ✅ UPDATED: lib/api_code/calculate_api_controller.dart
 
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'dart:async';
 import 'dart:convert';
-// ✅ Added for kDebugMode
+import 'package:flutter/foundation.dart'; // ✅ Added for kDebugMode
 
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import '../common_code/config.dart';
-// ✅ Added network service
+import '../common_code/network_service.dart'; // ✅ Added network service
 import '../api_model/calculate_api_model.dart';
 
 class CalculateController extends GetxController implements GetxService {
