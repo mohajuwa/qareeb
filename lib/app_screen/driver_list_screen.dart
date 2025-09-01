@@ -200,8 +200,9 @@ class _DriverListScreenState extends State<DriverListScreen>
 
       // Only reinitialize if driver count changed or request changed
       if (currentCount != _lastDriverCount || request_id != _lastRequestId) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print("🔄 Driver count changed: $_lastDriverCount → $currentCount");
+        }
         _initializeProgress();
         _initializeOfferStates();
       }
@@ -227,8 +228,9 @@ class _DriverListScreenState extends State<DriverListScreen>
 
         // Only log occasionally to reduce console spam
         if (timer.tick % 10 == 0) {
-          if (kDebugMode)
+          if (kDebugMode) {
             print("📡 Refreshed bidding data (tick ${timer.tick})");
+          }
         }
       } catch (e) {
         if (kDebugMode) print("❌ Timer error: $e");
@@ -245,8 +247,9 @@ class _DriverListScreenState extends State<DriverListScreen>
       driver_id = data['uid']?.toString() ?? "";
       request_id = data['request_id']?.toString() ?? request_id;
 
-      if (kDebugMode)
+      if (kDebugMode) {
         print("🚗 Navigating to MapScreen with driver: $driver_id");
+      }
 
       Get.offAll(() => const MapScreen(selectvihical: false));
     } catch (e) {
@@ -391,43 +394,44 @@ class _DriverListScreenState extends State<DriverListScreen>
         _cancelLoading = true;
       });
 
-      // Same exact cancellation flow as MapScreen
+      // Use the exact same API call and socket emit pattern as MapScreen
+
       await removeRequest.removeApi(uid: useridgloable.toString());
 
-      // Emit the same socket events as MapScreen
+      // Send the same socket event with driverid from calculateController like MapScreen
+
       socket.emit('AcceRemoveOther', {
         'requestid': request_id,
-        'driverid': '', // No specific driver in bidding mode
+        'driverid': calculateController.calCulateModel?.driverId ?? '',
       });
 
-      // Reset animation state like MapScreen
+      // Reset the same state variables as MapScreen
+
       setState(() {
         isanimation = false;
+
         buttontimer = false;
       });
 
       if (kDebugMode) print("✅ Request cancelled successfully");
 
-      // Wait a moment for backend processing
+      // Use the same delay timing as MapScreen (500ms)
+
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Navigate to MapScreen (same as your original app flow)
+      // Navigate to MapScreen (same as MapScreen does)
+
       Get.offAll(() => const MapScreen(selectvihical: false));
     } catch (e) {
       if (kDebugMode) print("❌ Error performing cancel: $e");
 
-      // Show error but still allow navigation
-      Get.snackbar(
-        "Error".tr,
-        "Failed to cancel request. Please try again.".tr,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-
-      // Reset loading state
       setState(() {
         _cancelLoading = false;
       });
+
+      // Still navigate to MapScreen even on error (like MapScreen behavior)
+
+      Get.offAll(() => const MapScreen(selectvihical: false));
     }
   }
 
@@ -523,7 +527,7 @@ class _DriverListScreenState extends State<DriverListScreen>
               backgroundColor: notifire.backgroundallscreenColor,
               elevation: 0,
               leading: IconButton(
-                icon: Icon(Icons.close,
+                icon: const Icon(Icons.close,
                     color: Colors.red), // Use close icon to show it's cancel
                 onPressed: _onCancelRequest,
               ),
@@ -633,7 +637,7 @@ class _DriverListScreenState extends State<DriverListScreen>
               Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.green,
                   shape: BoxShape.circle,
                 ),
@@ -674,7 +678,7 @@ class _DriverListScreenState extends State<DriverListScreen>
               Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.red,
                   shape: BoxShape.circle,
                 ),
@@ -865,7 +869,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.star,
                                 color: Colors.orange,
                                 size: 16,
@@ -1063,7 +1067,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
