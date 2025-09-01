@@ -60,7 +60,7 @@ class RunningRideMonitor {
       final homeController = Get.find<HomeApiController>();
 
       // Check if we have home API data
-      if (homeController.homeapimodel?.runnigRide?.isEmpty != false) {
+      if (homeController.homeapimodel?.runnigRide![0].biddingRunStatus == 0) {
         // Reset display flag when no ride
         _hasDisplayedDriverList = false;
         return;

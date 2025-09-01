@@ -394,7 +394,7 @@ class _MapScreenState extends State<MapScreen>
                 loadertimer = true;
                 offerpluse = false;
               });
-              RunningRideMonitor.instance.checkNow();
+
               if (!_isDisposed) {
                 requesttime();
               }
@@ -404,7 +404,6 @@ class _MapScreenState extends State<MapScreen>
               }
             });
           } else {
-            RunningRideMonitor.instance.checkNow();
             if (kDebugMode) {
               print("🚗 No running ride found. Ready for new booking.");
             }
@@ -465,7 +464,6 @@ class _MapScreenState extends State<MapScreen>
           mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
           mroal =
               homeApiController.homeapimodel!.categoryList![0].role.toString();
-          RunningRideMonitor.instance.checkNow();
         }).catchError((error) {
           if (kDebugMode) print("Socket home event error: $error");
         });
@@ -1023,7 +1021,6 @@ class _MapScreenState extends State<MapScreen>
           lat: lathome.toString(),
           lon: longhome.toString(),
         );
-        RunningRideMonitor.instance.checkNow();
 
         if (homeData == null || homeData["Result"] != true) {
           if (kDebugMode) print("❌ Home API failed");
@@ -1750,8 +1747,6 @@ class _MapScreenState extends State<MapScreen>
       if (kDebugMode) {
         print("🚀 App initialized, starting RunningRideMonitor ONCE");
       }
-
-      RunningRideMonitor.instance.startMonitoring();
     });
   }
 
@@ -1796,8 +1791,6 @@ class _MapScreenState extends State<MapScreen>
     WidgetsBinding.instance.removeObserver(this);
 
     // ✅ STOP MONITORING - When app is terminated
-
-    RunningRideMonitor.instance.stopMonitoring();
 
     super.dispose();
     if (kDebugMode) print("✅ MapScreen disposed successfully");
@@ -1867,48 +1860,9 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-  // ✅ UPDATE: Replace _createLogoPlaceholder() with themed version
   _createLogoPlaceholder() {
     // return _createThemedLogoPlaceholder();
     return _createLogoMarker();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-
-    switch (state) {
-      case AppLifecycleState.resumed:
-
-        // ✅ App came back - just check now, don't restart monitoring
-
-        if (kDebugMode) print("📱 App resumed - checking for running rides");
-
-        RunningRideMonitor.instance.checkNow();
-
-        break;
-
-      case AppLifecycleState.paused:
-
-        // ✅ App paused - monitoring continues in background
-
-        if (kDebugMode) print("📱 App paused - monitoring continues");
-
-        break;
-
-      case AppLifecycleState.detached:
-
-        // ✅ App terminated - stop monitoring
-
-        if (kDebugMode) print("📱 App detached - stopping monitor");
-
-        RunningRideMonitor.instance.stopMonitoring();
-
-        break;
-
-      default:
-        break;
-    }
   }
 
   // Replace your existing mapThemeStyle method:
@@ -5316,15 +5270,6 @@ class _MapScreenState extends State<MapScreen>
                                     );
                                   },
                                 ),
-                          homeApiController.homeapimodel!.runnigRide!.isEmpty
-                              ? SizedBox()
-                              : homeApiController.homeapimodel!.runnigRide![0]
-                                          .biddingRunStatus ==
-                                      0
-                                  ? SizedBox()
-                                  : const SizedBox(
-                                      height: 10,
-                                    ),
                           homeApiController.homeapimodel!.runnigRide!.isEmpty
                               ? SizedBox()
                               : homeApiController.homeapimodel!.runnigRide![0]

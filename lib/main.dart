@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/network_service.dart';
-import 'package:qareeb/services/app_cycel.dart';
 import 'auth_screen/splase_screen.dart';
 import 'common_code/colore_screen.dart';
 import 'common_code/language_translate.dart';
-
 import 'package:flutter/foundation.dart';
-
 import 'package:qareeb/services/running_ride_monitor.dart';
 
-import 'package:qareeb/services/app_cycel.dart';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NetworkService().initialize();
+  runApp(const MyApp());
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -21,35 +22,24 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  final AppLifecycleObserver _lifecycleObserver = AppLifecycleObserver();
-
   @override
   void initState() {
     super.initState();
 
-    // Add lifecycle observer
-
-    WidgetsBinding.instance.addObserver(_lifecycleObserver);
-
+    // Only need one observer
     WidgetsBinding.instance.addObserver(this);
 
-    // Start monitoring after app is ready
-
+    // Start monitoring once
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (kDebugMode) print("🚀 App initialized, starting RunningRideMonitor");
-
       RunningRideMonitor.instance.startMonitoring();
     });
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(_lifecycleObserver);
-
     WidgetsBinding.instance.removeObserver(this);
-
     RunningRideMonitor.instance.stopMonitoring();
-
     super.dispose();
   }
 
@@ -60,23 +50,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.resumed:
         if (kDebugMode) print("📱 App resumed - checking for running rides");
-
         RunningRideMonitor.instance.checkNow();
-
         break;
-
-      case AppLifecycleState.paused:
-        if (kDebugMode) print("📱 App paused");
-
-        break;
-
       case AppLifecycleState.detached:
         if (kDebugMode) print("📱 App detached - stopping monitor");
-
         RunningRideMonitor.instance.stopMonitoring();
-
         break;
-
       default:
         break;
     }
