@@ -1686,7 +1686,6 @@ class _MapScreenState extends State<MapScreen>
   }
 
   // ========================================
-  // ALSO UPDATE: Your initState() method - REMOVE the controller creation
   // ========================================
 
   @override
@@ -1701,11 +1700,6 @@ class _MapScreenState extends State<MapScreen>
     _isDisposed = false;
     WidgetsBinding.instance.addObserver(this);
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted && !_isDisposed) {
-        RunningRideMonitor.instance.startMonitoring();
-      }
-    });
     // Load automatic booking preference
     _loadAutomaticBookingPreference();
 
@@ -1753,7 +1747,11 @@ class _MapScreenState extends State<MapScreen>
 
     // Reset state after frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      resetMapScreenState();
+      if (kDebugMode) {
+        print("🚀 App initialized, starting RunningRideMonitor ONCE");
+      }
+
+      RunningRideMonitor.instance.startMonitoring();
     });
   }
 
@@ -1796,6 +1794,10 @@ class _MapScreenState extends State<MapScreen>
 
     // Remove observer
     WidgetsBinding.instance.removeObserver(this);
+
+    // ✅ STOP MONITORING - When app is terminated
+
+    RunningRideMonitor.instance.stopMonitoring();
 
     super.dispose();
     if (kDebugMode) print("✅ MapScreen disposed successfully");
@@ -1873,32 +1875,38 @@ class _MapScreenState extends State<MapScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
     switch (state) {
       case AppLifecycleState.resumed:
-        if (kDebugMode) print("🔄 App resumed, checking map state");
 
-        resetMapScreenState();
+        // ✅ App came back - just check now, don't restart monitoring
+
+        if (kDebugMode) print("📱 App resumed - checking for running rides");
+
+        RunningRideMonitor.instance.checkNow();
 
         break;
 
       case AppLifecycleState.paused:
-        if (kDebugMode) print("⏸️ App paused");
+
+        // ✅ App paused - monitoring continues in background
+
+        if (kDebugMode) print("📱 App paused - monitoring continues");
 
         break;
 
       case AppLifecycleState.detached:
-        if (kDebugMode) print("🔚 App detached");
+
+        // ✅ App terminated - stop monitoring
+
+        if (kDebugMode) print("📱 App detached - stopping monitor");
+
+        RunningRideMonitor.instance.stopMonitoring();
 
         break;
 
-      case AppLifecycleState.inactive:
-        if (kDebugMode) print("😴 App inactive");
-
-        break;
-
-      case AppLifecycleState.hidden:
-        if (kDebugMode) print("🙈 App hidden");
-
+      default:
         break;
     }
   }

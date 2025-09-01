@@ -23,20 +23,22 @@ class RunningRideMonitor {
   String? _lastRideId;
   String? _lastBiddingStatus;
   int? _lastBiddingRunStatus;
+  bool _hasDisplayedDriverList = false; // Prevent multiple navigations
 
   // Initialize monitoring when app starts
   void startMonitoring() {
     if (_isMonitoring) return;
 
     _isMonitoring = true;
+    _hasDisplayedDriverList = false;
 
     if (kDebugMode) print("🚗 Starting running ride monitor...");
 
     // Check immediately
     _checkRunningRide();
 
-    // Then check every 5 seconds
-    _monitorTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    // Increase interval to reduce performance impact
+    _monitorTimer = Timer.periodic(const Duration(seconds: 8), (timer) {
       _checkRunningRide();
     });
   }
@@ -48,6 +50,7 @@ class RunningRideMonitor {
     _lastRideId = null;
     _lastBiddingStatus = null;
     _lastBiddingRunStatus = null;
+    _hasDisplayedDriverList = false;
 
     if (kDebugMode) print("🛑 Stopped running ride monitor");
   }
@@ -58,6 +61,8 @@ class RunningRideMonitor {
 
       // Check if we have home API data
       if (homeController.homeapimodel?.runnigRide?.isEmpty != false) {
+        // Reset display flag when no ride
+        _hasDisplayedDriverList = false;
         return;
       }
 
@@ -67,16 +72,30 @@ class RunningRideMonitor {
       final currentBiddingRunStatus = runningRide.biddingRunStatus;
       final rideStatus = runningRide.status;
 
-      if (kDebugMode) {
-        print("🔍 Monitoring ride: $currentRideId");
-        print("   biddingStatus: $currentBiddingStatus");
-        print("   biddingRunStatus: $currentBiddingRunStatus");
+      // Only log when status changes to reduce console spam
+      bool statusChanged = currentRideId != _lastRideId ||
+          currentBiddingStatus != _lastBiddingStatus ||
+          currentBiddingRunStatus != _lastBiddingRunStatus;
+
+      if (kDebugMode && statusChanged) {
+        print("🔍 Ride status changed:");
+        print("   ID: $currentRideId (was: $_lastRideId)");
+        print(
+            "   biddingStatus: $currentBiddingStatus (was: $_lastBiddingStatus)");
+        print(
+            "   biddingRunStatus: $currentBiddingRunStatus (was: $_lastBiddingRunStatus)");
         print("   status: $rideStatus");
       }
 
       // Check if we should force display DriverListScreen
       if (_shouldForceDisplayDriverList(runningRide)) {
-        _forceDisplayDriverList(runningRide);
+        if (!_hasDisplayedDriverList) {
+          _forceDisplayDriverList(runningRide);
+          _hasDisplayedDriverList = true;
+        }
+      } else {
+        // Reset flag when conditions no longer met
+        _hasDisplayedDriverList = false;
       }
 
       // Update tracking variables
@@ -97,83 +116,60 @@ class RunningRideMonitor {
       return false;
     }
 
-    // 2. Bidding must be in active states
-    final biddingStatus = runningRide.biddingStatus?.toLowerCase();
-    final rideStatus = runningRide.status?.toLowerCase();
-
-    // Force display if:
-    // - Bidding is pending/active
-    // - Ride is not yet accepted by driver
-    // - Status indicates waiting for driver response
-
-    final shouldDisplay = (biddingStatus == "pending" ||
-            biddingStatus == "active" ||
-            biddingStatus == "waiting" ||
-            rideStatus == "pending" ||
-            rideStatus == "waiting" ||
-            rideStatus == "0" ||
-            rideStatus == "1") &&
-        (rideStatus != "accepted" &&
-            rideStatus != "completed" &&
-            rideStatus != "cancelled" &&
-            rideStatus != "2" &&
-            rideStatus != "3" &&
-            rideStatus != "4" &&
-            rideStatus != "5");
-
-    if (kDebugMode && shouldDisplay) {
-      print("🚨 Should force display DriverListScreen");
+    // 2. Bidding must be enabled
+    if (runningRide.biddingStatus != "1") {
+      return false;
     }
 
-    return shouldDisplay;
+    // 3. Request must be pending (not accepted yet)
+    if (runningRide.status != "0" && runningRide.status != null) {
+      return false;
+    }
+
+    // 4. Must have available drivers
+    try {
+      List<dynamic> driverIds = runningRide.dId ?? [];
+      if (driverIds.isEmpty) {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+
+    // 5. Don't display if already on DriverListScreen
+    if (Get.currentRoute.contains('DriverListScreen')) {
+      return false;
+    }
+
+    return true;
   }
 
   void _forceDisplayDriverList(dynamic runningRide) {
-    if (!Get.context!.mounted) return;
+    try {
+      if (kDebugMode) print("🚀 Forcing display of DriverListScreen");
 
-    // Check if DriverListScreen is already displayed
-    if (Get.currentRoute.contains('DriverListScreen')) {
-      if (kDebugMode) print("DriverListScreen already displayed");
-      return;
+      // Restore the ride data to global variables
+      _restoreRideData(runningRide);
+
+      // Load bidding data
+      _loadBiddingData(runningRide);
+
+      // Navigate to DriverListScreen with proper cleanup
+      Get.offAll(
+        () => const DriverListScreen(),
+        transition: Transition.fadeIn,
+        duration: const Duration(milliseconds: 300),
+      );
+
+      if (kDebugMode) print("✅ Navigated to DriverListScreen successfully");
+    } catch (e) {
+      if (kDebugMode) print("❌ Failed to force display DriverListScreen: $e");
     }
-
-    if (kDebugMode) print("🔄 Force displaying DriverListScreen...");
-
-    // Restore ride data to global variables
-    _restoreRideData(runningRide);
-
-    // Navigate to DriverListScreen
-    Get.to(() => const DriverListScreen());
-
-    // Emit socket to load bidding data
-    _loadBiddingData(runningRide);
   }
 
   void _restoreRideData(dynamic runningRide) {
     try {
-      // Restore global variables
-      request_id = runningRide.id.toString();
-
-      pickupcontroller.text = runningRide.pickAdd?.title?.toString() ?? "";
-      dropcontroller.text = runningRide.dropAdd?.title?.toString() ?? "";
-
-      if (runningRide.pickLatlon != null) {
-        latitudepick =
-            double.parse(runningRide.pickLatlon!.latitude.toString());
-        longitudepick =
-            double.parse(runningRide.pickLatlon!.longitude.toString());
-      }
-
-      if (runningRide.dropLatlon != null) {
-        latitudedrop =
-            double.parse(runningRide.dropLatlon!.latitude.toString());
-        longitudedrop =
-            double.parse(runningRide.dropLatlon!.longitude.toString());
-      }
-
-      maximumfare = runningRide.maximumFare;
-      minimumfare = runningRide.minimumFare;
-      dropprice = runningRide.price?.toString() ?? "0";
+      request_id = runningRide.id?.toString() ?? "0";
       priceyourfare = runningRide.price ?? 0;
 
       picktitle = runningRide.pickAdd?.title?.toString() ?? "";
@@ -200,10 +196,7 @@ class RunningRideMonitor {
       });
 
       if (kDebugMode) {
-        print("📡 Emitted load_bidding_data:");
-        print("   uid: $useridgloable");
-        print("   request_id: ${runningRide.id}");
-        print("   d_id: ${runningRide.dId}");
+        print("📡 Emitted load_bidding_data for request: ${runningRide.id}");
       }
     } catch (e) {
       if (kDebugMode) print("Error loading bidding data: $e");
@@ -214,6 +207,12 @@ class RunningRideMonitor {
   void checkNow() {
     if (kDebugMode) print("🔍 Manual running ride check...");
     _checkRunningRide();
+  }
+
+  // Reset display flag for new requests
+  void resetDisplayFlag() {
+    _hasDisplayedDriverList = false;
+    if (kDebugMode) print("🔄 Reset display flag");
   }
 
   // Check if currently has active bidding
@@ -247,6 +246,7 @@ class RunningRideMonitor {
         "biddingRunStatus": runningRide.biddingRunStatus,
         "status": runningRide.status,
         "shouldForceDisplay": _shouldForceDisplayDriverList(runningRide),
+        "hasDisplayed": _hasDisplayedDriverList,
       };
     } catch (e) {
       return {"hasRide": false, "error": e.toString()};

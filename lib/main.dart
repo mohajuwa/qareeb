@@ -7,14 +7,11 @@ import 'auth_screen/splase_screen.dart';
 import 'common_code/colore_screen.dart';
 import 'common_code/language_translate.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+import 'package:flutter/foundation.dart';
 
-  await NetworkService().initialize();
-  WidgetsBinding.instance.addObserver(AppLifecycleObserver());
+import 'package:qareeb/services/running_ride_monitor.dart';
 
-  runApp(const MyApp());
-}
+import 'package:qareeb/services/app_cycel.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -23,7 +20,68 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  final AppLifecycleObserver _lifecycleObserver = AppLifecycleObserver();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Add lifecycle observer
+
+    WidgetsBinding.instance.addObserver(_lifecycleObserver);
+
+    WidgetsBinding.instance.addObserver(this);
+
+    // Start monitoring after app is ready
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (kDebugMode) print("🚀 App initialized, starting RunningRideMonitor");
+
+      RunningRideMonitor.instance.startMonitoring();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+
+    WidgetsBinding.instance.removeObserver(this);
+
+    RunningRideMonitor.instance.stopMonitoring();
+
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        if (kDebugMode) print("📱 App resumed - checking for running rides");
+
+        RunningRideMonitor.instance.checkNow();
+
+        break;
+
+      case AppLifecycleState.paused:
+        if (kDebugMode) print("📱 App paused");
+
+        break;
+
+      case AppLifecycleState.detached:
+        if (kDebugMode) print("📱 App detached - stopping monitor");
+
+        RunningRideMonitor.instance.stopMonitoring();
+
+        break;
+
+      default:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
