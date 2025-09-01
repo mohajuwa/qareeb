@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:qareeb/services/running_ride_monitor.dart';
 import 'package:qareeb/utils/show_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../common_code/config.dart';
@@ -40,6 +41,11 @@ class HomeApiController extends GetxController implements GetxService {
 
           isLoading = false;
           update();
+
+          Future.delayed(const Duration(milliseconds: 500), () {
+            RunningRideMonitor.instance.checkNow();
+          });
+
           return data;
         } else {
           showToastForDuration("${data["message"]}", 3);

@@ -23,6 +23,7 @@ import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/status_helper.dart';
 import 'package:qareeb/common_code/status_page.dart';
+import 'package:qareeb/services/running_ride_monitor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import '../api_code/coupon_payment_api_contoller.dart';
@@ -345,8 +346,9 @@ class _MapScreenState extends State<MapScreen>
           // ✅ CRITICAL FIX: Restore the "Running Ride" Logic
 
           if (homeApiController.homeapimodel!.runnigRide!.isNotEmpty) {
-            if (kDebugMode)
+            if (kDebugMode) {
               print("🏃‍♂️ Found a running ride. Restoring state...");
+            }
 
             final runningRide = homeApiController.homeapimodel!.runnigRide![0];
 
@@ -392,20 +394,20 @@ class _MapScreenState extends State<MapScreen>
                 loadertimer = true;
                 offerpluse = false;
               });
-
+              RunningRideMonitor.instance.checkNow();
               if (!_isDisposed) {
                 requesttime();
-                Buttonpresebottomshhet();
               }
             }).catchError((error) {
-              if (kDebugMode)
+              if (kDebugMode) {
                 print("Calculate API error during ride restore: $error");
+              }
             });
           } else {
-            // This is the normal path for a new ride
-
-            if (kDebugMode)
+            RunningRideMonitor.instance.checkNow();
+            if (kDebugMode) {
               print("🚗 No running ride found. Ready for new booking.");
+            }
 
             if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
               homeMapController
@@ -463,6 +465,7 @@ class _MapScreenState extends State<MapScreen>
           mid = homeApiController.homeapimodel!.categoryList![0].id.toString();
           mroal =
               homeApiController.homeapimodel!.categoryList![0].role.toString();
+          RunningRideMonitor.instance.checkNow();
         }).catchError((error) {
           if (kDebugMode) print("Socket home event error: $error");
         });
@@ -571,11 +574,6 @@ class _MapScreenState extends State<MapScreen>
         Get.back();
         Navigator.push(context,
             MaterialPageRoute(builder: (context) => const DriverListScreen()));
-
-        if (vehicle_bidding_driver.isEmpty) {
-          Get.back();
-          Buttonpresebottomshhet();
-        }
       });
 
       socket.on('acceptvehrequest$useridgloable', (acceptvehrequest) {
@@ -1025,6 +1023,7 @@ class _MapScreenState extends State<MapScreen>
           lat: lathome.toString(),
           lon: longhome.toString(),
         );
+        RunningRideMonitor.instance.checkNow();
 
         if (homeData == null || homeData["Result"] != true) {
           if (kDebugMode) print("❌ Home API failed");
@@ -1702,6 +1701,11 @@ class _MapScreenState extends State<MapScreen>
     _isDisposed = false;
     WidgetsBinding.instance.addObserver(this);
 
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && !_isDisposed) {
+        RunningRideMonitor.instance.startMonitoring();
+      }
+    });
     // Load automatic booking preference
     _loadAutomaticBookingPreference();
 
@@ -3460,8 +3464,9 @@ class _MapScreenState extends State<MapScreen>
                                                       );
 
                                                       // 3. Hide the loading indicator.
-                                                      if (mounted)
+                                                      if (mounted) {
                                                         Navigator.pop(context);
+                                                      }
 
                                                       // 4. Check if the API call was successful and returned drivers.
                                                       if (modual_calculateController
@@ -3561,8 +3566,9 @@ class _MapScreenState extends State<MapScreen>
                                                       }
                                                     } catch (e) {
                                                       // Hide loading indicator on error.
-                                                      if (mounted)
+                                                      if (mounted) {
                                                         Navigator.pop(context);
+                                                      }
 
                                                       CustomNotification.show(
                                                         message:
