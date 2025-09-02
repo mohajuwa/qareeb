@@ -74,35 +74,125 @@ class _DriverListScreenState extends State<DriverListScreen>
 
   void _setupSocketListeners() {
     try {
-      // Listen for bidding updates
+      // Listen for bidding updates - try both possible event names
+
       socket.on('Accept_Bidding_Response$useridgloable', (data) {
         if (!mounted || _disposed) return;
 
         try {
-          if (kDebugMode) print("📢 Received bidding update");
+          if (kDebugMode) {
+            print("🎯 Received Accept_Bidding_Response: $data");
+
+            print("   Success: ${data['success']}");
+
+            print("   Driver ID: ${data['driver_id']}");
+
+            print("   Cart ID: ${data['cart_id']}");
+          }
+
+          if (data['success'] == true) {
+            // Stop all timers immediately to prevent ticker errors
+
+            _stopAllTimers();
+
+            _disposed = true; // Mark as disposed to prevent further operations
+
+            // Update global variables for the accepted driver
+
+            driver_id = data['driver_id']?.toString() ?? "";
+
+            request_id = data['cart_id']?.toString() ?? request_id;
+
+            if (kDebugMode) {
+              print("✅ Bid accepted! Navigating to DriverDetailScreen");
+            }
+
+            // Navigate to DriverDetailScreen using the same pattern as other parts of your app
+
+            globalDriverAcceptClass.driverdetailfunction(
+              context: context,
+              lat: double.tryParse(latitudepick.toString()) ?? 0.0,
+              long: double.tryParse(longitudepick.toString()) ?? 0.0,
+              d_id: driver_id,
+              request_id: request_id,
+            );
+          } else {
+            // Show error message
+
+            if (kDebugMode) {
+              print("❌ Bid acceptance failed: ${data['message']}");
+            }
+
+            Get.snackbar(
+              "Error".tr,
+              data['message'] ?? "Failed to accept driver offer".tr,
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.red.shade100,
+              colorText: Colors.red.shade800,
+            );
+
+            // Reset the accepted state for this driver
+
+            setState(() {
+              // Find and reset the accepted driver
+
+              for (int i = 0; i < vehicle_bidding_driver.length; i++) {
+                if (vehicle_bidding_driver[i]['id'].toString() ==
+                    data['driver_id'].toString()) {
+                  if (i < acceptedOffers.length) {
+                    acceptedOffers[i] = false;
+                  }
+
+                  break;
+                }
+              }
+            });
+          }
+        } catch (e) {
+          if (kDebugMode) print("❌ Error handling Accept_Bidding_Response: $e");
+        }
+      });
+      socket.on('Vehicle_Bidding$useridgloable', (data) {
+        if (!mounted || _disposed) return;
+
+        try {
+          if (kDebugMode) {
+            print("📢 Received Vehicle_Bidding: $data");
+
+            print("   Data type: ${data.runtimeType}");
+
+            if (data is Map) print("   Keys: ${data.keys}");
+          }
 
           // Update driver list and seconds
+
           if (data['bidding_list'] != null) {
             setState(() {
               vehicle_bidding_driver = data['bidding_list'];
+
               vehicle_bidding_secounde = List.generate(
                   vehicle_bidding_driver.length,
                   (index) =>
                       vehicle_bidding_driver[index]['diff_second'] ?? 120);
+
               _updateProgressList();
             });
+
+            _debugDriverData();
           }
         } catch (e) {
-          if (kDebugMode) print("❌ Error handling bidding response: $e");
+          if (kDebugMode) print("❌ Error handling Vehicle_Bidding: $e");
         }
       });
 
       // Listen for driver acceptance
+
       socket.on('acceptvehrequest$useridgloable', (data) {
         if (!mounted || _disposed) return;
 
         try {
-          if (kDebugMode) print("✅ Driver accepted the ride");
+          if (kDebugMode) print("✅ Driver accepted the ride: $data");
+
           _navigateToMapScreen(data);
         } catch (e) {
           if (kDebugMode) print("❌ Error handling acceptance: $e");
@@ -110,20 +200,24 @@ class _DriverListScreenState extends State<DriverListScreen>
       });
 
       // Listen for bid decline response
+
       socket.on('Bidding_decline_Response$useridgloable', (data) {
         if (!mounted || _disposed) return;
 
         try {
-          if (kDebugMode) print("❌ Driver bid declined");
+          if (kDebugMode) print("❌ Driver bid declined: $data");
 
           // Update the driver list
+
           if (data['bidding_list'] != null) {
             setState(() {
               vehicle_bidding_driver = data['bidding_list'];
+
               vehicle_bidding_secounde = List.generate(
                   vehicle_bidding_driver.length,
                   (index) =>
                       vehicle_bidding_driver[index]['diff_second'] ?? 120);
+
               _updateProgressList();
             });
           }
@@ -133,18 +227,62 @@ class _DriverListScreenState extends State<DriverListScreen>
       });
 
       // Listen for customer data removal
+
       socket.on('removecustomerdata$useridgloable', (data) {
         if (!mounted || _disposed) return;
 
         try {
-          if (kDebugMode) print("🗑️ Request cancelled/timeout");
+          if (kDebugMode) print("🗑️ Request cancelled/timeout: $data");
+
           _handleTimeout();
         } catch (e) {
           if (kDebugMode) print("❌ Error handling removal: $e");
         }
       });
+
+      if (kDebugMode) print("✅ Socket listeners setup complete");
     } catch (e) {
       if (kDebugMode) print("❌ Error setting up socket listeners: $e");
+    }
+  }
+
+  void _debugDriverData() {
+    if (kDebugMode) {
+      print("🔍 DEBUG: vehicle_bidding_driver data:");
+
+      print("   Length: ${vehicle_bidding_driver.length}");
+
+      for (int i = 0; i < vehicle_bidding_driver.length; i++) {
+        var driver = vehicle_bidding_driver[i];
+
+        print("   Driver $i: $driver");
+
+        print("     Type: ${driver.runtimeType}");
+
+        if (driver is Map) {
+          print("     Keys: ${driver.keys}");
+
+          print("     name: ${driver["name"]}");
+
+          print("     first_name: ${driver["first_name"]}");
+
+          print("     last_name: ${driver["last_name"]}");
+
+          print("     profile_image: ${driver["profile_image"]}");
+
+          print("     vehicle_name: ${driver["vehicle_name"]}");
+
+          print("     rating: ${driver["rating"]}");
+
+          print("     avg_star: ${driver["avg_star"]}");
+
+          print("     price: ${driver["price"]}");
+
+          print("     distance: ${driver["distance"]}");
+
+          print("     diff_second: ${driver["diff_second"]}");
+        }
+      }
     }
   }
 
@@ -321,25 +459,42 @@ class _DriverListScreenState extends State<DriverListScreen>
       if (index >= vehicle_bidding_driver.length) return;
 
       var driver = vehicle_bidding_driver[index];
+
       String driverId = driver['id']?.toString() ?? "";
+
+      // Prevent multiple accepts
+
+      if (index < acceptedOffers.length && acceptedOffers[index]) {
+        if (kDebugMode) print("⚠️ Driver already accepted, ignoring duplicate");
+
+        return;
+      }
 
       if (kDebugMode) print("✅ Accepting driver: $driverId");
 
       // Update local state immediately
+
       setState(() {
         if (index < acceptedOffers.length) {
           acceptedOffers[index] = true;
         }
       });
 
-      // Emit accept socket
-      socket.emit('Bidding_accept', {
-        'uid': driverId,
+      // Emit accept socket with the correct event name
+
+      socket.emit('Accept_Bidding', {
+        // Changed from 'Bidding_accept' to 'Accept_Bidding'
+
+        'uid': useridgloable,
+
+        'd_id': driverId,
+
         'request_id': request_id,
-        'c_id': useridgloable,
-        'price': driver['price']?.toString() ?? "0",
-        'status': "1"
+
+        'price': driver['price']?.toString() ?? "0"
       });
+
+      if (kDebugMode) print("📡 Emitted Accept_Bidding for driver $driverId");
     } catch (e) {
       if (kDebugMode) print("❌ Error accepting driver: $e");
     }
@@ -452,14 +607,12 @@ class _DriverListScreenState extends State<DriverListScreen>
   void _disposeControllers() {
     try {
       for (var controller in controllers) {
-        if (!controller.isAnimating) {
-          controller.dispose();
-        }
+        controller.dispose();
       }
       controllers.clear();
       progressList.clear();
 
-      if (kDebugMode) print("🧹 Disposed ${controllers.length} controllers");
+      if (kDebugMode) print("🧹 Disposed animation controllers");
     } catch (e) {
       if (kDebugMode) print("❌ Error disposing controllers: $e");
     }
@@ -488,24 +641,38 @@ class _DriverListScreenState extends State<DriverListScreen>
     if (kDebugMode) print("🗑️ Disposing DriverListScreen");
 
     _disposed = true;
+
+    // Stop all timers first
+
     _stopAllTimers();
+
+    // Dispose animation controllers before calling super.dispose()
+
     _disposeControllers();
 
     // Remove socket listeners
+
     try {
       socket.off('Accept_Bidding_Response$useridgloable');
+
+      socket.off('Vehicle_Bidding$useridgloable');
+
       socket.off('Bidding_decline_Response$useridgloable');
+
       socket.off('removecustomerdata$useridgloable');
+
       socket.off('acceptvehrequest$useridgloable');
     } catch (e) {
       if (kDebugMode) print("❌ Error removing socket listeners: $e");
     }
 
     // Reset global states
+
     buttontimer = false;
+
     isanimation = false;
 
-    super.dispose();
+    super.dispose(); // Call super.dispose() AFTER disposing controllers
   }
 
   @override
@@ -743,14 +910,46 @@ class _DriverListScreenState extends State<DriverListScreen>
     }
 
     var driver = vehicle_bidding_driver[index];
+
+    // Debug the actual driver object
+
+    if (kDebugMode) {
+      print("🎨 Building card for driver $index");
+    }
+
+    // Extract data with multiple fallback options
+
+    String driverName = driver["name"] ??
+        "${driver["first_name"] ?? ""} ${driver["last_name"] ?? ""}".trim();
+
+    if (driverName.isEmpty || driverName == " ") {
+      driverName = "Driver ${driver["id"] ?? index + 1}";
+    }
+
+    String profileImage = driver["profile_image"] ?? '';
+
+    String vehicleName =
+        driver["vehicle_name"] ?? driver["car_name"] ?? "Vehicle";
+
+    String rating = "${driver["rating"] ?? driver["avg_star"] ?? "5.0"}";
+
+    String distance = "${driver["distance"] ?? "0.0"}";
+
+    dynamic priceValue = driver["price"] ?? priceyourfare;
+
+    String price = priceValue.toString();
+
     double progress = index < progressList.length ? progressList[index] : 0.0;
+
     int seconds = index < vehicle_bidding_secounde.length
         ? vehicle_bidding_secounde[index]
         : 120;
 
     bool isExpired = isOfferExpired(seconds);
+
     bool isAccepted =
         index < acceptedOffers.length ? acceptedOffers[index] : false;
+
     bool isDeclined =
         index < declinedOffers.length ? declinedOffers[index] : false;
 
@@ -770,7 +969,42 @@ class _DriverListScreenState extends State<DriverListScreen>
       ),
       child: Column(
         children: [
+          // Debug info (remove this after fixing the issue)
+
+          if (kDebugMode)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: Colors.yellow.shade100,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "DEBUG INFO:",
+                    style: const TextStyle(
+                        fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "Raw: ${driver.toString()}",
+                    style: const TextStyle(fontSize: 9),
+                  ),
+                  Text(
+                    "Name: '$driverName' | Vehicle: '$vehicleName' | Rating: '$rating'",
+                    style: const TextStyle(fontSize: 9),
+                  ),
+                ],
+              ),
+            ),
+
           // Status banner
+
           if (isExpired || isAccepted || isDeclined)
             Container(
               width: double.infinity,
@@ -781,9 +1015,9 @@ class _DriverListScreenState extends State<DriverListScreen>
                     : isAccepted
                         ? Colors.green.shade50
                         : Colors.grey.shade50,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(kDebugMode ? 0 : 12),
+                  topRight: Radius.circular(kDebugMode ? 0 : 12),
                 ),
               ),
               child: Text(
@@ -812,15 +1046,17 @@ class _DriverListScreenState extends State<DriverListScreen>
                 Row(
                   children: [
                     // Driver image
+
                     ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: Image.network(
-                        "${Config.imageurl}${driver["profile_image"] ?? ''}",
+                        "${Config.imageurl}$profileImage",
                         height: 76,
                         width: 76,
                         fit: BoxFit.cover,
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
+
                           return Container(
                             height: 76,
                             width: 76,
@@ -834,6 +1070,11 @@ class _DriverListScreenState extends State<DriverListScreen>
                           );
                         },
                         errorBuilder: (context, error, stackTrace) {
+                          if (kDebugMode) {
+                            print(
+                                "❌ Error loading image: ${Config.imageurl}$profileImage");
+                          }
+
                           return Container(
                             height: 76,
                             width: 76,
@@ -854,12 +1095,13 @@ class _DriverListScreenState extends State<DriverListScreen>
                     const SizedBox(width: 16),
 
                     // Driver details
+
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            driver["name"] ?? "Driver",
+                            driverName,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -876,7 +1118,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                "${driver["rating"] ?? "0.0"}",
+                                rating,
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: notifire.secondaryTextColor,
@@ -884,7 +1126,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                               ),
                               const SizedBox(width: 16),
                               Text(
-                                "${driver["distance"] ?? "0"} km",
+                                "${distance} km",
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: notifire.secondaryTextColor,
@@ -894,7 +1136,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            driver["vehicle_name"] ?? "Vehicle",
+                            vehicleName,
                             style: TextStyle(
                               fontSize: 13,
                               color: notifire.secondaryTextColor,
@@ -905,11 +1147,12 @@ class _DriverListScreenState extends State<DriverListScreen>
                     ),
 
                     // Bid price
+
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          "$globalcurrency ${driver["price"] ?? priceyourfare}",
+                          "$globalcurrency $price",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -932,6 +1175,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                 const SizedBox(height: 12),
 
                 // Progress bar (only show if not expired/accepted/declined)
+
                 if (!isExpired && !isAccepted && !isDeclined)
                   Column(
                     children: [
@@ -969,6 +1213,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                 const SizedBox(height: 12),
 
                 // Action buttons (only show if not expired/accepted/declined)
+
                 if (!isExpired && !isAccepted && !isDeclined)
                   Row(
                     children: [

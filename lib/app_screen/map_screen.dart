@@ -1665,7 +1665,7 @@ class _MapScreenState extends State<MapScreen>
 
       // Set up timeout handling
       timer = Timer(Duration(seconds: duration), () {
-        if (!mounted || _isDisposed) return;
+        if (!mounted || !_isDisposed) return;
 
         if (kDebugMode) print("⏰ Request timer expired - handling timeout");
         _handleRequestTimeout();
