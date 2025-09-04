@@ -684,21 +684,21 @@ class _MapScreenState extends State<MapScreen>
 
   pagelistApiController pagelistcontroller = Get.put(pagelistApiController());
 
-  Future<Uint8List> getNetworkImage(String url) async {
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        return response.bodyBytes;
-      } else {
-        final ByteData data = await rootBundle.load('assets/logo.png');
-        return data.buffer.asUint8List();
-      }
-    } catch (e) {
-      if (kDebugMode) print("Error loading network image: $e");
+  Future<Uint8List> getNetworkImage(String path,
+      {int targetWidth = 100, int targetHeight = 100}) async {
+    final completer = Completer<ImageInfo>();
+    var image = NetworkImage(path);
+    image.resolve(const ImageConfiguration()).addListener(
+          ImageStreamListener((info, _) => completer.complete(info)),
+        );
+    final ImageInfo imageInfo = await completer.future;
 
-      final ByteData data = await rootBundle.load('assets/logo.png');
-      return data.buffer.asUint8List();
-    }
+    final ByteData? byteData =
+        await imageInfo.image.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List originalBytes = byteData!.buffer.asUint8List();
+
+    return resizeImage(originalBytes,
+        targetWidth: targetWidth, targetHeight: targetHeight);
   }
 
   void updateBiddingMode(bool isAutomatic) {
@@ -1199,7 +1199,7 @@ class _MapScreenState extends State<MapScreen>
       print("⏰ Starting 5-second logo placeholder timer...");
     }
 
-    _logoPlaceholderTimer = Timer(Duration(seconds: 5), () {
+    _logoPlaceholderTimer = Timer(Duration(seconds: 3), () {
       if (_isDisposed || !mounted) return;
 
       if (kDebugMode) {
@@ -1340,29 +1340,16 @@ class _MapScreenState extends State<MapScreen>
   }
 
   // ✅ OPTIMIZED: Load single icon with caching
-  Future<BitmapDescriptor> _loadSingleIcon(String url) async {
+  Future<BitmapDescriptor> _loadSingleIcon(String imageUrl) async {
     try {
-      if (url.isEmpty || url.contains("undefined")) {
-        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
-      }
-
-      final response =
-          await http.get(Uri.parse(url)).timeout(Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        final Uint8List bytes = response.bodyBytes;
-        final ui.Codec codec = await ui.instantiateImageCodec(bytes,
-            targetWidth: 40, // Slightly larger for better visibility
-            targetHeight: 60);
-        final ui.FrameInfo frameInfo = await codec.getNextFrame();
-        final ByteData? byteData =
-            await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
-        return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
-      } else {
-        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
-      }
+      final Uint8List iconBytes = await getNetworkImage(
+        imageUrl,
+        targetWidth: 100, // Increase these values
+        targetHeight: 100,
+      );
+      return BitmapDescriptor.fromBytes(iconBytes);
     } catch (e) {
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+      return BitmapDescriptor.defaultMarker;
     }
   }
 
@@ -2194,7 +2181,7 @@ class _MapScreenState extends State<MapScreen>
           final Uint8List bytes = response.bodyBytes;
 
           final ui.Codec codec = await ui.instantiateImageCodec(bytes,
-              targetWidth: 30, targetHeight: 50);
+              targetWidth: 80, targetHeight: 80);
           final ui.FrameInfo frameInfo = await codec.getNextFrame();
           final ByteData? byteData =
               await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
@@ -2708,8 +2695,8 @@ class _MapScreenState extends State<MapScreen>
                                   padding: const EdgeInsets.only(
                                       left: 10, right: 10),
                                   child: SizedBox(
-                                    height:
-                                        101, // THIS FIXED HEIGHT IS CAUSING OVERFLOW
+                                    height: 120, // Changed from 101
+
                                     child: ListView.builder(
                                         scrollDirection: Axis.horizontal,
                                         clipBehavior: Clip.none,
@@ -2956,12 +2943,15 @@ class _MapScreenState extends State<MapScreen>
                                                                 .start,
                                                         children: [
                                                           SizedBox(
-                                                            height: 40,
-                                                            width: 40,
+                                                            height:
+                                                                60, // Changed from 40
+                                                            width:
+                                                                60, // Changed from 40
                                                             child: Image(
                                                               image: NetworkImage(
                                                                   "${Config.imageurl}${homeApiController.homeapimodel!.categoryList![index].image}"),
-                                                              height: 40,
+                                                              height:
+                                                                  60, // Changed from 40
                                                             ),
                                                           ),
                                                           select1 == index
@@ -2997,7 +2987,7 @@ class _MapScreenState extends State<MapScreen>
                                                                                     children: [
                                                                                       Image.network(
                                                                                         "${Config.imageurl}${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.image}",
-                                                                                        height: 60,
+                                                                                        height: 100, // Changed from 60
                                                                                       ),
                                                                                       Text(
                                                                                         "${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.name}",
@@ -3605,16 +3595,19 @@ class _MapScreenState extends State<MapScreen>
                                   color: greaycolore, shape: BoxShape.circle),
                               child: decodeUid["profile_image"] == ""
                                   ? Center(
-                                      child: Text("${decodeUid["name"][0]}",
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 25)))
+                                      child: Icon(
+                                        Icons.person, // Default person icon
+                                        color: Colors.white,
+                                        size: 40, // Adjust size as needed
+                                      ),
+                                    )
                                   : ClipRRect(
                                       borderRadius: BorderRadius.circular(65),
                                       child: Image.network(
                                         "${Config.imageurl}${decodeUid["profile_image"]}",
                                         fit: BoxFit.cover,
-                                      )),
+                                      ),
+                                    ),
                             ),
                             Positioned(
                               right: 0,

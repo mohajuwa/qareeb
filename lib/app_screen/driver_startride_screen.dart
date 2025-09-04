@@ -73,7 +73,7 @@ Future<Uint8List> resizeImage(Uint8List data,
 }
 
 Future<Uint8List> getNetworkImage(String path,
-    {int targetWidth = 50, int targetHeight = 50}) async {
+    {int targetWidth = 100, int targetHeight = 100}) async {
   final completer = Completer<ImageInfo>();
   var image = NetworkImage(path);
   image.resolve(const ImageConfiguration()).addListener(
