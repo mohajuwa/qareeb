@@ -11,6 +11,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 import 'pickup_drop_point.dart';
 import '../common_code/colore_screen.dart';
 import '../common_code/common_button.dart';
@@ -206,15 +207,6 @@ class _CustomLocationSelectScreenState
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        // Text(
-                        //   "harsh savaliya",
-                        //   maxLines: 1,
-                        //   style: const TextStyle(
-                        //     color: Colors.black,
-                        //     fontSize: 14,
-                        //     overflow: TextOverflow.ellipsis,
-                        //   ),
-                        // ),
                       ],
                     ),
                   ),
@@ -226,7 +218,6 @@ class _CustomLocationSelectScreenState
       },
       position:
           LatLng(double.parse(lat.toString()), double.parse(long.toString())),
-      // icon: BitmapDescriptor.defaultMarker,
       icon: BitmapDescriptor.fromBytes(markIcon),
     ));
     setState(() {});
@@ -238,305 +229,399 @@ class _CustomLocationSelectScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.all(10),
-        child: CommonButton(
-            containcolore: theamcolore,
-            onPressed1: () {
-              if (picanddrop == false) {
-                print("++++++pickup run+++++++");
-                pickupcontroller.text = address;
+    return Consumer<ColorNotifier>(
+      builder: (context, notifier, child) {
+        return Scaffold(
+          backgroundColor: notifier.background,
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
+          floatingActionButton: Padding(
+            padding: const EdgeInsets.all(10),
+            child: CommonButton(
+                containcolore: theamcolore,
+                onPressed1: () {
+                  if (picanddrop == false) {
+                    print("++++++pickup run+++++++");
+                    pickupcontroller.text = address;
 
-                picktitle = address;
-                picksubtitle = address;
+                    picktitle = address;
+                    picksubtitle = address;
 
-                latitudepick = lat;
-                longitudepick = long;
+                    latitudepick = lat;
+                    longitudepick = long;
 
-                if (pickupcontroller.text.isNotEmpty &&
-                    dropcontroller.text.isNotEmpty) {
-                  print("++++++++++++++++done++++++++++++++++");
+                    if (pickupcontroller.text.isNotEmpty &&
+                        dropcontroller.text.isNotEmpty) {
+                      print("++++++++++++++++done++++++++++++++++");
 
-                  widget.bidding == "1"
-                      ? Get.offAll(const MapScreen(
-                          selectvihical: false,
-                        ))
-                      : widget.pagestate == true
-                          ? Navigator.pop(context, RefreshData(true))
-                          : Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => HomeScreen(
-                                        latpic: lat,
-                                        longpic: long,
-                                        latdrop: latitudedrop,
-                                        longdrop: longitudedrop,
-                                        destinationlat: destinationlat,
-                                      )),
+                      widget.bidding == "1"
+                          ? Get.offAll(const MapScreen(
+                              selectvihical: false,
+                            ))
+                          : widget.pagestate == true
+                              ? Navigator.pop(context, RefreshData(true))
+                              : Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => HomeScreen(
+                                            latpic: lat,
+                                            longpic: long,
+                                            latdrop: latitudedrop,
+                                            longdrop: longitudedrop,
+                                            destinationlat: destinationlat,
+                                          )),
+                                );
+
+                      widget.bidding == "1"
+                          ? calculateController
+                              .calculateApi(
+                                  context: context,
+                                  uid: useridgloable.toString(),
+                                  mid: mid,
+                                  mrole: mroal,
+                                  pickup_lat_lon:
+                                      "${latitudepick},${longitudepick}",
+                                  drop_lat_lon:
+                                      "${latitudedrop},${longitudedrop}",
+                                  drop_lat_lon_list: onlypass)
+                              .then(
+                              (value) {
+                                dropprice = 0;
+                                minimumfare = 0;
+                                maximumfare = 0;
+
+                                if (value["Result"] == true) {
+                                  dropprice = value["drop_price"];
+                                  minimumfare =
+                                      value["vehicle"]["minimum_fare"];
+                                  maximumfare =
+                                      value["vehicle"]["maximum_fare"];
+                                  responsemessage = value["message"];
+
+                                  tot_hour = value["tot_hour"].toString();
+                                  tot_time = value["tot_minute"].toString();
+                                  vehicle_id =
+                                      value["vehicle"]["id"].toString();
+                                  vihicalrice = double.parse(
+                                      value["drop_price"].toString());
+                                  totalkm =
+                                      double.parse(value["tot_km"].toString());
+                                  tot_secound = "0";
+
+                                  vihicalimage =
+                                      value["vehicle"]["map_img"].toString();
+                                  vihicalname =
+                                      value["vehicle"]["name"].toString();
+                                } else {
+                                  print(
+                                      "jojojojojojojojojojojojojojojojojojojojojojojojo");
+                                }
+
+                                print(
+                                    "********** dropprice **********:----- ${dropprice}");
+                                print(
+                                    "********** minimumfare **********:----- ${minimumfare}");
+                                print(
+                                    "********** maximumfare **********:----- ${maximumfare}");
+                              },
+                            )
+                          : modual_calculateController
+                              .modualcalculateApi(
+                                  context: context,
+                                  uid: useridgloable.toString(),
+                                  mid: mid,
+                                  mrole: mroal,
+                                  pickup_lat_lon:
+                                      "${latitudepick},${longitudepick}",
+                                  drop_lat_lon:
+                                      "${latitudedrop},${longitudedrop}",
+                                  drop_lat_lon_list: onlypass)
+                              .then(
+                              (value) {
+                                totalkm = double.parse(
+                                    modual_calculateController
+                                        .modualCalculateApiModel!
+                                        .caldriver![0]
+                                        .dropKm!
+                                        .toString());
+                                tot_time = modual_calculateController
+                                    .modualCalculateApiModel!
+                                    .caldriver![0]
+                                    .dropTime!
+                                    .toString();
+                                tot_hour = modual_calculateController
+                                    .modualCalculateApiModel!
+                                    .caldriver![0]
+                                    .dropHour!
+                                    .toString();
+                                tot_secound = "0";
+                                vihicalname = modual_calculateController
+                                    .modualCalculateApiModel!
+                                    .caldriver![0]
+                                    .name!
+                                    .toString();
+                                vihicalimage = modual_calculateController
+                                    .modualCalculateApiModel!
+                                    .caldriver![0]
+                                    .image!
+                                    .toString();
+                                vehicle_id = modual_calculateController
+                                    .modualCalculateApiModel!.caldriver![0].id!
+                                    .toString();
+                              },
                             );
+                    } else {
+                      Get.back();
+                    }
+                  } else {
+                    print("++++++drop run+++++++");
+                    dropcontroller.text = address;
 
-                  widget.bidding == "1"
-                      ? calculateController
-                          .calculateApi(
-                              context: context,
-                              uid: useridgloable.toString(),
-                              mid: mid,
-                              mrole: mroal,
-                              pickup_lat_lon:
-                                  "${latitudepick},${longitudepick}",
-                              drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: onlypass)
-                          .then(
-                          (value) {
-                            dropprice = 0;
-                            minimumfare = 0;
-                            maximumfare = 0;
+                    droptitle = address;
+                    dropsubtitle = address;
 
-                            if (value["Result"] == true) {
-                              dropprice = value["drop_price"];
-                              minimumfare = value["vehicle"]["minimum_fare"];
-                              maximumfare = value["vehicle"]["maximum_fare"];
-                              responsemessage = value["message"];
+                    latitudedrop = lat;
+                    longitudedrop = long;
+                    if (pickupcontroller.text.isNotEmpty &&
+                        dropcontroller.text.isNotEmpty) {
+                      print("++++++++++++++++done++++++++++++++++");
 
-                              tot_hour = value["tot_hour"].toString();
-                              tot_time = value["tot_minute"].toString();
-                              vehicle_id = value["vehicle"]["id"].toString();
-                              vihicalrice =
-                                  double.parse(value["drop_price"].toString());
-                              totalkm =
-                                  double.parse(value["tot_km"].toString());
-                              tot_secound = "0";
+                      widget.bidding == "1"
+                          ? Get.offAll(const MapScreen(
+                              selectvihical: false,
+                            ))
+                          : widget.pagestate == true
+                              ? Navigator.pop(context, RefreshData(true))
+                              : Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => HomeScreen(
+                                            latpic: latitudepick,
+                                            longpic: longitudepick,
+                                            latdrop: lat,
+                                            longdrop: long,
+                                            destinationlat: destinationlat,
+                                          )),
+                                );
+                      widget.bidding == "1"
+                          ? calculateController
+                              .calculateApi(
+                                  context: context,
+                                  uid: useridgloable.toString(),
+                                  mid: mid,
+                                  mrole: mroal,
+                                  pickup_lat_lon:
+                                      "${latitudepick},${longitudepick}",
+                                  drop_lat_lon:
+                                      "${latitudedrop},${longitudedrop}",
+                                  drop_lat_lon_list: onlypass)
+                              .then(
+                              (value) {
+                                dropprice = 0;
+                                minimumfare = 0;
+                                maximumfare = 0;
 
-                              vihicalimage =
-                                  value["vehicle"]["map_img"].toString();
-                              vihicalname = value["vehicle"]["name"].toString();
-                            } else {
-                              print(
-                                  "jojojojojojojojojojojojojojojojojojojojojojojojo");
-                            }
+                                if (value["Result"] == true) {
+                                  amountresponse = "true";
+                                  dropprice = value["drop_price"];
+                                  minimumfare =
+                                      value["vehicle"]["minimum_fare"];
+                                  maximumfare =
+                                      value["vehicle"]["maximum_fare"];
+                                  responsemessage = value["message"];
 
-                            print(
-                                "********** dropprice **********:----- ${dropprice}");
-                            print(
-                                "********** minimumfare **********:----- ${minimumfare}");
-                            print(
-                                "********** maximumfare **********:----- ${maximumfare}");
-                          },
-                        )
-                      : modual_calculateController
-                          .modualcalculateApi(
-                              context: context,
-                              uid: useridgloable.toString(),
-                              mid: mid,
-                              mrole: mroal,
-                              pickup_lat_lon:
-                                  "${latitudepick},${longitudepick}",
-                              drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: onlypass)
-                          .then(
-                          (value) {
-                            totalkm = double.parse(modual_calculateController
-                                .modualCalculateApiModel!.caldriver![0].dropKm!
-                                .toString());
-                            tot_time = modual_calculateController
-                                .modualCalculateApiModel!
-                                .caldriver![0]
-                                .dropTime!
-                                .toString();
-                            tot_hour = modual_calculateController
-                                .modualCalculateApiModel!
-                                .caldriver![0]
-                                .dropHour!
-                                .toString();
-                            tot_secound = "0";
-                            vihicalname = modual_calculateController
-                                .modualCalculateApiModel!.caldriver![0].name!
-                                .toString();
-                            vihicalimage = modual_calculateController
-                                .modualCalculateApiModel!.caldriver![0].image!
-                                .toString();
-                            vehicle_id = modual_calculateController
-                                .modualCalculateApiModel!.caldriver![0].id!
-                                .toString();
-                          },
-                        );
-                } else {
-                  Get.back();
-                }
-              } else {
-                print("++++++drop run+++++++");
-                dropcontroller.text = address;
+                                  tot_hour = value["tot_hour"].toString();
+                                  tot_time = value["tot_minute"].toString();
+                                  vehicle_id =
+                                      value["vehicle"]["id"].toString();
+                                  vihicalrice = double.parse(
+                                      value["drop_price"].toString());
+                                  totalkm =
+                                      double.parse(value["tot_km"].toString());
+                                  tot_secound = "0";
 
-                droptitle = address;
-                dropsubtitle = address;
+                                  vihicalimage =
+                                      value["vehicle"]["map_img"].toString();
+                                  vihicalname =
+                                      value["vehicle"]["name"].toString();
 
-                latitudedrop = lat;
-                longitudedrop = long;
-                if (pickupcontroller.text.isNotEmpty &&
-                    dropcontroller.text.isNotEmpty) {
-                  print("++++++++++++++++done++++++++++++++++");
+                                  print(".......>>>>>> ${tot_hour}");
+                                  print(".......>>>>>> ${tot_time}");
+                                  print(".......>>>>>> ${vehicle_id}");
+                                  print(".......>>>>>> ${vihicalrice}");
+                                  print(".......>>>>>> ${totalkm}");
+                                  print(".......>>>>>> ${totalkm}");
+                                  print(".......>>>>>> ${totalkm}");
+                                } else {
+                                  amountresponse = "false";
+                                  print(
+                                      "jojojojojojojojojojojojojojojojojojojojojojojojo");
+                                }
 
-                  widget.bidding == "1"
-                      ? Get.offAll(const MapScreen(
-                          selectvihical: false,
-                        ))
-                      : widget.pagestate == true
-                          ? Navigator.pop(context, RefreshData(true))
-                          : Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => HomeScreen(
-                                        latpic: latitudepick,
-                                        longpic: longitudepick,
-                                        latdrop: lat,
-                                        longdrop: long,
-                                        destinationlat: destinationlat,
-                                      )),
+                                print(
+                                    "********** dropprice **********:----- ${dropprice}");
+                                print(
+                                    "********** minimumfare **********:----- ${minimumfare}");
+                                print(
+                                    "********** maximumfare **********:----- ${maximumfare}");
+                              },
+                            )
+                          : modual_calculateController
+                              .modualcalculateApi(
+                                  context: context,
+                                  uid: useridgloable.toString(),
+                                  mid: mid,
+                                  mrole: mroal,
+                                  pickup_lat_lon:
+                                      "${latitudepick},${longitudepick}",
+                                  drop_lat_lon:
+                                      "${latitudedrop},${longitudedrop}",
+                                  drop_lat_lon_list: onlypass)
+                              .then(
+                              (value) {
+                                totalkm = double.parse(
+                                    modual_calculateController
+                                        .modualCalculateApiModel!
+                                        .caldriver![0]
+                                        .dropKm!
+                                        .toString());
+                                tot_time = modual_calculateController
+                                    .modualCalculateApiModel!
+                                    .caldriver![0]
+                                    .dropTime!
+                                    .toString();
+                                tot_hour = modual_calculateController
+                                    .modualCalculateApiModel!
+                                    .caldriver![0]
+                                    .dropHour!
+                                    .toString();
+                                tot_secound = "0";
+                                vihicalname = modual_calculateController
+                                    .modualCalculateApiModel!
+                                    .caldriver![0]
+                                    .name!
+                                    .toString();
+                                vihicalimage = modual_calculateController
+                                    .modualCalculateApiModel!
+                                    .caldriver![0]
+                                    .image!
+                                    .toString();
+                                vehicle_id = modual_calculateController
+                                    .modualCalculateApiModel!.caldriver![0].id!
+                                    .toString();
+
+                                print(
+                                    "GOGOGOGOGOGOGOGOGOGOGOGOG:- ${midseconde}");
+                                print(
+                                    "GOGOGOGOGOGOGOGOGOGOGOGOG:- ${vihicalrice}");
+                              },
                             );
-                  widget.bidding == "1"
-                      ? calculateController
-                          .calculateApi(
-                              context: context,
-                              uid: useridgloable.toString(),
-                              mid: mid,
-                              mrole: mroal,
-                              pickup_lat_lon:
-                                  "${latitudepick},${longitudepick}",
-                              drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: onlypass)
-                          .then(
-                          (value) {
-                            dropprice = 0;
-                            minimumfare = 0;
-                            maximumfare = 0;
+                    } else {
+                      Get.back();
+                    }
+                  }
+                },
+                context: context,
+                txt1: "Done"),
+          ),
+          body: Stack(
+            children: [
+              // Your original GoogleMap - UNCHANGED
+              GoogleMap(
+                gestureRecognizers: {
+                  Factory<OneSequenceGestureRecognizer>(
+                      () => EagerGestureRecognizer())
+                },
+                initialCameraPosition: const CameraPosition(
+                    target: LatLng(15.3694, 44.1910), zoom: 13),
+                mapType: MapType.normal,
+                markers: Set<Marker>.of(markers),
+                onTap: (argument) {
+                  setState(() {});
+                  _onAddMarkerButtonPressed(
+                      argument.latitude, argument.longitude);
+                  lat = argument.latitude;
+                  long = argument.longitude;
+                  getCurrentLatAndLong(
+                    lat,
+                    long,
+                  );
+                  print("**lato****:--- ${lat}");
+                  print("+++longo+++:--- ${long}");
+                  print("--------------------------------------");
+                  print("hfgjhvhjwfvhjuyfvf:-=---  ${address}");
+                },
+                myLocationEnabled: false,
+                zoomGesturesEnabled: true,
+                tiltGesturesEnabled: true,
+                zoomControlsEnabled: true,
+                onMapCreated: (controller) {
+                  setState(() {
+                    controller.setMapStyle(themeForMap);
+                    mapController1 = controller;
+                  });
+                  _moveToUserLocation(controller);
+                },
+              ),
 
-                            if (value["Result"] == true) {
-                              amountresponse = "true";
-                              dropprice = value["drop_price"];
-                              minimumfare = value["vehicle"]["minimum_fare"];
-                              maximumfare = value["vehicle"]["maximum_fare"];
-                              responsemessage = value["message"];
+              // Only UI improvements overlay
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                left: 16,
+                child: GestureDetector(
+                  onTap: () => Get.back(),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: notifier.background,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.arrow_back_ios_new,
+                      color: notifier.textColor,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
 
-                              tot_hour = value["tot_hour"].toString();
-                              tot_time = value["tot_minute"].toString();
-                              vehicle_id = value["vehicle"]["id"].toString();
-                              vihicalrice =
-                                  double.parse(value["drop_price"].toString());
-                              totalkm =
-                                  double.parse(value["tot_km"].toString());
-                              tot_secound = "0";
-
-                              vihicalimage =
-                                  value["vehicle"]["map_img"].toString();
-                              vihicalname = value["vehicle"]["name"].toString();
-
-                              print(".......>>>>>> ${tot_hour}");
-                              print(".......>>>>>> ${tot_time}");
-                              print(".......>>>>>> ${vehicle_id}");
-                              print(".......>>>>>> ${vihicalrice}");
-                              print(".......>>>>>> ${totalkm}");
-                              print(".......>>>>>> ${totalkm}");
-                              print(".......>>>>>> ${totalkm}");
-                            } else {
-                              amountresponse = "false";
-                              print(
-                                  "jojojojojojojojojojojojojojojojojojojojojojojojo");
-                            }
-
-                            print(
-                                "********** dropprice **********:----- ${dropprice}");
-                            print(
-                                "********** minimumfare **********:----- ${minimumfare}");
-                            print(
-                                "********** maximumfare **********:----- ${maximumfare}");
-                          },
-                        )
-                      : modual_calculateController
-                          .modualcalculateApi(
-                              context: context,
-                              uid: useridgloable.toString(),
-                              mid: mid,
-                              mrole: mroal,
-                              pickup_lat_lon:
-                                  "${latitudepick},${longitudepick}",
-                              drop_lat_lon: "${latitudedrop},${longitudedrop}",
-                              drop_lat_lon_list: onlypass)
-                          .then(
-                          (value) {
-                            // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
-                            // vihicalrice = double.parse(modual_calculateController.modualCalculateApiModel!.caldriver![0].dropPrice!.toString());
-                            totalkm = double.parse(modual_calculateController
-                                .modualCalculateApiModel!.caldriver![0].dropKm!
-                                .toString());
-                            tot_time = modual_calculateController
-                                .modualCalculateApiModel!
-                                .caldriver![0]
-                                .dropTime!
-                                .toString();
-                            tot_hour = modual_calculateController
-                                .modualCalculateApiModel!
-                                .caldriver![0]
-                                .dropHour!
-                                .toString();
-                            tot_secound = "0";
-                            vihicalname = modual_calculateController
-                                .modualCalculateApiModel!.caldriver![0].name!
-                                .toString();
-                            vihicalimage = modual_calculateController
-                                .modualCalculateApiModel!.caldriver![0].image!
-                                .toString();
-                            vehicle_id = modual_calculateController
-                                .modualCalculateApiModel!.caldriver![0].id!
-                                .toString();
-
-                            print("GOGOGOGOGOGOGOGOGOGOGOGOG:- ${midseconde}");
-                            print("GOGOGOGOGOGOGOGOGOGOGOGOG:- ${vihicalrice}");
-                          },
-                        );
-                } else {
-                  Get.back();
-                }
-              }
-            },
-            context: context,
-            txt1: "Done"),
-      ),
-      body: GoogleMap(
-        gestureRecognizers: {
-          Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())
-        },
-        initialCameraPosition:
-            const CameraPosition(target: LatLng(15.3694, 44.1910), zoom: 13),
-        mapType: MapType.normal,
-        markers: Set<Marker>.of(markers),
-        onTap: (argument) {
-          setState(() {});
-          _onAddMarkerButtonPressed(argument.latitude, argument.longitude);
-          lat = argument.latitude;
-          long = argument.longitude;
-          getCurrentLatAndLong(
-            lat,
-            long,
-          );
-          print("**lato****:--- ${lat}");
-          print("+++longo+++:--- ${long}");
-          print("--------------------------------------");
-          print("hfgjhvhjwfvhjuyfvf:-=---  ${address}");
-        },
-        myLocationEnabled: false,
-        zoomGesturesEnabled: true,
-        tiltGesturesEnabled: true,
-        zoomControlsEnabled: true,
-        onMapCreated: (controller) {
-          setState(() {
-            controller.setMapStyle(themeForMap);
-            mapController1 = controller;
-          });
-          _moveToUserLocation(controller);
-        },
-      ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                right: 16,
+                child: GestureDetector(
+                  onTap: () => _moveToUserLocation(mapController1),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: notifier.background,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.my_location,
+                      color: theamcolore,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

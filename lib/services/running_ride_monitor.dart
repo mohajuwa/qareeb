@@ -2,14 +2,13 @@
 
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
+import 'package:qareeb/app_screen/my_ride_screen.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
 import '../api_code/home_controller.dart';
 import '../app_screen/driver_list_screen.dart';
 import '../app_screen/home_screen.dart';
-import '../common_code/config.dart';
 
 class RunningRideMonitor {
   static RunningRideMonitor? _instance;
@@ -24,6 +23,7 @@ class RunningRideMonitor {
   String? _lastBiddingStatus;
   int? _lastBiddingRunStatus;
   bool _hasDisplayedDriverList = false; // Prevent multiple navigations
+  bool _hasDisplayedMyRide = false; // Add flag for MyRideScreen
 
   // Initialize monitoring when app starts
   void startMonitoring() {
@@ -59,10 +59,9 @@ class RunningRideMonitor {
     try {
       final homeController = Get.find<HomeApiController>();
 
-      // Check if we have home API data
       if (homeController.homeapimodel?.runnigRide![0].biddingRunStatus == 0) {
-        // Reset display flag when no ride
         _hasDisplayedDriverList = false;
+        _hasDisplayedMyRide = false; // Reset both flags
         return;
       }
 
@@ -72,38 +71,83 @@ class RunningRideMonitor {
       final currentBiddingRunStatus = runningRide.biddingRunStatus;
       final rideStatus = runningRide.status;
 
-      // Only log when status changes to reduce console spam
-      bool statusChanged = currentRideId != _lastRideId ||
-          currentBiddingStatus != _lastBiddingStatus ||
-          currentBiddingRunStatus != _lastBiddingRunStatus;
-
-      if (kDebugMode && statusChanged) {
-        print("🔍 Ride status changed:");
-        print("   ID: $currentRideId (was: $_lastRideId)");
-        print(
-            "   biddingStatus: $currentBiddingStatus (was: $_lastBiddingStatus)");
-        print(
-            "   biddingRunStatus: $currentBiddingRunStatus (was: $_lastBiddingRunStatus)");
-        print("   status: $rideStatus");
-      }
-
       // Check if we should force display DriverListScreen
       if (_shouldForceDisplayDriverList(runningRide)) {
         if (!_hasDisplayedDriverList) {
           _forceDisplayDriverList(runningRide);
           _hasDisplayedDriverList = true;
         }
+      }
+      // Check if we should force display MyRideScreen for accepted rides
+      else if (_shouldForceDisplayMyRide(runningRide)) {
+        if (!_hasDisplayedMyRide) {
+          _forceDisplayMyRide(runningRide);
+          _hasDisplayedMyRide = true;
+        }
       } else {
-        // Reset flag when conditions no longer met
         _hasDisplayedDriverList = false;
+        _hasDisplayedMyRide = false;
       }
 
-      // Update tracking variables
-      _lastRideId = currentRideId;
-      _lastBiddingStatus = currentBiddingStatus;
-      _lastBiddingRunStatus = currentBiddingRunStatus;
+      // Update tracking variables...
     } catch (e) {
       if (kDebugMode) print("Monitor error: $e");
+    }
+  }
+
+  bool _shouldForceDisplayMyRide(dynamic runningRide) {
+    // Conditions to force display MyRideScreen:
+
+    // 1. Must have active ride
+    if (runningRide.biddingRunStatus == null ||
+        runningRide.biddingRunStatus == 0) {
+      return false;
+    }
+
+    // 2. Request must be accepted (status 1 or higher, but not completed)
+    if (runningRide.status == null || runningRide.status == "0") {
+      return false; // Still pending
+    }
+
+    // 3. Don't display if already on MyRideScreen or ride-related screens
+    final currentRoute = Get.currentRoute;
+    if (currentRoute.contains('MyRideScreen') ||
+        currentRoute.contains('MapScreen') ||
+        currentRoute.contains('DriverStartrideScreen') ||
+        currentRoute.contains('RideCompletePaymentScreen')) {
+      return false;
+    }
+
+    // 4. Status should be between 1-8 (accepted but not completed)
+    final statusInt = int.tryParse(runningRide.status.toString()) ?? 0;
+    if (statusInt < 1 || statusInt >= 9) {
+      return false;
+    }
+
+    return true;
+  }
+
+  void _forceDisplayMyRide(dynamic runningRide) {
+    try {
+      if (kDebugMode) {
+        print("🚗 Forcing display of MyRideScreen for accepted ride");
+      }
+
+      // Set global variables needed for MyRideScreen
+      request_id = runningRide.id?.toString() ?? "0";
+      driver_id = runningRide.acceptedDriverId?.toString() ??
+          "0"; // Adjust field name as needed
+
+      // Navigate to MyRideScreen
+      Get.offAll(
+        () => const MyRideScreen(),
+        transition: Transition.fadeIn,
+        duration: const Duration(milliseconds: 300),
+      );
+
+      if (kDebugMode) print("✅ Navigated to MyRideScreen successfully");
+    } catch (e) {
+      if (kDebugMode) print("❌ Failed to force display MyRideScreen: $e");
     }
   }
 
