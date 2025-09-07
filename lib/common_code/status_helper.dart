@@ -12,7 +12,6 @@ class StatusHelper {
   StatusHelper._internal();
 
   // Show status page as dialog
-
   static void showStatusDialog(
     BuildContext context, {
     required StatusType statusType,
@@ -21,18 +20,22 @@ class StatusHelper {
     VoidCallback? onRetry,
     bool barrierDismissible = false,
   }) {
-    showDialog(
-      context: context,
-      barrierDismissible: barrierDismissible,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: ModernStatusPage(
+    // ✅ Changed from showDialog to Navigator push for full screen
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false, // Allows transparency
+        barrierDismissible: barrierDismissible,
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ModernStatusPage(
           statusType: statusType,
           customTitle: customTitle,
           customSubtitle: customSubtitle,
           onRetry: onRetry ?? () => Navigator.of(context).pop(),
-          isFullScreen: false,
+          isFullScreen: true, // ✅ Changed to true for full screen
         ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
       ),
     );
   }

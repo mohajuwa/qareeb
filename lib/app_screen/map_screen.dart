@@ -112,6 +112,11 @@ class _MapScreenState extends State<MapScreen>
   List<PointLatLng> _dropOffPoints = [];
   List<bool> couponadd = [];
 
+  bool _showDistanceAlert = false;
+  double _nearestVehicleDistance = 0.0;
+  String _selectedVehicleName = "";
+  String _alertMessage = "";
+
   // bool timeout = false;
   bool get isAutomaticBookingEnabled => switchValue && biddautostatus == "true";
   String get currentBookingModeDescription => isAutomaticBookingEnabled
@@ -682,6 +687,48 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
+// Check vehicle availability from API response
+  Future<void> _checkVehicleAvailability() async {
+    // Get selected vehicle name
+    if (homeApiController.homeapimodel != null &&
+        homeApiController.homeapimodel!.categoryList != null &&
+        select1 < homeApiController.homeapimodel!.categoryList!.length) {
+      _selectedVehicleName =
+          homeApiController.homeapimodel!.categoryList![select1].name ?? "";
+    }
+
+    // Check if no vehicles available (empty list from API)
+    if (vihicallocations.isEmpty && homeMapController.homeMapApiModel != null) {
+      String apiMessage = "";
+
+      // Try to get message from API response
+      try {
+        // The API returns a message when no drivers found
+        if (homeMapController.homeMapApiModel!.message != null) {
+          apiMessage = homeMapController.homeMapApiModel!.message!;
+        }
+      } catch (e) {
+        if (kDebugMode) print("Error getting API message: $e");
+      }
+
+      setState(() {
+        _showDistanceAlert = true;
+        _alertMessage = apiMessage.isNotEmpty
+            ? apiMessage
+            : "No $_selectedVehicleName drivers available in your area";
+      });
+
+      if (kDebugMode) {
+        print("🚨 No Vehicles Alert: $_alertMessage");
+      }
+    } else {
+      setState(() {
+        _showDistanceAlert = false;
+      });
+    }
+  }
+// Add this function to dismiss alert when user finds nearby vehicle
+
   pagelistApiController pagelistcontroller = Get.put(pagelistApiController());
 
   Future<Uint8List> getNetworkImage(String path,
@@ -1117,12 +1164,14 @@ class _MapScreenState extends State<MapScreen>
 
           // ✅ FAST: Add markers with optimized loading
           _addMarkersOptimized();
-
-          if (kDebugMode) {
-            print("✅ Loaded ${vihicallocations.length} vehicles optimized");
-          }
         }
       }
+      if (kDebugMode) {
+        print("✅ Vehicles loaded successfully");
+        print("📍 Total vehicles: ${vihicallocations.length}");
+      }
+
+      await _checkVehicleAvailability();
     } catch (e) {
       if (kDebugMode) {
         print("❌ Optimized vehicle loading error: $e");
@@ -2450,6 +2499,62 @@ class _MapScreenState extends State<MapScreen>
     });
   }
 
+  Widget _buildDistanceAlert() {
+    if (!_showDistanceAlert) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        border: Border.all(color: Colors.orange.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning_amber,
+            color: Colors.orange.shade700,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Vehicle Distance Alert",
+                  style: TextStyle(
+                    color: Colors.orange.shade800,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _alertMessage,
+                  style: TextStyle(
+                    color: Colors.orange.shade700,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Consider selecting a different vehicle type or wait for a closer vehicle."
+                      .tr,
+                  style: TextStyle(
+                    color: Colors.orange.shade600,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void refreshAnimation() {
     controller!.reset();
     controller!.repeat(reverse: false);
@@ -2743,6 +2848,8 @@ class _MapScreenState extends State<MapScreen>
 
                                                 await _loadVehiclesOptimized();
 
+                                                await _checkVehicleAvailability();
+
                                                 // ✅ CRITICAL: Recalculate price if pickup and drop locations exist
 
                                                 if (pickupcontroller
@@ -2759,7 +2866,8 @@ class _MapScreenState extends State<MapScreen>
                                                     statusType:
                                                         StatusType.loading,
                                                     customTitle:
-                                                        "Calculation Loading",
+                                                        "Calculation Loading"
+                                                            .tr,
                                                     customSubtitle:
                                                         "Calculating fare for this vehicle...",
                                                     barrierDismissible: true,
@@ -3309,6 +3417,15 @@ class _MapScreenState extends State<MapScreen>
                                             left: 20, right: 20),
                                         child: InkWell(
                                           onTap: () {
+                                            if (_showDistanceAlert) {
+                                              return CustomNotification.show(
+                                                message:
+                                                    "Please change vehicle type"
+                                                        .tr,
+                                                type: NotificationType.warning,
+                                              );
+                                            }
+
                                             Buttonpresebottomshhet();
                                           },
                                           child: Container(
@@ -3381,7 +3498,17 @@ class _MapScreenState extends State<MapScreen>
                                                         .bidding ==
                                                     "1"
                                                 ? () {
-                                                    // This is the bidding flow, which is correct and unchanged.
+                                                    if (_showDistanceAlert) {
+                                                      return CustomNotification
+                                                          .show(
+                                                        message:
+                                                            "Please change vehicle type"
+                                                                .tr,
+                                                        type: NotificationType
+                                                            .warning,
+                                                      );
+                                                    }
+
                                                     Buttonpresebottomshhet();
                                                   }
                                                 : () async {
@@ -3390,7 +3517,16 @@ class _MapScreenState extends State<MapScreen>
                                                       print(
                                                           "Requesting non-bidding ride...");
                                                     }
-
+                                                    if (_showDistanceAlert) {
+                                                      return CustomNotification
+                                                          .show(
+                                                        message:
+                                                            "Please change vehicle type"
+                                                                .tr,
+                                                        type: NotificationType
+                                                            .warning,
+                                                      );
+                                                    }
                                                     // 1. Show a loading indicator to the user.
                                                     StatusHelper.showStatusDialog(
                                                         context,
@@ -3543,7 +3679,13 @@ class _MapScreenState extends State<MapScreen>
                           ),
                         );
                       },
-                    )
+                    ),
+                    Positioned(
+                      top: 110,
+                      left: 0,
+                      right: 0,
+                      child: _buildDistanceAlert(),
+                    ),
                   ],
                 );
         },
@@ -3700,9 +3842,10 @@ class _MapScreenState extends State<MapScreen>
                                                         height: 60,
                                                         errorBuilder: (context,
                                                             error, stackTrace) {
-                                                          if (kDebugMode)
+                                                          if (kDebugMode) {
                                                             print(
                                                                 "Profile image error: $error");
+                                                          }
                                                           return const Center(
                                                             child: Icon(
                                                               Icons
@@ -4049,7 +4192,9 @@ class _MapScreenState extends State<MapScreen>
                                                     onChanged:
                                                         (bool value) async {
                                                       if (!mounted ||
-                                                          _isDisposed) return;
+                                                          _isDisposed) {
+                                                        return;
+                                                      }
 
                                                       try {
                                                         SharedPreferences
@@ -4062,16 +4207,19 @@ class _MapScreenState extends State<MapScreen>
                                                             .isAvailable(value);
 
                                                         if (!mounted ||
-                                                            _isDisposed) return;
+                                                            _isDisposed) {
+                                                          return;
+                                                        }
                                                         setState(() =>
                                                             darkMode = value);
                                                         Get.offAll(MapScreen(
                                                             selectvihical:
                                                                 false));
                                                       } catch (e) {
-                                                        if (kDebugMode)
+                                                        if (kDebugMode) {
                                                           print(
                                                               "Dark mode switch error: $e");
+                                                        }
                                                       }
                                                     },
                                                   ),
@@ -4342,7 +4490,7 @@ class _MapScreenState extends State<MapScreen>
                                         message:
                                             "Your current request is in progress. You can either wait for it to complete or cancel to perform this action."
                                                 .tr,
-                                        type: NotificationType.info);
+                                        type: NotificationType.warning);
                                   } else {
                                     Get.back();
                                   }
@@ -5484,55 +5632,61 @@ class _MapScreenState extends State<MapScreen>
                           const SizedBox(
                             height: 10,
                           ),
-                          StatefulBuilder(
-                            builder: (context, setState) {
-                              return cancelloader
-                                  ? Center(
-                                      child: CustomLoadingWidget(),
-                                    )
-                                  : CommonOutLineButton(
-                                      bordercolore: theamcolore,
-                                      onPressed1: () {
-                                        setState(() {
-                                          isanimation = false;
-
-                                          cancelloader = true;
-                                          print(
-                                              "++CANCEL LOADER++:- ${cancelloader}");
-                                          removeRequest
-                                              .removeApi(
-                                                  uid: useridgloable.toString())
-                                              .then(
-                                            (value) {
-                                              socket.emit('AcceRemoveOther', {
-                                                'requestid': request_id,
-                                                'driverid': calculateController
-                                                    .calCulateModel!.driverId!,
+                          // Show cancel button when there's an active request
+                          (isanimation == false && request_id.isEmpty)
+                              ? const SizedBox()
+                              : StatefulBuilder(
+                                  builder: (context, setState) {
+                                    return cancelloader
+                                        ? Center(child: CustomLoadingWidget())
+                                        : CommonOutLineButton(
+                                            bordercolore: theamcolore,
+                                            onPressed1: () {
+                                              // Reset states immediately
+                                              setState(() {
+                                                isanimation = false;
+                                                cancelloader = false;
+                                                request_id = "";
                                               });
 
-                                              Future.delayed(
-                                                  Duration(microseconds: 500),
-                                                  () {
-                                                setState(() {
-                                                  setState(() {});
+                                              // Cancel timers and controllers
+                                              if (controller != null &&
+                                                  controller!.isAnimating) {
+                                                controller!.dispose();
+                                              }
+                                              cancelTimer();
+
+                                              // Make API call in background (no waiting)
+                                              removeRequest
+                                                  .removeApi(
+                                                      uid: useridgloable
+                                                          .toString())
+                                                  .then((value) {
+                                                socket.emit('AcceRemoveOther', {
+                                                  'requestid': request_id,
+                                                  'driverid':
+                                                      calculateController
+                                                          .calCulateModel!
+                                                          .driverId!,
                                                 });
+
+                                                // ✅ Force immediate exit
+                                                while (Navigator.of(context)
+                                                    .canPop()) {
+                                                  Navigator.of(context).pop();
+                                                }
+                                              }).catchError((error) {
+                                                if (kDebugMode) {
+                                                  print(
+                                                      "Cancel API error: $error");
+                                                }
                                               });
-                                              Get.back();
-                                              cancelloader = false;
                                             },
+                                            context: context,
+                                            txt1: "Cancel Request".tr,
                                           );
-                                          if (controller != null &&
-                                              controller!.isAnimating) {
-                                            print("vgvgvgvgvgvgvgvgvgvgv");
-                                            controller!.dispose();
-                                          }
-                                          cancelTimer();
-                                        });
-                                      },
-                                      context: context,
-                                      txt1: "Cancel Request".tr);
-                            },
-                          ),
+                                  },
+                                ),
                           const SizedBox(
                             height: 10,
                           ),

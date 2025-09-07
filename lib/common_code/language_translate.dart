@@ -364,7 +364,11 @@ class AppTranslations extends Translations {
           "Something went wrong! Please try again.":
               "Something went wrong! Please try again.",
           "Server error. Please try again later.":
-              "Server error. Please try again later."
+              "Server error. Please try again later.",
+          "Calculation Loading": "Calculation Loading",
+          "Calculating fare for this vehicle...":
+              "Calculating fare for this vehicle...",
+          "Please change vehicle type": "Please change vehicle type",
         },
         'ur_arabic': {
           "Captains are busy": "القادة مشغولون",
@@ -725,7 +729,11 @@ class AppTranslations extends Translations {
           "Something went wrong! Please try again.":
               "حدث خطأ ما! يرجى المحاولة مرة أخرى.",
           "Server error. Please try again later.":
-              "خطأ في الخادم. يرجى المحاولة لاحقاً."
+              "خطأ في الخادم. يرجى المحاولة لاحقاً.",
+          "Calculation Loading": "جارٍ حساب الأجرة...",
+          "Calculating fare for this vehicle...":
+              "جارٍ حساب الأجرة لهذه المركبة",
+          "Please change vehicle type": "يرجى تغيير نوع المركبة أولاً",
         }
       };
 }

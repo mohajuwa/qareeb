@@ -57,6 +57,7 @@ class RunningRideMonitor {
 
   void _checkRunningRide() {
     try {
+      Get.put(HomeApiController());
       final homeController = Get.find<HomeApiController>();
 
       if (homeController.homeapimodel?.runnigRide![0].biddingRunStatus == 0) {
@@ -262,6 +263,7 @@ class RunningRideMonitor {
   // Check if currently has active bidding
   bool get hasActiveBidding {
     try {
+      Get.put(HomeApiController());
       final homeController = Get.find<HomeApiController>();
       if (homeController.homeapimodel?.runnigRide?.isEmpty != false) {
         return false;
@@ -277,6 +279,8 @@ class RunningRideMonitor {
   // Get current ride status for debugging
   Map<String, dynamic> get currentRideStatus {
     try {
+      Get.put(HomeApiController());
+
       final homeController = Get.find<HomeApiController>();
       if (homeController.homeapimodel?.runnigRide?.isEmpty != false) {
         return {"hasRide": false};

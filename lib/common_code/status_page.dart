@@ -237,11 +237,11 @@ class _ModernStatusPageState extends State<ModernStatusPage>
     try {
       return notifier.isDark
           ? SvgPicture.asset(
-              "assets/svgpicture/app_logo_light.svg",
+              "assets/svgpicture/app_logo_light.svg".tr,
               fit: BoxFit.contain,
             )
           : SvgPicture.asset(
-              "assets/svgpicture/app_logo_dark.svg",
+              "assets/svgpicture/app_logo_dark.svg".tr,
               fit: BoxFit.contain,
             );
     } catch (e) {
@@ -254,7 +254,7 @@ class _ModernStatusPageState extends State<ModernStatusPage>
         ),
         child: Center(
           child: Text(
-            "ق", // ✅ Arabic letter for Qareeb
+            "ق".tr, // ✅ Arabic letter for Qareeb
 
             style: TextStyle(
               fontSize: 40,
@@ -449,84 +449,91 @@ class _ModernStatusPageState extends State<ModernStatusPage>
     switch (type) {
       case StatusType.noInternet:
         return StatusConfig(
-          title: "No Internet Connection", // ✅ Will be localized with .tr
+          title: "No Internet Connection".tr, // ✅ Will be localized with .tr
 
           subtitle:
-              "Please check your internet connection and try again. Make sure you're connected to Wi-Fi or mobile data.",
+              "Please check your internet connection and try again. Make sure you're connected to Wi-Fi or mobile data."
+                  .tr,
 
           icon: Icons.wifi_off_rounded,
 
           accentColor: Colors.orange,
 
-          buttonText: "Try Again",
+          buttonText: "Try Again".tr,
 
           buttonIcon: Icons.refresh,
         );
 
       case StatusType.serverError:
         return StatusConfig(
-          title: "Server Error",
+          title: "Server Error".tr,
           subtitle:
-              "We're having trouble connecting to our servers. Our team has been notified and is working on a fix.",
+              "We're having trouble connecting to our servers. Our team has been notified and is working on a fix."
+                  .tr,
           icon: Icons.dns_rounded,
           accentColor: Colors.red,
-          buttonText: "Retry",
+          buttonText: "Retry".tr,
           buttonIcon: Icons.refresh,
         );
 
       case StatusType.timeout:
         return StatusConfig(
-          title: "Request Timeout",
+          title: "Request Timeout".tr,
           subtitle:
-              "The request is taking longer than expected. Please check your connection and try again.",
+              "The request is taking longer than expected. Please check your connection and try again."
+                  .tr,
           icon: Icons.access_time_rounded,
           accentColor: Colors.amber,
-          buttonText: "Try Again",
+          buttonText: "Try Again".tr,
           buttonIcon: Icons.refresh,
         );
 
       case StatusType.noData:
         return StatusConfig(
-          title: "No Data Available",
+          title: "No Data Available".tr,
           subtitle:
-              "There's no data to show right now. Please try again later or refresh to check for updates.",
+              "There's no data to show right now. Please try again later or refresh to check for updates."
+                  .tr,
           icon: Icons.inbox_rounded,
           accentColor: theamcolore,
-          buttonText: "Refresh",
+          buttonText: "Refresh".tr,
           buttonIcon: Icons.refresh,
         );
 
       case StatusType.loading:
         return StatusConfig(
-          title: "Loading...",
+          title: "Loading...".tr,
           subtitle:
-              "Please wait while we fetch your data. This should only take a moment.",
+              "Please wait while we fetch your data. This should only take a moment."
+                  .tr,
           icon: Icons.hourglass_empty_rounded,
           accentColor: theamcolore,
-          buttonText: "Loading",
+          buttonText: "Loading".tr,
           buttonIcon: Icons.hourglass_empty,
         );
 
       case StatusType.maintenance:
         return StatusConfig(
-          title: "Under Maintenance",
+          title: "Under Maintenance".tr,
           subtitle:
-              "We're currently performing maintenance to improve your experience. Please try again shortly.",
+              "We're currently performing maintenance to improve your experience. Please try again shortly."
+                  .tr,
           icon: Icons.build_rounded,
           accentColor: Colors.purple,
-          buttonText: "Check Again",
+          buttonText: "Check Again".tr,
           buttonIcon: Icons.refresh,
         );
 
       case StatusType.error:
       default:
         return StatusConfig(
-          title: "Something Went Wrong",
+          title: "Something Went Wrong".tr,
           subtitle:
-              "We encountered an unexpected error. Please try again or contact support if the problem persists.",
+              "We encountered an unexpected error. Please try again or contact support if the problem persists."
+                  .tr,
           icon: Icons.error_outline_rounded,
           accentColor: Colors.red,
-          buttonText: "Try Again",
+          buttonText: "Try Again".tr,
           buttonIcon: Icons.refresh,
         );
     }

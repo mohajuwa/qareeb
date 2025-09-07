@@ -67,10 +67,7 @@ Widget CommonOutLineButton(
               text: TextSpan(children: [
             TextSpan(
                 text: txt1,
-                style: TextStyle(
-                    fontSize: 15,
-                    color: notifier.textColor,
-                    fontFamily: "Khebrat")),
+                style: TextStyle(fontSize: 15, fontFamily: "Khebrat")),
             TextSpan(
                 text: txt2,
                 style: TextStyle(
