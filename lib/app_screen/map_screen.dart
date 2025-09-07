@@ -3555,514 +3555,711 @@ class _MapScreenState extends State<MapScreen>
     return Drawer(
       width: 280,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
+        borderRadius: BorderRadius.horizontal(right: Radius.circular(25)),
       ),
       backgroundColor: notifier.containercolore,
       child: GetBuilder<HomeApiController>(
         builder: (homeApiController) {
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 60,
-                ),
-                Row(
-                  children: [
-                    Spacer(),
-                    Text(
-                      "V 1.3",
-                      style: TextStyle(
-                          color: Colors.grey.withOpacity(0.8),
-                          fontWeight: FontWeight.bold),
+          return Column(
+            children: [
+              // Ultra Modern Header with Glassmorphism
+              Container(
+                height: 180,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      theamcolore,
+                      theamcolore.withOpacity(0.8),
+                      theamcolore.withOpacity(0.6),
+                    ],
+                    stops: [0.0, 0.5, 1.0],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(35),
+                    bottomRight: Radius.circular(35),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theamcolore.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
                     ),
-                    SizedBox(width: 10),
                   ],
                 ),
-                homeApiController.isLoading
-                    ? Center(child: CustomLoadingWidget())
-                    : InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const ProfileScreen(),
-                          ));
-                        },
-                        child: Stack(
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 15),
+                    child: Column(
+                      children: [
+                        // Version Badge with Modern Design
+                        Row(
                           children: [
+                            const Spacer(),
                             Container(
-                              height: 80,
-                              width: 80,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                  color: greaycolore, shape: BoxShape.circle),
-                              child: decodeUid["profile_image"] == ""
-                                  ? Center(
-                                      child: Icon(
-                                        Icons.person, // Default person icon
-                                        color: Colors.white,
-                                        size: 40, // Adjust size as needed
-                                      ),
-                                    )
-                                  : ClipRRect(
-                                      borderRadius: BorderRadius.circular(65),
-                                      child: Image.network(
-                                        "${Config.imageurl}${decodeUid["profile_image"]}",
-                                        fit: BoxFit.cover,
+                                color: Colors.white.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.4),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Text(
+                                "V 1.3",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 11,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Profile Section with Enhanced Design
+                        homeApiController.isLoading
+                            ? Container(
+                                height: 90,
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              )
+                            : Expanded(
+                                child: Row(
+                                  children: [
+                                    // Profile Image with Premium Styling
+                                    InkWell(
+                                      onTap: () {
+                                        Navigator.of(context)
+                                            .push(MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ProfileScreen(),
+                                        ));
+                                      },
+                                      borderRadius: BorderRadius.circular(30),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(3),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.white.withOpacity(0.3),
+                                              Colors.white.withOpacity(0.1),
+                                            ],
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.2),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Stack(
+                                          children: [
+                                            Container(
+                                              height: 60,
+                                              width: 60,
+                                              decoration: const BoxDecoration(
+                                                color: Colors.white,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: decodeUid != null &&
+                                                      decodeUid[
+                                                              "profile_image"] !=
+                                                          null &&
+                                                      decodeUid[
+                                                              "profile_image"] !=
+                                                          ""
+                                                  ? ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              30),
+                                                      child: Image.network(
+                                                        "${Config.imageurl}${decodeUid["profile_image"]}",
+                                                        fit: BoxFit.cover,
+                                                        width: 60,
+                                                        height: 60,
+                                                        errorBuilder: (context,
+                                                            error, stackTrace) {
+                                                          if (kDebugMode)
+                                                            print(
+                                                                "Profile image error: $error");
+                                                          return const Center(
+                                                            child: Icon(
+                                                              Icons
+                                                                  .person_rounded,
+                                                              color:
+                                                                  Colors.grey,
+                                                              size: 30,
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    )
+                                                  : const Center(
+                                                      child: Icon(
+                                                        Icons.person_rounded,
+                                                        color: Colors.grey,
+                                                        size: 30,
+                                                      ),
+                                                    ),
+                                            ),
+                                            Positioned(
+                                              right: -2,
+                                              bottom: -2,
+                                              child: Container(
+                                                height: 18,
+                                                width: 18,
+                                                decoration: BoxDecoration(
+                                                  color: theamcolore,
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(
+                                                      color: Colors.white,
+                                                      width: 2),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withOpacity(0.2),
+                                                      blurRadius: 4,
+                                                      offset:
+                                                          const Offset(0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: const Center(
+                                                  child: Icon(
+                                                    Icons.edit,
+                                                    color: Colors.white,
+                                                    size: 10,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
+                                    const SizedBox(width: 15),
+
+                                    // User Info Section
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          // Username with Modern Typography
+                                          Text(
+                                            username == ""
+                                                ? "Guest User"
+                                                : username,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 17,
+                                              letterSpacing: 0.3,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+
+                                          // Rating with Enhanced Design
+                                          homeApiController.homeapimodel !=
+                                                      null &&
+                                                  homeApiController
+                                                          .homeapimodel!
+                                                          .cusRating !=
+                                                      null
+                                              ? Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 3),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12),
+                                                    color: Colors.white
+                                                        .withOpacity(0.25),
+                                                    border: Border.all(
+                                                      color: Colors.white
+                                                          .withOpacity(0.4),
+                                                      width: 1,
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      SvgPicture.asset(
+                                                        "assets/svgpicture/star-fill.svg",
+                                                        height: 12,
+                                                        color: Colors.amber,
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        "${homeApiController.homeapimodel!.cusRating!.avgStar}",
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                )
+                                              : const SizedBox(height: 20),
+                                          const SizedBox(height: 4),
+
+                                          // View Profile Link
+                                          InkWell(
+                                            onTap: () {
+                                              Navigator.of(context)
+                                                  .push(MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const ProfileScreen(),
+                                              ));
+                                            },
+                                            child: Text(
+                                              "View profile",
+                                              style: TextStyle(
+                                                color: Colors.white
+                                                    .withOpacity(0.9),
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                decoration:
+                                                    TextDecoration.underline,
+                                                decorationColor: Colors.white
+                                                    .withOpacity(0.9),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Elegant Divider
+              Container(
+                height: 1,
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.grey.withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+
+              // Scrollable Menu Section with Enhanced Design
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Column(
+                      children: [
+                        // Main Menu Items with Premium Design
+                        ...List.generate(drowertitle.length, (index) {
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 3),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.transparent,
                             ),
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                height: 25,
-                                width: 25,
-                                decoration: BoxDecoration(
-                                    color: theamcolore,
-                                    border: Border.all(color: Colors.white),
-                                    shape: BoxShape.circle),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.add,
-                                    color: Colors.white,
-                                    size: 20,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                splashColor: theamcolore.withOpacity(0.1),
+                                highlightColor: theamcolore.withOpacity(0.05),
+                                onTap: () {
+                                  switch (index) {
+                                    case 0:
+                                      pickupcontroller.text = "";
+                                      dropcontroller.text = "";
+                                      latitudepick = 0.00;
+                                      longitudepick = 0.00;
+                                      latitudedrop = 0.00;
+                                      longitudedrop = 0.00;
+                                      picktitle = "";
+                                      picksubtitle = "";
+                                      droptitle = "";
+                                      dropsubtitle = "";
+                                      droptitlelist = [];
+                                      Get.offAll(const MapScreen(
+                                          selectvihical: false));
+                                    case 1:
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                        builder: (context) =>
+                                            const MyRideScreen(),
+                                      ));
+                                    case 2:
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                        builder: (context) =>
+                                            const TopUpScreen(),
+                                      ));
+                                    case 3:
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ProfileScreen(),
+                                      ));
+                                    case 4:
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                        builder: (context) =>
+                                            const LanguageScreen(),
+                                      ));
+                                    case 5:
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ReferAndEarn(),
+                                      ));
+                                    case 6:
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                        builder: (context) => const FaqScreen(),
+                                      ));
+                                    case 7:
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                        builder: (context) =>
+                                            const NotificationScreen(),
+                                      ));
+                                    case 8:
+                                      break;
+                                  }
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 15, vertical: 13),
+                                  child: Row(
+                                    children: [
+                                      // Ultra Modern Icon Container
+                                      Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              theamcolore.withOpacity(0.15),
+                                              theamcolore.withOpacity(0.08),
+                                            ],
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: theamcolore.withOpacity(0.2),
+                                            width: 1,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  theamcolore.withOpacity(0.1),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: SvgPicture.asset(
+                                            "${drowerimage[index]}",
+                                            height: 20,
+                                            color: theamcolore,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 15),
+
+                                      // Menu Title with Modern Typography
+                                      Expanded(
+                                        child: Text(
+                                          "${drowertitle[index]}".tr,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: notifier.textColor,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.2,
+                                          ),
+                                        ),
+                                      ),
+
+                                      // Premium Switch or Arrow
+                                      index == 8
+                                          ? Container(
+                                              padding: const EdgeInsets.all(2),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                                color: notifier.isDark
+                                                    ? theamcolore
+                                                        .withOpacity(0.2)
+                                                    : Colors.grey
+                                                        .withOpacity(0.1),
+                                              ),
+                                              child: SizedBox(
+                                                height: 24,
+                                                width: 40,
+                                                child: Transform.scale(
+                                                  scale: 0.8,
+                                                  child: CupertinoSwitch(
+                                                    value: notifier.isDark,
+                                                    activeColor: theamcolore,
+                                                    trackColor: Colors.grey
+                                                        .withOpacity(0.3),
+                                                    onChanged:
+                                                        (bool value) async {
+                                                      if (!mounted ||
+                                                          _isDisposed) return;
+
+                                                      try {
+                                                        SharedPreferences
+                                                            prefs =
+                                                            await SharedPreferences
+                                                                .getInstance();
+                                                        await prefs.setBool(
+                                                            "isDark", value);
+                                                        notifier
+                                                            .isAvailable(value);
+
+                                                        if (!mounted ||
+                                                            _isDisposed) return;
+                                                        setState(() =>
+                                                            darkMode = value);
+                                                        Get.offAll(MapScreen(
+                                                            selectvihical:
+                                                                false));
+                                                      } catch (e) {
+                                                        if (kDebugMode)
+                                                          print(
+                                                              "Dark mode switch error: $e");
+                                                      }
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                          : Container(
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey
+                                                    .withOpacity(0.1),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Icon(
+                                                Icons.arrow_forward_ios_rounded,
+                                                color: Colors.grey
+                                                    .withOpacity(0.7),
+                                                size: 12,
+                                              ),
+                                            ),
+                                    ],
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Center(
-                  child: Container(
-                    height: 25,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: theamcolore)),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.only(top: 2),
-                          child: Text(
-                            "${homeApiController.homeapimodel!.cusRating!.avgStar}",
-                            style: TextStyle(
-                                fontSize: 14, color: notifier.textColor),
-                          ),
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        SvgPicture.asset(
-                          "assets/svgpicture/star-fill.svg",
-                          height: 12,
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Text(
-                  username == "" ? "" : username,
-                  style: TextStyle(
-                      color: notifier.textColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20),
-                ),
-                const SizedBox(
-                  height: 5,
-                ),
-                InkWell(
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const ProfileScreen(),
-                      ));
-                    },
-                    child: Text(
-                      "View profile",
-                      style: TextStyle(color: theamcolore),
-                    )),
-                const SizedBox(
-                  height: 5,
-                ),
-                Divider(
-                  color: Colors.grey.withOpacity(0.4),
-                ),
-                ListView.builder(
-                  padding: EdgeInsets.zero,
-                  shrinkWrap: true,
-                  itemCount: drowertitle.length,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    return InkWell(
-                      onTap: () {
-                        switch (index) {
-                          case 0:
-                            pickupcontroller.text = "";
-                            dropcontroller.text = "";
-                            latitudepick = 0.00;
-                            longitudepick = 0.00;
-                            latitudedrop = 0.00;
-                            longitudedrop = 0.00;
-                            picktitle = "";
-                            picksubtitle = "";
-                            droptitle = "";
-                            dropsubtitle = "";
-                            droptitlelist = [];
-                            Get.offAll(const MapScreen(
-                              selectvihical: false,
-                            ));
-                          case 1:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const MyRideScreen(),
-                            ));
-                          case 2:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const TopUpScreen(),
-                            ));
-                          case 3:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const ProfileScreen(),
-                            ));
-                          case 4:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const LanguageScreen(),
-                            ));
-                          case 5:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const ReferAndEarn(),
-                            ));
-                          case 6:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const FaqScreen(),
-                            ));
-                          case 7:
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const NotificationScreen(),
-                            ));
-                          case 8:
-                            return;
-                          case 9:
-                            return;
-                        }
-                      },
-                      child: Padding(
-                        padding:
-                            const EdgeInsets.only(left: 10, right: 10, top: 20),
-                        child: Column(
-                          children: [
-                            Row(
+                          );
+                        }),
+
+                        // Pages List Section with Enhanced Design
+                        GetBuilder<pagelistApiController>(
+                          builder: (pagelistcontroller) {
+                            if (pagelistcontroller.isLoading ||
+                                pagelistcontroller.pageListApiiimodel == null ||
+                                pagelistcontroller
+                                        .pageListApiiimodel!.pagesList ==
+                                    null ||
+                                pagelistcontroller
+                                    .pageListApiiimodel!.pagesList!.isEmpty) {
+                              return const SizedBox();
+                            }
+
+                            return Column(
                               children: [
-                                SvgPicture.asset(
-                                  "${drowerimage[index]}",
-                                  height: 25,
-                                  color: notifier.textColor,
-                                ),
-                                const SizedBox(
-                                  width: 15,
-                                ),
-                                Text(
-                                  "${drowertitle[index]}".tr,
-                                  style: TextStyle(
-                                      fontSize: 16, color: notifier.textColor),
-                                ),
-                                const Spacer(),
-                                index == 8
-                                    ? // Replace the existing dark mode switch with this code:
-
-                                    SizedBox(
-                                        height: 20,
-                                        width: 30,
-                                        child: Transform.scale(
-                                          scale: 0.8,
-                                          child: CupertinoSwitch(
-                                            value: notifier.isDark,
-                                            activeColor: theamcolore,
-                                            onChanged: (bool value) async {
-                                              if (!mounted || _isDisposed) {
-                                                return;
-                                              }
-
-                                              try {
-                                                SharedPreferences prefs =
-                                                    await SharedPreferences
-                                                        .getInstance();
-
-                                                await prefs.setBool(
-                                                    "isDark", value);
-
-                                                notifier.isAvailable(value);
-
-                                                if (!mounted || _isDisposed) {
-                                                  return;
-                                                }
-
-                                                setState(() {
-                                                  darkMode = value;
-                                                });
-
-                                                Get.offAll(MapScreen(
-                                                    selectvihical: false));
-                                              } catch (e) {
-                                                if (kDebugMode) {
-                                                  print(
-                                                      "Dark mode switch error: $e");
-                                                }
-                                              }
-                                            },
-                                          ),
-                                        ),
-                                      )
-                                    : const SizedBox(),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                GetBuilder<pagelistApiController>(
-                  builder: (pagelistcontroller) {
-                    return pagelistcontroller.isLoading
-                        ? const SizedBox()
-                        : ListView.separated(
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: EdgeInsets.zero,
-                            separatorBuilder: (context, index) {
-                              return const SizedBox(width: 5);
-                            },
-                            shrinkWrap: true,
-                            scrollDirection: Axis.vertical,
-                            itemCount: pagelistcontroller
-                                .pageListApiiimodel!.pagesList!.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            Page_List_description(
-                                                title:
-                                                    pagelistcontroller
-                                                        .pageListApiiimodel!
-                                                        .pagesList![index]
-                                                        .title
-                                                        .toString(),
-                                                description: pagelistcontroller
-                                                    .pageListApiiimodel!
-                                                    .pagesList![index]
-                                                    .description
-                                                    .toString()),
-                                      ));
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: 10, right: 10, top: 20),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          SvgPicture.asset(
-                                            "assets/svgpicture/pagelist.svg",
-                                            height: 25,
-                                            color: notifier.textColor,
-                                          ),
-                                          const SizedBox(
-                                            width: 15,
-                                          ),
-                                          Text(
-                                            "${pagelistcontroller.pageListApiiimodel!.pagesList![index].title}",
-                                            style: TextStyle(
-                                                fontSize: 16,
-                                                color: notifier.textColor),
-                                          ),
-                                          const Spacer(),
-                                        ],
-                                      ),
-                                    ],
+                                // Section Divider
+                                Container(
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 10),
+                                  height: 1,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.transparent,
+                                        Colors.grey.withOpacity(0.2),
+                                        Colors.transparent,
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              );
-                            });
-                  },
-                ),
-                InkWell(
-                  onTap: () {
-                    loginSharedPreferencesSet(true);
-                    Get.offAll(const OnbordingScreen());
-                  },
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.only(left: 10, right: 10, top: 20),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            SvgPicture.asset(
-                              "assets/svgpicture/logout.svg",
-                              height: 25,
-                              color: Colors.red,
-                            ),
-                            const SizedBox(
-                              width: 15,
-                            ),
-                            Text(
-                              "Log Out".tr,
-                              style: const TextStyle(
-                                  fontSize: 16, color: Colors.red),
-                            ),
-                            const Spacer(),
-                          ],
+
+                                // Dynamic Pages
+                                ...List.generate(
+                                  pagelistcontroller
+                                      .pageListApiiimodel!.pagesList!.length,
+                                  (index) {
+                                    return Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          horizontal: 15, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        color: Colors.transparent,
+                                      ),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          splashColor:
+                                              theamcolore.withOpacity(0.1),
+                                          highlightColor:
+                                              theamcolore.withOpacity(0.05),
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    Page_List_description(
+                                                  title: pagelistcontroller
+                                                      .pageListApiiimodel!
+                                                      .pagesList![index]
+                                                      .title
+                                                      .toString(),
+                                                  description:
+                                                      pagelistcontroller
+                                                          .pageListApiiimodel!
+                                                          .pagesList![index]
+                                                          .description
+                                                          .toString(),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 15, vertical: 12),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  width: 36,
+                                                  height: 36,
+                                                  decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      begin: Alignment.topLeft,
+                                                      end:
+                                                          Alignment.bottomRight,
+                                                      colors: [
+                                                        Colors.blue
+                                                            .withOpacity(0.15),
+                                                        Colors.blue
+                                                            .withOpacity(0.08),
+                                                      ],
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    border: Border.all(
+                                                      color: Colors.blue
+                                                          .withOpacity(0.2),
+                                                      width: 1,
+                                                    ),
+                                                  ),
+                                                  child: Center(
+                                                    child: SvgPicture.asset(
+                                                      "assets/svgpicture/pagelist.svg",
+                                                      height: 16,
+                                                      color: Colors.blue,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Text(
+                                                    "${pagelistcontroller.pageListApiiimodel!.pagesList![index].title}"
+                                                        .tr,
+                                                    style: TextStyle(
+                                                      fontSize: 15,
+                                                      color: notifier.textColor,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      letterSpacing: 0.1,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.all(4),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.1),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Icon(
+                                                    Icons
+                                                        .arrow_forward_ios_rounded,
+                                                    color: Colors.grey
+                                                        .withOpacity(0.7),
+                                                    size: 10,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            );
+                          },
                         ),
+
+                        const SizedBox(height: 25),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(
-                  height: 20,
-                ),
-                InkWell(
-                  onTap: () {
-                    Get.back();
-                    showModalBottomSheet<void>(
-                      shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(15),
-                              topLeft: Radius.circular(15))),
-                      context: context,
-                      builder: (BuildContext context) {
-                        return Container(
-                          height: 200,
-                          decoration: BoxDecoration(
-                              color: notifier.containercolore,
-                              borderRadius: const BorderRadius.only(
-                                  topRight: Radius.circular(15),
-                                  topLeft: Radius.circular(15))),
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 15, right: 15),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                const SizedBox(
-                                  height: 25,
-                                ),
-                                Text('Delete Account'.tr,
-                                    style: TextStyle(
-                                        color: theamcolore,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20)),
-                                const SizedBox(height: 12.5),
-                                const Divider(
-                                  color: Colors.grey,
-                                ),
-                                const SizedBox(
-                                  height: 12.5,
-                                ),
-                                Text(
-                                    'Are you sure you want to delete account?'
-                                        .tr,
-                                    style: TextStyle(
-                                        color: notifier.textColor,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold)),
-                                const SizedBox(
-                                  height: 25,
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    ElevatedButton(
-                                      style: ButtonStyle(
-                                          fixedSize:
-                                              const WidgetStatePropertyAll(
-                                                  Size(130, 40)),
-                                          elevation:
-                                              const WidgetStatePropertyAll(0),
-                                          shape: WidgetStatePropertyAll(
-                                              RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10))),
-                                          backgroundColor:
-                                              const WidgetStatePropertyAll(
-                                                  Colors.white)),
-                                      onPressed: () => Navigator.pop(context),
-                                      child: Text('Cancel'.tr.tr,
-                                          style: const TextStyle(
-                                              color: Colors.black)),
-                                    ),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
-                                    ElevatedButton(
-                                      style: ButtonStyle(
-                                          fixedSize:
-                                              const WidgetStatePropertyAll(
-                                                  Size(130, 40)),
-                                          elevation:
-                                              const WidgetStatePropertyAll(0),
-                                          shape: WidgetStatePropertyAll(
-                                              RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10))),
-                                          backgroundColor:
-                                              WidgetStatePropertyAll(
-                                                  theamcolore)),
-                                      onPressed: () => {
-                                        loginSharedPreferencesSet(true),
-                                        deleteAccount
-                                            .deleteaccountApi(
-                                                id: useridgloable.toString())
-                                            .then(
-                                          (value) {
-                                            Get.offAll(OnbordingScreen());
-                                          },
-                                        ),
-                                      },
-                                      child: Text('Yes,Remove'.tr,
-                                          style: const TextStyle(
-                                              color: Colors.white)),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10, right: 10),
-                    child: Container(
-                      height: 40,
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.red),
-                          borderRadius: BorderRadius.circular(15)),
-                      child: Center(
-                        child: Text(
-                          "Delete account",
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 30,
-                ),
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),

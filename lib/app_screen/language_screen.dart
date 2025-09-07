@@ -19,253 +19,320 @@ class LanguageScreen extends StatefulWidget {
   State<LanguageScreen> createState() => _LanguageScreenState();
 }
 
-class _LanguageScreenState extends State<LanguageScreen> {
+class _LanguageScreenState extends State<LanguageScreen>
+    with TickerProviderStateMixin {
   int value = 0;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  // Only Arabic and English
   List languageimage = [
     'assets/L-Arabic.png',
     'assets/L-English.png',
   ];
 
   List languagetext = [
-    'Arabic',
+    'العربية',
     'English',
   ];
 
-  List languagetext1 = [
-    'ur_arabic',
-    'en_English',
+  // Proper locale codes that match what we set
+  List<Locale> languageLocales = [
+    const Locale('ur', 'arabic'), // Arabic
+    const Locale('en', 'US'), // English
   ];
 
   language1 language11 = Get.put(language1());
 
   fun() {
-    for (int a = 0; a < languagetext1.length; a++) {
-      print(languagetext1[a]);
-      print(Get.locale);
-      if (languagetext1[a].toString().compareTo(Get.locale.toString()) == 0) {
+    print("Current locale: ${Get.locale}");
+
+    // Check current locale and set the correct selection
+    for (int a = 0; a < languageLocales.length; a++) {
+      print("Checking: ${languageLocales[a]}");
+
+      // Compare language codes properly
+      if (Get.locale != null &&
+          Get.locale!.languageCode == languageLocales[a].languageCode) {
         setState(() {
           value = a;
+          print("Selected language index: $a");
         });
-      } else {}
+        break;
+      }
     }
   }
 
   @override
   void initState() {
-    fun();
-    // TODO: implement initState
     super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+    fun();
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   ColorNotifier notifier = ColorNotifier();
+
   @override
   Widget build(BuildContext context) {
     notifier = Provider.of<ColorNotifier>(context, listen: true);
     return Scaffold(
+      backgroundColor: notifier.background,
       appBar: AppBar(
-        backgroundColor: notifier.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        // automaticallyImplyLeading: false,
         iconTheme: IconThemeData(color: notifier.textColor),
-        title: Text('Language'.tr,
-            style: TextStyle(
-                color: notifier.textColor,
-                fontFamily: "SofiaProBold",
-                fontSize: 18)),
+        title: Text(
+          'Language'.tr,
+          style: TextStyle(
+            color: notifier.textColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
       ),
-      backgroundColor: notifier.background,
-      body: Column(
-        children: [
-          Container(
-            height: 610,
-            decoration: BoxDecoration(
-              // color: notifier.languagecontainercolore,
-              borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(15), topLeft: Radius.circular(15)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    ListView.builder(
-                      shrinkWrap: true,
-                      scrollDirection: Axis.vertical,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: 8,
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Text
+              Text(
+                'Choose your preferred language'.tr,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: notifier.textColor.withOpacity(0.7),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              // Language Options - FIXED: itemCount now matches array length
+              Expanded(
+                child: ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: languagetext.length, // FIXED: was 8, now 2
+                  itemBuilder: (context, index) {
+                    return AnimatedContainer(
+                      duration: Duration(milliseconds: 200 + (index * 100)),
+                      curve: Curves.easeOutBack,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          splashColor: theamcolore.withOpacity(0.1),
+                          highlightColor: theamcolore.withOpacity(0.05),
                           onTap: () {
                             setState(() {
                               value = index;
                             });
 
-                            if (index == 2) {
+                            // Handle RTL for Arabic
+                            if (index == 0) {
+                              // Arabic
                               setState(() {
                                 rtl = true;
-                                print("++++++++++if+++++++++++${rtl}");
+                                print(
+                                    "++++++++++Arabic selected+++++++++++${rtl}");
                               });
                             } else {
+                              // English
                               setState(() {
                                 rtl = false;
-                                print("+++++++++++else++++++++++${rtl}");
+                                print(
+                                    "+++++++++++English selected++++++++++${rtl}");
                               });
                             }
 
+                            // Update locale and go back
                             switch (index) {
                               case 0:
                                 Get.updateLocale(const Locale('ur', 'arabic'));
-                                Get.back();
-                                // homeController.setselectpage(0);
                                 break;
                               case 1:
-                                Get.updateLocale(const Locale('en', 'English'));
-                                Get.back();
-                                // homeController.setselectpage(0);
+                                Get.updateLocale(const Locale('en', 'US'));
                                 break;
                             }
+
+                            // Delay to show selection animation then go back
+                            Future.delayed(const Duration(milliseconds: 300),
+                                () {
+                              Get.back();
+                            });
                           },
-                          // onTap: () {},
                           child: Container(
-                            height: 60,
-                            width: Get.width,
-                            margin: const EdgeInsets.symmetric(vertical: 7),
+                            padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: value == index
-                                      ? theamcolore
-                                      : Colors.transparent,
-                                ),
-                                color: notifier.languagecontainercolore,
-                                borderRadius: BorderRadius.circular(10)),
-                            child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        height: 45,
-                                        width: 60,
-                                        margin: const EdgeInsets.symmetric(
-                                            horizontal: 10),
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent,
-                                          borderRadius:
-                                              BorderRadius.circular(100),
-                                        ),
-                                        child: Center(
-                                          child: Container(
-                                            height: 32,
-                                            width: 32,
-                                            decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                              image: AssetImage(
-                                                  languageimage[index]),
-                                            )),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(languagetext[index],
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 14,
-                                                  color: notifier.textColor)),
-                                        ],
-                                      ),
-                                      const Spacer(),
-                                      CheckboxListTile(index),
-                                      const SizedBox(
-                                        width: 15,
+                              color: value == index
+                                  ? theamcolore.withOpacity(0.1)
+                                  : notifier.containercolore,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: value == index
+                                    ? theamcolore
+                                    : Colors.grey.withOpacity(0.2),
+                                width: value == index ? 2 : 1,
+                              ),
+                              boxShadow: [
+                                if (value == index)
+                                  BoxShadow(
+                                    color: theamcolore.withOpacity(0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                // Language Flag/Icon
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
-                                ]),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.asset(
+                                      languageimage[index],
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        // Fallback icon if image not found
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                            color: theamcolore.withOpacity(0.2),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(
+                                            Icons.language,
+                                            color: theamcolore,
+                                            size: 24,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+
+                                // Language Name
+                                Expanded(
+                                  child: Text(
+                                    languagetext[index],
+                                    style: TextStyle(
+                                      fontWeight: value == index
+                                          ? FontWeight.bold
+                                          : FontWeight.w600,
+                                      fontSize: 18,
+                                      color: value == index
+                                          ? theamcolore
+                                          : notifier.textColor,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ),
+
+                                // Selection Indicator
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: value == index
+                                        ? theamcolore
+                                        : Colors.grey.withOpacity(0.3),
+                                    border: Border.all(
+                                      color: value == index
+                                          ? theamcolore
+                                          : Colors.grey.withOpacity(0.5),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 200),
+                                    child: value == index
+                                        ? const Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: 16,
+                                            key: ValueKey('selected'),
+                                          )
+                                        : const SizedBox(
+                                            key: ValueKey('unselected'),
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      },
-                    )
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Bottom Info Text
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theamcolore.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theamcolore.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: theamcolore,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'App will restart to apply language changes'.tr,
+                        style: TextStyle(
+                          color: theamcolore,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget CheckboxListTile(int index) {
-    return SizedBox(
-      height: 24,
-      width: 24,
-      child: ElevatedButton(
-        onPressed: () {
-          value = index;
-          setState(() {
-            value = index;
-
-            switch (index) {
-              case 0:
-                Get.updateLocale(const Locale('en', 'English'));
-                Get.back();
-                break;
-              case 1:
-                Get.updateLocale(const Locale('en', 'spanse'));
-                Get.back();
-                break;
-              case 2:
-                Get.updateLocale(const Locale('en', 'arabic'));
-                Get.back();
-                break;
-              case 3:
-                Get.updateLocale(const Locale('en', 'Hindi'));
-                Get.back();
-                break;
-              case 4:
-                Get.updateLocale(const Locale('en', 'Gujarati'));
-                Get.back();
-                break;
-              case 5:
-                Get.updateLocale(const Locale('en', 'African'));
-                Get.back();
-                break;
-              case 6:
-                Get.updateLocale(const Locale('en', 'Bangali'));
-                Get.back();
-                break;
-              case 7:
-                Get.updateLocale(const Locale('en', 'Indonesiya'));
-                Get.back();
-            }
-          });
-        },
-        // onPressed: () {
-        //
-        // },
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-          backgroundColor: const Color(0xffEEEEEE),
-          side: BorderSide(
-            color: (value == index) ? Colors.transparent : Colors.transparent,
-            width: (value == index) ? 2 : 2,
+            ],
           ),
-          padding: const EdgeInsets.all(0),
         ),
-        child: Center(
-            child: Icon(
-          Icons.check,
-          color: value == index ? Colors.black : Colors.transparent,
-          size: 18,
-        )),
       ),
     );
   }
