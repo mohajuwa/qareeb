@@ -3,10 +3,13 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:qareeb/api_code/vihical_driver_detail_api_controller.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
 import 'package:qareeb/app_screen/my_ride_screen.dart';
 import 'package:qareeb/app_screen/pickup_drop_point.dart';
+import 'package:qareeb/app_screen/driver_detail_screen.dart';
 import '../api_code/home_controller.dart';
+import '../api_code/check_active_ride_api_controller.dart';
 import '../app_screen/driver_list_screen.dart';
 import '../app_screen/home_screen.dart';
 
@@ -22,8 +25,10 @@ class RunningRideMonitor {
   String? _lastRideId;
   String? _lastBiddingStatus;
   int? _lastBiddingRunStatus;
-  bool _hasDisplayedDriverList = false; // Prevent multiple navigations
-  bool _hasDisplayedMyRide = false; // Add flag for MyRideScreen
+  bool _hasDisplayedDriverList =
+      false; // Prevent multiple navigations to DriverListScreen
+  bool _hasDisplayedDriverDetail =
+      false; // Prevent multiple navigations to DriverDetailScreen
 
   // Initialize monitoring when app starts
   void startMonitoring() {
@@ -31,13 +36,14 @@ class RunningRideMonitor {
 
     _isMonitoring = true;
     _hasDisplayedDriverList = false;
+    _hasDisplayedDriverDetail = false;
 
     if (kDebugMode) print("🚗 Starting running ride monitor...");
 
     // Check immediately
     _checkRunningRide();
 
-    // Increase interval to reduce performance impact
+    // Check every 8 seconds
     _monitorTimer = Timer.periodic(const Duration(seconds: 8), (timer) {
       _checkRunningRide();
     });
@@ -51,109 +57,57 @@ class RunningRideMonitor {
     _lastBiddingStatus = null;
     _lastBiddingRunStatus = null;
     _hasDisplayedDriverList = false;
+    _hasDisplayedDriverDetail = false;
 
     if (kDebugMode) print("🛑 Stopped running ride monitor");
   }
 
   void _checkRunningRide() {
     try {
+      if (kDebugMode) print("🔍 RunningRideMonitor: Starting check...");
+
       Get.put(HomeApiController());
       final homeController = Get.find<HomeApiController>();
 
-      if (homeController.homeapimodel?.runnigRide![0].biddingRunStatus == 0) {
-        _hasDisplayedDriverList = false;
-        _hasDisplayedMyRide = false; // Reset both flags
-        return;
-      }
+      if (kDebugMode)
+        print(
+            "🔍 HomeController found: ${homeController.homeapimodel != null}");
 
-      final runningRide = homeController.homeapimodel!.runnigRide![0];
-      final currentRideId = runningRide.id?.toString();
-      final currentBiddingStatus = runningRide.biddingStatus;
-      final currentBiddingRunStatus = runningRide.biddingRunStatus;
-      final rideStatus = runningRide.status;
+      // STEP 1: Check for pending rides with bidding (ONLY uses homeapimodel data)
+      if (homeController.homeapimodel?.runnigRide != null &&
+          homeController.homeapimodel!.runnigRide!.isNotEmpty) {
+        final runningRide = homeController.homeapimodel!.runnigRide![0];
 
-      // Check if we should force display DriverListScreen
-      if (_shouldForceDisplayDriverList(runningRide)) {
-        if (!_hasDisplayedDriverList) {
-          _forceDisplayDriverList(runningRide);
-          _hasDisplayedDriverList = true;
+        if (runningRide.biddingRunStatus != null &&
+            runningRide.biddingRunStatus != 0) {
+          if (_shouldForceDisplayDriverList(runningRide)) {
+            if (!_hasDisplayedDriverList) {
+              _forceDisplayDriverListFromHomeModel(runningRide);
+              _hasDisplayedDriverList = true;
+              _hasDisplayedDriverDetail = false; // Reset other flag
+            }
+            return; // Exit early - handling pending ride from homeapimodel
+          }
         }
       }
-      // Check if we should force display MyRideScreen for accepted rides
-      else if (_shouldForceDisplayMyRide(runningRide)) {
-        if (!_hasDisplayedMyRide) {
-          _forceDisplayMyRide(runningRide);
-          _hasDisplayedMyRide = true;
-        }
-      } else {
-        _hasDisplayedDriverList = false;
-        _hasDisplayedMyRide = false;
-      }
 
-      // Update tracking variables...
+      // STEP 2: If no pending rides in homeapimodel, check for accepted rides via CheckActiveRide API
+      if (kDebugMode)
+        print(
+            "🔍 No pending rides in homeapimodel - checking for active rides via API");
+
+      _checkForActiveRideViaApi();
     } catch (e) {
       if (kDebugMode) print("Monitor error: $e");
     }
   }
 
-  bool _shouldForceDisplayMyRide(dynamic runningRide) {
-    // Conditions to force display MyRideScreen:
-
-    // 1. Must have active ride
-    if (runningRide.biddingRunStatus == null ||
-        runningRide.biddingRunStatus == 0) {
-      return false;
-    }
-
-    // 2. Request must be accepted (status 1 or higher, but not completed)
-    if (runningRide.status == null || runningRide.status == "0") {
-      return false; // Still pending
-    }
-
-    // 3. Don't display if already on MyRideScreen or ride-related screens
-    final currentRoute = Get.currentRoute;
-    if (currentRoute.contains('MyRideScreen') ||
-        currentRoute.contains('MapScreen') ||
-        currentRoute.contains('DriverStartrideScreen') ||
-        currentRoute.contains('RideCompletePaymentScreen')) {
-      return false;
-    }
-
-    // 4. Status should be between 1-8 (accepted but not completed)
-    final statusInt = int.tryParse(runningRide.status.toString()) ?? 0;
-    if (statusInt < 1 || statusInt >= 9) {
-      return false;
-    }
-
-    return true;
-  }
-
-  void _forceDisplayMyRide(dynamic runningRide) {
-    try {
-      if (kDebugMode) {
-        print("🚗 Forcing display of MyRideScreen for accepted ride");
-      }
-
-      // Set global variables needed for MyRideScreen
-      request_id = runningRide.id?.toString() ?? "0";
-      driver_id = runningRide.acceptedDriverId?.toString() ??
-          "0"; // Adjust field name as needed
-
-      // Navigate to MyRideScreen
-      Get.offAll(
-        () => const MyRideScreen(),
-        transition: Transition.fadeIn,
-        duration: const Duration(milliseconds: 300),
-      );
-
-      if (kDebugMode) print("✅ Navigated to MyRideScreen successfully");
-    } catch (e) {
-      if (kDebugMode) print("❌ Failed to force display MyRideScreen: $e");
-    }
-  }
+  // ====================================================================
+  // DRIVER LIST SCREEN LOGIC - ONLY USES homeapimodel DATA
+  // ====================================================================
 
   bool _shouldForceDisplayDriverList(dynamic runningRide) {
-    // Conditions to force display DriverListScreen:
+    // This method ONLY works with homeapimodel data
 
     // 1. Must have bidding enabled and active
     if (runningRide.biddingRunStatus == null ||
@@ -189,31 +143,34 @@ class RunningRideMonitor {
     return true;
   }
 
-  void _forceDisplayDriverList(dynamic runningRide) {
+  void _forceDisplayDriverListFromHomeModel(dynamic runningRide) {
     try {
-      if (kDebugMode) print("🚀 Forcing display of DriverListScreen");
+      if (kDebugMode)
+        print("🚀 Forcing display of DriverListScreen from homeapimodel data");
 
-      // Restore the ride data to global variables
-      _restoreRideData(runningRide);
+      // Restore ride data from homeapimodel to global variables
+      _restoreRideDataFromHomeModel(runningRide);
 
-      // Load bidding data
-      _loadBiddingData(runningRide);
+      // Load bidding data using homeapimodel
+      _loadBiddingDataFromHomeModel(runningRide);
 
-      // Navigate to DriverListScreen with proper cleanup
+      // Navigate to DriverListScreen
       Get.offAll(
         () => const DriverListScreen(),
         transition: Transition.fadeIn,
         duration: const Duration(milliseconds: 300),
       );
 
-      if (kDebugMode) print("✅ Navigated to DriverListScreen successfully");
+      if (kDebugMode)
+        print("✅ Navigated to DriverListScreen from homeapimodel data");
     } catch (e) {
       if (kDebugMode) print("❌ Failed to force display DriverListScreen: $e");
     }
   }
 
-  void _restoreRideData(dynamic runningRide) {
+  void _restoreRideDataFromHomeModel(dynamic runningRide) {
     try {
+      // Extract data from homeapimodel for DriverListScreen
       request_id = runningRide.id?.toString() ?? "0";
       priceyourfare = runningRide.price ?? 0;
 
@@ -225,15 +182,17 @@ class RunningRideMonitor {
       tot_hour = runningRide.totHour?.toString() ?? "0";
       tot_time = runningRide.totMinute?.toString() ?? "0";
 
-      if (kDebugMode) print("✅ Restored ride data for request_id: $request_id");
+      if (kDebugMode)
+        print(
+            "✅ Restored ride data from homeapimodel for request_id: $request_id");
     } catch (e) {
-      if (kDebugMode) print("Error restoring ride data: $e");
+      if (kDebugMode) print("Error restoring ride data from homeapimodel: $e");
     }
   }
 
-  void _loadBiddingData(dynamic runningRide) {
+  void _loadBiddingDataFromHomeModel(dynamic runningRide) {
     try {
-      // Emit socket to load current bidding data
+      // Emit socket to load current bidding data from homeapimodel
       socket.emit('load_bidding_data', {
         'uid': useridgloable,
         'request_id': runningRide.id.toString(),
@@ -241,12 +200,126 @@ class RunningRideMonitor {
       });
 
       if (kDebugMode) {
-        print("📡 Emitted load_bidding_data for request: ${runningRide.id}");
+        print(
+            "📡 Emitted load_bidding_data from homeapimodel for request: ${runningRide.id}");
       }
     } catch (e) {
-      if (kDebugMode) print("Error loading bidding data: $e");
+      if (kDebugMode) print("Error loading bidding data from homeapimodel: $e");
     }
   }
+
+  // ====================================================================
+  // DRIVER DETAIL SCREEN LOGIC - USES CheckActiveRide API
+  // ====================================================================
+
+  void _checkForActiveRideViaApi() {
+    try {
+      // Don't make duplicate calls if we already displayed or are on ride screens
+      final currentRoute = Get.currentRoute;
+      if (currentRoute.contains('DriverDetailScreen') ||
+          currentRoute.contains('DriverStartrideScreen') ||
+          currentRoute.contains('RideCompletePaymentScreen') ||
+          _hasDisplayedDriverDetail) {
+        if (kDebugMode)
+          print(
+              "🔍 Already on ride screen or displayed DriverDetail, skipping API call");
+        return;
+      }
+
+      if (kDebugMode) print("🔍 Making CheckActiveRide API call");
+
+      final checkActiveRideController = Get.put(CheckActiveRideApiController());
+
+      if (kDebugMode) {
+        print("🔍 CheckActiveRide API parameters:");
+        print("   uid: $useridgloable");
+      }
+
+      // Make API call with only user ID - this is separate from homeapimodel
+      checkActiveRideController
+          .checkActiveRide(
+        uid: useridgloable.toString(),
+      )
+          .then((response) {
+        if (kDebugMode)
+          print("✅ CheckActiveRide API response received: $response");
+
+        // Check if API returned active ride data
+        if (checkActiveRideController.activeRideModel != null &&
+            checkActiveRideController.activeRideModel!.result == true) {
+          final driverDetail =
+              checkActiveRideController.activeRideModel!.acceptedDDetail!;
+
+          // Check if this is an active accepted ride (status 1-8)
+          final statusInt = int.tryParse(driverDetail.status.toString()) ?? 0;
+          if (statusInt >= 1 && statusInt < 9) {
+            if (kDebugMode) {
+              print("🚗 Found active ride via CheckActiveRide API:");
+              print(
+                  "   Driver: ${driverDetail.firstName} ${driverDetail.lastName}");
+              print("   Status: ${driverDetail.status}");
+              print("   Request ID: ${driverDetail.id}");
+              print(
+                  "   Location: ${driverDetail.latitude}, ${driverDetail.longitude}");
+            }
+
+            // Set global variables from API response
+            request_id = driverDetail.id?.toString() ?? "0";
+            driver_id = driverDetail.dId?.toString() ?? "0";
+
+            // Navigate to DriverDetailScreen with API data
+            Get.offAll(
+              () => DriverDetailScreen(
+                lat: double.tryParse(driverDetail.latitude ?? "0") ?? 0.0,
+                long: double.tryParse(driverDetail.longitude ?? "0") ?? 0.0,
+              ),
+              transition: Transition.fadeIn,
+              duration: const Duration(milliseconds: 300),
+            );
+
+            Future.delayed(const Duration(milliseconds: 300), () {
+              final vihicalDriverDetailApiController =
+                  Get.put(VihicalDriverDetailApiController());
+
+              vihicalDriverDetailApiController.vihicaldriverdetailapi(
+                uid: useridgloable.toString(),
+                d_id: driver_id,
+                request_id: request_id,
+              );
+            });
+
+            _hasDisplayedDriverDetail = true;
+            _hasDisplayedDriverList = false; // Reset other flag
+            if (kDebugMode)
+              print(
+                  "✅ Navigated to DriverDetailScreen from CheckActiveRide API");
+          } else {
+            if (kDebugMode) print("🔍 Ride status not active: $statusInt");
+            _resetFlags();
+          }
+        } else {
+          if (kDebugMode)
+            print("🔍 No active ride found via CheckActiveRide API");
+          _resetFlags();
+        }
+      }).catchError((error) {
+        if (kDebugMode) print("❌ CheckActiveRide API error: $error");
+        _resetFlags();
+      });
+    } catch (e) {
+      if (kDebugMode) print("Error in _checkForActiveRideViaApi: $e");
+      _resetFlags();
+    }
+  }
+
+  void _resetFlags() {
+    _hasDisplayedDriverList = false;
+    _hasDisplayedDriverDetail = false;
+  }
+
+  // ====================================================================
+  // UTILITY METHODS
+  // ====================================================================
 
   // Manual check method for specific scenarios
   void checkNow() {
@@ -254,13 +327,14 @@ class RunningRideMonitor {
     _checkRunningRide();
   }
 
-  // Reset display flag for new requests
-  void resetDisplayFlag() {
+  // Reset display flags for new requests
+  void resetDisplayFlags() {
     _hasDisplayedDriverList = false;
-    if (kDebugMode) print("🔄 Reset display flag");
+    _hasDisplayedDriverDetail = false;
+    if (kDebugMode) print("🔄 Reset all display flags");
   }
 
-  // Check if currently has active bidding
+  // Check if currently has active bidding (only uses homeapimodel)
   bool get hasActiveBidding {
     try {
       Get.put(HomeApiController());
@@ -276,7 +350,7 @@ class RunningRideMonitor {
     }
   }
 
-  // Get current ride status for debugging
+  // Get current ride status for debugging (only uses homeapimodel)
   Map<String, dynamic> get currentRideStatus {
     try {
       Get.put(HomeApiController());
@@ -294,7 +368,8 @@ class RunningRideMonitor {
         "biddingRunStatus": runningRide.biddingRunStatus,
         "status": runningRide.status,
         "shouldForceDisplay": _shouldForceDisplayDriverList(runningRide),
-        "hasDisplayed": _hasDisplayedDriverList,
+        "hasDisplayedDriverList": _hasDisplayedDriverList,
+        "hasDisplayedDriverDetail": _hasDisplayedDriverDetail,
       };
     } catch (e) {
       return {"hasRide": false, "error": e.toString()};

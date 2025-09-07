@@ -63,6 +63,9 @@ class AcceptedDDetail {
   String? passengerCapacity;
   String? prefrenceName;
   DateTime? joinDate;
+  String? latitude; // ADD THIS
+  String? longitude; // ADD THIS
+  String? mapImg; // ADD THIS (also from API)
   String? carName;
   int? totReview;
   int? totCompleteOrder;
@@ -90,11 +93,81 @@ class AcceptedDDetail {
     this.passengerCapacity,
     this.prefrenceName,
     this.joinDate,
+    this.latitude, // ADD THIS
+    this.longitude, // ADD THIS
+    this.mapImg, // ADD THIS
     this.carName,
     this.totReview,
     this.totCompleteOrder,
     this.rating,
   });
+
+  factory AcceptedDDetail.fromJson(Map<String, dynamic> json) =>
+      AcceptedDDetail(
+        id: json["id"],
+        cId: json["c_id"],
+        dId: json["d_id"],
+        price: _parseToNum(json["price"]),
+        totKm: json["tot_km"],
+        status: json["status"],
+        otp: json["otp"],
+        totHour: _parseToNum(json["tot_hour"]),
+        totMinute: _parseToNum(json["tot_minute"]),
+        profileImage: json["profile_image"],
+        vehicleImage: json["vehicle_image"],
+        firstName: json["first_name"],
+        lastName: json["last_name"],
+        primaryCcode: json["primary_ccode"],
+        primaryPhoneNo: json["primary_phoneNo"],
+        language: json["language"],
+        vehicleNumber: json["vehicle_number"],
+        carColor: json["car_color"],
+        passengerCapacity: json["passenger_capacity"],
+        prefrenceName: json["prefrence_name"],
+        joinDate: json["join_date"] == null
+            ? null
+            : DateTime.parse(json["join_date"]),
+        latitude: json["latitude"], // ADD THIS
+        longitude: json["longitude"], // ADD THIS
+        mapImg: json["map_img"], // ADD THIS
+        carName: json["car_name"],
+        totReview: _parseToInt(json["tot_review"]),
+        totCompleteOrder: _parseToInt(json["tot_complete_order"]),
+        rating: _parseToNum(json["rating"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "c_id": cId,
+        "d_id": dId,
+        "price": price,
+        "tot_km": totKm,
+        "status": status,
+        "otp": otp,
+        "tot_hour": totHour,
+        "tot_minute": totMinute,
+        "profile_image": profileImage,
+        "vehicle_image": vehicleImage,
+        "first_name": firstName,
+        "last_name": lastName,
+        "primary_ccode": primaryCcode,
+        "primary_phoneNo": primaryPhoneNo,
+        "language": language,
+        "vehicle_number": vehicleNumber,
+        "car_color": carColor,
+        "passenger_capacity": passengerCapacity,
+        "prefrence_name": prefrenceName,
+        "join_date": joinDate == null
+            ? null
+            : "${joinDate!.year.toString().padLeft(4, '0')}-${joinDate!.month.toString().padLeft(2, '0')}-${joinDate!.day.toString().padLeft(2, '0')}",
+        "latitude": latitude, // ADD THIS
+        "longitude": longitude, // ADD THIS
+        "map_img": mapImg, // ADD THIS
+        "car_name": carName,
+        "tot_review": totReview,
+        "tot_complete_order": totCompleteOrder,
+        "rating": rating,
+      };
 
   // Helper method to safely convert string to num
   static num? _parseToNum(dynamic value) {
@@ -124,67 +197,4 @@ class AcceptedDDetail {
     }
     return null;
   }
-
-  factory AcceptedDDetail.fromJson(Map<String, dynamic> json) =>
-      AcceptedDDetail(
-        id: json["id"],
-        cId: json["c_id"],
-        dId: json["d_id"],
-        price: _parseToNum(json["price"]), // 🔧 Fixed: Convert string to num
-        totKm: json["tot_km"],
-        status: json["status"],
-        otp: json["otp"],
-        totHour: _parseToNum(json["tot_hour"]), // 🔧 Fixed: Convert to num
-        totMinute: _parseToNum(json["tot_minute"]), // 🔧 Fixed: Convert to num
-        profileImage: json["profile_image"],
-        vehicleImage: json["vehicle_image"],
-        firstName: json["first_name"],
-        lastName: json["last_name"],
-        primaryCcode: json["primary_ccode"],
-        primaryPhoneNo: json["primary_phoneNo"],
-        language: json["language"],
-        vehicleNumber: json["vehicle_number"],
-        carColor: json["car_color"],
-        passengerCapacity: json["passenger_capacity"],
-        prefrenceName: json["prefrence_name"],
-        joinDate: json["join_date"] == null
-            ? null
-            : DateTime.parse(json["join_date"]),
-        carName: json["car_name"],
-        totReview: _parseToInt(json["tot_review"]), // 🔧 Fixed: Convert to int
-        totCompleteOrder:
-            _parseToInt(json["tot_complete_order"]), // 🔧 Fixed: Convert to int
-        rating:
-            _parseToNum(json["rating"]), // 🔧 Fixed: Convert string/int to num
-      );
-
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "c_id": cId,
-        "d_id": dId,
-        "price": price,
-        "tot_km": totKm,
-        "status": status,
-        "otp": otp,
-        "tot_hour": totHour,
-        "tot_minute": totMinute,
-        "profile_image": profileImage,
-        "vehicle_image": vehicleImage,
-        "first_name": firstName,
-        "last_name": lastName,
-        "primary_ccode": primaryCcode,
-        "primary_phoneNo": primaryPhoneNo,
-        "language": language,
-        "vehicle_number": vehicleNumber,
-        "car_color": carColor,
-        "passenger_capacity": passengerCapacity,
-        "prefrence_name": prefrenceName,
-        "join_date": joinDate == null
-            ? null
-            : "${joinDate!.year.toString().padLeft(4, '0')}-${joinDate!.month.toString().padLeft(2, '0')}-${joinDate!.day.toString().padLeft(2, '0')}",
-        "car_name": carName,
-        "tot_review": totReview,
-        "tot_complete_order": totCompleteOrder,
-        "rating": rating,
-      };
 }

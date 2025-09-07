@@ -1,8 +1,8 @@
 import 'package:qareeb/common_code/custom_notification.dart';
-// ignore_for_file: avoid_print
-// ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
-// ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
-// ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
+
+
+
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -34,11 +34,11 @@ import 'map_screen.dart';
 import 'my_ride_screen.dart';
 
 class DriverDetailScreen extends StatefulWidget {
-  // final String d_id;
-  // final String request_id;
+
+
   final double lat;
   final double long;
-  // const DriverDetailScreen({super.key, required this.d_id, required this.request_id, required this.lat, required this.long});
+
   const DriverDetailScreen({super.key, required this.lat, required this.long});
 
   @override
@@ -119,18 +119,18 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
 
   Future<Uint8List> resizeImage(Uint8List data,
       {required int targetWidth, required int targetHeight}) async {
-    // Decode the image
+
     final ui.Codec codec = await ui.instantiateImageCodec(data);
     final ui.FrameInfo frameInfo = await codec.getNextFrame();
 
-    // Original dimensions
+
     final int originalWidth = frameInfo.image.width;
     final int originalHeight = frameInfo.image.height;
 
-    // Calculate the aspect ratio
+
     final double aspectRatio = originalWidth / originalHeight;
 
-    // Determine the dimensions to maintain the aspect ratio
+
     int resizedWidth, resizedHeight;
     if (originalWidth > originalHeight) {
       resizedWidth = targetWidth;
@@ -140,13 +140,13 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       resizedWidth = (targetHeight * aspectRatio).round();
     }
 
-    // Resize image
+
     final ui.PictureRecorder recorder = ui.PictureRecorder();
     final Canvas canvas = Canvas(recorder);
     final Size size = Size(resizedWidth.toDouble(), resizedHeight.toDouble());
     final Rect rect = Rect.fromLTWH(0.0, 0.0, size.width, size.height);
 
-    // Paint image
+
     final Paint paint = Paint()..isAntiAlias = true;
     canvas.drawImageRect(
         frameInfo.image,
@@ -196,18 +196,18 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
     if (markers.containsKey(markerId)) {
       final Marker oldMarker = markers[markerId]!;
       print("3333333333333333333");
-      // Create a new marker with the updated position, keeping other properties same
+
       final Marker updatedMarker = oldMarker.copyWith(
-        positionParam: position, // Update the marker's position
+        positionParam: position,
       );
 
-      // setState(() {
+
 
       markers[markerId] = updatedMarker;
       setState(() {});
-      // update();
+
       print("4444444444444444444");
-      // });
+
     }
   }
 
@@ -243,26 +243,26 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
           polylineCoordinates.add(LatLng(point.latitude, point.longitude));
         }
       } else {
-        // Handle the case where no route is found
+
       }
     }
 
     addPolyLine(polylineCoordinates);
   }
 
-  // late IO.Socket socket;
+
   socketConnect() async {
     setState(() {});
-    // socket = IO.io(Config.imageurl,<String,dynamic>{
-    //   'autoConnect': false,
-    //   'transports': ['websocket'],
-    // });
+
+
+
+
     socket.connect();
 
-    // socket.onConnect((_) {
-    //   print('Connected');
-    //   socket.emit('message', 'Hello from Flutter');
-    // });
+
+
+
+
 
     _connectSocket();
   }
@@ -280,9 +280,9 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
 
     print("999999:-- ${useridgloable}");
 
-    // socket.on('test_Driver_Location$useridgloable', (test_Driver_Location) {
-    //   print("++++++ /test_Driver_Location/ ++++ :---  $test_Driver_Location");
-    // });
+
+
+
     socket.on('V_Driver_Location$useridgloable', (V_Driver_Location) {
       print("++++++ /V_Driver_Location111/ ++++ :---  $V_Driver_Location");
       print(
@@ -345,7 +345,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
             d_id: Vehicle_D_IAmHere["uid"].toString(),
             request_id: Vehicle_D_IAmHere["request_id"].toString(),
             context: context);
-        // Navigator.push(context, MaterialPageRoute(builder: (context) => DriverDetailScreen(d_id: Vehicle_D_IAmHere["uid"].toString(), request_id: Vehicle_D_IAmHere["request_id"].toString(), lat: widget.latpic, long: widget.longpic),));
+
       } else {
         print("Not Done");
       }
@@ -357,77 +357,77 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       print(
           "++++++ /request_id new/ ++++ :---  ${Vehicle_Accept_Cancel["request_id"].toString()}");
 
-      // if(request_id.toString() == Vehicle_Accept_Cancel["request_id"].toString()){
+
       Get.offAll(const MapScreen(
         selectvihical: false,
       ));
-      // }else{
-      //   print(">>>>>OOOOOOPPPPPP<<<<<<<:::");
-      // }
+
+
+
     });
 
-    // socket.on('Vehicle_Ride_Payment${userid}', (Vehicle_Ride_Payment) {
-    //   print("++++++ /Vehicle_Ride_Payment1/ ++++ :---  $Vehicle_Ride_Payment");
-    //   print("Vehicle_Ride_Payment1 is of type: ${Vehicle_Ride_Payment.runtimeType}");
-    //   print("Vehicle_Ride_Payment1 keys: ${Vehicle_Ride_Payment.keys}");
-    // });
 
-    // socket.on('Vehicle_Ride_Start_End$userid', (Vehicle_Ride_Start_End) {
-    //
-    //   print("++++++ /Vehicle_Ride_Start_End/ ++++ :---  $Vehicle_Ride_Start_End");
-    //   print("Vehicle_Ride_Start_End is of type: ${Vehicle_Ride_Start_End.runtimeType}");
-    //   print("Vehicle_Ride_Start_End keys: ${Vehicle_Ride_Start_End.keys}");
-    //   print("++++Vehicle_Ride_Start_End userid+++++: $userid");
-    //   print("++++Vehicle_Ride_Start_End gggg +++++: ${Vehicle_Ride_Start_End["uid"].toString()}");
-    //   print("++++driver_id gggg +++++: $driver_id");
-    //
-    //   statusridestart = "";
-    //   totaldropmint = "";
-    //
-    //   if(driver_id == Vehicle_Ride_Start_End["uid"].toString()){
-    //     print("SuccessFully1");
-    //     statusridestart = Vehicle_Ride_Start_End["status"];
-    //     totaldropmint = Vehicle_Ride_Start_End["tot_min"];
-    //     print("+++++++totaldropmint++++:-- $totaldropmint");
-    //     print("++++++++ststus++++:-- $statusridestart");
-    //
-    //     if(statusridestart == "5"){
-    //       Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartrideScreen(),));
-    //     }
-    //     else if(statusridestart == "6"){
-    //       Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartrideScreen(),));
-    //     }
-    //     else if(statusridestart == "7"){
-    //       Navigator.push(context, MaterialPageRoute(builder: (context) => const RideCompletePaymentScreen(),));
-    //     }
-    //
-    //
-    //
-    //   }else{
-    //     statusridestart = "";
-    //     print("UnSuccessFully1");
-    //   }
-    //
-    // });
-    //
-    // socket.on('Vehicle_Ride_OTP', (Vehicle_Ride_OTP) {
-    //
-    //   print("++++++ /Vehicle_Ride_OTP/ ++++ :---  $Vehicle_Ride_OTP");
-    //   print("Vehicle_Ride_OTP is of type: ${Vehicle_Ride_OTP.runtimeType}");
-    //   print("Vehicle_Ride_OTP keys: ${Vehicle_Ride_OTP.keys}");
-    //   print("++++userid+++++: $userid");
-    //   // print("++++hjhhhhhhhhhhhhhhhhhh+++++: ${Vehicle_Ride_OTP["uid"].toString()}");
-    //
-    //   print("++++otpstatus+++++:- $otpstatus");
-    //
-    //   if(userid.toString() == Vehicle_Ride_OTP["c_id"].toString()){
-    //     otpstatus = Vehicle_Ride_OTP["status"];
-    //   }
-    //   else{
-    //     otpstatus = false;
-    //   }
-    //
-    // });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
 
   VihicalCalculateController vihicalCalculateController =
@@ -454,8 +454,8 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
   @override
   void initState() {
     setState(() {});
-    // livelat = 21.2420;
-    // livelong = 72.8753;
+
+
     Timer(const Duration(seconds: 2), () {
       print("22222222222222222222222222 TIMER");
       setState(() {
@@ -484,10 +484,10 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       });
     });
 
-    // mapThemeStyle(context: context);
-    // _addMarker(LatLng(widget.lat, widget.long), "origin", BitmapDescriptor.defaultMarker).then((value) {
-    //   print("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv111222");
-    // },);
+
+
+
+
 
     socketConnect();
 
@@ -498,302 +498,302 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
     print("00000072.8753000000:-- ${livelong}");
     print("wwwwww:-- ${tot_secound}");
 
-    // vihicalDriverDetailApiController.vihicaldriverdetailapi(driver_list: vihicalCalculateController.vihicalCalculateModel!.driverId!,uid: userid.toString(), d_id: widget.d_id, request_id: request_id).then((value) {
-    //
-    //   print("/////////value///:-- $value");
-    //
-    //   if(value["Result"] == true){
-    //     tot_hour = value["accepted_d_detail"]["tot_hour"].toString();
-    //     tot_time = value["accepted_d_detail"]["tot_minute"].toString();
-    //     timeincressstatus = value["accepted_d_detail"]["status"].toString();
-    //     print("-----timeincressstatus---:-- $timeincressstatus");
-    //
-    //     socket.emit('AcceRemoveOther',{
-    //       'requestid': addVihicalCalculateController.addVihicalCalculateModel!.id,
-    //       'driverid' : value["driverlist"],
-    //     });
-    //     // Get.back();
-    //
-    //     drivername = "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.firstName} ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.lastName}";
-    //     drivervihicalnumber = "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.vehicleNumber}";
-    //     driverlanguage = "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.language}";
-    //     driverrating = "${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.rating}";
-    //     driverimage = "${Config.imageurl}${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.profileImage}";
-    //
-    //     // Get.bottomSheet(
-    //     //     isDismissible: false,
-    //     //     isScrollControlled: true,
-    //     //     enableDrag: false,
-    //     //     StatefulBuilder(builder: (context, setState) {
-    //     //       return Stack(
-    //     //         clipBehavior: Clip.none,
-    //     //         children: [
-    //     //           GetBuilder<VihicalDriverDetailApiController>(builder: (vihicalDriverDetailApiController) {
-    //     //             return Container(
-    //     //               height: Get.height,
-    //     //               width: Get.width,
-    //     //               decoration: const BoxDecoration(
-    //     //                 color: Colors.white,
-    //     //                 borderRadius: BorderRadius.only(topLeft: Radius.circular(15),topRight: Radius.circular(15)),
-    //     //               ),
-    //     //               child: Stack(
-    //     //                 children: [
-    //     //                   GoogleMap(
-    //     //                     initialCameraPosition: CameraPosition(target: LatLng(lat, long),zoom: 15),
-    //     //                     myLocationEnabled: true,
-    //     //                     tiltGesturesEnabled: true,
-    //     //                     compassEnabled: true,
-    //     //                     scrollGesturesEnabled: true,
-    //     //                     zoomGesturesEnabled: true,
-    //     //                     onMapCreated: _onMapCreated,
-    //     //                     markers: Set<Marker>.of(markers.values),
-    //     //                     polylines: Set<Polyline>.of(polylines.values),
-    //     //                   ),
-    //     //                   // mapwidget(),
-    //     //                   Positioned(
-    //     //                     bottom: 0,
-    //     //                     child: Container(
-    //     //                       height: 360,
-    //     //                       width: Get.width,
-    //     //                       decoration: const BoxDecoration(
-    //     //                         color: Colors.white,
-    //     //                         borderRadius: BorderRadius.only(topLeft: Radius.circular(15),topRight: Radius.circular(15)),
-    //     //                       ),
-    //     //                       child: Padding(
-    //     //                         padding: const EdgeInsets.only(left: 15,right: 15),
-    //     //                         child: Column(
-    //     //                           mainAxisAlignment: MainAxisAlignment.start,
-    //     //                           crossAxisAlignment: CrossAxisAlignment.center,
-    //     //                           children: [
-    //     //                             const SizedBox(height: 10,),
-    //     //                             Row(
-    //     //                               crossAxisAlignment: CrossAxisAlignment.center,
-    //     //                               mainAxisAlignment: MainAxisAlignment.center,
-    //     //                               children: [
-    //     //                                 Container(
-    //     //                                   height: 5,
-    //     //                                   width: 50,
-    //     //                                   decoration: BoxDecoration(
-    //     //                                     color: Colors.grey.withOpacity(0.4),
-    //     //                                     borderRadius: BorderRadius.circular(10),
-    //     //                                   ),
-    //     //                                 ),
-    //     //                               ],
-    //     //                             ),
-    //     //                             const SizedBox(height: 10,),
-    //     //                             Row(
-    //     //                               children: [
-    //     //
-    //     //                                 if(vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.status == "1")
-    //     //                                   const Text("Captain on the way",style: TextStyle(color: Colors.black,fontSize: 18),)
-    //     //                                 else if(vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.status == "2")
-    //     //                                   Column(
-    //     //                                     crossAxisAlignment: CrossAxisAlignment.start,
-    //     //                                     children: [
-    //     //                                       const Text("Captain has arrived",style: TextStyle(color: Colors.black,fontSize: 18),),
-    //     //                                       extraststus == "" ?
-    //     //                                       Text("Free wait time of $tot_time mins has started.",style: const TextStyle(color: Colors.black,fontSize: 12),):
-    //     //                                       Text(extraststus,style: const TextStyle(color: Colors.black,fontSize: 12),),
-    //     //
-    //     //
-    //     //                                       // isloading22  ?
-    //     //                                       // Text(extraststus,style: const TextStyle(color: Colors.black,fontSize: 12),)
-    //     //                                       //     :
-    //     //                                       // Text("Free wait time of $tot_time mins has started.",style: const TextStyle(color: Colors.black,fontSize: 12),)
-    //     //
-    //     //                                     ],
-    //     //                                   )
-    //     //                                 else if(vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.status == "3")
-    //     //                                     const Text("Heading to the destination",style: TextStyle(color: Colors.black,fontSize: 18),),
-    //     //
-    //     //
-    //     //
-    //     //                                 // switch (r) {
-    //     //                                 // case 0:
-    //     //                                 // // do something
-    //     //                                 // break;
-    //     //                                 // case myPI:
-    //     //                                 // // do something else
-    //     //                                 // break;
-    //     //                                 // }
-    //     //
-    //     //                                 const Spacer(),
-    //     //                                 // Container(
-    //     //                                 //   height: 40,
-    //     //                                 //   width: 80,
-    //     //                                 //   decoration: BoxDecoration(
-    //     //                                 //       color: theamcolore,
-    //     //                                 //       borderRadius: BorderRadius.circular(30),
-    //     //                                 //   ),
-    //     //                                 //   child: Center(child: Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.pickupTime}",style: const TextStyle(color: Colors.white),),),
-    //     //                                 // ),
-    //     //                                 TimerScreen(hours: int.parse(tot_hour),minutes: int.parse(tot_time)-1),
-    //     //                               ],
-    //     //                             ),
-    //     //                             const Divider(color: Colors.black,),
-    //     //                             Row(
-    //     //                               children: [
-    //     //                                 const Text("Start your order with PIN"),
-    //     //                                 // Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.otp}"),
-    //     //                                 const Spacer(),
-    //     //
-    //     //                                 for(int i=0; i<4; i++)
-    //     //                                   Padding(
-    //     //                                     padding: const EdgeInsets.only(left: 4.0),
-    //     //                                     child: Container(
-    //     //                                       height: 35,
-    //     //                                       width: 30,
-    //     //                                       decoration: BoxDecoration(
-    //     //                                         border: Border.all(color: Colors.grey),
-    //     //                                         borderRadius: BorderRadius.circular(10),
-    //     //                                       ),
-    //     //                                       child: Center(child: Text(vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.otp![i]),),
-    //     //                                     ),
-    //     //                                   )
-    //     //
-    //     //                               ],
-    //     //                             ),
-    //     //                             const SizedBox(height: 10,),
-    //     //                             Container(
-    //     //                               decoration: BoxDecoration(
-    //     //                                   color: greaycolore,
-    //     //                                   borderRadius: BorderRadius.circular(10)
-    //     //                               ),
-    //     //                               child: Padding(
-    //     //                                 padding: const EdgeInsets.all(8.0),
-    //     //                                 child: Column(
-    //     //                                   children: [
-    //     //                                     ListTile(
-    //     //                                       isThreeLine: true,
-    //     //                                       contentPadding: EdgeInsets.zero,
-    //     //                                       title: Column(
-    //     //                                         crossAxisAlignment: CrossAxisAlignment.start,
-    //     //                                         children: [
-    //     //                                           Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.vehicleNumber}",style: const TextStyle(fontSize: 18,color: Colors.black),),
-    //     //                                           const SizedBox(height: 5,),
-    //     //                                           Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.carName}",style: const TextStyle(fontSize: 15,color: Colors.grey)),
-    //     //                                           const SizedBox(height: 8,),
-    //     //                                         ],
-    //     //                                       ),
-    //     //                                       subtitle: Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.firstName} ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.lastName}",style: const TextStyle(fontSize: 15,color: Colors.grey)),
-    //     //                                       trailing: Stack(
-    //     //                                         clipBehavior: Clip.none,
-    //     //                                         children: [
-    //     //                                           Container(
-    //     //                                             height: 60,
-    //     //                                             width: 60,
-    //     //                                             decoration: BoxDecoration(
-    //     //                                                 shape: BoxShape.circle,
-    //     //                                                 image: DecorationImage(image: NetworkImage("${Config.imageurl}${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.profileImage}"),fit: BoxFit.cover)
-    //     //                                             ),
-    //     //                                             // child: Image(image: NetworkImage("https://i.pinimg.com/originals/a3/fc/98/a3fc98cd46931905114589e2e8abdc49.jpg"))
-    //     //                                           ),
-    //     //                                           Positioned(
-    //     //                                             bottom: -15,
-    //     //                                             left: 0,
-    //     //                                             right: 0,
-    //     //                                             child: Container(
-    //     //                                               height: 25,
-    //     //                                               width: 40,
-    //     //                                               decoration: BoxDecoration(
-    //     //                                                   color: Colors.white,
-    //     //                                                   border: Border.all(color: Colors.grey.withOpacity(0.2)),
-    //     //                                                   borderRadius: BorderRadius.circular(15)
-    //     //                                               ),
-    //     //                                               child: Center(child: Row(
-    //     //                                                 crossAxisAlignment: CrossAxisAlignment.center,
-    //     //                                                 mainAxisAlignment: MainAxisAlignment.center,
-    //     //                                                 children: [
-    //     //                                                   Text("${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.rating}"),
-    //     //                                                   const SizedBox(width: 5,),
-    //     //                                                   const Icon(Icons.star,color: Colors.yellow,size: 15,)
-    //     //                                                 ],
-    //     //                                               ),),
-    //     //                                             ),
-    //     //                                           )
-    //     //                                         ],
-    //     //                                       ),
-    //     //                                     ),
-    //     //                                     const SizedBox(height: 20,),
-    //     //                                     Row(
-    //     //                                       children: [
-    //     //                                         Container(
-    //     //                                           height: 45,
-    //     //                                           width: 45,
-    //     //                                           decoration: BoxDecoration(
-    //     //                                               shape: BoxShape.circle,
-    //     //                                               border: Border.all(color: Colors.grey)
-    //     //                                           ),
-    //     //                                           child: const Center(child: Icon(Icons.call,color: Colors.grey,size: 20,),),
-    //     //                                         ),
-    //     //                                         const SizedBox(width: 10,),
-    //     //                                         Expanded(
-    //     //                                           child: Container(
-    //     //                                             height: 45,
-    //     //                                             decoration: BoxDecoration(
-    //     //                                                 borderRadius: BorderRadius.circular(30),
-    //     //                                                 border: Border.all(
-    //     //                                                   color: Colors.grey,
-    //     //                                                 )
-    //     //                                             ),
-    //     //                                             child: Row(
-    //     //                                               crossAxisAlignment: CrossAxisAlignment.center,
-    //     //                                               children: [
-    //     //                                                 const SizedBox(width: 10,),
-    //     //                                                 const Icon(Icons.message,color: Colors.grey,size: 20,),
-    //     //                                                 const SizedBox(width: 10,),
-    //     //                                                 Text("Message ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.firstName} ${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.lastName}")
-    //     //                                               ],
-    //     //                                             ),
-    //     //                                           ),
-    //     //                                         )
-    //     //                                       ],
-    //     //                                     ),
-    //     //                                     const SizedBox(height: 10,),
-    //     //
-    //     //                                   ],
-    //     //                                 ),
-    //     //                               ),
-    //     //                             ),
-    //     //                             const SizedBox(height: 10,),
-    //     //                             ListTile(
-    //     //                               contentPadding: EdgeInsets.zero,
-    //     //                               title: const Text("Pickup From"),
-    //     //                               // subtitle: Text("31"),
-    //     //                               trailing: InkWell(
-    //     //                                 onTap: () {
-    //     //                                   commonbottomsheetcancelflow(context: context);
-    //     //                                   // commonbottomsheetrequestsend(context: context);
-    //     //                                 },
-    //     //                                 child: Container(
-    //     //                                   height: 40,
-    //     //                                   width: 100,
-    //     //                                   decoration: BoxDecoration(
-    //     //                                     border: Border.all(color: Colors.grey.withOpacity(0.4)),
-    //     //                                     borderRadius: BorderRadius.circular(30),
-    //     //                                   ),
-    //     //                                   child: const Center(child: Text("Trip Details".tr),),
-    //     //                                 ),
-    //     //                               ),
-    //     //                             )
-    //     //                           ],
-    //     //                         ),
-    //     //                       ),
-    //     //                     ),
-    //     //                   ),
-    //     //
-    //     //                 ],
-    //     //               ),
-    //     //             );
-    //     //           },),
-    //     //         ],
-    //     //       );
-    //     //     },)
-    //     // );
-    //   }
-    // });
 
-    // TODO: implement initState
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     super.initState();
   }
 
@@ -960,10 +960,10 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                                   fontSize: 12),
                                             ),
 
-                                      // isloading22  ?
-                                      // Text(extraststus,style: const TextStyle(color: Colors.black,fontSize: 12),)
-                                      //     :
-                                      // Text("Free wait time of $tot_time mins has started.",style: const TextStyle(color: Colors.black,fontSize: 12),)
+
+
+
+
                                     ],
                                   )
                                 else if (vihicalDriverDetailApiController
@@ -978,41 +978,41 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                         fontSize: 18),
                                   ),
 
-                                // switch (r) {
-                                // case 0:
-                                // // do something
-                                // break;
-                                // case myPI:
-                                // // do something else
-                                // break;
-                                // }
+
+
+
+
+
+
+
+
 
                                 const Spacer(),
 
-                                // TimerScreen(hours: int.parse(tot_hour),minutes: int.parse(tot_time)-1),
+
                                 TimerScreen(
                                   hours: int.parse(tot_hour),
                                   minutes: int.parse(tot_time),
                                   secound: int.parse(tot_secound),
                                 ),
-                                // Center(
-                                //   child: Container(
-                                //     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                //     decoration: BoxDecoration(
-                                //       borderRadius: BorderRadius.circular(20),
-                                //       border: Border.all(color:  isloading  ? Colors.green : theamcolore), // Dynamic border width
-                                //       color: theamcolore.withOpacity(0.1),
-                                //     ),
-                                //     child: Text(
-                                //       _formatTime(_remainingTime),
-                                //       style: TextStyle(
-                                //         fontSize: 18,
-                                //         fontWeight: FontWeight.bold,
-                                //         color: isloading  ? Colors.green : theamcolore,
-                                //       ),
-                                //     ),
-                                //   ),
-                                // ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                               ],
                             ),
                             const Divider(
@@ -1027,10 +1027,10 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                   ),
                                 ),
                                 Directionality(
-                                  // This is the key line that forces Left-to-Right layout.
+
                                   textDirection: TextDirection.ltr,
                                   child: SizedBox(
-                                    width: 140, // Fixed width for PIN boxes
+                                    width: 140,
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceEvenly,
@@ -1125,7 +1125,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                                       image: NetworkImage(
                                                           "${Config.imageurl}${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.profileImage}"),
                                                       fit: BoxFit.cover)),
-                                              // child: Image(image: NetworkImage("https://i.pinimg.com/originals/a3/fc/98/a3fc98cd46931905114589e2e8abdc49.jpg"))
+
                                             ),
                                           ),
                                           Positioned(
@@ -1164,7 +1164,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                                       "assets/svgpicture/star-fill.svg",
                                                       height: 15,
                                                     ),
-                                                    // const Icon(Icons.star,color: Colors.yellow,size: 15,)
+
                                                   ],
                                                 ),
                                               ),
@@ -1271,11 +1271,11 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                 picktitle == "" ? addresspickup : picktitle,
                                 style: TextStyle(color: notifier.textColor),
                               ),
-                              // subtitle: Text("31"),
+
                               trailing: InkWell(
                                 onTap: () {
                                   commonbottomsheetcancelflow(context: context);
-                                  // commonbottomsheetrequestsend(context: context);
+
                                 },
                                 child: Container(
                                   height: 40,
@@ -1310,27 +1310,27 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
   }
 }
 
-// driverdetailbottomsheet(){
-// driverdetailbottomsheet(){
-//   VihicalDriverDetailApiController vihicalDriverDetailApiController = Get.put(VihicalDriverDetailApiController());
-//
-//   return GetBuilder<VihicalDriverDetailApiController>(builder: (vihicalDriverDetailApiController) {
-//     return Container(
-//       height: 500,
-//       decoration: const BoxDecoration(
-//           color: Colors.red,
-//           borderRadius: BorderRadius.only(topLeft: Radius.circular(15),topRight: Radius.circular(15))
-//       ),
-//     );
-//   },);
-//
-// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 List prefrence = [];
 List language = [];
 
 driverdetailbottomsheet() {
-  // VihicalDriverDetailApiController vihicalDriverDetailApiController = Get.put(VihicalDriverDetailApiController());
+
   DriverDetailApiController driverDetailApiController =
       Get.put(DriverDetailApiController());
 
@@ -1375,7 +1375,7 @@ driverdetailbottomsheet() {
                               height: 150,
                               width: Get.width,
                               decoration: BoxDecoration(
-                                  // color: Colors.red,
+
                                   borderRadius: const BorderRadius.only(
                                       topLeft: Radius.circular(15),
                                       topRight: Radius.circular(15)),
@@ -1457,7 +1457,7 @@ driverdetailbottomsheet() {
                                             "assets/svgpicture/star-fill.svg",
                                             height: 20,
                                           ),
-                                          // Icon(Icons.star,color: Colors.yellow,size: 20,)
+
                                         ],
                                       ),
                                     ],
@@ -1532,14 +1532,14 @@ driverdetailbottomsheet() {
                                 height: 20,
                               ),
                               Wrap(
-                                // spacing: 13,
+
                                 runSpacing: 13,
-                                // alignment: WrapAlignment.start,
-                                // clipBehavior: Clip.none,
-                                // crossAxisAlignment: WrapCrossAlignment.start,
-                                // runAlignment: WrapAlignment.start,
+
+
+
+
                                 spacing: 10,
-                                // runSpacing: 5,
+
                                 alignment: WrapAlignment.start,
                                 clipBehavior: Clip.none,
                                 crossAxisAlignment: WrapCrossAlignment.start,
@@ -1551,9 +1551,9 @@ driverdetailbottomsheet() {
                                         height: 40,
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 15, vertical: 8),
-                                        // width: 100,
-                                        // width: 50,
-                                        // width: 10,
+
+
+
                                         decoration: BoxDecoration(
                                             border:
                                                 Border.all(color: Colors.grey),
@@ -1587,14 +1587,14 @@ driverdetailbottomsheet() {
                                 height: 20,
                               ),
                               Wrap(
-                                // spacing: 13,
+
                                 runSpacing: 13,
-                                // alignment: WrapAlignment.start,
-                                // clipBehavior: Clip.none,
-                                // crossAxisAlignment: WrapCrossAlignment.start,
-                                // runAlignment: WrapAlignment.start,
+
+
+
+
                                 spacing: 10,
-                                // runSpacing: 5,
+
                                 alignment: WrapAlignment.start,
                                 clipBehavior: Clip.none,
                                 crossAxisAlignment: WrapCrossAlignment.start,
@@ -1606,9 +1606,9 @@ driverdetailbottomsheet() {
                                         height: 40,
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 15, vertical: 4),
-                                        // width: 100,
-                                        // width: 50,
-                                        // width: 10,
+
+
+
                                         decoration: BoxDecoration(
                                             border:
                                                 Border.all(color: Colors.grey),
@@ -1643,8 +1643,8 @@ driverdetailbottomsheet() {
     },
   );
 
-  // prefrence = [];
-  // language = [];
-  // prefrence = vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.prefrenceName.toString().split(",");
-  // language = vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.language.toString().split(",");
+
+
+
+
 }
