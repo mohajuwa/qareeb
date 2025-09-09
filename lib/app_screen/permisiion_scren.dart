@@ -131,21 +131,21 @@ class _PermissionScreenState extends State<PermissionScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Location Permission Required"),
-        content: Text(
+        title: const Text("Location Permission Required"),
+        content: const Text(
           "Location permission is permanently denied. Please enable it in device settings to use this feature.",
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
+            child: const Text("Cancel"),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               await Geolocator.openAppSettings();
             },
-            child: Text("Open Settings"),
+            child: const Text("Open Settings"),
           ),
         ],
       ),
@@ -156,21 +156,21 @@ class _PermissionScreenState extends State<PermissionScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Location Permission Needed"),
-        content: Text(
+        title: const Text("Location Permission Needed"),
+        content: const Text(
           "We need location permission to provide you with the best ride experience. Would you like to try again?",
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
+            child: const Text("Cancel"),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _requestLocation();
             },
-            child: Text("Try Again"),
+            child: const Text("Try Again"),
           ),
         ],
       ),

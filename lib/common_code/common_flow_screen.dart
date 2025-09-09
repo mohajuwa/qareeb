@@ -1,8 +1,9 @@
-import 'package:qareeb/common_code/custom_loading_widget.dart';
 // ignore_for_file: avoid_print
 // ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
 // ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
+
+import 'package:qareeb/common_code/custom_loading_widget.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -165,42 +166,6 @@ Future commonbottomsheetrequestsend({required context}) {
                 ),
               ),
             ),
-            // Positioned(
-            //   top: -50,
-            //   right: 10,
-            //   child: InkWell(
-            //     onTap: () {
-            //
-            //         print("vvvvvvv");
-            //         removeRequest.removeApi(uid: useridgloable.toString()).then((value) {
-            //           socket.emit('AcceRemoveOther',{
-            //             'requestid': request_id,
-            //             'driverid' : vihicalCalculateController.vihicalCalculateModel!.driverId!,
-            //           });
-            //         },);
-            //         // Get.back();
-            //         print("aaaaaaa");
-            //
-            //       // Navigator.of(context).pop();
-            //     },
-            //     child: Container(
-            //       alignment: Alignment.center,
-            //       height: 40,
-            //       width: 100,
-            //       padding: const EdgeInsets.symmetric(horizontal: 15),
-            //       decoration: BoxDecoration(
-            //         color: Colors.white,
-            //         borderRadius: BorderRadius.circular(30),
-            //       ),
-            //       child: const Text("Cancel".tr,style: TextStyle(
-            //         color: Colors.black,
-            //         fontSize: 14,
-            //         letterSpacing: 0.5,
-            //       ),
-            //       ),
-            //     ),
-            //   ),
-            // ),
           ],
         );
       },
@@ -217,12 +182,7 @@ Future commonbottomsheetcancelflow({required context}) {
   );
   cancelRasonRequestApiController.cancelreasonApi(context);
   String cancel_id = "";
-  // late IO.Socket socket;
-  //
-  // socket = IO.io(Config.imageurl,<String,dynamic>{
-  //   'autoConnect': false,
-  //   'transports': ['websocket'],
-  // });
+
   socket.connect();
 
   return Get.bottomSheet(
@@ -233,8 +193,6 @@ Future commonbottomsheetcancelflow({required context}) {
           clipBehavior: Clip.none,
           children: [
             Container(
-              // height: 800,
-              // width: Get.width,
               decoration: BoxDecoration(
                 color: notifier.background,
                 borderRadius: BorderRadius.only(
@@ -403,7 +361,6 @@ Future commonbottomsheetcancelflow({required context}) {
                                             ? const Offset(0, 0)
                                             : const Offset(0, -10),
                                         child: ListTile(
-                                          // isThreeLine: true,
                                           contentPadding: EdgeInsets.zero,
                                           title: Text(
                                             "${picktitle == "" ? addresspickup : picktitle}",
@@ -424,7 +381,6 @@ Future commonbottomsheetcancelflow({required context}) {
                                       Transform.translate(
                                         offset: const Offset(0, -30),
                                         child: ListTile(
-                                          // isThreeLine: true,
                                           contentPadding: EdgeInsets.zero,
                                           title: Text(
                                             droptitle,
@@ -473,7 +429,6 @@ Future commonbottomsheetcancelflow({required context}) {
                                                 offset: const Offset(-5, -25),
                                                 child: Column(
                                                   children: [
-                                                    // const SizedBox(height: 4,),
                                                     Container(
                                                       height: 10,
                                                       width: 3,
@@ -540,13 +495,7 @@ Future commonbottomsheetcancelflow({required context}) {
                                             offset: const Offset(0, -15),
                                             child: Column(
                                               children: [
-                                                // Transform.translate(
-                                                //   offset: const Offset(0, -7),
-                                                //   child: Text("${droptitlelist[index]["title"]}"),
-                                                // ),
-                                                // const SizedBox(height: 5,),
                                                 ListTile(
-                                                  // isThreeLine: true,
                                                   contentPadding:
                                                       EdgeInsets.zero,
                                                   title: Text(
@@ -595,7 +544,6 @@ Future commonbottomsheetcancelflow({required context}) {
                                                 offset: const Offset(-5, -25),
                                                 child: Column(
                                                   children: [
-                                                    // const SizedBox(height: 4,),
                                                     Container(
                                                       height: 10,
                                                       width: 3,
@@ -662,13 +610,7 @@ Future commonbottomsheetcancelflow({required context}) {
                                             offset: const Offset(0, -15),
                                             child: Column(
                                               children: [
-                                                // Transform.translate(
-                                                //   offset: const Offset(0, -7),
-                                                //   child: Text("${droptitlelist[index]["title"]}"),
-                                                // ),
-                                                // const SizedBox(height: 5,),
                                                 ListTile(
-                                                  // isThreeLine: true,
                                                   contentPadding:
                                                       EdgeInsets.zero,
                                                   title: Text(
@@ -724,8 +666,6 @@ Future commonbottomsheetcancelflow({required context}) {
                       "Paying via cash",
                       style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
-                    // const Spacer(),
-                    // const SizedBox(height: 40,),
                     const SizedBox(height: 10),
                     statusridestart == "5"
                         ? const SizedBox()
@@ -779,7 +719,6 @@ Future commonbottomsheetcancelflow({required context}) {
                                                 const SizedBox(height: 20),
                                                 Expanded(
                                                   child: ListView.separated(
-                                                    // physics: const NeverScrollableScrollPhysics(),
                                                     separatorBuilder:
                                                         (context, index) {
                                                       return const SizedBox(
@@ -868,8 +807,6 @@ Future commonbottomsheetcancelflow({required context}) {
                                                                                           ),
                                                                                         ),
                                                                                       ),
-                                                                                      // SizedBox(height: 20,),
-                                                                                      // const Image(image: AssetImage("assets/rapido.png")),
                                                                                       lottie.Lottie.asset(
                                                                                         "assets/lottie/canceljson.json",
                                                                                       ),
@@ -902,7 +839,6 @@ Future commonbottomsheetcancelflow({required context}) {
                                                                                       const SizedBox(
                                                                                         height: 5,
                                                                                       ),
-
                                                                                       CommonButton(
                                                                                         containcolore: theamcolore,
                                                                                         onPressed1: () {
@@ -928,10 +864,6 @@ Future commonbottomsheetcancelflow({required context}) {
                                                                                               Get.close(
                                                                                                 2,
                                                                                               );
-                                                                                              // Get.offAll(MapScreen());
-                                                                                              // Get.to(PickupDropPoint(pagestate: false,bidding: homeApiController.homeapimodel!.categoryList![select1].bidding.toString(),));
-                                                                                              // Get.to(HomeScreen(latpic: latitudepick,longpic: longitudepick,latdrop: latitudedrop,longdrop: longitudedrop,destinationlat: destinationlat));
-                                                                                              // vihicaleridecancelemit();
                                                                                             },
                                                                                           );
                                                                                         },
@@ -983,7 +915,6 @@ Future commonbottomsheetcancelflow({required context}) {
                                                                 contentPadding:
                                                                     EdgeInsets
                                                                         .zero,
-                                                                // title: Text("Selected Wrong Pickup Location"),
                                                                 title: Text(
                                                                   "${cancelRasonRequestApiController.cancelReasonModel!.rideCancelList![index].title}",
                                                                   style:
@@ -1123,8 +1054,6 @@ num whthercharge = 0.00;
 num platformfee = 0.00;
 num additionaltime = 0.00;
 
-// List<int> drive_id_list = [];
-
 List<PointLatLng> droppointstartscreen = [];
 List listdrop = [];
 
@@ -1137,8 +1066,7 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
     required double long,
   }) {
     print("object@@@@@@@1");
-    // print("firt time +++:-- $driver_id");
-    // print("secound time +++:-- ${driver_id.toString()}");
+
     VihicalCalculateController vihicalCalculateController = Get.put(
       VihicalCalculateController(),
     );
@@ -1150,84 +1078,7 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
     );
     otpstatus = false;
 
-    // late IO.Socket socket;
-    //
-    // socket = IO.io(Config.imageurl,<String,dynamic>{
-    //   'autoConnect': false,
-    //   'transports': ['websocket'],
-    // });
-
     socket.connect();
-
-    // socket.on('Vehicle_Ride_Start_End$useridgloable', (Vehicle_Ride_Start_End) {
-    //
-    //   print("++++++ /Vehicle_Ride_Start_End/ ++++ :---  $Vehicle_Ride_Start_End");
-    //   print("Vehicle_Ride_Start_End is of type: ${Vehicle_Ride_Start_End.runtimeType}");
-    //   print("Vehicle_Ride_Start_End keys: ${Vehicle_Ride_Start_End.keys}");
-    //   print("++++Vehicle_Ride_Start_End userid+++++: $useridgloable");
-    //   print("++++Vehicle_Ride_Start_End gggg +++++: ${Vehicle_Ride_Start_End["uid"].toString()}");
-    //   print("++++driver_id gggg +++++: $driver_id");
-    //
-    //   statusridestart = "";
-    //   totaldropmint = "";
-    //
-    //   if(driver_id == Vehicle_Ride_Start_End["uid"].toString()){
-    //     print("SuccessFully1");
-    //     statusridestart = Vehicle_Ride_Start_End["status"];
-    //     totaldropmint = Vehicle_Ride_Start_End["tot_min"].toString();
-    //     totaldrophour = Vehicle_Ride_Start_End["tot_hour"].toString();
-    //     print("+++++++totaldropmint++++:-- $totaldropmint");
-    //     print("+++++++totaldrophour++++:-- $totaldrophour");
-    //     print("++++++++ststus++++:-- $statusridestart");
-    //
-    //
-    //
-    //     if(statusridestart == "5"){
-    //       print("555555555555555555555555");
-    //       droppointstartscreen = [];
-    //       listdrop = [];
-    //       listdrop = Vehicle_Ride_Start_End["drop_list"];
-    //       print("xxxxxxxxx droppointstartscreen xxxxxxxxx$listdrop");
-    //       print("xxxxxxxxx listdrop length:- ${listdrop.length}");
-    //
-    //       for(int i=0; i<listdrop.length; i++){
-    //         print("objectMMMMMMMMM:-- ($i)");
-    //         droppointstartscreen.add(PointLatLng(double.parse(Vehicle_Ride_Start_End["drop_list"][i]["latitude"]), double.parse(Vehicle_Ride_Start_End["drop_list"][i]["longitude"])));
-    //         print("vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
-    //       }
-    //       Get.to(const DriverStartrideScreen());
-    //       // Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartrideScreen(),));
-    //
-    //     }
-    //     else if(statusridestart == "6"){
-    //       print("6666666666666666");
-    //       droppointstartscreen = [];
-    //       listdrop = [];
-    //       listdrop = Vehicle_Ride_Start_End["drop_list"];
-    //       print("xxxxxxxxx droppointstartscreen xxxxxxxxx$listdrop");
-    //       print("xxxxxxxxx listdrop length${listdrop.length}");
-    //       for(int i=0; i<listdrop.length; i++){
-    //         print("objectHHHHH:-- (${i})");
-    //         droppointstartscreen.add(PointLatLng(double.parse(Vehicle_Ride_Start_End["drop_list"][i]["latitude"]), double.parse(Vehicle_Ride_Start_End["drop_list"][i]["longitude"])));
-    //         print("vvvvvvvvv droppointstartscreen vvvvvvvvv:-- $droppointstartscreen");
-    //       }
-    //       // Navigator.push(context, MaterialPageRoute(builder: (context) => const DriverStartrideScreen(),));
-    //     }
-    //     else if(statusridestart == "7"){
-    //       print("7777777777777777");
-    //       Get.to(const RideCompletePaymentScreen());
-    //       // Navigator.push(context, MaterialPageRoute(builder: (context) => const RideCompletePaymentScreen(),));
-    //     }
-    //     else{
-    //
-    //     }
-    //
-    //   }else{
-    //     statusridestart = "";
-    //     print("UnSuccessFully1");
-    //   }
-    //
-    // });
 
     print("object@@@@@@@2");
 
@@ -1284,20 +1135,6 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
       }
     });
 
-    // socket.on('Vehicle_Time_update$useridgloable', (Vehicle_Time_update) {
-    //
-    //   print("++++++ /Vehicle_Time_update/ ++++ :---  $Vehicle_Time_update");
-    //   print("Vehicle_Time_update is of type: ${Vehicle_Time_update.runtimeType}");
-    //   print("Vehicle_Time_update keys: ${Vehicle_Time_update.keys}");
-    //
-    //   tot_hour = "0";
-    //   tot_time = Vehicle_Time_update["time"].toString();
-    //
-    //   print("+++tot_hour+++:-- $tot_hour");
-    //   print("+++tot_time+++:-- $tot_time");
-    //
-    // });
-
     drivername = "";
     drivervihicalnumber = "";
     driverlanguage = "";
@@ -1307,11 +1144,8 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
     print("object@@@@@@@3");
     print("object@@@@@@@333 (${driveridloader})");
 
-    // driveridloader == false ? drive_id_list = vihicalCalculateController.vihicalCalculateModel!.driverId! : [];
-
     print("object@@@@@@@4");
 
-    // vihicalDriverDetailApiController.vihicaldriverdetailapi(driver_list: vihicalCalculateController.vihicalCalculateModel!.driverId!,uid: useridgloable.toString(), d_id: d_id, request_id: request_id).then((value) {
     vihicalDriverDetailApiController
         .vihicaldriverdetailapi(
       uid: useridgloable.toString(),
@@ -1338,11 +1172,6 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
         print("-----livelong---:-- $livelong");
         print("-----imagenetwork---:-- $imagenetwork");
         print("-----timeincressstatus---:-- $timeincressstatus");
-
-        // socket.emit('AcceRemoveOther',{
-        //   'requestid': driveridloader == false ? addVihicalCalculateController.addVihicalCalculateModel!.id : appstatusid,
-        //   'driverid' : value["driverlist"],
-        // });
 
         Get.back();
 
@@ -1376,20 +1205,18 @@ class GlobalDriverAcceptClass extends GetxController implements GetxService {
 
 totalRateUpdate(double rating) {
   tRate = rating;
-  // update();
 }
 
 Future rateBottomSheet() {
   DriverReviewDetailApiController driverReviewDetailApiController = Get.put(
     DriverReviewDetailApiController(),
   );
-  // VihicalRideCompleteOrderApiController vihicalRideCompleteOrderApiController = Get.put(VihicalRideCompleteOrderApiController());
+
   TextEditingController reviewtextcontroller = TextEditingController();
   ReviewDataApiController reviewDataApiController = Get.put(
     ReviewDataApiController(),
   );
 
-  // String reviewid = '';
   List reviewid = [];
   String reviewtitle = '';
 
@@ -1427,7 +1254,6 @@ Future rateBottomSheet() {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Row(
-                                // mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   SvgPicture.asset(
@@ -1439,7 +1265,6 @@ Future rateBottomSheet() {
                                     "Paid $globalcurrency$finaltotal",
                                     style: TextStyle(
                                       fontSize: 15,
-                                      // fontWeight: FontWeight.w500,
                                       color: notifier.textColor,
                                     ),
                                   ),
@@ -1488,13 +1313,11 @@ Future rateBottomSheet() {
                                   height: 80,
                                   width: 80,
                                   decoration: BoxDecoration(
-                                    // color: theamcolore,
                                     shape: BoxShape.circle,
                                     image: DecorationImage(
                                       image: NetworkImage("$driverimage"),
                                       fit: BoxFit.cover,
                                     ),
-                                    // image: DecorationImage(image: NetworkImage("https://cdn.prod.website-files.com/595d6b420002832258c527cb/602edff72af06859a9cf846a_driver-behavior-professional-truck-driver-driving-truck-vehicle-1000.jpg"),fit: BoxFit.cover),
                                   ),
                                 ),
                               ),
@@ -1569,8 +1392,6 @@ Future rateBottomSheet() {
                                         return InkWell(
                                           onTap: () {
                                             setState(() {
-                                              // reviewid = reviewDataApiController.reviewDataApiModel!.reviewList![a].id.toString();
-
                                               reviewtitle =
                                                   reviewDataApiController
                                                       .reviewDataApiModel!
@@ -1610,7 +1431,6 @@ Future rateBottomSheet() {
                                                 " + + + +  + + + $reviewid",
                                               );
                                             });
-                                            // Get.back();
                                           },
                                           child: Container(
                                             height: 40,
@@ -1627,7 +1447,6 @@ Future rateBottomSheet() {
                                               )
                                                   ? theamcolore
                                                   : notifier.containercolore,
-                                              // color: reviewtitle == reviewDataApiController.reviewDataApiModel!.reviewList![a].title ?  theamcolore : Colors.white,
                                               borderRadius:
                                                   BorderRadius.circular(18),
                                               border: Border.all(

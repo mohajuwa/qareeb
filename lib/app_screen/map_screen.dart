@@ -3716,7 +3716,7 @@ class _MapScreenState extends State<MapScreen>
                       theamcolore.withOpacity(0.8),
                       theamcolore.withOpacity(0.6),
                     ],
-                    stops: [0.0, 0.5, 1.0],
+                    stops: const [0.0, 0.5, 1.0],
                   ),
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(35),
@@ -3774,7 +3774,7 @@ class _MapScreenState extends State<MapScreen>
 
                         // Profile Section with Enhanced Design
                         homeApiController.isLoading
-                            ? Container(
+                            ? SizedBox(
                                 height: 90,
                                 child: const Center(
                                   child: CircularProgressIndicator(

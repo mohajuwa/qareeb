@@ -6,7 +6,6 @@ import 'dart:async';
 
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 
 import 'package:get/get.dart';
 
@@ -15,7 +14,6 @@ import 'package:qareeb/api_model/driver_detail_api_model.dart';
 
 import '../common_code/config.dart';
 
-import '../common_code/network_service.dart';
 
 import '../utils/show_toast.dart';
 

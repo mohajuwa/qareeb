@@ -246,7 +246,7 @@ class SimpleDriverListScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      "$globalcurrency",
+                      globalcurrency,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],

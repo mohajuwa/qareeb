@@ -986,9 +986,9 @@ class _DriverListScreenState extends State<DriverListScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     "DEBUG INFO:",
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                   Text(
@@ -1015,7 +1015,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                     : isAccepted
                         ? Colors.green.shade50
                         : Colors.grey.shade50,
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(kDebugMode ? 0 : 12),
                   topRight: Radius.circular(kDebugMode ? 0 : 12),
                 ),
@@ -1126,7 +1126,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                               ),
                               const SizedBox(width: 16),
                               Text(
-                                "${distance} km",
+                                "$distance km",
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: notifire.secondaryTextColor,

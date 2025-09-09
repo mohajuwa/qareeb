@@ -6,6 +6,8 @@ import 'package:qareeb/app_screen/driver_list_screen.dart';
 import 'package:qareeb/services/running_ride_monitor.dart';
 
 class RunningRideDebugWidget extends StatefulWidget {
+  const RunningRideDebugWidget({super.key});
+
   @override
   _RunningRideDebugWidgetState createState() => _RunningRideDebugWidgetState();
 }
@@ -65,7 +67,7 @@ class _RunningRideDebugWidgetState extends State<RunningRideDebugWidget> {
               TextButton(
                 onPressed: () => RunningRideMonitor.instance.checkNow(),
                 child: const Text("Check Now",
-                    style: const TextStyle(color: Colors.blue)),
+                    style: TextStyle(color: Colors.blue)),
               ),
               TextButton(
                 onPressed: () {

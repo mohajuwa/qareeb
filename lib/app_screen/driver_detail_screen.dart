@@ -1,9 +1,5 @@
 import 'package:qareeb/common_code/custom_notification.dart';
 
-
-
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -34,8 +30,6 @@ import 'map_screen.dart';
 import 'my_ride_screen.dart';
 
 class DriverDetailScreen extends StatefulWidget {
-
-
   final double lat;
   final double long;
 
@@ -119,17 +113,13 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
 
   Future<Uint8List> resizeImage(Uint8List data,
       {required int targetWidth, required int targetHeight}) async {
-
     final ui.Codec codec = await ui.instantiateImageCodec(data);
     final ui.FrameInfo frameInfo = await codec.getNextFrame();
-
 
     final int originalWidth = frameInfo.image.width;
     final int originalHeight = frameInfo.image.height;
 
-
     final double aspectRatio = originalWidth / originalHeight;
-
 
     int resizedWidth, resizedHeight;
     if (originalWidth > originalHeight) {
@@ -140,12 +130,10 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       resizedWidth = (targetHeight * aspectRatio).round();
     }
 
-
     final ui.PictureRecorder recorder = ui.PictureRecorder();
     final Canvas canvas = Canvas(recorder);
     final Size size = Size(resizedWidth.toDouble(), resizedHeight.toDouble());
     final Rect rect = Rect.fromLTWH(0.0, 0.0, size.width, size.height);
-
 
     final Paint paint = Paint()..isAntiAlias = true;
     canvas.drawImageRect(
@@ -201,13 +189,10 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
         positionParam: position,
       );
 
-
-
       markers[markerId] = updatedMarker;
       setState(() {});
 
       print("4444444444444444444");
-
     }
   }
 
@@ -242,27 +227,16 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
         for (var point in result.points) {
           polylineCoordinates.add(LatLng(point.latitude, point.longitude));
         }
-      } else {
-
-      }
+      } else {}
     }
 
     addPolyLine(polylineCoordinates);
   }
 
-
   socketConnect() async {
     setState(() {});
 
-
-
-
     socket.connect();
-
-
-
-
-
 
     _connectSocket();
   }
@@ -278,35 +252,32 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
     _addMarker(LatLng(widget.lat, widget.long), "origin",
         BitmapDescriptor.defaultMarker);
 
-    print("999999:-- ${useridgloable}");
+    print("999999:-- $useridgloable");
 
-
-
-
-    socket.on('V_Driver_Location$useridgloable', (V_Driver_Location) {
-      print("++++++ /V_Driver_Location111/ ++++ :---  $V_Driver_Location");
+    socket.on('V_Driver_Location$useridgloable', (vDriverLocation) {
+      print("++++++ /V_Driver_Location111/ ++++ :---  $vDriverLocation");
       print(
-          "V_Driver_Location111 is of type: ${V_Driver_Location.runtimeType}");
-      print("V_Driver_Location111 keys: ${V_Driver_Location.keys}");
+          "V_Driver_Location111 is of type: ${vDriverLocation.runtimeType}");
+      print("V_Driver_Location111 keys: ${vDriverLocation.keys}");
       print("+++++V_Driver_Location111 userid+++++: $useridgloable");
       print("++++driver_id hhhh111 +++++: $driver_id");
       print(
-          "++++ooooooooooooooooooooooooo111 +++++: ${V_Driver_Location["driver_location"]["image"]}");
+          "++++ooooooooooooooooooooooooo111 +++++: ${vDriverLocation["driver_location"]["image"]}");
       imagenetwork =
-          "${Config.imageurl}${V_Driver_Location["driver_location"]["image"]}";
+          "${Config.imageurl}${vDriverLocation["driver_location"]["image"]}";
       print(
           "++++oooooooooooooooooooooooooimagenetwork111 +++++: $imagenetwork");
 
-      if (driver_id == V_Driver_Location["d_id"].toString()) {
+      if (driver_id == vDriverLocation["d_id"].toString()) {
         print("SuccessFully111");
 
         livelat =
-            double.parse(V_Driver_Location["driver_location"]["latitude"]);
+            double.parse(vDriverLocation["driver_location"]["latitude"]);
         livelong =
-            double.parse(V_Driver_Location["driver_location"]["longitude"]);
+            double.parse(vDriverLocation["driver_location"]["longitude"]);
 
-        print("****livelat****:-- ${livelat}");
-        print("****livelong****:-- ${livelong}");
+        print("****livelat****:-- $livelat");
+        print("****livelong****:-- $livelong");
 
         _addMarker(LatLng(widget.lat, widget.long), "origin",
             BitmapDescriptor.defaultMarker);
@@ -317,117 +288,49 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
             lat1: PointLatLng(livelat, livelong),
             lat2: PointLatLng(widget.lat, widget.long));
       } else {
-        print("111111:- (${driver_id})");
-        print("222222:- (${V_Driver_Location["d_id"]})");
+        print("111111:- ($driver_id)");
+        print("222222:- (${vDriverLocation["d_id"]})");
         print("UnSuccessFully111");
       }
     });
 
-    socket.on('Vehicle_D_IAmHere', (Vehicle_D_IAmHere) {
-      print("++++++ /Vehicle_D_IAmHere/ ++++ :---  $Vehicle_D_IAmHere");
-      print("Vehicle_D_IAmHere is of type: ${Vehicle_D_IAmHere.runtimeType}");
-      print("Vehicle_D_IAmHere keys: ${Vehicle_D_IAmHere.keys}");
-      print("Vehicle_D_IAmHere id: ${Vehicle_D_IAmHere["c_id"]}");
+    socket.on('Vehicle_D_IAmHere', (vehicleDIamhere) {
+      print("++++++ /Vehicle_D_IAmHere/ ++++ :---  $vehicleDIamhere");
+      print("Vehicle_D_IAmHere is of type: ${vehicleDIamhere.runtimeType}");
+      print("Vehicle_D_IAmHere keys: ${vehicleDIamhere.keys}");
+      print("Vehicle_D_IAmHere id: ${vehicleDIamhere["c_id"]}");
       print("userid: $useridgloable");
-      tot_time = Vehicle_D_IAmHere["pickuptime"].toString();
-      extratime = Vehicle_D_IAmHere["pickuptime"].toString();
+      tot_time = vehicleDIamhere["pickuptime"].toString();
+      extratime = vehicleDIamhere["pickuptime"].toString();
       tot_secound = "0";
-      print("Vehicle_D_IAmHere_pickuptime: ${Vehicle_D_IAmHere["pickuptime"]}");
-      print("Vehicle_D_IAmHere_pickuptime tot_time: ${tot_time}");
-      print("Vehicle_D_IAmHere_pickuptime tot_time: ${extratime}");
+      print("Vehicle_D_IAmHere_pickuptime: ${vehicleDIamhere["pickuptime"]}");
+      print("Vehicle_D_IAmHere_pickuptime tot_time: $tot_time");
+      print("Vehicle_D_IAmHere_pickuptime tot_time: $extratime");
 
-      if (Vehicle_D_IAmHere["c_id"] == useridgloable.toString()) {
+      if (vehicleDIamhere["c_id"] == useridgloable.toString()) {
         print("Done Done");
         driveridloader == false;
         globalDriverAcceptClass.driverdetailfunction(
             lat: widget.lat,
             long: widget.long,
-            d_id: Vehicle_D_IAmHere["uid"].toString(),
-            request_id: Vehicle_D_IAmHere["request_id"].toString(),
+            d_id: vehicleDIamhere["uid"].toString(),
+            request_id: vehicleDIamhere["request_id"].toString(),
             context: context);
-
       } else {
         print("Not Done");
       }
     });
 
-    socket.on('Vehicle_Accept_Cancel${useridgloable}', (Vehicle_Accept_Cancel) {
-      print("++++++ /Vehicle_Accept_Cancel/ ++++ :---  $Vehicle_Accept_Cancel");
+    socket.on('Vehicle_Accept_Cancel$useridgloable', (vehicleAcceptCancel) {
+      print("++++++ /Vehicle_Accept_Cancel/ ++++ :---  $vehicleAcceptCancel");
       print("++++++ /request_id accpt/ ++++ :---  ${request_id.toString()}");
       print(
-          "++++++ /request_id new/ ++++ :---  ${Vehicle_Accept_Cancel["request_id"].toString()}");
-
+          "++++++ /request_id new/ ++++ :---  ${vehicleAcceptCancel["request_id"].toString()}");
 
       Get.offAll(const MapScreen(
         selectvihical: false,
       ));
-
-
-
     });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   }
 
   VihicalCalculateController vihicalCalculateController =
@@ -454,7 +357,6 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
   @override
   void initState() {
     setState(() {});
-
 
     Timer(const Duration(seconds: 2), () {
       print("22222222222222222222222222 TIMER");
@@ -484,315 +386,14 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       });
     });
 
-
-
-
-
-
     socketConnect();
 
     otpstatus = false;
     print("000000000000:-- ${widget.lat}");
     print("000000000000:-- ${widget.long}");
-    print("000000livelat000000:-- ${livelat}");
-    print("00000072.8753000000:-- ${livelong}");
-    print("wwwwww:-- ${tot_secound}");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    print("000000livelat000000:-- $livelat");
+    print("00000072.8753000000:-- $livelong");
+    print("wwwwww:-- $tot_secound");
 
     super.initState();
   }
@@ -887,7 +488,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                     width: Get.width,
                     decoration: BoxDecoration(
                       color: notifier.containercolore,
-                      borderRadius: BorderRadius.only(
+                      borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(15),
                           topRight: Radius.circular(15)),
                     ),
@@ -948,7 +549,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                       ),
                                       extraststus == ""
                                           ? Text(
-                                              "Free wait time of ${extratime} mins has started.",
+                                              "Free wait time of $extratime mins has started.",
                                               style: TextStyle(
                                                   color: notifier.textColor,
                                                   fontSize: 12),
@@ -959,11 +560,6 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                                   color: notifier.textColor,
                                                   fontSize: 12),
                                             ),
-
-
-
-
-
                                     ],
                                   )
                                 else if (vihicalDriverDetailApiController
@@ -977,42 +573,12 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                         color: notifier.textColor,
                                         fontSize: 18),
                                   ),
-
-
-
-
-
-
-
-
-
-
                                 const Spacer(),
-
-
                                 TimerScreen(
                                   hours: int.parse(tot_hour),
                                   minutes: int.parse(tot_time),
                                   secound: int.parse(tot_secound),
                                 ),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                               ],
                             ),
                             const Divider(
@@ -1027,7 +593,6 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                   ),
                                 ),
                                 Directionality(
-
                                   textDirection: TextDirection.ltr,
                                   child: SizedBox(
                                     width: 140,
@@ -1111,7 +676,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                             onTap: () {
                                               print(
                                                   "jhdgsfhjsvfhjfvhjkafvjahkfvjhkfvjkhfbvjuvaeswj");
-                                              print("*****:(:-- ${prefrence}");
+                                              print("*****:(:-- $prefrence");
                                               print(
                                                   "*****:(:-- ${prefrence.length}");
                                               driverdetailbottomsheet();
@@ -1125,7 +690,6 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                                       image: NetworkImage(
                                                           "${Config.imageurl}${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.profileImage}"),
                                                       fit: BoxFit.cover)),
-
                                             ),
                                           ),
                                           Positioned(
@@ -1164,7 +728,6 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                                       "assets/svgpicture/star-fill.svg",
                                                       height: 15,
                                                     ),
-
                                                   ],
                                                 ),
                                               ),
@@ -1271,11 +834,9 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                 picktitle == "" ? addresspickup : picktitle,
                                 style: TextStyle(color: notifier.textColor),
                               ),
-
                               trailing: InkWell(
                                 onTap: () {
                                   commonbottomsheetcancelflow(context: context);
-
                                 },
                                 child: Container(
                                   height: 40,
@@ -1310,27 +871,10 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 List prefrence = [];
 List language = [];
 
 driverdetailbottomsheet() {
-
   DriverDetailApiController driverDetailApiController =
       Get.put(DriverDetailApiController());
 
@@ -1359,7 +903,7 @@ driverdetailbottomsheet() {
                   height: 600,
                   decoration: BoxDecoration(
                     color: notifier.containercolore,
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(15),
                         topRight: Radius.circular(15)),
                   ),
@@ -1375,7 +919,6 @@ driverdetailbottomsheet() {
                               height: 150,
                               width: Get.width,
                               decoration: BoxDecoration(
-
                                   borderRadius: const BorderRadius.only(
                                       topLeft: Radius.circular(15),
                                       topRight: Radius.circular(15)),
@@ -1457,7 +1000,6 @@ driverdetailbottomsheet() {
                                             "assets/svgpicture/star-fill.svg",
                                             height: 20,
                                           ),
-
                                         ],
                                       ),
                                     ],
@@ -1508,7 +1050,7 @@ driverdetailbottomsheet() {
                                         height: 10,
                                       ),
                                       Text(
-                                        "${driverDetailApiController.driverDetailApiModel!.dDetail!.joinDate.toString().split(" ").first}",
+                                        driverDetailApiController.driverDetailApiModel!.dDetail!.joinDate.toString().split(" ").first,
                                         style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -1532,14 +1074,8 @@ driverdetailbottomsheet() {
                                 height: 20,
                               ),
                               Wrap(
-
                                 runSpacing: 13,
-
-
-
-
                                 spacing: 10,
-
                                 alignment: WrapAlignment.start,
                                 clipBehavior: Clip.none,
                                 crossAxisAlignment: WrapCrossAlignment.start,
@@ -1551,9 +1087,6 @@ driverdetailbottomsheet() {
                                         height: 40,
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 15, vertical: 8),
-
-
-
                                         decoration: BoxDecoration(
                                             border:
                                                 Border.all(color: Colors.grey),
@@ -1587,14 +1120,8 @@ driverdetailbottomsheet() {
                                 height: 20,
                               ),
                               Wrap(
-
                                 runSpacing: 13,
-
-
-
-
                                 spacing: 10,
-
                                 alignment: WrapAlignment.start,
                                 clipBehavior: Clip.none,
                                 crossAxisAlignment: WrapCrossAlignment.start,
@@ -1606,9 +1133,6 @@ driverdetailbottomsheet() {
                                         height: 40,
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 15, vertical: 4),
-
-
-
                                         decoration: BoxDecoration(
                                             border:
                                                 Border.all(color: Colors.grey),
@@ -1642,9 +1166,4 @@ driverdetailbottomsheet() {
       );
     },
   );
-
-
-
-
-
 }
