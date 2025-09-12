@@ -3,7 +3,10 @@
 // ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
 // ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
 import 'colore_screen.dart';
@@ -166,13 +169,169 @@ Widget CommonTextfiled2(
   );
 }
 
-ScaffoldFeatureController<SnackBar, SnackBarClosedReason> snackbar(
-    {required context, required String text}) {
-  return ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(text),
-      backgroundColor: Colors.black,
-      elevation: 10,
+void snackbar({
+  required BuildContext context,
+  required String text,
+  Color? backgroundColor,
+  Color? textColor,
+  IconData? icon,
+  Duration duration = const Duration(seconds: 3),
+  bool isError = false,
+  bool isSuccess = false,
+  bool showAppIcon = true,
+}) {
+  final notifier = Provider.of<ColorNotifier>(context, listen: false);
+
+  Color bgColor = backgroundColor ??
+      (Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey.shade800.withOpacity(0.85)
+          : Colors.grey.shade900.withOpacity(0.85));
+
+  Color borderColor = isError
+      ? Colors.red.shade400
+      : isSuccess
+          ? Colors.green.shade400
+          : theamcolore;
+
+  Color txtColor = textColor ?? Colors.white;
+  Widget? leadingWidget;
+
+  if (icon != null) {
+    leadingWidget = Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withOpacity(0.2),
+        border: Border.all(
+          color: borderColor,
+          width: 1.5,
+        ),
+      ),
+      child: Icon(
+        icon,
+        color: txtColor,
+        size: 22,
+      ),
+    );
+  } else if (isError) {
+    leadingWidget = Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withOpacity(0.2),
+        border: Border.all(
+          color: borderColor,
+          width: 1.5,
+        ),
+      ),
+      child: Icon(
+        Icons.error_outline,
+        color: txtColor,
+        size: 22,
+      ),
+    );
+  } else if (isSuccess) {
+    leadingWidget = Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withOpacity(0.2),
+        border: Border.all(
+          color: borderColor,
+          width: 1.5,
+        ),
+      ),
+      child: Icon(
+        Icons.check_circle_outline,
+        color: txtColor,
+        size: 22,
+      ),
+    );
+  } else if (showAppIcon) {
+    leadingWidget = Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withOpacity(0.2),
+        border: Border.all(
+          color: borderColor,
+          width: 1.5,
+        ),
+      ),
+      child: Center(
+        child: SvgPicture.asset(
+          notifier.isDark == true
+              ? "assets/svgpicture/app_logo_dark.svg"
+              : "assets/svgpicture/app_logo_light.svg",
+          height: 24,
+          width: 24,
+        ),
+      ),
+    );
+  }
+
+  final overlay = Overlay.of(context);
+  late OverlayEntry overlayEntry;
+
+  overlayEntry = OverlayEntry(
+    builder: (context) => Positioned(
+      top: MediaQuery.of(context).size.height * 0.15,
+      left: MediaQuery.of(context).size.width * 0.15,
+      right: MediaQuery.of(context).size.width * 0.15,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(50),
+            border: Border.all(
+              color: borderColor,
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: bgColor.withOpacity(0.6),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              if (leadingWidget != null) ...[
+                leadingWidget,
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    color: txtColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     ),
   );
+
+  overlay.insert(overlayEntry);
+
+  Timer(duration, () {
+    overlayEntry.remove();
+  });
 }

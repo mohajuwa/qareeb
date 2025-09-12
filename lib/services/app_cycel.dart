@@ -7,7 +7,6 @@ class AppLifecycleObserver extends WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.resumed:
         // App came to foreground - check for running rides
-        RunningRideMonitor.instance.checkNow();
         break;
       case AppLifecycleState.paused:
         // App went to background - can reduce monitoring frequency

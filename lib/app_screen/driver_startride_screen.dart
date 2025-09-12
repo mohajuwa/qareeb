@@ -748,9 +748,7 @@ class _DriverStartrideScreenState extends State<DriverStartrideScreen> {
               padding: const EdgeInsets.only(left: 15, top: 60),
               child: InkWell(
                 onTap: () {
-                  Get.offAll(const MapScreen(
-                    selectvihical: false,
-                  ));
+                  Get.offAll(() => const MapScreen(selectvihical: false));
                 },
                 child: Container(
                   height: 30,

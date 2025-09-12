@@ -1,4 +1,5 @@
 import 'package:qareeb/app_screen/driver_list_screen.dart';
+import 'package:qareeb/app_screen/map_screen.dart';
 import 'package:qareeb/common_code/custom_loading_widget.dart';
 // ignore_for_file: avoid_print
 // ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
@@ -10,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/services/running_ride_monitor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'my_ride_detail_screen.dart';
 import 'pickup_drop_point.dart';
@@ -46,7 +48,7 @@ class _MyRideScreenState extends State<MyRideScreen>
   @override
   void initState() {
     super.initState();
-    // socketConnect();
+
     _tabController = TabController(length: 3, vsync: this);
     datagetfunction();
   }
@@ -56,39 +58,6 @@ class _MyRideScreenState extends State<MyRideScreen>
     _tabController.dispose();
     super.dispose();
   }
-
-  // socketConnect() async {
-  //
-  //   setState(() {
-  //
-  //   });
-  //
-  //   // socket = IO.io(Config.imageurl,<String,dynamic>{
-  //   //   'autoConnect': false,
-  //   //   'transports': ['websocket'],
-  //   //
-  //   // });
-  //
-  //   socket.connect();
-  //
-  //   // socket.onConnect((_) {
-  //   //   print('Connected');
-  //   //   socket.emit('message', 'Hello from Flutter');
-  //   // });
-  //
-  //   _connectSocket();
-  //
-  // }
-  //
-  // _connectSocket() async {
-  //   setState(() {
-  //     // midseconde = modual_calculateController.modualCalculateApiModel!.caldriver![0].id!;
-  //   });
-  //
-  //   socket.onConnect((data) => print('Connection established Connected'));
-  //   socket.onConnectError((data) => print('Connect Error: $data'));
-  //   socket.onDisconnect((data) => print('Socket.IO server disconnected'));
-  // }
 
   var decodeUid;
   var userid;
@@ -136,10 +105,6 @@ class _MyRideScreenState extends State<MyRideScreen>
         );
       },
     );
-
-    // livelat = double.parse(value["accepted_d_detail"]["latitude"]);
-    // livelong = double.parse(value["accepted_d_detail"]["longitude"]);
-    // imagenetwork = "${Config.imageurl}${value["accepted_d_detail"]["map_img"]}";
   }
 
   ColorNotifier notifier = ColorNotifier();
@@ -154,7 +119,7 @@ class _MyRideScreenState extends State<MyRideScreen>
         elevation: 0,
         leading: InkWell(
             onTap: () {
-              Get.back();
+              Get.offAll(() => const MapScreen(selectvihical: false));
             },
             child: Padding(
               padding: EdgeInsets.all(15.0),
@@ -302,8 +267,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                       driveridloader = true;
                                                       loadertimer = true;
 
-                                                      // driveridloader == true ? drive_id_list = allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].driverIdList! : [];
-                                                      // print("Status 1 Status:-- $drive_id_list");
                                                       driver_id =
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
@@ -404,16 +367,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                   index]
                                                               .price
                                                               .toString());
-
-                                                      // for(int i=0; i<allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList!.length; i++){
-                                                      //   droptitlelist.add(
-                                                      //       {
-                                                      //         "title" : allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].title,
-                                                      //         "subt": allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].subtitle
-                                                      //       }
-                                                      //   );
-                                                      //   print(".......111111......:--- ${droptitlelist}");
-                                                      // }
 
                                                       for (int i = 0;
                                                           i <
@@ -645,11 +598,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                       loadertimer = true;
                                                       otpstatus = true;
 
-                                                      // timerstop = allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].runTime!.status.toString();
-                                                      //
-                                                      // print("***otpstatus***:---- ${otpstatus}");
-                                                      // print("***timerstop***:---- ${timerstop}");
-
                                                       driver_id =
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
@@ -671,7 +619,7 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                   index]
                                                               .vehicleImage
                                                               .toString();
-                                                      // driveridloader == true ? drive_id_list = allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].driverIdList! : [];
+
                                                       tot_hour =
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
@@ -743,16 +691,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                   index]
                                                               .id
                                                               .toString();
-
-                                                      // for(int i=0; i<allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList!.length; i++){
-                                                      //   droptitlelist.add(
-                                                      //       {
-                                                      //         "title" : allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].title,
-                                                      //         "subt": allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].subtitle
-                                                      //       }
-                                                      //   );
-                                                      //   print(".......33333......:--- ${droptitlelist}");
-                                                      // }
 
                                                       for (int i = 0;
                                                           i <
@@ -1001,11 +939,8 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                               'subtitle']
                                                         });
 
-                                                        // droppointstartscreen.add(PointLatLng(double.parse(dropItem[i]['title']), double.parse(dropItem[i]['subtitle'])));
-
                                                         print(
                                                             ".......111111......:--- ${droptitlelist}");
-                                                        // print(".......droppointstartscreen......:--- ${droppointstartscreen}");
                                                       }
 
                                                       Navigator.push(
@@ -1121,16 +1056,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                               .id
                                                               .toString();
 
-                                                      // for(int i=0; i<allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList!.length; i++){
-                                                      //   droptitlelist.add(
-                                                      //       {
-                                                      //         "title" : allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].title,
-                                                      //         "subt": allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].dropList![i].subtitle
-                                                      //       }
-                                                      //   );
-                                                      //   print(".......33333......:--- ${droptitlelist}");
-                                                      // }
-
                                                       livelat = double.parse(
                                                           allRequestDataApiController
                                                               .allRequestDataModelupcoming!
@@ -1203,12 +1128,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                       print(
                                                           "Status 7 Status:--");
 
-                                                      // total = Vehicle_Ride_Payment["price_list"]["tot_price"];
-                                                      // finaltotal = Vehicle_Ride_Payment["price_list"]["final_price"];
-                                                      // coupontotal = Vehicle_Ride_Payment["price_list"]["coupon_amount"];
-                                                      // additionaltotal = Vehicle_Ride_Payment["price_list"]["addi_time_price"];
-                                                      // platformfee = Vehicle_Ride_Payment["price_list"]["platform_fee"];
-                                                      // additionaltime = Vehicle_Ride_Payment["price_list"]["addi_time"];
                                                       print(
                                                           "//////:-- ${allRequestDataApiController.allRequestDataModelupcoming!.reuqestList![index].finalPrice}");
 
@@ -1310,7 +1229,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                   });
                                                 },
                                                 child: Container(
-                                                  // height: 200,
                                                   width: MediaQuery.of(context)
                                                           .size
                                                           .width *
@@ -1318,7 +1236,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                   margin: const EdgeInsets.only(
                                                       bottom: 10),
                                                   decoration: BoxDecoration(
-                                                    // color: Colors.red,
                                                     border: Border.all(
                                                         color: Colors.grey
                                                             .withOpacity(0.4)),
@@ -1401,7 +1318,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                           height: 10,
                                                         ),
                                                         ListTile(
-                                                          // isThreeLine: true,
                                                           contentPadding:
                                                               EdgeInsets.zero,
                                                           leading: Padding(
@@ -1425,8 +1341,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                         .all(6),
                                                                 child:
                                                                     Container(
-                                                                  // height: 10,
-                                                                  // width: 10,
                                                                   decoration: const BoxDecoration(
                                                                       color: Colors
                                                                           .green,
@@ -1465,7 +1379,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                   )),
                                                         ),
                                                         ListTile(
-                                                          // isThreeLine: true,
                                                           contentPadding:
                                                               EdgeInsets.zero,
                                                           leading: Padding(
@@ -1489,8 +1402,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                         .all(6),
                                                                 child:
                                                                     Container(
-                                                                  // height: 10,
-                                                                  // width: 10,
                                                                   decoration: const BoxDecoration(
                                                                       color: Colors
                                                                           .red,
@@ -1529,17 +1440,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                     maxLines: 2,
                                                                   )),
                                                         ),
-                                                        // const SizedBox(height: 10,),
-                                                        // Row(
-                                                        //   crossAxisAlignment: CrossAxisAlignment.center,
-                                                        //   mainAxisAlignment: MainAxisAlignment.center,
-                                                        //   children: [
-                                                        //     Icon(Icons.person,color: theamcolore,),
-                                                        //     const SizedBox(width: 10,),
-                                                        //     const Text("Driver arrived in",style: TextStyle(color: Colors.black,fontSize: 18),),
-                                                        //     Text(" 15 mins",style: TextStyle(color: theamcolore,fontSize: 18),),
-                                                        //   ],
-                                                        // )
                                                       ],
                                                     ),
                                                   ),
@@ -1633,7 +1533,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                         ));
                                                   },
                                                   child: Container(
-                                                    // height: 200,
                                                     width:
                                                         MediaQuery.of(context)
                                                                 .size
@@ -1643,7 +1542,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                         const EdgeInsets.only(
                                                             bottom: 10),
                                                     decoration: BoxDecoration(
-                                                      // color: Colors.red,
                                                       border: Border.all(
                                                           color: Colors.grey
                                                               .withOpacity(
@@ -1708,7 +1606,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                     color: notifier
                                                                         .textColor),
                                                               ),
-                                                              // const Text("18/11/2024, 10:24 AM"),
                                                               const Spacer(),
                                                               allRequestDataApiController
                                                                           .allRequestDataModelcompleted!
@@ -1744,7 +1641,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                             height: 10,
                                                           ),
                                                           ListTile(
-                                                            // isThreeLine: true,
                                                             contentPadding:
                                                                 EdgeInsets.zero,
                                                             leading: Padding(
@@ -1769,8 +1665,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                           6),
                                                                   child:
                                                                       Container(
-                                                                    // height: 10,
-                                                                    // width: 10,
                                                                     decoration: const BoxDecoration(
                                                                         color: Colors
                                                                             .green,
@@ -1811,7 +1705,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                     )),
                                                           ),
                                                           ListTile(
-                                                            // isThreeLine: true,
                                                             contentPadding:
                                                                 EdgeInsets.zero,
                                                             leading: Padding(
@@ -1836,8 +1729,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                           6),
                                                                   child:
                                                                       Container(
-                                                                    // height: 10,
-                                                                    // width: 10,
                                                                     decoration: const BoxDecoration(
                                                                         color: Colors
                                                                             .red,
@@ -1877,17 +1768,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                           2,
                                                                     )),
                                                           ),
-                                                          // const SizedBox(height: 10,),
-                                                          // Row(
-                                                          //   crossAxisAlignment: CrossAxisAlignment.center,
-                                                          //   mainAxisAlignment: MainAxisAlignment.center,
-                                                          //   children: [
-                                                          //     Icon(Icons.person,color: theamcolore,),
-                                                          //     const SizedBox(width: 10,),
-                                                          //     const Text("Driver arrived in",style: TextStyle(color: Colors.black,fontSize: 18),),
-                                                          //     Text(" 15mins",style: TextStyle(color: theamcolore,fontSize: 18),),
-                                                          //   ],
-                                                          // )
                                                         ],
                                                       ),
                                                     ),
@@ -1970,7 +1850,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                         "***:-- ${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].id}");
                                                   },
                                                   child: Container(
-                                                    // height: 200,
                                                     width:
                                                         MediaQuery.of(context)
                                                                 .size
@@ -1980,7 +1859,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                         const EdgeInsets.only(
                                                             bottom: 10),
                                                     decoration: BoxDecoration(
-                                                      // color: Colors.red,
                                                       border: Border.all(
                                                           color: Colors.grey
                                                               .withOpacity(
@@ -2039,7 +1917,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                           ),
                                                           Row(
                                                             children: [
-                                                              // const Text("18/11/2024, 10:24 AM"),
                                                               Text(
                                                                 "${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].startTime.toString().split(",").first}, ${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].startTime.toString().split(",").last}",
                                                                 style: TextStyle(
@@ -2075,15 +1952,12 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                           style:
                                                                               TextStyle(color: notifier.textColor),
                                                                         )
-
-                                                              // Text("${allRequestDataApiController.allRequestDataModelcancelled!.reuqestList![index].pName}"),
                                                             ],
                                                           ),
                                                           const SizedBox(
                                                             height: 10,
                                                           ),
                                                           ListTile(
-                                                            // isThreeLine: true,
                                                             contentPadding:
                                                                 EdgeInsets.zero,
                                                             leading: Padding(
@@ -2108,8 +1982,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                           6),
                                                                   child:
                                                                       Container(
-                                                                    // height: 10,
-                                                                    // width: 10,
                                                                     decoration: const BoxDecoration(
                                                                         color: Colors
                                                                             .green,
@@ -2146,7 +2018,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                     )),
                                                           ),
                                                           ListTile(
-                                                            // isThreeLine: true,
                                                             contentPadding:
                                                                 EdgeInsets.zero,
                                                             leading: Padding(
@@ -2171,8 +2042,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                           6),
                                                                   child:
                                                                       Container(
-                                                                    // height: 10,
-                                                                    // width: 10,
                                                                     decoration: const BoxDecoration(
                                                                         color: Colors
                                                                             .red,
@@ -2212,17 +2081,6 @@ class _MyRideScreenState extends State<MyRideScreen>
                                                                           2,
                                                                     )),
                                                           ),
-                                                          // const SizedBox(height: 10,),
-                                                          // Row(
-                                                          //   crossAxisAlignment: CrossAxisAlignment.center,
-                                                          //   mainAxisAlignment: MainAxisAlignment.center,
-                                                          //   children: [
-                                                          //     Icon(Icons.person,color: theamcolore,),
-                                                          //     const SizedBox(width: 10,),
-                                                          //     const Text("Driver arrived in",style: TextStyle(color: Colors.black,fontSize: 18),),
-                                                          //     Text(" 15 mins",style: TextStyle(color: theamcolore,fontSize: 18),),
-                                                          //   ],
-                                                          // )
                                                         ],
                                                       ),
                                                     ),

@@ -190,6 +190,7 @@ class _MapScreenState extends State<MapScreen>
 
     if (mounted) {
       setState(() {
+        request_id = "";
         isanimation = false;
 
         isControllerDisposed = true;
@@ -1732,6 +1733,7 @@ class _MapScreenState extends State<MapScreen>
 
     _isDisposed = false;
     WidgetsBinding.instance.addObserver(this);
+    RunningRideMonitor.setCurrentScreen('MapScreen');
 
     // Load automatic booking preference
     _loadAutomaticBookingPreference();
@@ -1782,6 +1784,7 @@ class _MapScreenState extends State<MapScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (kDebugMode) {
         print("🚀 App initialized, starting RunningRideMonitor ONCE");
+        request_id = "";
       }
     });
   }
@@ -3706,7 +3709,7 @@ class _MapScreenState extends State<MapScreen>
             children: [
               // Ultra Modern Header with Glassmorphism
               Container(
-                height: 180,
+                height: 190,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -3741,7 +3744,7 @@ class _MapScreenState extends State<MapScreen>
                             const Spacer(),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
+                                  horizontal: 16, vertical: 4),
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.25),
                                 borderRadius: BorderRadius.circular(15),
@@ -3919,7 +3922,7 @@ class _MapScreenState extends State<MapScreen>
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 17,
+                                              fontSize: 15,
                                               letterSpacing: 0.3,
                                             ),
                                             maxLines: 1,
@@ -4421,10 +4424,11 @@ class _MapScreenState extends State<MapScreen>
   Buttonpresebottomshhet() {
     if (pickupcontroller.text.isEmpty || dropcontroller.text.isEmpty) {
       CustomNotification.show(
-          message: "Select Pickup and Drop", type: NotificationType.info);
+          message: "Select Pickup and Drop".tr, type: NotificationType.warning);
     } else if (amountresponse == "false") {
       CustomNotification.show(
-          message: "Address is not in the zone!", type: NotificationType.info);
+          message: "Address is not in the zone!".tr,
+          type: NotificationType.warning);
     } else if (dropprice == 0) {
       CustomNotification.show(
           message: responsemessage, type: NotificationType.info);
@@ -4689,8 +4693,8 @@ class _MapScreenState extends State<MapScreen>
                             width: 30,
                           ),
                           title: Text(
-                            "Automatically book the nearest driver for (${globalcurrency}${amountcontroller.text})"
-                                .tr,
+                            "Automatically book the nearest driver for".tr +
+                                " (${globalcurrency}${amountcontroller.text})",
                             style: TextStyle(
                                 color: notifier.textColor, fontSize: 16),
                           ),
@@ -5703,121 +5707,135 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-// =================== 👇 PASTE THIS ENTIRE FUNCTION 👇 ===================
+// =================== 👇 انسخ هذه الدالة بالكامل واستبدلها 👇 ===================
 
-  orderfunction() {
-    print("DRIVER ID:- ${homeMapController.homeMapApiModel!.driverid}");
-    print("PICK LOCATION:- ${pickupcontroller.text}");
-    print("DROP LOCATION:- ${dropcontroller.text}");
-    socket.connect();
-
-    homeWalletApiController
-        .homwwalleteApi(uid: userid.toString(), context: context)
-        .then(
-      (value) {
-        print("{{{{{[wallete}}}}}]:-- ${value["wallet_amount"]}");
-        walleteamount = double.parse(value["wallet_amount"]);
-        print("[[[[[[[[[[[[[walleteamount]]]]]]]]]]]]]:-- ($walleteamount)");
-      },
-    );
-    // refreshAnimation();
-
-    // print("111111111dd111111111 ${calculateController.calCulateModel!.driverId}");
-    print("111111111 amountcontroller.text 111111111 ${amountcontroller.text}");
-
-    percentValue.clear();
-    percentValue = [];
-    for (int i = 0; i < 4; i++) {
-      percentValue.add(0);
-    }
-    setState(() {
-      currentStoryIndex = 0;
-      // loadertimer = false;
-    });
-
-    priceyourfare = double.parse(amountcontroller.text);
-    print("***price***::-(${priceyourfare})");
-
-    addVihicalCalculateController.addvihicalcalculateApi(
-      pickupadd: {
-        "title": "${picktitle == "" ? addresspickup : picktitle}",
-        "subt": picksubtitle
-      },
-      dropadd: {"title": droptitle, "subt": dropsubtitle},
-      droplistadd: droptitlelist,
-      context: context,
-      uid: useridgloable.toString(),
-      tot_km: "$totalkm",
-      vehicle_id: vehicle_id,
-      tot_minute: tot_time,
-      tot_hour: tot_hour,
-      m_role: mroal,
-      coupon_id: couponId,
-      payment_id: "$payment",
-      driverid: homeMapController.homeMapApiModel!.driverid!,
-      // driverid: [29,14],
-      price: amountcontroller.text,
-      pickup: "$latitudepick,$longitudepick",
-      drop: "$latitudedrop,$longitudedrop",
-      droplist: onlypass,
-      bidd_auto_status: biddautostatus,
-    ).then(
-      (value) {
-        print("+++++${value!["id"]}");
-        setState(() {});
-        request_id = value["id"].toString();
-        socateempt();
-      },
-    );
-
-    calculateController
-        .calculateApi(
-            context: context,
-            uid: userid.toString(),
-            mid: mid,
-            mrole: mroal,
-            pickup_lat_lon: "$latitudepick,$longitudepick",
-            drop_lat_lon: "$latitudedrop,$longitudedrop",
-            drop_lat_lon_list: onlypass)
-        .then(
-      (value) {
-        // print("********** value **********:----- ${value}");
-        // print("********** value **********:----- ${value["drop_price"]}");
-        // print("********** value **********:----- ${value["vehicle"]["minimum_fare"]}");
-        // print("********** value **********:----- ${value["vehicle"]["maximum_fare"]}");
-
-        dropprice = 0;
-        minimumfare = 0;
-        maximumfare = 0;
-
-        if (value["Result"] == true) {
-          amountresponse = "true";
-          dropprice = value["drop_price"];
-          minimumfare = value["vehicle"]["minimum_fare"];
-          maximumfare = value["vehicle"]["maximum_fare"];
-          responsemessage = value["message"];
-        } else {
-          amountresponse = "false";
-          print("jojojojojojojojojojojojojojojojojojojojojojojojo");
-        }
-
-        print("********** dropprice **********:----- $dropprice");
-        print("********** minimumfare **********:----- $minimumfare");
-        print("********** maximumfare **********:----- $maximumfare");
-      },
-    );
-  }
-
-// =================== 👆 END OF THE FUNCTION TO PASTE 👆 ===================
+// ✅ HELPER FUNCTION: Make sure this function exists in your class
   List<String> convertDroplist() {
     if (onlypass.isEmpty) {
       return [];
     }
-
     return onlypass
         .map((point) => "${point.latitude},${point.longitude}")
         .toList();
   }
+
+// ✅ UPDATED FUNCTION: This function now handles calculations, ride creation, and push notifications correctly.
+  orderfunction() async {
+    if (!mounted || _isDisposed) return;
+
+    // Show a loading indicator immediately to the user
+    StatusHelper.showStatusDialog(
+      context,
+      statusType: StatusType.loading,
+      customSubtitle: "Finding the best driver for you...".tr,
+    );
+
+    try {
+      // Step 1: AWAIT the calculation API call first to get driver and ETA.
+      final calculationResult = await calculateController.calculateApi(
+        context: context,
+        uid: userid.toString(),
+        mid: mid,
+        mrole: mroal,
+        pickup_lat_lon: "$latitudepick,$longitudepick",
+        drop_lat_lon: "$latitudedrop,$longitudedrop",
+        drop_lat_lon_list: onlypass,
+      );
+
+      if (!mounted || _isDisposed) {
+        Navigator.of(context, rootNavigator: true).pop();
+        return;
+      }
+
+      // Step 2: Check if the calculation was successful
+      if (calculationResult == null || calculationResult["Result"] != true) {
+        Navigator.of(context, rootNavigator: true).pop();
+        CustomNotification.show(
+          message: calculationResult?["message"] ??
+              "Could not find a driver. Please try again.".tr,
+          type: NotificationType.error,
+        );
+        setState(() => isanimation = false);
+        return;
+      }
+
+      // ✅ Step 3: Use the FRESHLY calculated data (CORRECTED)
+      final String driverEtaMinutes =
+          calculateController.calCulateModel!.totMinute.toString();
+      final String driverEtaHours =
+          calculateController.calCulateModel!.totHour.toString();
+      final List<int> nearestDriverIds = calculateController
+          .calCulateModel!.driverId!; // ✅ CORRECT: Keep it as a List<int>
+      priceyourfare = double.parse(amountcontroller.text);
+
+      // Step 4: NOW, create the ride request with the correct data
+      final rideCreationResult =
+          await addVihicalCalculateController.addvihicalcalculateApi(
+        pickupadd: {
+          "title": picktitle == "" ? addresspickup : picktitle,
+          "subt": picksubtitle
+        },
+        dropadd: {"title": droptitle, "subt": dropsubtitle},
+        droplistadd: droptitlelist,
+        context: context,
+        uid: useridgloable.toString(),
+        tot_km: "$totalkm",
+        vehicle_id: vehicle_id,
+        tot_minute: driverEtaMinutes,
+        tot_hour: driverEtaHours,
+        m_role: mroal,
+        coupon_id: couponId,
+        payment_id: "$payment",
+        driverid: nearestDriverIds, // ✅ CORRECT: Pass the List<int> directly
+        price: amountcontroller.text,
+        pickup: "$latitudepick,$longitudepick",
+        drop: "$latitudedrop,$longitudedrop",
+        droplist: convertDroplist(),
+        bidd_auto_status: biddautostatus,
+      );
+
+      if (!mounted || _isDisposed) {
+        Navigator.of(context, rootNavigator: true).pop();
+        return;
+      }
+
+      Navigator.of(context, rootNavigator: true).pop();
+
+      if (rideCreationResult != null && rideCreationResult["id"] != null) {
+        setState(() {
+          request_id = rideCreationResult["id"].toString();
+          isanimation = true;
+          loadertimer = true;
+          offerpluse = false;
+        });
+
+        // Step 5: Start timer and emit socket event AFTER successfully creating the ride
+        requesttime();
+        socateempt();
+      } else {
+        CustomNotification.show(
+          message: "Failed to create ride request. Please try again.".tr,
+          type: NotificationType.error,
+        );
+        setState(() => isanimation = false);
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error in orderfunction: $e");
+      if (!mounted || _isDisposed) return;
+
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      setState(() => isanimation = false);
+      CustomNotification.show(
+        message: "An unexpected error occurred. Please try again.".tr,
+        type: NotificationType.error,
+      );
+    }
+  }
+
+// =================== 👆 END OF THE SECTION TO PASTE 👆 ===================
 
   void _showRetryDialog(BuildContext context) {
     showDialog(

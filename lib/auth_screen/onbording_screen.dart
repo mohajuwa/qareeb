@@ -411,7 +411,8 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
         break;
       default:
         CustomNotification.show(
-            message: "No Service".tr, type: NotificationType.info); {}
+            message: "No Service".tr, type: NotificationType.info);
+        {}
     }
   }
 
@@ -600,7 +601,8 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
           break;
         default:
           CustomNotification.show(
-              message: "No Service".tr, type: NotificationType.info); {}
+              message: "No Service".tr, type: NotificationType.info);
+          {}
       }
     } else {
       CustomNotification.show(

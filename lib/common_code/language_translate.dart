@@ -30,6 +30,8 @@ class AppTranslations extends Translations {
           "Comments": "Comments",
           "How many of you will go?": "How many of you will go?",
           "Captain on the way": "Captain on the way",
+          "Select Pickup and Drop": "Select Pickup and Drop",
+          "Address is not in the zone!": "Address is not in the zone!",
           "Captain has arrived": "Captain has arrived",
           "Heading to the destination": "Heading to the destination",
           "Start your order with PIN": "Start your order with PIN",
@@ -395,6 +397,8 @@ class AppTranslations extends Translations {
           "Comments": "التعليقات",
           "How many of you will go?": "كم منكم سيذهب؟",
           "Captain on the way": "الكابتن في الطريق",
+          "Select Pickup and Drop": "اختر موقع النزول والاقلاع",
+          "Address is not in the zone!": "الموقع ليس ضمن النطاق المتاح",
           "Captain has arrived": "لقد وصل الكابتن",
           "Heading to the destination": "متجه إلى الوجهة",
           "Start your order with PIN":
@@ -439,7 +443,7 @@ class AppTranslations extends Translations {
           "💡Raise the fare, increase your chances.":
               "💡ارفع الأجرة، وزد من فرصك.",
           "Automatically book the nearest driver for":
-              "احجز تلقائيًا أقرب سائق لـ",
+              "احجز تلقائيًا أقرب سائق بــ",
           "Cancel Request": "إلغاء الطلب",
           "cancel": "إلغاء",
           "Completed": "مكتمل",

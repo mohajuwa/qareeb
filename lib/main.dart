@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:provider/provider.dart';
 import 'package:qareeb/common_code/network_service.dart';
+import 'package:qareeb/services/routes.dart';
 import 'auth_screen/splase_screen.dart';
 import 'common_code/colore_screen.dart';
 import 'common_code/language_translate.dart';
@@ -74,6 +75,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         debugShowCheckedModeBanner: false,
         translations: AppTranslations(),
         locale: const Locale('ur', 'arabic'),
+        getPages: AppRoutes.getPages,
         theme: ThemeData(
           fontFamily: 'Khebrat',
           useMaterial3: false,

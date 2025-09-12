@@ -82,43 +82,46 @@ class _DriverListScreenState extends State<DriverListScreen>
         try {
           if (kDebugMode) {
             print("🎯 Received Accept_Bidding_Response: $data");
-
             print("   Success: ${data['success']}");
-
             print("   Driver ID: ${data['driver_id']}");
-
             print("   Cart ID: ${data['cart_id']}");
           }
 
           if (data['success'] == true) {
             // Stop all timers immediately to prevent ticker errors
-
             _stopAllTimers();
-
             _disposed = true; // Mark as disposed to prevent further operations
 
             // Update global variables for the accepted driver
-
             driver_id = data['driver_id']?.toString() ?? "";
-
             request_id = data['cart_id']?.toString() ?? request_id;
 
             if (kDebugMode) {
-              print("✅ Bid accepted! Navigating to DriverDetailScreen");
+              print(
+                  "✅ Bid accepted! Navigating to MapScreen then DriverDetailScreen");
             }
 
-            // Navigate to DriverDetailScreen using the same pattern as other parts of your app
-
-            globalDriverAcceptClass.driverdetailfunction(
-              context: context,
-              lat: double.tryParse(latitudepick.toString()) ?? 0.0,
-              long: double.tryParse(longitudepick.toString()) ?? 0.0,
-              d_id: driver_id,
-              request_id: request_id,
+            // Navigate to MapScreen immediately
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const MapScreen(
+                        selectvihical: true,
+                      )),
             );
+
+            // Navigate to driver detail after 3 seconds
+            Timer(const Duration(seconds: 3), () {
+              globalDriverAcceptClass.driverdetailfunction(
+                context: context,
+                lat: double.tryParse(latitudepick.toString()) ?? 0.0,
+                long: double.tryParse(longitudepick.toString()) ?? 0.0,
+                d_id: driver_id,
+                request_id: request_id,
+              );
+            });
           } else {
             // Show error message
-
             if (kDebugMode) {
               print("❌ Bid acceptance failed: ${data['message']}");
             }
@@ -132,17 +135,14 @@ class _DriverListScreenState extends State<DriverListScreen>
             );
 
             // Reset the accepted state for this driver
-
             setState(() {
               // Find and reset the accepted driver
-
               for (int i = 0; i < vehicle_bidding_driver.length; i++) {
                 if (vehicle_bidding_driver[i]['id'].toString() ==
                     data['driver_id'].toString()) {
                   if (i < acceptedOffers.length) {
                     acceptedOffers[i] = false;
                   }
-
                   break;
                 }
               }
@@ -988,8 +988,7 @@ class _DriverListScreenState extends State<DriverListScreen>
                 children: [
                   const Text(
                     "DEBUG INFO:",
-                    style: TextStyle(
-                        fontSize: 10, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     "Raw: ${driver.toString()}",

@@ -6,6 +6,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/services/running_ride_monitor.dart';
+import 'package:qareeb/utils/image_utils.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:url_launcher/url_launcher.dart';
 import 'pickup_drop_point.dart';
@@ -256,8 +258,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
 
     socket.on('V_Driver_Location$useridgloable', (vDriverLocation) {
       print("++++++ /V_Driver_Location111/ ++++ :---  $vDriverLocation");
-      print(
-          "V_Driver_Location111 is of type: ${vDriverLocation.runtimeType}");
+      print("V_Driver_Location111 is of type: ${vDriverLocation.runtimeType}");
       print("V_Driver_Location111 keys: ${vDriverLocation.keys}");
       print("+++++V_Driver_Location111 userid+++++: $useridgloable");
       print("++++driver_id hhhh111 +++++: $driver_id");
@@ -271,8 +272,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
       if (driver_id == vDriverLocation["d_id"].toString()) {
         print("SuccessFully111");
 
-        livelat =
-            double.parse(vDriverLocation["driver_location"]["latitude"]);
+        livelat = double.parse(vDriverLocation["driver_location"]["latitude"]);
         livelong =
             double.parse(vDriverLocation["driver_location"]["longitude"]);
 
@@ -356,7 +356,9 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
 
   @override
   void initState() {
-    setState(() {});
+    setState(() {
+      RunningRideMonitor.setCurrentScreen('DriverDetailScreen');
+    });
 
     Timer(const Duration(seconds: 2), () {
       print("22222222222222222222222222 TIMER");
@@ -673,25 +675,24 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                         clipBehavior: Clip.none,
                                         children: [
                                           InkWell(
-                                            onTap: () {
-                                              print(
-                                                  "jhdgsfhjsvfhjfvhjkafvjahkfvjhkfvjkhfbvjuvaeswj");
-                                              print("*****:(:-- $prefrence");
-                                              print(
-                                                  "*****:(:-- ${prefrence.length}");
-                                              driverdetailbottomsheet();
-                                            },
-                                            child: Container(
-                                              height: 60,
-                                              width: 60,
-                                              decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  image: DecorationImage(
-                                                      image: NetworkImage(
-                                                          "${Config.imageurl}${vihicalDriverDetailApiController.vihicalDriverDetailModel!.acceptedDDetail!.profileImage}"),
-                                                      fit: BoxFit.cover)),
-                                            ),
-                                          ),
+                                              onTap: () {
+                                                print(
+                                                    "jhdgsfhjsvfhjfvhjkafvjahkfvjhkfvjkhfbvjuvaeswj");
+                                                print("*****:(:-- $prefrence");
+                                                print(
+                                                    "*****:(:-- ${prefrence.length}");
+                                                driverdetailbottomsheet();
+                                              },
+                                              child:
+                                                  ImageUtils.buildProfileImage(
+                                                imageUrl:
+                                                    vihicalDriverDetailApiController
+                                                        .vihicalDriverDetailModel
+                                                        ?.acceptedDDetail
+                                                        ?.profileImage,
+                                                height: 60,
+                                                width: 60,
+                                              )),
                                           Positioned(
                                             bottom: -15,
                                             left: 0,
@@ -915,32 +916,28 @@ driverdetailbottomsheet() {
                         Stack(
                           clipBehavior: Clip.none,
                           children: [
-                            Container(
+                            ImageUtils.buildVehicleImage(
+                              imageUrl: driverDetailApiController
+                                  .driverDetailApiModel?.dDetail?.vehicleImage,
                               height: 150,
                               width: Get.width,
-                              decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(15),
-                                      topRight: Radius.circular(15)),
-                                  image: DecorationImage(
-                                      image: NetworkImage(
-                                          "${Config.imageurl}${driverDetailApiController.driverDetailApiModel!.dDetail!.vehicleImage}"),
-                                      fit: BoxFit.cover)),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(15),
+                                topRight: Radius.circular(15),
+                              ),
+                              context: context,
                             ),
                             Positioned(
-                              left: 20,
-                              bottom: -35,
-                              child: Container(
-                                height: 80,
-                                width: 80,
-                                decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    image: DecorationImage(
-                                        image: NetworkImage(
-                                            "${Config.imageurl}${driverDetailApiController.driverDetailApiModel!.dDetail!.profileImage}"),
-                                        fit: BoxFit.cover)),
-                              ),
-                            )
+                                left: 20,
+                                bottom: -35,
+                                child: ImageUtils.buildProfileImage(
+                                  imageUrl: driverDetailApiController
+                                      .driverDetailApiModel
+                                      ?.dDetail
+                                      ?.profileImage,
+                                  height: 80,
+                                  width: 80,
+                                ))
                           ],
                         ),
                         Padding(
@@ -1050,7 +1047,13 @@ driverdetailbottomsheet() {
                                         height: 10,
                                       ),
                                       Text(
-                                        driverDetailApiController.driverDetailApiModel!.dDetail!.joinDate.toString().split(" ").first,
+                                        driverDetailApiController
+                                            .driverDetailApiModel!
+                                            .dDetail!
+                                            .joinDate
+                                            .toString()
+                                            .split(" ")
+                                            .first,
                                         style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,

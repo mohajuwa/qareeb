@@ -42,9 +42,6 @@ class HomeApiController extends GetxController implements GetxService {
           isLoading = false;
           update();
 
-          Future.delayed(const Duration(milliseconds: 500), () {
-            RunningRideMonitor.instance.checkNow();
-          });
 
           return data;
         } else {
