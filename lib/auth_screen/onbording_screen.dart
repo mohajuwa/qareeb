@@ -342,7 +342,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
       containcolore: theamcolore,
       onPressed1: _handleContinue,
       context: context,
-      txt1: "Continue".tr.tr,
+      txt1: "Continue".tr,
     );
   }
 
@@ -516,7 +516,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
                 _buildForgotPhoneField(notifier),
                 const SizedBox(height: 20),
                 CommonButton(
-                  txt1: 'Continue'.tr.tr,
+                  txt1: 'Continue'.tr,
                   containcolore: theamcolore,
                   context: context,
                   onPressed1: _handleForgotPassword,
@@ -764,7 +764,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
               const SizedBox(height: 15),
               CommonButton(
                 containcolore: theamcolore,
-                txt1: 'Confirm'.tr.tr,
+                txt1: 'Confirm'.tr,
                 context: context,
                 onPressed1: _handlePasswordReset,
               ),

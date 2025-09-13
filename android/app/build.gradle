@@ -33,7 +33,11 @@ configurations.all {
         }
     }
 }
-
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
 android {
     namespace "com.qareeb.customer"
     compileSdkVersion 35
@@ -60,6 +64,17 @@ android {
         versionName flutterVersionName
         multiDexEnabled true
     }
+     signingConfigs {
+    release {
+        println ">>> Keystore path: ${keystoreProperties['storeFile']}"
+        keyAlias keystoreProperties['keyAlias']
+        keyPassword keystoreProperties['keyPassword']
+        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+        storePassword keystoreProperties['storePassword']
+    }
+}
+
+
 
     buildTypes {
         release {
@@ -113,4 +128,9 @@ dependencies {
     // Google Maps (if needed)
     implementation 'com.google.android.gms:play-services-maps:18.2.0'
     implementation 'com.google.android.gms:play-services-location:21.0.1'
+
+    // Provides the missing Google Pay/Wallet classes for Razorpay
+    implementation 'com.google.android.gms:play-services-wallet:19.3.0'
+    // Provides the missing proguard.annotation classes
+    // implementation 'com.android.tools:proguard-annotations:2.0.3'
 }

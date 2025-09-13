@@ -77,7 +77,7 @@ class LoginController extends GetxController implements GetxService {
         snackbar(context: context, text: "${data["message"]}");
       }
     } else {
-      snackbar(context: context, text: "Something went Wrong....!!!");
+      snackbar(context: context, text: "Something went Wrong....!!!".tr);
     }
   }
 }

@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 import 'package:get/get.dart';
 import '../common_code/config.dart';
 
@@ -41,8 +40,8 @@ class SmstypeApiController extends GetxController implements GetxService {
       }
     } else {
       Get.back();
-      // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Something went Wrong....!!!")));
-      snackbar(context: context, text: "Something went Wrong....!!!");
+      // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Something went Wrong....!!!".tr)));
+      snackbar(context: context, text: "Something went Wrong....!!!".tr);
     }
   }
 }

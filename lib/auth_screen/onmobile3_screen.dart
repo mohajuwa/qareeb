@@ -207,7 +207,7 @@ class _Onmobile3ScreenState extends State<Onmobile3Screen> {
                           style: TextStyle(color: notifier.textColor),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter some text';
+                              return 'Please enter some text'.tr;
                             }
                             return null;
                           },

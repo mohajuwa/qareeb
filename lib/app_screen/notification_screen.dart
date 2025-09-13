@@ -42,7 +42,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         iconTheme: IconThemeData(
           color: notifier.textColor,
         ),
-        title: Text('Notification'.tr.tr,
+        title: Text('Notification'.tr,
             style: TextStyle(
                 color: notifier.textColor,
                 fontFamily: "SofiaProBold",
@@ -52,8 +52,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       body: GetBuilder<NotificationApiController>(
         builder: (notificationApiController) {
           return notificationApiController.isLoading
-              ? Center(
-                  child: CustomLoadingWidget())
+              ? Center(child: CustomLoadingWidget())
               : notificationApiController.notiFicationApiModel!.ndata!.isEmpty
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,

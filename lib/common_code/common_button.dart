@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import 'colore_screen.dart';
@@ -94,7 +95,7 @@ Widget CommonTextfiled200(
     style: TextStyle(color: notifier.textColor),
     validator: (value) {
       if (value == null || value.isEmpty) {
-        return 'Please enter some text';
+        return 'Please enter some text'.tr;
       }
       return null;
     },

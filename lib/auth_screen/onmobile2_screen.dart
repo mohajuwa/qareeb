@@ -1,7 +1,6 @@
-import 'package:qareeb/common_code/custom_notification.dart';
-// ignore_for_file: avoid_print
-// ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_fields
-// ignore_for_file: unused_import, must_be_immutable, use_super_parameters,
+// ignore_for_file: avoid_prin
+// ignore_for_file: unused_field, unused_element, depend_on_referenced_packages, camel_case_types, non_constant_identifier_names, prefer_typing_uninitialized_variables, avoid_init_to_null, use_build_context_synchronously, unnecessary_brace_in_string_interps, prefer_final_field
+// ignore_for_file: unused_import, must_be_immutable, use_super_parameters
 // ignore_for_file: use_key_in_widget_constructors, prefer_interpolation_to_compose_strings, unnecessary_string_interpolations, await_only_futures, prefer_const_constructors, avoid_unnecessary_containers, file_names, void_checks, deprecated_member_use
 
 import 'dart:async';
@@ -13,6 +12,7 @@ import 'package:otp_text_field/otp_field.dart';
 import 'package:otp_text_field/otp_field_style.dart';
 import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/custom_notification.dart';
 import 'onmobile3_screen.dart';
 import '../api_code/msg91_api_controller.dart';
 import '../api_code/sms_type_controller.dart';
@@ -33,8 +33,6 @@ class Onmobile2Screen extends StatefulWidget {
 class _Onmobile2ScreenState extends State<Onmobile2Screen> {
   @override
   void initState() {
-    // TODO: implement initState
-
     otpvarable2 = widget.otpvariable;
     startTimer();
     smstypeApiController.smsApi(context);
@@ -50,8 +48,6 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
   MasgapiController masgapiController = Get.put(MasgapiController());
   SmstypeApiController smstypeApiController = Get.put(SmstypeApiController());
   TwilioapiController twilioapiController = Get.put(TwilioapiController());
-
-  // resend code
 
   int secondsRemaining = 30;
   bool enableResend = false;
@@ -70,36 +66,11 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
           secondsRemaining--;
         } else {
           enableResend = true;
-          t.cancel(); // Cancel timer when done
+          t.cancel();
         }
       });
     });
   }
-
-  // void _resendCode() {
-  //
-  //   if (smstypeApiController.smaApiModel!.message == "MSG91") {
-  //     // print("******* Msg91 ******* ${widget.ccode}");
-  //
-  //     masgapiController.msgApi(mobilenumber: ccode + signupmobilecontroller.text, context: context);
-  //
-  //   }
-  //   else if (smstypeApiController.smaApiModel!.message == "Twilio") {
-  //     print("******* Twilio *******");
-  //
-  //     twilioapiController.twilioApi(mobilenumber: ccode + signupmobilecontroller.text, context: context);
-  //
-  //   }
-  //   else{}
-  //
-  //
-  //
-  //   setState(() {
-  //     secondsRemaining = 30;
-  //     enableResend = false;
-  //     startTimer();
-  //   });
-  // }
 
   ColorNotifier notifier = ColorNotifier();
   @override
@@ -133,10 +104,6 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                           color: Colors.white,
                           height: 35,
                         )),
-                    // const Expanded(
-                    //   child: Divider(color: Colors.white,thickness: 2,),
-                    // ),
-                    // const SizedBox(width: 5,),
                     const Expanded(
                       child: Divider(
                         color: Colors.white,
@@ -164,7 +131,6 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                     ),
                   ],
                 ),
-                // Spacer(),
                 const SizedBox(
                   height: 20,
                 ),
@@ -188,11 +154,11 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
             padding: const EdgeInsets.all(15),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(
-                    "Login using the OTP sent ${ccode}${signupmobilecontroller.text}",
+                    "Login using the OTP sent ${ccode}${signupmobilecontroller.text}"
+                        .tr,
                     style: TextStyle(color: notifier.textColor),
                   ),
                   const SizedBox(
@@ -230,40 +196,10 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                       });
                     },
                   ),
-                  // const SizedBox(height: 15,),
-                  // CommonTextfiled200(txt: "Enter 4 digit OTP", context: context),
                   const SizedBox(
                     height: 20,
                   ),
-
-                  // Row(
-                  //   children: [
-                  //     Spacer(),
-                  //     enableResend
-                  //         ? InkWell(
-                  //       onTap: () {
-                  //         _resendCode();
-                  //         otpvarable2 = int.parse(masgapiController.msgApiModel!.otp.toString());
-                  //         print("****:---------***:---  ${otpvarable2}");
-                  //         print("fffffffff");
-                  //       },
-                  //       child: Text(
-                  //         "Resend code?".tr,
-                  //         style: TextStyle(
-                  //             fontFamily: "SofiaRegular", color: Colors.black, fontSize: 16),
-                  //       ),
-                  //     ) : Text(
-                  //       " $secondsRemaining Seconds".tr,
-                  //       style: TextStyle(
-                  //         color: theamcolore,
-                  //         fontFamily: "SofiaRegular",
-                  //       ),
-                  //     ),
-                  //     Spacer(),
-                  //   ],
-                  // )
                 ]),
-                // Spacer(),
               ],
             ),
           ),
@@ -292,7 +228,7 @@ class _Onmobile2ScreenState extends State<Onmobile2Screen> {
                   }
                 },
                 context: context,
-                txt1: "Continue".tr.tr),
+                txt1: "Continue".tr),
           )
         ],
       ),

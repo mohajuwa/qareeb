@@ -29,23 +29,23 @@ class CustomNotification {
       case NotificationType.success:
         bg = Colors.green.shade600;
         lottiePath = 'assets/lottie/payment_success.json';
-        title ??= 'Success'.tr.tr;
+        title ??= 'Success'.tr;
         break;
       case NotificationType.error:
         bg = Colors.red.shade600;
         lottiePath = 'assets/lottie/warning.json';
-        title ??= 'Error'.tr.tr;
+        title ??= 'Error'.tr;
         break;
       case NotificationType.warning:
         bg = Colors.orange.shade700;
         lottiePath = 'assets/lottie/warning.json';
-        title ??= 'Warning'.tr.tr;
+        title ??= 'Warning'.tr;
         break;
       case NotificationType.info:
       default:
         bg = theamcolore;
         lottiePath = 'assets/lottie/searching.json';
-        title ??= 'Info'.tr.tr;
+        title ??= 'Info'.tr;
         break;
     }
 

@@ -150,8 +150,7 @@ class _ChatScreenState extends State<ChatScreen> {
       body: GetBuilder<ChatListApiController>(
         builder: (chatListApiController) {
           return chatListApiController.isLoading
-              ? Center(
-                  child: CustomLoadingWidget())
+              ? Center(child: CustomLoadingWidget())
               : chatListApiController.chatListApiModel!.chatList!.isEmpty
                   ? Center(
                       child: Column(
@@ -617,7 +616,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             //             gradient: gradient.btnGradient,
                             //           ),
                             //           child: Text(
-                            //             "Info".tr.tr,
+                            //             "Info".tr,
                             //             style: TextStyle(
                             //               fontFamily: FontFamily.gilroyMedium,
                             //               color: WhiteColor,

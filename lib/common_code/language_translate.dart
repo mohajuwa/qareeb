@@ -373,19 +373,62 @@ class AppTranslations extends Translations {
           "Please change vehicle type": "Please change vehicle type",
         },
         'ur_arabic': {
+          // Basic Navigation & Actions
           "Captains are busy": "القادة مشغولون",
           "Find a driver": "ابحث عن سائق",
           "City to city": "من مدينة إلى مدينة",
           "From": "من",
           "To": "إلى",
-          "Departure date": "تاريخ المغادرة",
-          "Departure time": "وقت المغادرة",
           "Done": "تم",
           "Skip": "تخطي",
           "Next": "التالي",
+          "Continue": "متابعة",
+          "Cancel": "إلغاء",
+          "Close": "إغلاق",
+          "Accept": "قبول",
+          "Decline": "رفض",
+          "Update": "تحديث",
+          "Remove": "إزالة",
+          "Add": "إضافة",
+          "Select": "اختيار",
+          "Change": "تغيير",
+          "Apply": "تطبيق",
+          "Save": "حفظ",
+          "Edit": "تعديل",
+          "Delete": "حذف",
+          "Back": "رجوع",
+          "Yes": "نعم",
+          "No": "لا",
+          "Confirm": "تأكيد",
+          "OK": "موافق",
+          "Try Again": "حاول مرة أخرى",
+          "Retry": "إعادة المحاولة",
+
+          // Date & Time
+          "Departure date": "تاريخ المغادرة",
+          "Departure time": "وقت المغادرة",
           "When": "متى",
+          "Date and Time": "التاريخ والوقت",
+          "Starting at": "يبدأ من",
+          "Leave now": "اغادر الآن",
+          "Leave later": "اغادر لاحقًا",
+          "How much time do you need?": "كم من الوقت تحتاج؟",
+          "Estimated arrival": "الوصول المتوقع",
+          "Arrival time": "وقت الوصول",
+          "Estimated time": "الوقت المقدر",
+          "hours / minit :": "ساعات/دقائق:",
+          "Date & Time :": "التاريخ والوقت:",
+          "minutes": "دقائق",
+          "hours": "ساعات",
+          "days": "أيام",
+          "weeks": "أسابيع",
+          "months": "شهور",
+
+          // Passengers & Pricing
           "Number of passengers": "عدد الركاب",
+          "How many of you will go?": "كم منكم سيذهب؟",
           "Set your price": "حدد السعر",
+          "Offer your fare": "اعرض أجرة",
           "We charge no commission. Full": "لا نفرض أي عمولة. يذهب المبلغ",
           "amount goes to the captain": "الكامل إلى القائد",
           "Higher the price,higher the chance of":
@@ -393,79 +436,209 @@ class AppTranslations extends Translations {
           "getting a ride": "الحصول على رحلة",
           "Automatically accept the nearest driver for your fare":
               "اقبل تلقائيًا أقرب سائق مقابل أجرة",
-          "Offer your fare": "اعرض أجرة",
-          "Comments": "التعليقات",
-          "How many of you will go?": "كم منكم سيذهب؟",
-          "Captain on the way": "الكابتن في الطريق",
+          "💡Raise the fare, increase your chances.":
+              "💡ارفع الأجرة، وزد من فرصك.",
+          "Automatically book the nearest driver for":
+              "احجز تلقائيًا أقرب سائق بــ",
+
+          // Location & Map
           "Select Pickup and Drop": "اختر موقع النزول والاقلاع",
+          "Pickup": "الاستلام",
+          "Pickup From": "الاستلام من",
+          "Destination": "الوجهة",
+          "Drop": "التسليم",
+          "Drop to": "إسقاط إلى",
+          "Drop location": "موقع التسليم",
           "Address is not in the zone!": "الموقع ليس ضمن النطاق المتاح",
+          "Your Current Location": "موقعك الحالي",
+          "Current location": "الموقع الحالي",
+          "Select on map": "حدد على الخريطة",
+          "Add a destination": "أضف وجهة",
+          "Please select pickup location": "يرجى اختيار موقع الانطلاق",
+          "Please select drop location": "يرجى اختيار موقع الوصول",
+          "Pickup and drop locations cannot be same":
+              "لا يمكن أن يكون موقع الانطلاق والوصول متماثلين",
+          "Enter pickup manually": "إدخال الاستلام يدويًا",
+          "Location not found": "لم يتم العثور على الموقع",
+          "Invalid location": "موقع غير صحيح",
+          "Location permission not enabled": "إذن الموقع غير ممكّن",
+          "Sharing Location permission helps us improve your ride booking and pickup experience":
+              "مشاركة إذن الموقع يساعدنا في تحسين حجز رحلتك وتجربة الاستلام",
+          "Allow Permission": "السماح بالإذن",
+          "Searching for you on the map...": "البحث عنك على الخريطة...",
+          "Route": "المسار",
+          "Traffic": "الحركة المرورية",
+          "Fastest route": "أسرع مسار",
+          "Shortest route": "أقصر مسار",
+          "Alternative route": "مسار بديل",
+
+          // Trip Status & Flow
+          "Captain on the way": "الكابتن في الطريق",
+          "Driver on the way": "السائق في الطريق",
           "Captain has arrived": "لقد وصل الكابتن",
           "Heading to the destination": "متجه إلى الوجهة",
           "Start your order with PIN":
               "ابدأ طلبك باستخدام رقم التعريف الشخصي (PIN)",
-          "Pickup From": "الاستلام من",
-          "Trip Details": "تفاصيل الرحلة",
-          "Rating": "التقييم",
-          "Trips": "الرحلات",
-          "Joined": "تم الانضمام",
-          "Language": "اللغة",
-          "Preference": "التفضيل",
           "Choose a driver": "اختر سائقًا",
+          "Choose a ride": "اختر رحلة",
           "Driver can offer their fare and time": "يمكن للسائق تقديم أجرة ووقت",
-          "Decline": "رفض",
-          "Accept": "قبول",
-          "Drop to": "إسقاط إلى",
-          "Faq List": "قائمة الأسئلة الشائعة",
-          "CONTINUE": "متابعة",
+          "Trip Details": "تفاصيل الرحلة",
+          "RIDE DETAIL": "تفاصيل الرحلة",
+          "Ride Type :": "نوع الرحلة:",
+          "Car Type :": "نوع السيارة:",
+          "Trip started": "بدأت الرحلة",
+          "Trip completed": "اكتملت الرحلة",
+          "Trip in progress": "الرحلة قيد التنفيذ",
+          "RIDE COMPLETED": "اكتملت الرحلة",
+          "Cancel Request": "إلغاء الطلب",
+          "Cancel trip": "إلغاء الرحلة",
+          "Request cancelled": "تم إلغاء الطلب",
+          "Unable to cancel": "تعذر الإلغاء",
+          "Driver assigned": "تم تعيين السائق",
+          "Vehicle assigned": "تم تعيين المركبة",
+          "Searching for driver": "جاري البحث عن سائق",
+          "No drivers available": "لا يوجد سائقون متاحون",
+          "Request timeout": "انتهت مهلة الطلب",
+
+          // Driver Information
+          "Driver name": "اسم السائق",
+          "Driver rating": "تقييم السائق",
+          "Vehicle number": "رقم المركبة",
+          "Driver phone": "هاتف السائق",
+          "Driver location": "موقع السائق",
+          "Contact driver": "اتصل بالسائق",
+          "Driver found": "تم العثور على سائق",
+          "Driver arriving": "السائق قادم",
+
+          // Payment & Pricing
+          "PAYMENT": "الدفع",
+          "Ride Fair :": "معرض الرحلة:",
+          "Ride fare": "أجرة الرحلة",
+          "Total fare": "إجمالي الأجرة",
+          "Total amount": "المبلغ الإجمالي",
+          "Final amount": "المبلغ النهائي",
+          "Base fare": "الأجرة الأساسية",
+          "Distance charge": "رسوم المسافة",
+          "Time charge": "رسوم الوقت",
+          "Service fee": "رسوم الخدمة",
+          "Fare breakdown": "تفصيل الأجرة",
+          "Minimum fare": "الحد الأدنى للأجرة",
+          "Maximum fare": "الحد الأقصى للأجرة",
+          "Promo :": "العرض الترويجي:",
+          "PlatformFee :": "رسوم المنصة:",
+          "Platform fee": "رسوم المنصة",
+          "Weather Price :": "سعر الطقس:",
+          "Whether Charge": "سواء كانت رسومًا",
+          "Total :": "الإجمالي:",
+          "Discount": "الخصم",
+          "Total trip fare": "إجمالي أجرة الرحلة",
+          "Ride Charges": "رسوم الرحلة",
+          "AMOUNT TO BE PAID": "المبلغ المطلوب دفعه",
+          "Select a payment method to pay": "حدد طريقة الدفع للدفع",
+          "Payment Gateway Method": "طريقة بوابة الدفع",
           "Payment Getway Method": "طريقة الدفع Getway",
+          "Payment method": "طريقة الدفع",
+          "Select payment method": "اختر طريقة الدفع",
+          "Select Payment Method": "حدد طريقة الدفع",
+          "Cash": "نقداً",
+          "Card": "بطاقة",
+          "Payment successful": "تم الدفع بنجاح",
+          "Payment failed": "فشل الدفع",
+          "Payment pending": "الدفع معلق",
+          "Price updated": "تم تحديث السعر",
+          "Invalid price": "سعر غير صالح",
+
+          // Coupons
           "All coupons": "جميع القسائم",
           "Best Coupon": "أفضل قسيمة",
           "Coupon Code: ": "رمز القسيمة:",
           "Coupon Amount: ": "مبلغ القسيمة:",
           "Minimum Amount: ": "الحد الأدنى للمبلغ:",
           "Ex Date: ": "تاريخ انتهاء الصلاحية:",
-          "Remove": "إزالة",
           "Apply coupons": "تطبيق القسائم",
           "Coupon": "القسيمة",
           "Coupon applied": "القسيمة المطبقة",
-          "Try Again": "حاول مرة أخرى",
-          "Cancel": "إلغاء",
+
+          // Wallet & Balance
+          "Wallet": "المحفظة",
+          "Total Balance": "إجمالي الرصيد",
+          "Wallet balance": "رصيد المحفظة",
+          "Add Wallet Amount": "أضف مبلغ المحفظة",
+          "Add money": "إضافة رصيد",
+          "Enter Amount": "أدخل المبلغ",
+          "Enter Amount!!!": "أدخل المبلغ!!!",
+          "Top-up": "إعادة الشحن",
+          "Transaction History": "سجل المعاملات",
+          "Transaction history": "سجل المعاملات",
+          "Debit": "الخصم",
+          "Creadit": "Creadit",
+          "Insufficient balance": "رصيد غير كاف",
+
+          // Profile & User
+          "Profile": "الملف الشخصي",
+          "My Profile": "الملف الشخصي",
+          "Name": "الاسم",
+          "Full Name": "الاسم الكامل",
+          "Email": "البريد الإلكتروني",
+          "email": "البريد الإلكتروني",
+          "Password": "كلمة المرور",
+          "Phone Number": "رقم الهاتف",
+          "Referral code(optional)": "رمز الإحالة (اختياري)",
+          "Referral code": "رمز الإحالة",
+          "Enter your name": "أدخل اسمك",
+          "Enter your email": "أدخل بريدك الإلكتروني",
+          "Enter your phone": "أدخل رقم هاتفك",
+          "Enter valid email": "أدخل بريدًا إلكترونيًا صالحًا",
+          "Enter valid phone": "أدخل رقم هاتف صالحًا",
+          "Password must be at least 6 characters":
+              "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+          "Passwords do not match": "كلمتا المرور غير متطابقتين",
+          "Profile updated successfully": "تم تحديث الملف الشخصي بنجاح",
+          "Failed to update profile": "فشل تحديث الملف الشخصي",
+
+          // Authentication
+          "Account created successfully": "تم إنشاء الحساب بنجاح",
+          "Failed to create account": "فشل إنشاء الحساب",
+          "Login successful": "تم تسجيل الدخول بنجاح",
+          "Invalid credentials": "بيانات اعتماد غير صالحة",
+          "Logout": "تسجيل الخروج",
+          "Are you sure you want to logout?":
+              "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+          "By clicking Continue.you agree tp our ":
+              "بالنقر فوق متابعة، فإنك توافق على",
+          "T&Cs": "شروط وأحكامنا",
+          "Forget Password ?": "نسيت كلمة المرور؟",
+          "Forgot Password ?": "نسيت كلمة المرور؟",
+          "Enter Mobile Number...!!!": "أدخل رقم الهاتف المحمول...!!!",
+          "Got an OTP?": "هل لديك كلمة مرور لمرة واحدة؟",
+          "Just one last thing": "شيء أخير",
+          "Let's get you trip-ready!": "دعنا نجهزك للرحلة!",
+          "Let's go!": "لننطلق!",
+
+          // Main Navigation
           "Home": "الصفحة الرئيسية",
           "My Ride": "رحلتي",
-          "Wallet": "المحفظة",
-          "Profile": "الملف الشخصي",
-          "Faq": "الأسئلة الشائعة",
-          "Refer and earn": "أحل واكسب",
-          "Notifications": "الإشعارات",
-          "Your Current Location": "موقعك الحالي",
-          "Close": "إغلاق",
-          "Searching for you on the map...": "البحث عنك على الخريطة...",
-          "💡Raise the fare, increase your chances.":
-              "💡ارفع الأجرة، وزد من فرصك.",
-          "Automatically book the nearest driver for":
-              "احجز تلقائيًا أقرب سائق بــ",
-          "Cancel Request": "إلغاء الطلب",
-          "cancel": "إلغاء",
-          "Completed": "مكتمل",
-          "Invoice": "الفاتورة",
-          "Rate your ride": "قيم رحلتك",
-          "Pickup": "الاستلام",
-          "Destination": "الوجهة",
-          "RIDE DETAIL": "تفاصيل الرحلة",
-          "Ride Type :": "نوع الرحلة:",
-          "Car Type :": "نوع السيارة:",
-          "hours / minit :": "ساعات/دقائق:",
-          "Date & Time :": "التاريخ والوقت:",
-          "PAYMENT": "الدفع",
-          "Ride Fair :": "معرض الرحلة:",
-          "Promo :": "العرض الترويجي:",
-          "PlatformFee :": "رسوم المنصة:",
-          "Weather Price :": "سعر الطقس:",
-          "Total :": "الإجمالي:",
           "My Rides": "رحلاتي",
           "Upcoming": "المقبلة",
+          "Completed": "مكتمل",
           "Cancelled": "الملغاة",
+
+          // Settings & Language
+          "Language": "اللغة",
+          "Choose your preferred language": "اختر لغتك المفضلة",
+          "App will restart to apply language changes":
+              "سيتم إعادة تشغيل التطبيق لتطبيق تغييرات اللغة",
+          "Change language": "تغيير اللغة",
+          "English": "English",
+          "العربية": "العربية",
+          "Dark mode": "الوضع الداكن",
+          "Light mode": "الوضع الفاتح",
+          "Dark Mode": "الوضع المظلم",
+          "Preference": "التفضيل",
+
+          // Notifications
           "Notification": "الإشعارات",
+          "Notifications": "الإشعارات",
           "No new notifications": "لا توجد إشعارات جديدة",
           "Looks like you haven't received any notification":
               "يبدو أنك لم تتلق أي إشعارات",
@@ -478,20 +651,11 @@ class AppTranslations extends Translations {
               "كن أول من يعرف بعروضنا والميزات الجديدة",
           "Allow": "السماح",
           "Maybe, later": "ربما، لاحقًا",
-          "Location permission not enabled": "إذن الموقع غير ممكّن",
-          "Sharing Location permission helps us improve your ride booking and pickup experience":
-              "مشاركة إذن الموقع يساعدنا في تحسين حجز رحلتك وتجربة الاستلام",
-          "Allow Permission": "السماح بالإذن",
-          "Enter pickup manually": "إدخال الاستلام يدويًا",
-          "Drop": "التسليم",
-          "Drop location": "موقع التسليم",
-          "Select on map": "حدد على الخريطة",
-          "Add a destination": "أضف وجهة",
-          "Update": "تحديث",
-          "My Profile": "My الملف الشخصي",
-          "Name": "الاسم",
-          "Email": "البريد الإلكتروني",
-          "Password": "كلمة المرور",
+          "Mark as read": "تعيين مقروء",
+          "Clear all": "مسح الكل",
+
+          // Refer & Earn
+          "Refer and earn": "أحل واكسب",
           "Refer your friends": "أحل أصدقاءك",
           "& Earn Coins!": "& اربح عملات!",
           "Invite all your friend to ": "ادعُ جميع أصدقائك إلى",
@@ -505,210 +669,88 @@ class AppTranslations extends Translations {
           "Start inviting friends today and enjoy the benefits together!":
               "ابدأ في دعوة الأصدقاء اليوم واستمتع بالمزايا معًا!",
           "Refer a Friend": "أحل صديقًا",
+          "Invite friend": "ادعُ صديقًا",
+
+          // FAQ & Help
+          "Faq": "الأسئلة الشائعة",
+          "Faq List": "قائمة الأسئلة الشائعة",
+          "FAQ": "الأسئلة الشائعة",
           "Help": "المساعدة",
           "H": "H",
-          "RIDE COMPLETED": "اكتملت الرحلة",
-          "Select a payment method to pay": "حدد طريقة الدفع للدفع",
-          "Total trip fare": "إجمالي أجرة الرحلة",
-          "Ride Charges": "رسوم الرحلة",
-          "Discount": "الخصم",
-          "Whether Charge": "سواء كانت رسومًا",
-          "Platform fee": "رسوم المنصة",
-          "AMOUNT TO BE PAID": "المبلغ المطلوب دفعه",
-          "Payment Gateway Method": "طريقة بوابة الدفع",
-          "Total Balance": "إجمالي الرصيد",
-          "Add Wallet Amount": "أضف مبلغ المحفظة",
-          "Enter Amount": "أدخل المبلغ",
-          "Select Payment Method": "حدد طريقة الدفع",
-          "Enter Amount!!!": "أدخل المبلغ!!!",
-          "Top-up": "إعادة الشحن",
-          "Join Our App and Make a Difference:":
-              "انضم إلى تطبيقنا وأحدث فرقًا:",
-          "Donate Today!": "تبرع اليوم!",
-          "Invite friend": "ادعُ صديقًا",
-          "Transaction History": "سجل المعاملات",
-          "Debit": "الخصم",
-          "Creadit": "Creadit",
-          "Welcome to Your Qareeb Ride!": "مرحبًا بك في رحلتك على Qareeb!",
-          "Your Journey, Just a Tap Away": "رحلتك، بنقرة واحدة فقط",
-          "Wherever You Go, We’re Here": "أينما ذهبت، نحن هنا",
-          "Book a ride in just a few taps and reach your destination comfortably":
-              "احجز رحلة ببضع نقرات فقط ووصل إلى وجهتك بشكل مريح",
-          "Experience fast, reliable, and safe rides with ease.":
-              "استمتع برحلات سريعة وموثوقة وآمنة بكل سهولة.",
-          "Find a ride quickly and enjoy your journey hassle-free":
-              "اعثر على رحلة بسرعة واستمتع برحلتك دون أي متاعب",
-          "Phone Number": "رقم الهاتف",
-          "By clicking Continue.you agree tp our ":
-              "بالنقر فوق متابعة، فإنك توافق على",
-          "T&Cs": "شروط وأحكامنا",
-          "Continue": "متابعة",
-          "Forget Password ?": "نسيت كلمة المرور؟",
-          "Enter Mobile Number...!!!": "أدخل رقم الهاتف المحمول...!!!",
-          "Forgot Password ?": "نسيت كلمة المرور؟",
-          "Milk made modern!": "حليب عصري!",
-          "Our app combines the convenience of technology with the tradition of the milkman":
-              "يجمع تطبيقنا بين راحة التكنولوجيا وتقاليد بائع الحليب",
-          "Never miss a delivery again!": "لا تفوت أي عملية توصيل مرة أخرى!",
-          "With our app, you'll receive real-time notifications about your milk deliveries":
-              "من خلال تطبيقنا، ستتلقى إشعارات في الوقت الفعلي حول عمليات توصيل الحليب الخاصة بك",
-          "Milk at your fingertips!": "الحليب في متناول يدك!",
-          "order fresh milk and dairy products for delivery straight to your doorstep":
-              "اطلب الحليب الطازج ومنتجات الألبان للتوصيل مباشرة إلى باب منزلك",
-          "Get Started": "ابدأ",
-          "Step 1/3": "الخطوة 1/3",
-          "Let's get you trip-ready!": "دعنا نجهزك للرحلة!",
-          "Step 1/2": "الخطوة 1/2",
-          "Got an OTP?": "هل لديك كلمة مرور لمرة واحدة؟",
-          "Step 2/2": "الخطوة 2/2",
-          "Just one last thing": "شيء أخير",
-          "Full Name": "الاسم الكامل",
-          "email": "البريد الإلكتروني",
-          "Referral code(optional)": "رمز الإحالة (اختياري)",
-          "Referral code": "رمز الإحالة",
-          "Let's go!": "لننطلق!",
-          "No Chat Found!": "لم يتم العثور على دردشة!",
-          "Currently you don’t have chat.": "حاليًا ليس لديك دردشة.",
-          "Say Something...": "قل شيئًا...",
-          "Reject": "ارفض",
-          "How much time do you need?": "كم من الوقت تحتاج؟",
-          "Leave now": "اغادر الآن",
-          "Leave later": "اغادر لاحقًا",
-          "Date and Time": "التاريخ والوقت",
-          "Starting at": "يبدأ من",
-          "Choose a ride": "اختر رحلة",
+
+          // Rating & Reviews
+          "Rate your ride": "قيم رحلتك",
+          "Rating": "التقييم",
+          "Comments": "التعليقات",
+
+          // Status Messages
+          "Loading": "جاري التحميل",
           "Loading...": "جاري التحميل...",
           "Please wait": "يرجى الانتظار",
+          "Searching": "جاري البحث",
+          "Processing": "جاري المعالجة",
+          "Connecting": "جاري الاتصال",
+          "Connected": "متصل",
+          "Disconnected": "غير متصل",
           "Success": "نجاح",
           "Error": "خطأ",
           "Warning": "تحذير",
           "Info": "معلومات",
-          "Searching": "جاري البحث",
-          "Processing": "جاري المعالجة",
-          "Payment successful": "تم الدفع بنجاح",
-          "Payment failed": "فشل الدفع",
-          "Request sent": "تم إرسال الطلب",
-          "Driver found": "تم العثور على سائق",
-          "Trip started": "بدأت الرحلة",
-          "Trip completed": "اكتملت الرحلة",
-          "No internet connection": "لا يوجد اتصال بالإنترنت",
+          "Found": "تم العثور",
+          "Failed": "فشل",
           "Something went wrong": "حدث خطأ ما",
-          "Try again": "حاول مرة أخرى",
-          "Confirm": "تأكيد",
-          "Yes": "نعم",
-          "No": "لا",
-          "Save": "حفظ",
-          "Edit": "تعديل",
-          "Delete": "حذف",
-          "Back": "رجوع",
-          "Profile updated successfully": "تم تحديث الملف الشخصي بنجاح",
-          "Failed to update profile": "فشل تحديث الملف الشخصي",
-          "Select image": "اختر صورة",
-          "Camera": "الكاميرا",
-          "Gallery": "المعرض",
-          "Permission denied": "تم رفض الإذن",
-          "Location not found": "الموقع غير موجود",
-          "Driver on the way": "السائق في الطريق",
-          "Estimated arrival": "الوصول المتوقع",
-          "Contact driver": "اتصل بالسائق",
-          "Cancel trip": "إلغاء الرحلة",
-          "Trip in progress": "رحلة قيد التنفيذ",
-          "Wallet balance": "رصيد المحفظة",
-          "Add money": "إضافة رصيد",
-          "Transaction history": "سجل المعاملات",
-          "Insufficient balance": "رصيد غير كاف",
-          "Payment method": "طريقة الدفع",
-          "Select payment method": "اختر طريقة الدفع",
-          "Cash": "نقدًا",
-          "Card": "بطاقة",
-          "Dark Mode": "الوضع المظلم",
-          "Ride fare": "أجرة الرحلة",
-          "Total amount": "المبلغ الإجمالي",
-          "Booking confirmed": "تم تأكيد الحجز",
-          "Booking cancelled": "تم إلغاء الحجز",
-          "Driver assigned": "تم تعيين السائق",
-          "Searching for driver": "جاري البحث عن سائق",
-          "No drivers available": "لا يوجد سائقون متاحون",
-          "Request timeout": "انتهى وقت الطلب",
-          "Invalid location": "موقع غير صالح",
-          "Please select pickup location": "يرجى اختيار موقع الانطلاق",
-          "Please select drop location": "يرجى اختيار موقع الوصول",
-          "Pickup and drop locations cannot be same":
-              "لا يمكن أن يكون موقع الانطلاق والوصول متماثلين",
-          "Enter your name": "أدخل اسمك",
-          "Enter your email": "أدخل بريدك الإلكتروني",
-          "Enter your phone": "أدخل رقم هاتفك",
-          "Enter valid email": "أدخل بريدًا إلكترونيًا صالحًا",
-          "Enter valid phone": "أدخل رقم هاتف صالحًا",
-          "Password must be at least 6 characters":
-              "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
-          "Passwords do not match": "كلمتا المرور غير متطابقتين",
-          "Account created successfully": "تم إنشاء الحساب بنجاح",
-          "Failed to create account": "فشل إنشاء الحساب",
-          "Login successful": "تم تسجيل الدخول بنجاح",
-          "Invalid credentials": "بيانات اعتماد غير صالحة",
-          "Logout": "تسجيل الخروج",
-          "Are you sure you want to logout?":
-              "هل أنت متأكد أنك تريد تسجيل الخروج؟",
-          "Dark mode": "الوضع الداكن",
-          "Light mode": "الوضع الفاتح",
-          "Change language": "تغيير اللغة",
-          "English": "English",
-          "العربية": "العربية",
+          "Something went wrong! Please try again.":
+              "حدث خطأ ما! يرجى المحاولة مرة أخرى.",
+
+          // App Info & Updates
           "Version": "الإصدار",
           "About": "حول",
           "Privacy policy": "سياسة الخصوصية",
           "Terms of service": "شروط الخدمة",
           "Contact support": "اتصل بالدعم",
-          "FAQ": "الأسئلة الشائعة",
           "Share app": "مشاركة التطبيق",
           "Rate app": "قيّم التطبيق",
           "Update available": "يتوفر تحديث",
           "Please update to continue": "يرجى التحديث للمتابعة",
           "Update now": "حدّث الآن",
           "Later": "لاحقًا",
-          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.":
-              "يوجد طلب حالي قيد التنفيذ. يمكنك الانتظار حتى يكتمل أو الإلغاء لتنفيذ هذا الإجراء.",
-          "Request cancelled": "تم إلغاء الطلب",
-          "Unable to cancel": "تعذر الإلغاء",
-          "Automatic booking enabled": "تم تفعيل الحجز التلقائي",
-          "Manual driver selection": "اختيار السائق يدويًا",
-          "Price updated": "تم تحديث السعر",
-          "Invalid price": "سعر غير صالح",
-          "Minimum fare": "الحد الأدنى للأجرة",
-          "Maximum fare": "الحد الأقصى للأجرة",
-          "Work": "العمل",
-          "Other": "أخرى",
-          "Add location": "إضافة موقع",
-          "Location saved": "تم حفظ الموقع",
-          "Failed to save location": "فشل حفظ الموقع",
-          "Remove location": "إزالة الموقع",
-          "Location removed": "تمت إزالة الموقع",
-          "Mark as read": "تعيين مقروء",
-          "Clear all": "مسح الكل",
-          "Are you sure?": "هل أنت متأكد؟",
-          "No results found": "لم يتم العثور على نتائج",
-          "Connection error": "خطأ في الاتصال",
-          "Server error": "خطأ في الخادم",
-          "WiFi": "واي فاي",
-          "Mobile Data": "بيانات الجوال",
-          "Ethernet": "إيثرنت",
-          "No Connection": "لا يوجد اتصال",
-          "Unknown": "غير معروف",
-          "Calculating Price": "جارٍ حساب ا لسعر",
-          "Connected": "متصل",
-          "Fetching fare for Calculation...":
-              "استخراج السعر لهذا النوع من المركبات",
-          "Disconnected": "غير متصل",
+
+          // Onboarding
+          "Welcome to Your Qareeb Ride!": "مرحبًا بك في رحلتك على Qareeb!",
+          "Your Journey, Just a Tap Away": "رحلتك، بنقرة واحدة فقط",
+          "Wherever You Go, We're Here": "أينما ذهبت، نحن هنا",
+          "Book a ride in just a few taps and reach your destination comfortably":
+              "احجز رحلة ببضع نقرات فقط ووصل إلى وجهتك بشكل مريح",
+          "Experience fast, reliable, and safe rides with ease.":
+              "استمتع برحلات سريعة وموثوقة وآمنة بكل سهولة.",
+          "Find a ride quickly and enjoy your journey hassle-free":
+              "اعثر على رحلة بسرعة واستمتع برحلتك دون أي متاعب",
+          "Get Started": "ابدأ",
+          "Step 1/3": "الخطوة 1/3",
+          "Step 1/2": "الخطوة 1/2",
+          "Step 2/2": "الخطوة 2/2",
+
+          // Chat & Communication
+          "No Chat Found!": "لم يتم العثور على دردشة!",
+          "Currently you don't have chat.": "حاليًا ليس لديك دردشة.",
+          "Say Something...": "قل شيئًا...",
+          "Reject": "ارفض",
+
+          // Error Handling & Network
+          "No internet connection": "لا يوجد اتصال بالإنترنت",
           "No Internet Connection": "لا يوجد اتصال بالإنترنت",
           "Please check your internet connection and try again. Make sure you're connected to Wi-Fi or mobile data.":
               "يرجى فحص اتصال الإنترنت والمحاولة مرة أخرى. تأكد من الاتصال بالواي فاي أو بيانات الجوال.",
           "Server Error": "خطأ في الخادم",
+          "Server error. Please try again later.":
+              "خطأ في الخادم. يرجى المحاولة لاحقاً.",
           "We're having trouble connecting to our servers. Our team has been notified and is working on a fix.":
               "نواجه مشكلة في الاتصال بخوادمنا. تم إبلاغ فريقنا ويعمل على حل المشكلة.",
           "Request Timeout": "انتهت مهلة الطلب",
           "The request is taking longer than expected. Please check your connection and try again.":
               "يستغرق الطلب وقتاً أطول من المتوقع. يرجى فحص الاتصال والمحاولة مرة أخرى.",
+          "Request timed out. Please check your connection and try again.":
+              "انتهت مهلة الطلب. يرجى فحص الاتصال والمحاولة مرة أخرى.",
           "No Data Available": "لا توجد بيانات متاحة",
           "There's no data to show right now. Please try again later or refresh to check for updates.":
               "لا توجد بيانات للعرض حالياً. يرجى المحاولة لاحقاً أو التحديث للبحث عن تحديثات.",
@@ -720,24 +762,121 @@ class AppTranslations extends Translations {
           "Something Went Wrong": "حدث خطأ ما",
           "We encountered an unexpected error. Please try again or contact support if the problem persists.":
               "واجهنا خطأ غير متوقع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم إذا استمرت المشكلة.",
-          "Retry": "إعادة المحاولة",
-          "Refresh": "تحديث",
-          "Check Again": "تحقق مرة أخرى",
-          "Loading": "جاري التحميل",
-          "No internet connection available. Please check your network and try again.":
-              "لا يوجد اتصال إنترنت متاح. يرجى فحص الشبكة والمحاولة مرة أخرى.",
-          "Request timed out. Please check your connection and try again.":
-              "انتهت مهلة الطلب. يرجى فحص الاتصال والمحاولة مرة أخرى.",
+          "Connection lost": "انقطع الاتصال",
+          "Connection error": "خطأ في الاتصال",
+          "Service unavailable": "الخدمة غير متاحة",
           "API returned false result": "أرجع API نتيجة خاطئة",
           "API request failed": "فشل طلب API",
-          "Something went wrong! Please try again.":
-              "حدث خطأ ما! يرجى المحاولة مرة أخرى.",
-          "Server error. Please try again later.":
-              "خطأ في الخادم. يرجى المحاولة لاحقاً.",
+          "No internet connection available. Please check your network and try again.":
+              "لا يوجد اتصال إنترنت متاح. يرجى فحص الشبكة والمحاولة مرة أخرى.",
+
+          // Calculation & Pricing
+          "Calculating Price": "جارٍ حساب السعر",
           "Calculation Loading": "جارٍ حساب الأجرة...",
           "Calculating fare for this vehicle...":
               "جارٍ حساب الأجرة لهذه المركبة",
+          "Fetching fare for Calculation...":
+              "استخراج السعر لهذا النوع من المركبات",
           "Please change vehicle type": "يرجى تغيير نوع المركبة أولاً",
+
+          // General Form Validation
+          "Please enter some text": "يرجى إدخال نص",
+          "Are you sure?": "هل أنت متأكد؟",
+          "No results found": "لم يتم العثور على نتائج",
+
+          // App Features
+          "Refresh": "تحديث",
+          "Check Again": "تحقق مرة أخرى",
+          "Booking confirmed": "تم تأكيد الحجز",
+          "Booking cancelled": "تم إلغاء الحجز",
+          "Request sent": "تم إرسال الطلب",
+          "Automatic booking enabled": "تم تفعيل الحجز التلقائي",
+          "Manual driver selection": "اختيار السائق يدويًا",
+          "Your current request is in progress. You can either wait for it to complete or cancel to perform this action.":
+              "يوجد طلب حالي قيد التنفيذ. يمكنك الانتظار حتى يكتمل أو الإلغاء لتنفيذ هذا الإجراء.",
+
+          // Other Features
+          "Work": "العمل",
+          "Other": "أخرى",
+          "Add location": "إضافة موقع",
+          "Location saved": "تم حفظ الموقع",
+          "Failed to save location": "فشل حفظ الموقع",
+          "Remove location": "إزالة الموقع",
+          "Location removed": "تمت إزالة الموقع",
+          "Select image": "اختر صورة",
+          "Camera": "الكاميرا",
+          "Gallery": "المعرض",
+          "Permission denied": "تم رفض الإذن",
+
+          // Network Types (if needed)
+          "WiFi": "واي فاي",
+          "Mobile Data": "بيانات الجوال",
+          "Ethernet": "إيثرنت",
+          "No Connection": "لا يوجد اتصال",
+          "Unknown": "غير معروف",
+
+          // Additional Onboarding Text
+          "start the adventure ": "ابدأ المغامرة ",
+          "together with our ": "معاً مع تطبيقنا ",
+          "app today!": "اليوم!",
+          "Join Our App and Make a Difference:":
+              "انضم إلى تطبيقنا وأحدث فرقًا:",
+          "Donate Today!": "تبرع اليوم!",
+
+          // Additional Labels
+          "Invoice": "الفاتورة",
+          "Trips": "الرحلات",
+          "Joined": "تم الانضمام",
+          "CONTINUE": "متابعة",
+
+          // Unused/Legacy Milk App Text (if removing milk references)
+          "Milk made modern!": "حليب عصري!",
+          "Our app combines the convenience of technology with the tradition of the milkman":
+              "يجمع تطبيقنا بين راحة التكنولوجيا وتقاليد بائع الحليب",
+          "Never miss a delivery again!": "لا تفوت أي عملية توصيل مرة أخرى!",
+          "With our app, you'll receive real-time notifications about your milk deliveries":
+              "من خلال تطبيقنا، ستتلقى إشعارات في الوقت الفعلي حول عمليات توصيل الحليب الخاصة بك",
+          "Milk at your fingertips!": "الحليب في متناول يدك!",
+          "order fresh milk and dairy products for delivery straight to your doorstep":
+              "اطلب الحليب الطازج ومنتجات الألبان للتوصيل مباشرة إلى باب منزلك",
+
+          // PDF and Documents
+          "PDF Preview": "معاينة PDF",
+
+          // OTP and Authentication
+          "Login using the OTP sent":
+              "سجل الدخول باستخدام رمز التحقق المرسل إلى",
+          "Resend code?": "إعادة إرسال الرمز؟",
+          "Seconds": "ثانية",
+          "Please Enter Otp.": "يرجى إدخال رمز التحقق.",
+          "Incorrect OTP. Please try again.":
+              "رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.",
+          "VERIFY OTP": "تحقق من الرمز",
+          "We have sent the OTP to": "لقد أرسلنا رمز التحقق إلى",
+          "Awesome": "رائع",
+          "Enter Password": "أدخل كلمة المرور",
+          "All fields are required.": "جميع الحقول مطلوبة.",
+
+          // Driver Selection & Actions
+          "Choose Your Driver": "اختر السائقك",
+          "Choose Required": "الاختيار مطلوب",
+          "You must either accept a driver offer or cancel the request to continue.":
+              "يجب عليك إما قبول عرض السائق أو إلغاء الطلب للمتابعة.",
+          "Accept a driver offer or cancel to continue":
+              "اقبل عرض سائق أو ألغِ للمتابعة",
+          "Cancel Request?": "إلغاء الطلب؟",
+          "Are you sure you want to cancel this ride request?":
+              "هل أنت متأكد أنك تريد إلغاء طلب الرحلة هذا؟",
+          "Message": "رسالة",
+
+          "Something went Wrong....!!!": "حدث خطأ ما....!!!",
+          "Connection Error": "خطأ في الاتصال",
+          "Failed to create ride request. Would you like to try again?":
+              "فشل في إنشاء طلب الرحلة. هل تريد المحاولة مرة أخرى؟",
+          "An unexpected error occurred. Please try again.":
+              "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+          "All fields are required": "جميع الحقول مطلوبة",
+          "No Service": "لا توجد خدمة",
         }
       };
 }

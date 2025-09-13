@@ -112,8 +112,7 @@ class WalletApiController extends GetxController implements GetxService {
                         Expanded(
                           child: ElevatedButton(
                             style: const ButtonStyle(
-                                fixedSize:
-                                    WidgetStatePropertyAll(Size(0, 50)),
+                                fixedSize: WidgetStatePropertyAll(Size(0, 50)),
                                 backgroundColor:
                                     WidgetStatePropertyAll(Colors.white),
                                 side: WidgetStatePropertyAll(
@@ -136,8 +135,7 @@ class WalletApiController extends GetxController implements GetxService {
                         Expanded(
                           child: ElevatedButton(
                             style: const ButtonStyle(
-                                fixedSize:
-                                    WidgetStatePropertyAll(Size(0, 50)),
+                                fixedSize: WidgetStatePropertyAll(Size(0, 50)),
                                 backgroundColor:
                                     WidgetStatePropertyAll(Colors.black),
                                 side: WidgetStatePropertyAll(
@@ -171,7 +169,8 @@ class WalletApiController extends GetxController implements GetxService {
       }
     } else {
       CustomNotification.show(
-          message: "Something went Wrong....!!!", type: NotificationType.info);
+          message: "Something went Wrong....!!!".tr,
+          type: NotificationType.info);
     }
   }
 }

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:get/get.dart';
 import 'package:printing/printing.dart';
 import 'makepdf_screen.dart';
 
@@ -12,7 +13,7 @@ class PdfPreviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:  const Text('PDF Preview'),
+        title: Text('PDF Preview'.tr),
       ),
       body: PdfPreview(
         build: (context) => makePdf(),

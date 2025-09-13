@@ -849,7 +849,7 @@ class _DriverDetailScreenState extends State<DriverDetailScreen> {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      "Trip Details".tr.tr,
+                                      "Trip Details".tr,
                                       style:
                                           TextStyle(color: notifier.textColor),
                                     ),

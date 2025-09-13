@@ -34,7 +34,7 @@ class ReviewDataApiController extends GetxController implements GetxService {
       }
     } else {
       Get.back();
-      // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Something went Wrong....!!!")));
+      // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Something went Wrong....!!!".tr)));
     }
   }
 }

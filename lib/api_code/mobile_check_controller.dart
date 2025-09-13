@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_disposable.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:http/http.dart' as http;
@@ -36,12 +37,12 @@ class MobilCheckController extends GetxController implements GetxService {
     } else {
       // ScaffoldMessenger.of(context).showSnackBar(
       //   SnackBar(
-      //     content: const Text("Something went Wrong....!!!"),
+      //     content: const Text("Something went Wrong....!!!".tr),
       //     behavior: SnackBarBehavior.floating,
       //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       //   ),
       // );
-      snackbar(context: context, text: "Something went Wrong....!!!");
+      snackbar(context: context, text: "Something went Wrong....!!!".tr);
     }
   }
 }
