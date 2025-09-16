@@ -3055,14 +3055,14 @@ class _MapScreenState extends State<MapScreen>
                                                         children: [
                                                           SizedBox(
                                                             height:
-                                                                40, // Changed from 40
+                                                                40, // Changed from 60
                                                             width:
-                                                                40, // Changed from 40
+                                                                40, // Changed from 60
                                                             child: Image(
                                                               image: NetworkImage(
                                                                   "${Config.imageurl}${homeApiController.homeapimodel!.categoryList![index].image}"),
                                                               height:
-                                                                  40, // Changed from 40
+                                                                  40, // Changed from 60
                                                             ),
                                                           ),
                                                           select1 == index
@@ -3098,7 +3098,7 @@ class _MapScreenState extends State<MapScreen>
                                                                                     children: [
                                                                                       Image.network(
                                                                                         "${Config.imageurl}${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.image}",
-                                                                                        height: 100, // Changed from 60
+                                                                                        height: 100, 
                                                                                       ),
                                                                                       Text(
                                                                                         "${vihicalInformationApiController.vihicalInFormationApiModel!.vehicle!.name}",
