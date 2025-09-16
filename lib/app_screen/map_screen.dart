@@ -21,6 +21,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/font_helper.dart';
 import 'package:qareeb/common_code/status_helper.dart';
 import 'package:qareeb/common_code/status_page.dart';
 import 'package:qareeb/services/running_ride_monitor.dart';
@@ -733,7 +734,7 @@ class _MapScreenState extends State<MapScreen>
   pagelistApiController pagelistcontroller = Get.put(pagelistApiController());
 
   Future<Uint8List> getNetworkImage(String path,
-      {int targetWidth = 100, int targetHeight = 100}) async {
+      {int targetWidth = 80, int targetHeight = 80}) async {
     final completer = Completer<ImageInfo>();
     var image = NetworkImage(path);
     image.resolve(const ImageConfiguration()).addListener(
@@ -1394,8 +1395,8 @@ class _MapScreenState extends State<MapScreen>
     try {
       final Uint8List iconBytes = await getNetworkImage(
         imageUrl,
-        targetWidth: 100, // Increase these values
-        targetHeight: 100,
+        targetWidth: 80, // Increase these values
+        targetHeight: 80,
       );
       return BitmapDescriptor.fromBytes(iconBytes);
     } catch (e) {
@@ -2803,7 +2804,7 @@ class _MapScreenState extends State<MapScreen>
                                   padding: const EdgeInsets.only(
                                       left: 10, right: 10),
                                   child: SizedBox(
-                                    height: 120, // Changed from 101
+                                    height: 80, // Changed from 101
 
                                     child: ListView.builder(
                                         scrollDirection: Axis.horizontal,
@@ -3022,9 +3023,8 @@ class _MapScreenState extends State<MapScreen>
                                               }
                                             },
                                             child: Padding(
-                                              padding: const EdgeInsets.all(4),
+                                              padding: const EdgeInsets.all(5),
                                               child: Container(
-                                                height: 50,
                                                 decoration: BoxDecoration(
                                                   color: select1 == index
                                                       ? theamcolore
@@ -3055,14 +3055,14 @@ class _MapScreenState extends State<MapScreen>
                                                         children: [
                                                           SizedBox(
                                                             height:
-                                                                60, // Changed from 40
+                                                                40, // Changed from 40
                                                             width:
-                                                                60, // Changed from 40
+                                                                40, // Changed from 40
                                                             child: Image(
                                                               image: NetworkImage(
                                                                   "${Config.imageurl}${homeApiController.homeapimodel!.categoryList![index].image}"),
                                                               height:
-                                                                  60, // Changed from 40
+                                                                  40, // Changed from 40
                                                             ),
                                                           ),
                                                           select1 == index
@@ -3137,8 +3137,7 @@ class _MapScreenState extends State<MapScreen>
                                                               : const SizedBox(),
                                                         ],
                                                       ),
-                                                      const SizedBox(
-                                                          height: 10),
+                                                      const SizedBox(height: 2),
                                                       Text(
                                                         "${homeApiController.homeapimodel!.categoryList![index].name}",
                                                         style: TextStyle(
@@ -4863,8 +4862,8 @@ class _MapScreenState extends State<MapScreen>
                                                           'Payment Getway Method'
                                                               .tr,
                                                           style: TextStyle(
-                                                              fontFamily:
-                                                                  "SofiaProBold",
+                                                              fontFamily: FontHelper
+                                                                  .getCurrentFont(),
                                                               fontSize: 18,
                                                               color: notifier
                                                                   .textColor)),
@@ -4984,7 +4983,11 @@ class _MapScreenState extends State<MapScreen>
                                                                                   padding: const EdgeInsets.only(bottom: 4),
                                                                                   child: Text(
                                                                                     paymentGetApiController.paymentgetwayapi!.paymentList![index].name.toString(),
-                                                                                    style: TextStyle(fontSize: 16, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                    style: TextStyle(
+                                                                                      fontSize: 16,
+                                                                                      fontFamily: FontHelper.getCurrentFont(),
+                                                                                      color: notifier.textColor,
+                                                                                    ),
                                                                                     maxLines: 2,
                                                                                   ),
                                                                                 ),
@@ -4992,7 +4995,11 @@ class _MapScreenState extends State<MapScreen>
                                                                                   padding: const EdgeInsets.only(bottom: 4),
                                                                                   child: Text(
                                                                                     paymentGetApiController.paymentgetwayapi!.paymentList![index].subTitle.toString(),
-                                                                                    style: TextStyle(fontSize: 12, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                    style: TextStyle(
+                                                                                      fontSize: 12,
+                                                                                      fontFamily: FontHelper.getCurrentFont(),
+                                                                                      color: notifier.textColor,
+                                                                                    ),
                                                                                     maxLines: 2,
                                                                                   ),
                                                                                 ),

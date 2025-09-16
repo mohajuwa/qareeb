@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/font_helper.dart';
 import 'package:qareeb/common_code/network_service.dart';
 import 'package:qareeb/services/routes.dart';
 import 'auth_screen/splase_screen.dart';
@@ -77,7 +78,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         locale: const Locale('ur', 'arabic'),
         getPages: AppRoutes.getPages,
         theme: ThemeData(
-          fontFamily: 'Khebrat',
+          fontFamily: FontHelper.getCurrentFont(),
           useMaterial3: false,
           splashColor: Colors.transparent,
           hoverColor: Colors.transparent,

@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:qareeb/app_screen/driver_detail_screen.dart';
 import 'package:qareeb/app_screen/map_screen.dart';
 import 'package:qareeb/app_screen/my_ride_screen.dart';
 import 'package:qareeb/app_screen/driver_list_screen.dart';

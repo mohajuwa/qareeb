@@ -2,9 +2,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../common_code/colore_screen.dart';
-import '../common_code/config.dart';
 import 'map_screen.dart';
 
 class SimpleDriverListScreen extends StatelessWidget {

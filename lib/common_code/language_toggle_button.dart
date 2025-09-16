@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:qareeb/common_code/font_helper.dart';
 
 class LanguageToggleButton extends StatefulWidget {
   const LanguageToggleButton({super.key});
@@ -30,7 +31,7 @@ class _LanguageToggleButtonState extends State<LanguageToggleButton> {
       // Switch to Arabic
       Get.updateLocale(const Locale('ur', 'arabic'));
       Get.changeTheme(ThemeData(
-        fontFamily: 'Khebrat',
+        fontFamily: FontHelper.getCurrentFont(),
         useMaterial3: false,
         splashColor: Colors.transparent,
         hoverColor: Colors.transparent,
@@ -41,7 +42,7 @@ class _LanguageToggleButtonState extends State<LanguageToggleButton> {
       // Switch to English
       Get.updateLocale(const Locale('en', 'English'));
       Get.changeTheme(ThemeData(
-        fontFamily: 'SofiaRegular',
+        fontFamily: FontHelper.getCurrentFont(),
         useMaterial3: false,
         splashColor: Colors.transparent,
         hoverColor: Colors.transparent,

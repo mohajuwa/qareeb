@@ -11,6 +11,7 @@ import 'package:otp_text_field/otp_field.dart';
 import 'package:otp_text_field/otp_field_style.dart';
 import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/font_helper.dart';
 import 'dart:ui' as ui;
 
 import '../common_code/colore_screen.dart';
@@ -227,7 +228,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
             style: TextStyle(
               fontSize: 22,
               color: notifier.textColor,
-              fontFamily: 'Khebrat',
+              fontFamily: FontHelper.getCurrentFont(),
             ),
           ),
           const SizedBox(height: 10),
@@ -353,7 +354,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
         'Forgot Password ?'.tr,
         style: TextStyle(
           color: notifier.textColor,
-          fontFamily: "Khebrat",
+          fontFamily: FontHelper.getCurrentFont(),
           fontSize: 14,
         ),
       ),
@@ -652,7 +653,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
                   'Awesome'.tr,
                   style: TextStyle(
                     color: notifier.textColor,
-                    fontFamily: 'Khebrat',
+                    fontFamily: FontHelper.getCurrentFont(),
                     fontSize: 20,
                   ),
                 ),
@@ -662,7 +663,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
                       .tr,
                   style: TextStyle(
                     color: notifier.textColor,
-                    fontFamily: "Khebrat",
+                    fontFamily: FontHelper.getCurrentFont(),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -682,7 +683,7 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
                     style: TextStyle(
                       fontSize: 17,
                       color: notifier.textColor,
-                      fontFamily: "Khebrat",
+                      fontFamily: FontHelper.getCurrentFont(),
                     ),
                     onChanged: (pin) =>
                         setState(() => _otpVariableForgot = _smsCode),
@@ -743,9 +744,9 @@ class _OnbordingScreenState extends State<OnbordingScreen> {
               const SizedBox(height: 15),
               Text(
                 'Create A New Password'.tr,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
-                  fontFamily: "Khebrat",
+                  fontFamily: FontHelper.getCurrentFont(),
                   color: Colors.black,
                 ),
               ),

@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:qareeb/services/running_ride_monitor.dart';
 import 'home_screen.dart';
 import 'pickup_drop_point.dart';
 import '../common_code/config.dart';

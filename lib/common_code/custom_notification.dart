@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
-import 'package:qareeb/common_code/colore_screen.dart';
 
 enum NotificationType { success, error, info, warning }
 
@@ -32,18 +31,18 @@ class CustomNotification {
         title ??= 'Success'.tr;
         break;
       case NotificationType.error:
-        bg = Colors.red.shade600;
+        bg = Colors.red.shade400;
         lottiePath = 'assets/lottie/warning.json';
         title ??= 'Error'.tr;
         break;
       case NotificationType.warning:
-        bg = Colors.orange.shade700;
+        bg = Colors.orange.shade400;
         lottiePath = 'assets/lottie/warning.json';
         title ??= 'Warning'.tr;
         break;
       case NotificationType.info:
       default:
-        bg = theamcolore;
+        bg = Colors.blue.shade700;
         lottiePath = 'assets/lottie/searching.json';
         title ??= 'Info'.tr;
         break;

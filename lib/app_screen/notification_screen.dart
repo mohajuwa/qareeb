@@ -7,6 +7,7 @@ import 'package:qareeb/common_code/custom_loading_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/font_helper.dart';
 import '../api_code/notification_api_controller.dart';
 import 'home_screen.dart';
 import '../common_code/colore_screen.dart';
@@ -45,7 +46,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         title: Text('Notification'.tr,
             style: TextStyle(
                 color: notifier.textColor,
-                fontFamily: "SofiaProBold",
+                fontFamily: FontHelper.getCurrentFont(),
                 fontSize: 18)),
       ),
       backgroundColor: notifier.background,

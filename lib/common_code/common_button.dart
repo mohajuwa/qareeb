@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/font_helper.dart';
 
 import 'colore_screen.dart';
 
@@ -37,10 +38,16 @@ Widget CommonButton(
               text: TextSpan(children: [
             TextSpan(
                 text: txt1,
-                style: const TextStyle(fontSize: 15, fontFamily: "Khebrat")),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontFamily: FontHelper.getCurrentFont(),
+                )),
             TextSpan(
                 text: txt2,
-                style: const TextStyle(fontSize: 15, fontFamily: "Khebrat")),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontFamily: FontHelper.getCurrentFont(),
+                )),
           ])),
         ),
       ));
@@ -72,13 +79,17 @@ Widget CommonOutLineButton(
             TextSpan(
                 text: txt1,
                 style: TextStyle(
-                    fontSize: 15,
-                    color: notifier.textColor,
-                    fontFamily: "Khebrat")),
+                  fontSize: 15,
+                  color: notifier.textColor,
+                  fontFamily: FontHelper.getCurrentFont(),
+                )),
             TextSpan(
                 text: txt2,
                 style: TextStyle(
-                    fontSize: 15, color: clore, fontFamily: "Khebrat")),
+                  fontSize: 15,
+                  color: clore,
+                  fontFamily: FontHelper.getCurrentFont(),
+                )),
           ])),
         ),
       ));

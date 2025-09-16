@@ -30,7 +30,7 @@ class TwilioapiController extends GetxController implements GetxService {
     var data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      if (data["Result"] == "true") {
+      if (data["Result"] == true) {
         twilioApiModel = twilioApiModelFromJson(response.body);
         update();
 

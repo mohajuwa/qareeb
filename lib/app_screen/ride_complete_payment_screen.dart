@@ -14,6 +14,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/font_helper.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api_code/vihical_ride_complete_order_api_controller.dart';
@@ -1042,7 +1043,7 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                               ),
                               Text('Payment Gateway Method'.tr,
                                   style: TextStyle(
-                                      fontFamily: "SofiaProBold",
+                                      fontFamily: FontHelper.getCurrentFont(),
                                       fontSize: 18,
                                       color: notifier.textColor)),
                               const SizedBox(
@@ -1228,8 +1229,8 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                                             .toString(),
                                                         style: TextStyle(
                                                             fontSize: 16,
-                                                            fontFamily:
-                                                                "SofiaProBold",
+                                                            fontFamily: FontHelper
+                                                                .getCurrentFont(),
                                                             color: notifier
                                                                 .textColor),
                                                         maxLines: 2,
@@ -1247,8 +1248,8 @@ class _RideCompletePaymentScreenState extends State<RideCompletePaymentScreen> {
                                                             .toString(),
                                                         style: TextStyle(
                                                             fontSize: 12,
-                                                            fontFamily:
-                                                                "SofiaProBold",
+                                                            fontFamily: FontHelper
+                                                                .getCurrentFont(),
                                                             color: notifier
                                                                 .textColor),
                                                         maxLines: 2,

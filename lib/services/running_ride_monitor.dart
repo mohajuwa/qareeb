@@ -47,7 +47,7 @@ class RunningRideMonitor {
     if (kDebugMode) print("🚗 Starting running ride monitor...");
 
     // Check every 20 seconds
-    _monitorTimer = Timer.periodic(const Duration(seconds: 60), (timer) {
+    _monitorTimer = Timer.periodic(const Duration(seconds: 120), (timer) {
       _checkRunningRide();
     });
   }
@@ -253,13 +253,15 @@ class RunningRideMonitor {
 
         // Determine actual screen
         if (currentRoute == '' || currentRoute == '/') {
-          if (request_id != null && request_id != "0") {
-            if (kDebugMode)
+          if (request_id != "0") {
+            if (kDebugMode) {
               print("🔍 Empty route with active ride - assuming ride screen");
+            }
             _actualCurrentScreen = 'DriverDetailScreen';
           } else {
-            if (kDebugMode)
+            if (kDebugMode) {
               print("🔍 Empty route with no active ride - assuming MapScreen");
+            }
             _actualCurrentScreen = 'MapScreen';
           }
         } else {

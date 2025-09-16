@@ -15,6 +15,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:qareeb/common_code/font_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api_code/vihical_calculate_api_controller.dart';
 import 'map_screen.dart';
@@ -1175,8 +1176,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     style: TextStyle(
                                                         color:
                                                             notifier.textColor,
-                                                        fontFamily:
-                                                            "SofiaProBold",
+                                                        fontFamily: FontHelper
+                                                            .getCurrentFont(),
                                                         fontSize: 16)),
                                                 const SizedBox(
                                                   width: 10,
@@ -1332,7 +1333,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                 .tr,
                                                             style: TextStyle(
                                                                 fontFamily:
-                                                                    "SofiaProBold",
+                                                                    FontHelper
+                                                                        .getCurrentFont(),
                                                                 fontSize: 18,
                                                                 color: notifier
                                                                     .textColor)),
@@ -1451,7 +1453,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                     padding: const EdgeInsets.only(bottom: 4),
                                                                                     child: Text(
                                                                                       paymentGetApiController.paymentgetwayapi!.paymentList![index].name.toString(),
-                                                                                      style: TextStyle(fontSize: 16, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                      style: TextStyle(
+                                                                                        fontSize: 16,
+                                                                                        fontFamily: FontHelper.getCurrentFont(),
+                                                                                        color: notifier.textColor,
+                                                                                      ),
                                                                                       maxLines: 2,
                                                                                     ),
                                                                                   ),
@@ -1459,7 +1465,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                                     padding: const EdgeInsets.only(bottom: 4),
                                                                                     child: Text(
                                                                                       paymentGetApiController.paymentgetwayapi!.paymentList![index].subTitle.toString(),
-                                                                                      style: TextStyle(fontSize: 12, fontFamily: "SofiaProBold", color: notifier.textColor),
+                                                                                      style: TextStyle(
+                                                                                        fontSize: 12,
+                                                                                        fontFamily: FontHelper.getCurrentFont(),
+                                                                                        color: notifier.textColor,
+                                                                                      ),
                                                                                       maxLines: 2,
                                                                                     ),
                                                                                   ),

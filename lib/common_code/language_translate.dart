@@ -839,10 +839,10 @@ class AppTranslations extends Translations {
           "Milk at your fingertips!": "الحليب في متناول يدك!",
           "order fresh milk and dairy products for delivery straight to your doorstep":
               "اطلب الحليب الطازج ومنتجات الألبان للتوصيل مباشرة إلى باب منزلك",
-
+          "Clear": "مسح",
           // PDF and Documents
           "PDF Preview": "معاينة PDF",
-
+          "We've sent a verification code": "رمز التحقق الذي ارسلناه",
           // OTP and Authentication
           "Login using the OTP sent":
               "سجل الدخول باستخدام رمز التحقق المرسل إلى",
@@ -854,6 +854,8 @@ class AppTranslations extends Translations {
           "VERIFY OTP": "تحقق من الرمز",
           "We have sent the OTP to": "لقد أرسلنا رمز التحقق إلى",
           "Awesome": "رائع",
+          "Please enter the complete OTP.":
+              "الرجاء ادخال كامل الكود ، واديت بالباقي اقلاص",
           "Enter Password": "أدخل كلمة المرور",
           "All fields are required.": "جميع الحقول مطلوبة.",
 
@@ -877,6 +879,31 @@ class AppTranslations extends Translations {
               "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
           "All fields are required": "جميع الحقول مطلوبة",
           "No Service": "لا توجد خدمة",
+
+          "Create Account": "إنشاء حساب",
+          "Just a few more details to get started":
+              "بعض التفاصيل الإضافية للبدء",
+          "Enter your full name": "أدخل اسمك الكامل",
+          "Email Address": "عنوان البريد الإلكتروني",
+          "Enter your email address": "أدخل عنوان بريدك الإلكتروني",
+          "Create a secure password": "أنشئ كلمة مرور آمنة",
+          "Referral Code": "رمز الإحالة",
+          "Enter referral code": "أدخل رمز الإحالة",
+          "(optional)": "(اختياري)",
+          "Email is required": "البريد الإلكتروني مطلوب",
+          "Enter a valid email address": "أدخل عنوان بريد إلكتروني صحيح",
+          "Name is required": "الاسم مطلوب",
+          "Name must be at least 2 characters":
+              "يجب أن يكون الاسم على الأقل حرفين",
+          "Name can only contain letters and spaces":
+              "يمكن أن يحتوي الاسم على أحرف ومسافات فقط",
+          "Password is required": "كلمة المرور مطلوبة",
+          "By creating an account, you agree to our ":
+              "بإنشاء حساب، فإنك توافق على ",
+          "Terms of Service": "شروط الخدمة",
+          " and ": " و ",
+          "Privacy Policy": "سياسة الخصوصية",
+          "Paste": "لصق",
         }
       };
 }

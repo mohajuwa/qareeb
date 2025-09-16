@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:qareeb/services/running_ride_monitor.dart';
 import 'package:qareeb/utils/show_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../common_code/config.dart';
